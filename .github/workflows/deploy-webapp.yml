@@ -1,0 +1,62 @@
+---
+# Deploy to production over SSH: pull main, install, build, run via PM2.
+#
+# Production app directory (fixed): /home/ubuntu/otusio/retentio-webapp
+#
+# Repository secrets (Settings → Secrets and variables → Actions):
+#   SERVER_HOST       — hostname or IP
+#   SERVER_USERNAME   — SSH user (e.g. ubuntu)
+#   SERVER_SSH_KEY    — private key for that user; matching public key in ~/.ssh/authorized_keys on the server
+#
+# Non-default SSH port: add `port: YOUR_PORT` under `with:` in the ssh-action step (default is 22).
+#
+# Server prerequisites:
+#   — Git, Node.js 20+, pnpm on PATH (non-interactive SSH often needs e.g. ~/.profile for pnpm)
+#   — PM2 globally installed (`pnpm add -g pm2` or `npm i -g pm2`) and `pm2 save` / startup if you use reboot persistence
+#   — Repo cloned at /home/ubuntu/otusio/retentio-webapp with origin able to fetch this repository
+#
+# PM2 name "webapp":
+#   This is the label PM2 uses for the process (`pm2 describe webapp`, `pm2 restart webapp`). It is set by
+#   `pm2 start pnpm --name webapp -- start` on first deploy. It is independent of the directory name
+#   (/home/ubuntu/otusio/retentio-webapp); change `webapp` in the pm2 lines below if you prefer another PM2 id.
+
+name: Deploy Webapp
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch: {}
+
+concurrency:
+  group: deploy-webapp-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment: production
+
+    steps:
+      - name: Deploy over SSH
+        uses: appleboy/ssh-action@v1.2.0
+        with:
+          host: ${{ secrets.SERVER_HOST }}
+          username: ${{ secrets.SERVER_USERNAME }}
+          key: ${{ secrets.SERVER_SSH_KEY }}
+          command_timeout: 30m
+          script_stop: true
+          script: |
+            set -euo pipefail
+            cd /home/ubuntu/otusio/retentio-webapp
+            source ~/.profile 2>/dev/null || source ~/.bashrc 2>/dev/null || true
+            git fetch origin main
+            git checkout main
+            git reset --hard origin/main
+            export HUSKY=0
+            pnpm install --frozen-lockfile
+            pnpm run build
+            if pm2 describe webapp >/dev/null 2>&1; then
+              pm2 restart webapp
+            else
+              pm2 start pnpm --name webapp -- start
+            fi

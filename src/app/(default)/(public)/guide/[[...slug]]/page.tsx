@@ -1,6 +1,6 @@
 import MDXPage from '@/components/MDX/MDXPage'
 import GuideLocaleFallbackNotice from '@/components/guide/GuideLocaleFallbackNotice'
-import { APP_DESC, APP_NAME } from '@/config'
+import { APP_DESC, APP_NAME, SITE_URL } from '@/config'
 import type { Locale } from '@/lib/locale.server'
 import { getLocale } from '@/lib/locale.server'
 import { DEFAULT_LOCALE } from '@/lib/locale'
@@ -52,23 +52,25 @@ async function resolveDocWithFallback(locale: Locale, slug: string[]) {
   return null
 }
 
+function guideCanonical(slug?: string[]): string {
+  const tail = slug?.length ? slug.join('/') : ''
+  return tail ? `${SITE_URL}/guide/${tail}` : `${SITE_URL}/guide`
+}
+
 function getMetadataFromFrontmatter(frontmatter?: Frontmatter, slug?: string[]): Metadata {
+  const canonical = guideCanonical(slug)
   if (!frontmatter) {
     return {
       title: APP_NAME,
       description: APP_DESC,
-      alternates: {
-        canonical: 'https://https://retentio.vercel.app/guide',
-      },
+      alternates: { canonical },
     }
   }
 
   return {
     title: frontmatter.title,
     description: frontmatter.description,
-    alternates: {
-      canonical: `https://retentio.vercel.app/guide/${slug?.join('/') || ''}`,
-    },
+    alternates: { canonical },
   }
 }
 

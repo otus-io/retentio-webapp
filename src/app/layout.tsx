@@ -1,7 +1,7 @@
 import type { Metadata } from 'next'
 import { Geist, Geist_Mono } from 'next/font/google'
 import { NextIntlClientProvider } from 'next-intl'
-import { APP_DESC, APP_NAME } from '@/config'
+import { APP_DESC, APP_NAME, SITE_URL } from '@/config'
 import { getLocale } from '@/lib/locale.server'
 
 import '@/app/globals.css'
@@ -19,6 +19,7 @@ const geistMono = Geist_Mono({
 })
 
 export const metadata: Metadata = {
+  metadataBase: new URL(SITE_URL),
   title: {
     default: `${APP_NAME} - ${APP_DESC}`,
     template: `%s | ${APP_NAME}`, // 子页面用：页面名 | Retentio
@@ -31,7 +32,7 @@ export const metadata: Metadata = {
   openGraph: {
     title: `${APP_NAME} - ${APP_DESC}`,
     description: 'Remember more, for longer.',
-    url: 'https://retentio.vercel.app',
+    url: SITE_URL,
     siteName: APP_NAME,
     images: [{ url: '/logo.svg', width: 1200, height: 630 }],
     locale: 'en_US',
@@ -55,7 +56,7 @@ export const metadata: Metadata = {
 
   // 规范链接（防重复内容）
   alternates: {
-    canonical: 'https://retentio.vercel.app',
+    canonical: '/',
   },
 }
 

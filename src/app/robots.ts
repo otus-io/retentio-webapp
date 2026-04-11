@@ -1,4 +1,5 @@
 // app/robots.ts
+import { SITE_URL } from '@/config'
 import type { MetadataRoute } from 'next'
 
 export default function robots(): MetadataRoute.Robots {
@@ -12,6 +13,6 @@ export default function robots(): MetadataRoute.Robots {
         '/profile',
       ],
     },
-    sitemap: 'https://retentio.vercel.app/sitemap.xml',
+    sitemap: `${SITE_URL}/sitemap.xml`,
   }
 }

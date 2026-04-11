@@ -13,12 +13,11 @@
 # testing
 /coverage
 
-# next.js
+# Build & generated (reproducible via pnpm build / generate:md)
 /.next/
 /out/
-
-# production
-/build
+/build/
+/public/search-index/
 
 # misc
 .DS_Store
@@ -39,5 +38,3 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
-
-public/search-index
