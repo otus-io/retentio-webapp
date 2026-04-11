@@ -1,0 +1,82 @@
+@import "tailwindcss";
+
+@import "@heroui/styles"; 
+
+@custom-variant dark (&:is(.dark *));
+
+@custom-variant dark (&:where([data-theme=dark], [data-theme=dark] *));
+
+:root {
+  --background: #ffffff;
+  --foreground: #171717;
+}
+
+
+@theme inline {
+  --accent: #2563eb;
+  --container-content: 75rem;
+}
+
+:root.dark {
+  --background: #0a0a0a;
+  --foreground: #ededed;
+}
+
+body {
+  background: var(--color-fd-background);
+  font-family: Arial, Helvetica, sans-serif;
+}
+
+@keyframes fade-in-left {
+  from { opacity: 0; transform: translateX(-30px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes fade-in-right {
+  from { opacity: 0; transform: translateX(30px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes fade-in-up {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+
+/* 开启全局平滑滚动体验更好 */
+
+
+/* 锚点链接的基础样式：默认透明，去掉下划线 */
+.anchor-link {
+  opacity: 0;
+  margin-left: 0.5em; /* 距离标题文字一点距离 */
+  text-decoration: none !important;
+  color: #3b82f6; /* Tailwind 的 blue-500，你可以换成你的主题色 */
+  transition: opacity 0.2s ease-in-out;
+}
+
+/* 鼠标悬浮在任意标题上时，显示内部的锚点链接 */
+.markdown-body h1:hover .anchor-link,
+.markdown-body h2:hover .anchor-link,
+.markdown-body h3:hover .anchor-link,
+.markdown-body h4:hover .anchor-link,
+.markdown-body h5:hover .anchor-link,
+.markdown-body h6:hover .anchor-link {
+  opacity: 1;
+}
+
+/* ★ 极其重要：防止锚点跳转被顶部导航栏遮挡 ★ */
+/* 假设你的顶部导航栏高度是 4rem (64px) */
+.markdown-body h1,
+.markdown-body h2,
+.markdown-body h3,
+.markdown-body h4,
+.markdown-body h5,
+.markdown-body h6 {
+  scroll-margin-top: 88px; /* 让滚动定位往下偏移一点 */
+}

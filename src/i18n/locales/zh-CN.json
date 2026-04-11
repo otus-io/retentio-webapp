@@ -1,0 +1,200 @@
+{
+  "nav": {
+    "home": "首页",
+    "about": "关于",
+    "guide": "指南",
+    "dashboard": "控制台",
+    "profile": "个人资料",
+    "library": "资料库"
+  },
+  "profile": {
+    "title": "个人资料",
+    "username": "用户名",
+    "email": "邮箱",
+    "memberSince": "注册时间"
+  },
+  "theme": {
+    "light": "明亮",
+    "dark": "暗黑",
+    "system": "系统"
+  },
+  "home": {
+    "hero": {
+      "title": "记住更多，",
+      "titleHighlight": "记得更久",
+      "subtitle": "Retentio 使用经过科学验证的间隔重复算法，帮助您高效记忆任何内容——词汇、概念以及更多。",
+      "cta": "在 App Store 下载",
+      "learnMore": "了解更多",
+      "appPreview": "应用预览"
+    },
+    "about": {
+      "title": "关于 Retentio",
+      "description": "Retentio 是一款基于间隔重复科学的智能闪卡应用。它优化您的复习计划，让您花更少的时间学习却记住更多。无论是学习语言、备考还是掌握新技能，Retentio 都能适应您的记忆模式以实现最高效率。"
+    },
+    "features": {
+      "sectionTitle": "为什么选择 Retentio",
+      "verified": {
+        "title": "多语言支持",
+        "description": "支持多种语言，完整的国际化体验，让您用最舒适的语言学习。"
+      },
+      "algorithm": {
+        "title": "智能算法",
+        "description": "间隔重复算法根据您的学习节奏自适应调整，达到最佳记忆效果。"
+      },
+      "ui": {
+        "title": "精美设计",
+        "description": "简洁现代的界面设计，让学习成为一种享受而非负担。"
+      },
+      "ai": {
+        "title": "AI 驱动",
+        "description": "利用人工智能自动生成闪卡，优化您的学习计划。"
+      }
+    },
+    "howItWorks": {
+      "sectionTitle": "如何使用",
+      "step1": {
+        "title": "创建卡片",
+        "description": "手动添加闪卡或从多种来源导入，将它们整理到不同的卡组中便于管理。"
+      },
+      "step2": {
+        "title": "智能学习",
+        "description": "算法会在您即将遗忘之前安排复习，在最佳时间点巩固记忆。"
+      },
+      "step3": {
+        "title": "跟踪进度",
+        "description": "通过详细的统计数据和进度跟踪，直观地看到知识的积累增长。"
+      },
+      "readMore": "了解更多背后的科学原理"
+    },
+    "cta": {
+      "title": "今天就开始学习",
+      "subtitle": "加入数千名正在使用 Retentio 的学习者，记住更多，记得更久。",
+      "button": "在 App Store 下载"
+    }
+  },
+  "error": {
+    "reset": "重置",
+    "not-find": "资源未找到",
+    "not-find-desc": "您正在寻找的页面不存在。<br></br>请尝试 <back> 返回 </back> 或返回 <home> 首页 </home>。",
+    "unauthorized": "未授权访问",
+    "forbidden": "访问被禁止"
+  },
+  "footer": {
+    "tagline": "记住更多，记得更久。",
+    "privacy": "隐私政策",
+    "terms": "服务条款",
+    "contact": "联系我们"
+  },
+  "content": {
+    "previous": "上一个",
+    "next": "下一个",
+    "fallback-notice": "当前语言暂无此文档，您现在看到的是英文版本。"
+  },
+  "search": {
+    "placeholder": "你在搜索什么？",
+    "noResults": "未找到结果。",
+    "escHint": "ESC"
+  },
+  "dashboard": {
+    "welcome": "欢迎回来，{name}",
+    "title": "以下是你的学习进度概览。",
+    "totalDecks": "卡组总数",
+    "totalCards": "卡片总数",
+    "dueToday": "今日待复习",
+    "streak": "连续天数",
+    "recentDecks": "最近卡组",
+    "cards": "{count} 张卡片",
+    "due": "{count} 待复习"
+  },
+  "library": {
+    "title": "我的资料库",
+    "import": "导入",
+    "export": "导出",
+    "decks": "卡组",
+    "cards": "卡片",
+    "facts": "知识点",
+    "cardCount": "{count} 张卡片",
+    "createDeck": "创建卡组",
+    "deckName": "卡组名称",
+    "deckDescription": "描述",
+    "emptyDecks": "还没有卡组。创建你的第一个卡组开始吧。",
+    "emptyCards": "选择一个卡组来查看其卡片。",
+    "emptyFacts": "选择一张卡片来查看其知识点。",
+    "front": "正面",
+    "back": "背面",
+    "cancel": "取消",
+    "save": "保存"
+  },
+  "auth": {
+    "loginTitle": "登录",
+    "registerTitle": "注册",
+    "loginDescription": "登录你的账号",
+    "registerDescription": "创建一个新账号",
+    "usernameLabel": "用户名",
+    "usernamePlaceholder": "请输入用户名",
+    "emailLabel": "邮箱",
+    "emailPlaceholder": "请输入邮箱",
+    "passwordLabel": "密码",
+    "passwordPlaceholder": "请输入密码",
+    "confirmPasswordLabel": "确认密码",
+    "confirmPasswordPlaceholder": "请再次输入密码",
+    "loginButton": "登录",
+    "registerButton": "注册",
+    "noAccount": "暂无账号？",
+    "goRegister": "去注册",
+    "goLogin": "去登录",
+    "termsWarning": "请同意服务条款和隐私政策",
+    "termsAgree": "我同意",
+    "termsOfService": "服务条款",
+    "termsAnd": "和",
+    "privacyPolicy": "隐私政策"
+  },
+  "common": {
+    "login": "登录",
+    "logout": "退出登录"
+  },
+  "guide-sidebar": {
+    "menu": "菜单",
+    "guide": "指南",
+
+    "background": "背景",
+    "what-is-retentio": "什么是 Retentio",
+    "read-more": "了解更多",
+    
+    "platform-notes": "平台说明",
+    
+    "getting-started": "快速入门",
+    "key-concepts": "核心概念",
+    "decks": "卡组 (Decks)",
+    "cards": "卡片 (Cards)",
+    "facts": "事实 (Facts)",
+    "field-image-and-audio": "字段、图片与音频",
+    "login-registration": "登录与注册",
+    
+    "studying": "学习模式",
+    "how-to-start": "如何开始",
+    "show-answer": "显示答案",
+    "hard-or-easy": "困难还是容易？",
+    
+    "adding-editing": "添加与编辑",
+    "create-decks": "创建卡组",
+    "deck-name": "卡组名称",
+    "add-fields": "添加字段",
+    "frequency-of-introduce-a-new-card": "新卡片引入频率",
+    "edit-decks": "编辑卡组",
+    "delete-decks": "删除卡组",
+    "add-facts": "添加事实",
+    "edit-facts": "编辑事实",
+    "hide-cards-delete-cards": "隐藏与删除卡片",
+    
+    "importing": "导入",
+    "importing-from-the-web": "从网页导入",
+    "supported-format": "支持的格式",
+    
+    "profile": "个人资料",
+    "avatar-and-username": "头像与用户名",
+    "change-language": "更改语言",
+    "change-theme": "更改主题",
+    "logout": "退出登录"
+  }
+}

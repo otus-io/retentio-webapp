@@ -1,0 +1,200 @@
+{
+  "nav": {
+    "home": "Home",
+    "about": "About",
+    "guide": "Guide",
+    "dashboard": "Dashboard",
+    "profile": "Profile",
+    "library": "Library"
+  },
+  "profile": {
+    "title": "Profile",
+    "username": "Username",
+    "email": "Email",
+    "memberSince": "Member Since"
+  },
+  "theme": {
+    "light": "Light",
+    "dark": "Dark",
+    "system": "System"
+  },
+  "home": {
+    "hero": {
+      "title": "Remember More,",
+      "titleHighlight": "For Longer",
+      "subtitle": "Retentio uses scientifically proven spaced repetition algorithms to help you efficiently memorize anything — vocabulary, concepts, and beyond.",
+      "cta": "Download on App Store",
+      "learnMore": "Learn More",
+      "appPreview": "App Preview"
+    },
+    "about": {
+      "title": "About Retentio",
+      "description": "Retentio is a smart flashcard app powered by spaced repetition science. It optimizes your review schedule so you spend less time studying while retaining more. Whether you're learning languages, preparing for exams, or mastering new skills, Retentio adapts to your memory patterns for maximum efficiency."
+    },
+    "features": {
+      "sectionTitle": "Why Choose Retentio",
+      "verified": {
+        "title": "Multi-language Support",
+        "description": "Learn in your preferred language with full internationalization support."
+      },
+      "algorithm": {
+        "title": "Smart Algorithm",
+        "description": "Our spaced repetition algorithm adapts to your learning pace for optimal retention."
+      },
+      "ui": {
+        "title": "Beautiful Design",
+        "description": "A clean, modern interface that makes studying a pleasure, not a chore."
+      },
+      "ai": {
+        "title": "AI Powered",
+        "description": "Leverage artificial intelligence to generate flashcards and optimize your study sessions."
+      }
+    },
+    "howItWorks": {
+      "sectionTitle": "How It Works",
+      "step1": {
+        "title": "Create Your Cards",
+        "description": "Add flashcards manually or import them from various sources. Organize them into decks for easy management."
+      },
+      "step2": {
+        "title": "Study Smart",
+        "description": "Our algorithm schedules reviews at the optimal time, right before you're about to forget."
+      },
+      "step3": {
+        "title": "Track Progress",
+        "description": "Watch your knowledge grow over time with detailed statistics and progress tracking."
+      },
+      "readMore": "Learn more about the science"
+    },
+    "cta": {
+      "title": "Start Learning Today",
+      "subtitle": "Join thousands of learners who are already using Retentio to remember more, for longer.",
+      "button": "Download on App Store"
+    }
+  },
+  "error": {
+    "reset": "Reset",
+    "not-find": "Resource Not Found",
+    "not-find-desc": "The page you are looking for does not exist. <br></br>Please try <back> going back </back> or return to the <home> home </home>.",
+    "unauthorized": "Unauthorized Access",
+    "forbidden": "Access Forbidden"
+  },
+  "footer": {
+    "tagline": "Remember More, For Longer.",
+    "privacy": "Privacy",
+    "terms": "Terms",
+    "contact": "Contact"
+  },
+  "content": {
+    "previous": "Previous",
+    "next": "Next",
+    "fallback-notice": "This document is not available in your current language. You are viewing the English version."
+  },
+  "search": {
+    "placeholder": "What are you searching for?",
+    "noResults": "No results found.",
+    "escHint": "ESC"
+  },
+  "dashboard": {
+    "welcome": "Welcome back, {name}",
+    "title": "Here's an overview of your learning progress.",
+    "totalDecks": "Total Decks",
+    "totalCards": "Total Cards",
+    "dueToday": "Due Today",
+    "streak": "Day Streak",
+    "recentDecks": "Recent Decks",
+    "cards": "{count} cards",
+    "due": "{count} due"
+  },
+  "library": {
+    "title": "My Library",
+    "import": "Import",
+    "export": "Export",
+    "decks": "Decks",
+    "cards": "Cards",
+    "facts": "Facts",
+    "cardCount": "{count} cards",
+    "createDeck": "Create Deck",
+    "deckName": "Deck Name",
+    "deckDescription": "Description",
+    "emptyDecks": "No decks yet. Create your first deck to get started.",
+    "emptyCards": "Select a deck to view its cards.",
+    "emptyFacts": "Select a card to view its facts.",
+    "front": "Front",
+    "back": "Back",
+    "cancel": "Cancel",
+    "save": "Save"
+  },
+  "auth": {
+    "loginTitle": "Login",
+    "registerTitle": "Register",
+    "loginDescription": "Sign in to your account",
+    "registerDescription": "Create a new account",
+    "usernameLabel": "Username",
+    "usernamePlaceholder": "Enter your username",
+    "emailLabel": "Email",
+    "emailPlaceholder": "Enter your email",
+    "passwordLabel": "Password",
+    "passwordPlaceholder": "Enter your password",
+    "confirmPasswordLabel": "Confirm Password",
+    "confirmPasswordPlaceholder": "Enter your password again",
+    "loginButton": "Login",
+    "registerButton": "Register",
+    "noAccount": "Don't have an account?",
+    "goRegister": "Register",
+    "goLogin": "Login",
+    "termsWarning": "Please agree to the Terms of Service and Privacy Policy",
+    "termsAgree": "I agree to the",
+    "termsOfService": "Terms of Service",
+    "termsAnd": "and",
+    "privacyPolicy": "Privacy Policy"
+  },
+  "common": {
+    "login": "Login",
+    "logout": "Logout"
+  },
+  "guide-sidebar": {
+    "menu": "Menu",
+    "guide": "Guide",
+    
+    "background": "Background",
+    "what-is-retentio": "What is Retentio",
+    "read-more": "Read more",
+    
+    "platform-notes": "Platform Notes",
+    
+    "getting-started": "Getting Started",
+    "key-concepts": "Key Concepts",
+    "decks": "Decks",
+    "cards": "Cards",
+    "facts": "Facts",
+    "field-image-and-audio": "Field, image, and audio",
+    "login-registration": "Login / Registration",
+    
+    "studying": "Studying",
+    "how-to-start": "How to start",
+    "show-answer": "Show answer",
+    "hard-or-easy": "Hard or Easy?",
+    
+    "adding-editing": "Adding / Editing",
+    "create-decks": "Create Decks",
+    "deck-name": "Deck name",
+    "add-fields": "Add fields",
+    "frequency-of-introduce-a-new-card": "Frequency of introduce a new card",
+    "edit-decks": "Edit Decks",
+    "delete-decks": "Delete Decks",
+    "add-facts": "Add Facts",
+    "edit-facts": "Edit Facts",
+    "hide-cards-delete-cards": "Hide Cards / Delete Cards",
+    
+    "importing": "Importing",
+    "importing-from-the-web": "Importing from the web",
+    "supported-format": "Supported format",
+    
+    "profile": "Profile",
+    "avatar-and-username": "Avatar and username",
+    "change-language": "Change language",
+    "change-theme": "Change theme",
+    "logout": "Logout"
+  }
+}
