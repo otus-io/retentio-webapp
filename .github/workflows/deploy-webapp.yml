@@ -11,7 +11,9 @@
 # Non-default SSH port: add `port: YOUR_PORT` under `with:` in the ssh-action step (default is 22).
 #
 # Server prerequisites:
-#   — Git, Node.js 20+, pnpm on PATH (non-interactive SSH often needs e.g. ~/.profile for pnpm)
+#   — Git, Node.js >=20.9 on PATH (Next.js). Non-interactive SSH: install via nvm and ensure the script
+#     below can run `nvm use 20` (nvm.sh + Node 20 installed), or use system Node 20+ (e.g. NodeSource).
+#   — pnpm on PATH (~/.profile / ~/.bashrc)
 #   — PM2 globally installed (`pnpm add -g pm2` or `npm i -g pm2`) and `pm2 save` / startup if you use reboot persistence
 #   — Repo cloned at ~/otusio/retentio-webapp with origin able to fetch this repository
 #
@@ -48,7 +50,20 @@ jobs:
           script: |
             set -euo pipefail
             cd ~/otusio/retentio-webapp
-            source ~/.profile 2>/dev/null || source ~/.bashrc 2>/dev/null || true
+            source ~/.profile 2>/dev/null || true
+            source ~/.bashrc 2>/dev/null || true
+            export NVM_DIR="${NVM_DIR:-$HOME/.nvm}"
+            if [ -s "$NVM_DIR/nvm.sh" ]; then
+              . "$NVM_DIR/nvm.sh"
+              nvm use 20 2>/dev/null || nvm use default 2>/dev/null || true
+            fi
+            NODE_MAJOR="$(node -v 2>/dev/null | sed 's/^v//' | cut -d. -f1 || echo 0)"
+            if [ "${NODE_MAJOR:-0}" -lt 20 ]; then
+              echo "Node.js >= 20.9 is required (see package.json engines). Got: $(node -v 2>/dev/null || echo 'not found')"
+              echo "Fix on server: nvm install 20 && nvm alias default 20  (or install Node 20+ system-wide)"
+              exit 1
+            fi
+            node -v
             git fetch origin main
             git checkout main
             git reset --hard origin/main

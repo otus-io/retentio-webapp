@@ -2,6 +2,9 @@
   "name": "retentio-webapp",
   "version": "0.1.0",
   "private": true,
+  "engines": {
+    "node": ">=20.9.0"
+  },
   "scripts": {
     "generate:md": "node scripts/generate-index.mjs",
     "dev": "npm run generate:md && next dev",
