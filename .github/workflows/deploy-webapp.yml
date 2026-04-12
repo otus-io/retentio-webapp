@@ -1,7 +1,7 @@
 ---
 # Deploy to production over SSH: pull main, install, build, run via PM2.
 #
-# Production app directory (fixed): /home/ubuntu/otusio/retentio-webapp
+# Production app directory: ~/otusio/retentio-webapp (same layout as backend deploy)
 #
 # Repository secrets (Settings → Secrets and variables → Actions):
 #   SERVER_HOST       — hostname or IP
@@ -13,12 +13,12 @@
 # Server prerequisites:
 #   — Git, Node.js 20+, pnpm on PATH (non-interactive SSH often needs e.g. ~/.profile for pnpm)
 #   — PM2 globally installed (`pnpm add -g pm2` or `npm i -g pm2`) and `pm2 save` / startup if you use reboot persistence
-#   — Repo cloned at /home/ubuntu/otusio/retentio-webapp with origin able to fetch this repository
+#   — Repo cloned at ~/otusio/retentio-webapp with origin able to fetch this repository
 #
 # PM2 name "webapp":
 #   This is the label PM2 uses for the process (`pm2 describe webapp`, `pm2 restart webapp`). It is set by
 #   `pm2 start pnpm --name webapp -- start` on first deploy. It is independent of the directory name
-#   (/home/ubuntu/otusio/retentio-webapp); change `webapp` in the pm2 lines below if you prefer another PM2 id.
+#   (~/otusio/retentio-webapp); change `webapp` in the pm2 lines below if you prefer another PM2 id.
 
 name: Deploy Webapp
 
@@ -47,7 +47,7 @@ jobs:
           script_stop: true
           script: |
             set -euo pipefail
-            cd /home/ubuntu/otusio/retentio-webapp
+            cd ~/otusio/retentio-webapp
             source ~/.profile 2>/dev/null || source ~/.bashrc 2>/dev/null || true
             git fetch origin main
             git checkout main
