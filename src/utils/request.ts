@@ -3,7 +3,7 @@
 
 import { getToken } from '@/lib/token.server'
 
-const BASE_URL = 'https://api.wordupx.com:8443'
+const BASE_URL = 'https://api.retentio.app:8443'
 
 
 
