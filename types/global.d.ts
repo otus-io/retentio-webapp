@@ -124,6 +124,64 @@ declare global {
   type ActionFunctionPayload<Payload = any, State = any>
     = (payload: Payload, state: ActionState<State> | null, formData: FormData) => ActionState<State> | Promise<ActionState<State> | null>
 
+  /**
+   * Base type constraint for API response data.
+   *
+   * This ensures that the `data` field in the API response
+   * is always an object-like structure.
+   */
+  type BaseApiResultData = object
+
+  /**
+   * Default meta information returned by the API.
+   */
+  interface BaseApiResultMeta {
+    /**
+     * success message
+     */
+    msg: string
+  }
+
+  /**
+   * Generic API response structure.
+   *
+   * This provides a consistent shape for all API responses,
+   * including both the actual data and additional metadata.
+   *
+   * @template Data - The type of the response data.
+   * @template Meta - The type of the meta information (defaults to BaseApiResultMeta).
+   *
+   * @example
+   * ```ts
+   * interface User {
+   *   id: number
+   *   name: string
+   * }
+   *
+   * type UserResponse = BaseApiResult<User>
+   *
+   * // Example response:
+   * const res: UserResponse = {
+   *   data: { id: 1, name: "Alice" },
+   *   meta: { msg: "ok" }
+   * }
+   * ```
+   */
+  interface BaseApiResult<
+    Data extends BaseApiResultData,
+    Meta extends BaseApiResultMeta = BaseApiResultMeta,
+  > {
+    /**
+     * The actual response data.
+     */
+    data: Data
+
+    /**
+     * Additional meta information about the response.
+     */
+    meta: Meta
+  }
+
   type KeyOfStringOrNumber<T> = {
     [K in keyof T]: T[K] extends string | number ? K : never
   }[keyof T]
