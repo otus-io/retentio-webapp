@@ -5,8 +5,8 @@ import { getProfileService } from '@/modules/auth/auth.service'
 
 export default async function Page() {
   const user = await getProfileService()
-  if (!user) {
+  if (!user?.success) {
     redirect(LOGIN_PATH)
   }
-  return <Profile user={user} />
+  return <Profile user={user.data} />
 }

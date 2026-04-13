@@ -7,18 +7,19 @@ import { Metadata } from 'next'
 
 export default async function Page() {
   const user = await getProfileService()
-  if (!user) {
+  if (!user?.success) {
     redirect(LOGIN_PATH)
   }
-  return <Dashboard user={user} />
+  return <Dashboard user={user.data} />
 }
 
 
 export async function generateMetadata() {
   const user = await getProfileService()
   const t = await getTranslations()
+  const name = user?.success === true ? user.data.data.username : ''
   return {
     title: t('nav.dashboard'),
-    description: t('dashboard.welcome', { 'name': `${user?.data.username}` }),
+    description: t('dashboard.welcome', { 'name': `${name}` }),
   } satisfies Metadata
 }
