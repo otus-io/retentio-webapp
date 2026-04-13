@@ -42,12 +42,3 @@ export type ProfileResponseDTO = BaseApiResult<
   { email: string; username: string },
   { created_at: string }
 >
-
-export interface AuthResultDTO {
-  user: { username: string; email: string; createdAt: string }
-  token: string
-}
-
-export type ApiResult<T> =
-  | { ok: true; data: T }
-  | { ok: false; error: string }

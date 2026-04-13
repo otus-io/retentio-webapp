@@ -16,9 +16,9 @@ export const loginAction: ActionFunction = async (_, formData) => {
     }
   }
   const res = await loginService(result.data)
-  if (!res.ok) {
+  if (!res.success) {
     return {
-      error: res.error,
+      error: res.message,
       data,
       success: false,
     }
@@ -37,9 +37,9 @@ export const registerAction: ActionFunction = async (_, formData) => {
     }
   }
   const res = await registerService(result.data)
-  if (!res.ok) {
+  if (!res.success) {
     return {
-      error: res.error,
+      error: res.message,
       data,
       success: false,
     }

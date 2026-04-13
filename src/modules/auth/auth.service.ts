@@ -1,7 +1,5 @@
 import { request } from '@/utils/request'
 import type {
-  ApiResult,
-  AuthResultDTO,
   LoginDTO,
   LoginResponseDTO,
   ProfileResponseDTO,
@@ -9,28 +7,27 @@ import type {
   RegisterResponseDTO,
 } from './auth.schema'
 import { getToken, setToken, removeToken } from '@/lib/token.server'
-import { logger } from '@/lib/logger'
+import { ServiceResponse } from '@/lib/response'
 
-async function fetchProfileWithTokenService(token: string): Promise<AuthResultDTO> {
+async function fetchProfileWithTokenService(token: string){
   await setToken(token)
   try {
     const profile = await request<ProfileResponseDTO>('/api/profile')
-    return {
+    return ServiceResponse.success({
       user: {
         username: profile.data.username,
         email: profile.data.email,
         createdAt: profile.meta.created_at,
       },
       token,
-    }
-  } catch {
+    })
+  } catch (e){
     await removeToken()
-    logger.error('fetchProfileWithTokenService failed')
-    throw new Error('Failed to fetch profile')
+    return ServiceResponse.error('fetchProfileWithTokenService failed', e)
   }
 }
 
-export async function loginService(params: LoginDTO): Promise<ApiResult<AuthResultDTO>> {
+export async function loginService(params: LoginDTO) {
   const { username, password } = params
   try {
     const loginRes = await request<LoginResponseDTO>('/auth/login', {
@@ -38,16 +35,14 @@ export async function loginService(params: LoginDTO): Promise<ApiResult<AuthResu
       body: JSON.stringify({ username, password }),
     })
     const result = await fetchProfileWithTokenService(loginRes.data.token)
-    return { ok: true, data: result }
+    return ServiceResponse.success(result)
   } catch (e){
-    console.log(e)
-    logger.error({ e }, 'loginService failed')
     await removeToken()
-    return { ok: false, error: 'loginFailed' }
+    return ServiceResponse.error('loginFailed failed', e)
   }
 }
 
-export async function registerService(params: RegisterDTO): Promise<ApiResult<AuthResultDTO>> {
+export async function registerService(params: RegisterDTO) {
   const { username, password, email } = params
   try {
     await request<RegisterResponseDTO>('/auth/register', {
@@ -59,31 +54,31 @@ export async function registerService(params: RegisterDTO): Promise<ApiResult<Au
       body: JSON.stringify({ username, password }),
     })
     const result = await fetchProfileWithTokenService(loginRes.data.token)
-    return { ok: true, data: result }
+    return ServiceResponse.success(result)
   } catch (e) {
-    logger.error({ e }, 'registerFailed failed')
     await removeToken()
-    return { ok: false, error: 'registerFailed' }
+    return ServiceResponse.error('registerFailed failed', e)
   }
 }
 
 export async function getProfileService() {
   try {
     if(!await getToken()){
-      return null
+      return ServiceResponse.error('token not found')
     }
-    return await request<ProfileResponseDTO>('/api/profile')
+    const result = await request<ProfileResponseDTO>('/api/profile')
+    return ServiceResponse.success(result)
   } catch (e) {
-    logger.error({ e }, 'getProfileService failed')
-    return null
+    return ServiceResponse.error('getProfileService failed', e)
   }
 }
 
-export async function logoutService(): Promise<void> {
+export async function logoutService(){
   try {
-    await request<unknown>('/auth/logout', { method: 'POST' })
-  } catch {
-    // Clear local state regardless of API result
+    const result = await request<unknown>('/auth/logout', { method: 'POST' })
+    return ServiceResponse.success(result)
+  } catch (e){
+    return ServiceResponse.error('logoutService failed', e)
   } finally {
     await removeToken()
   }
