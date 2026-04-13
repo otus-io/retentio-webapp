@@ -131,11 +131,14 @@ declare global {
    * is always an object-like structure.
    */
   type BaseApiResultData = object
-
+  /**
+   * Base type constraint for API response meta information.
+   */
+  type BaseApiResultMeta = object
   /**
    * Default meta information returned by the API.
    */
-  interface BaseApiResultMeta {
+  interface BaseApiResultMetaWithMsg {
     /**
      * success message
      */
@@ -179,7 +182,7 @@ declare global {
     /**
      * Additional meta information about the response.
      */
-    meta: Meta
+    meta: Meta & BaseApiResultMetaWithMsg
   }
 
   type KeyOfStringOrNumber<T> = {
