@@ -1,1 +1,7 @@
-pnpm exec lint-staged
+#!/usr/bin/env sh
+cd "$(dirname "$0")/.." || exit 1
+
+if command -v pnpm >/dev/null 2>&1 && [ -f pnpm-lock.yaml ]; then
+  exec pnpm exec lint-staged
+fi
+exec npx --no -- lint-staged
