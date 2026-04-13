@@ -20,6 +20,51 @@ declare global {
     data?: T
   }
 
+  /**
+   * Represents an action function used with React's `useAction`-style hooks.
+   *
+   * This function receives the previous state and a FormData object,
+   * and returns the next state (either synchronously or asynchronously).
+   *
+   * @template T - The shape of the state managed by the action.
+   *
+   * @param state - The previous state, or null if it has not been initialized.
+   * @param formData - The FormData submitted from a form.
+   * @returns The next state, null, or a Promise resolving to the next state or null.
+   *
+   * @example
+   * ```tsx
+   * type LoginState = {
+   *   success: boolean;
+   *   message?: string;
+   * };
+   *
+   * const loginAction: ActionFunction<LoginState> = async (state, formData) => {
+   *   const username = formData.get("username");
+   *   const password = formData.get("password");
+   *
+   *   if (username === "admin" && password === "1234") {
+   *     return { success: true };
+   *   }
+   *
+   *   return { success: false, message: "Invalid credentials" };
+   * };
+   *
+   * export default function LoginForm() {
+   *   const [state, action] = useAction(loginAction, null);
+   *
+   *   return (
+   *     <form action={action}>
+   *       <input name="username" />
+   *       <input name="password" type="password" />
+   *       <button type="submit">Login</button>
+   *
+   *       {state?.message && <p>{state.message}</p>}
+   *     </form>
+   *   );
+   * }
+   * ```
+   */
   type ActionFunction<T = any>
     = (state: ActionState<T> | null, formData: FormData) => ActionState<T> | Promise<ActionState<T> | null> | null
 
