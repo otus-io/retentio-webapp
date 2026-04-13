@@ -68,8 +68,61 @@ declare global {
   type ActionFunction<T = any>
     = (state: ActionState<T> | null, formData: FormData) => ActionState<T> | Promise<ActionState<T> | null> | null
 
-  type ActionFunctionPayload<T = any, U = any>
-    = (payload: U, state: ActionState<T> | null, formData: FormData) => ActionState<T> | Promise<ActionState<T> | null>
+  /**
+   * An extended version of ActionFunction that supports an extra payload argument.
+   *
+   * This is useful for actions that require additional parameters beyond form data,
+   * such as IDs for update/delete operations. Typically, the payload is pre-bound
+   * using `Function.bind`.
+   *
+   * @template Payload - The type of the extra argument passed into the action.
+   * @template State - The shape of the state managed by the action.
+   *
+   * @param payload - The extra argument (e.g., an id), usually pre-bound via `bind`.
+   * @param state - The previous state, or null if it has not been initialized.
+   * @param formData - The FormData submitted from a form.
+   * @returns The next state, null, or a Promise resolving to the next state or null.
+   *
+   * @example
+   * ```tsx
+   * type TodoState = {
+   *   success: boolean;
+   *   message?: string;
+   * };
+   *
+   * // Action with payload (e.g., updating a todo by id)
+   * const updateTodo: ActionFunctionPayload<number, TodoState> = async (
+   *   id,
+   *   state,
+   *   formData
+   * ) => {
+   *   const title = formData.get("title");
+   *
+   *   // pretend API call
+   *   await fetch(`/api/todos/${id}`, {
+   *     method: "PUT",
+   *     body: JSON.stringify({ title }),
+   *   });
+   *
+   *   return { success: true };
+   * };
+   *
+   * export default function TodoItem({ id }: { id: number }) {
+   *   // bind payload (id) to the action
+   *   const action = updateTodo.bind(null, id);
+   *   const [state, formAction] = useAction(action, null);
+   *
+   *   return (
+   *     <form action={formAction}>
+   *       <input name="title" />
+   *       <button type="submit">Update</button>
+   *     </form>
+   *   );
+   * }
+   * ```
+   */
+  type ActionFunctionPayload<Payload = any, State = any>
+    = (payload: Payload, state: ActionState<State> | null, formData: FormData) => ActionState<State> | Promise<ActionState<State> | null>
 
   type KeyOfStringOrNumber<T> = {
     [K in keyof T]: T[K] extends string | number ? K : never
