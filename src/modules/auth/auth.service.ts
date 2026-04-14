@@ -35,7 +35,7 @@ export async function loginService(params: LoginDTO) {
       body: JSON.stringify({ username, password }),
     })
     const result = await fetchProfileWithTokenService(loginRes.data.token)
-    return ServiceResponse.success(result)
+    return result
   } catch (e){
     await removeToken()
     return ServiceResponse.error('loginFailed failed', e)
