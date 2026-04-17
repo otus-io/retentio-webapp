@@ -8,5 +8,5 @@ export default async function Page() {
   if (!user?.success) {
     redirect(LOGIN_PATH)
   }
-  return <Profile user={user.data} />
+  return <Profile user={user} />
 }

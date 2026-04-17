@@ -10,14 +10,14 @@ export default async function Page() {
   if (!user?.success) {
     redirect(LOGIN_PATH)
   }
-  return <Dashboard user={user.data} />
+  return <Dashboard user={user} />
 }
 
 
 export async function generateMetadata() {
   const user = await getProfileService()
   const t = await getTranslations()
-  const name = user?.success === true ? user.data.data.username : ''
+  const name = user?.success === true ? user.data.username : ''
   return {
     title: t('nav.dashboard'),
     description: t('dashboard.welcome', { 'name': `${name}` }),

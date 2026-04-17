@@ -13,14 +13,7 @@ async function fetchProfileWithTokenService(token: string){
   await setToken(token)
   try {
     const profile = await request<ProfileResponseDTO>('/api/profile')
-    return ServiceResponse.success({
-      user: {
-        username: profile.data.username,
-        email: profile.data.email,
-        createdAt: profile.meta.created_at,
-      },
-      token,
-    })
+    return ServiceResponse.success(profile)
   } catch (e){
     await removeToken()
     return ServiceResponse.error('fetchProfileWithTokenService failed', e)
@@ -75,7 +68,7 @@ export async function getProfileService() {
 
 export async function logoutService(){
   try {
-    const result = await request<unknown>('/auth/logout', { method: 'POST' })
+    const result = await request<BaseApiResult<{ msg: string }>>('/auth/logout', { method: 'POST' })
     return ServiceResponse.success(result)
   } catch (e){
     return ServiceResponse.error('logoutService failed', e)

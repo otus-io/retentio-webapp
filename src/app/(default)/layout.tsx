@@ -7,7 +7,7 @@ export default async function Layout({ children }: { children: React.ReactNode }
   const user = await getProfileService()
   return (
     <section>
-      <TopNav user={user?.data} />
+      <TopNav user={user?.success? user: null} />
       {children}
       <Footer />
     </section>
