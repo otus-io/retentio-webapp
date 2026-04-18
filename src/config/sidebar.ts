@@ -35,8 +35,8 @@ export const guideSidebarConfig: SidebarNavItem[] = [
     items: [
       { titleKey: 'guide-sidebar.key-concepts', href: '/guide/getting-started/key-concepts' },
       { titleKey: 'guide-sidebar.decks', href: '/guide/getting-started/decks' },
-      { titleKey: 'guide-sidebar.cards', href: '/guide/getting-started/cards' },
       { titleKey: 'guide-sidebar.facts', href: '/guide/getting-started/facts' },
+      { titleKey: 'guide-sidebar.cards', href: '/guide/getting-started/cards' },
       { titleKey: 'guide-sidebar.field-image-and-audio', href: '/guide/getting-started/field-image-and-audio' },
       { titleKey: 'guide-sidebar.login-registration', href: '/guide/getting-started/login-registration' },
     ],
