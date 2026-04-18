@@ -5,7 +5,8 @@
     "guide": "指南",
     "dashboard": "控制台",
     "profile": "个人资料",
-    "library": "资料库"
+    "library": "资料库",
+    "decks": "卡组"
   },
   "profile": {
     "title": "个人资料",
@@ -196,5 +197,13 @@
     "change-language": "更改语言",
     "change-theme": "更改主题",
     "logout": "退出登录"
+  },
+  "decks": {
+    "created-at": "创建日期",
+    "updated-at": "更新日期",
+    "all-decks": "所有卡组",
+    "sort-by": "排序方式",
+    "layout-grid": "网格",
+    "layout-list": "列表"
   }
 }
