@@ -5,7 +5,8 @@
     "guide": "Guide",
     "dashboard": "Dashboard",
     "profile": "Profile",
-    "library": "Library"
+    "library": "Library",
+    "decks": "Decks"
   },
   "profile": {
     "title": "Profile",
@@ -196,5 +197,13 @@
     "change-language": "Change language",
     "change-theme": "Change theme",
     "logout": "Logout"
+  },
+  "decks": {
+    "created-at": "Created At",
+    "updated-at": "Updated At",
+    "all-decks": "All Decks",
+    "sort-by": "Sort by",
+    "layout-grid": "Grid",
+    "layout-list": "List"
   }
 }
