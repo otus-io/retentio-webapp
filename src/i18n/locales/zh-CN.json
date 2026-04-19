@@ -204,6 +204,7 @@
     "all-decks": "所有卡组",
     "sort-by": "排序方式",
     "layout-grid": "网格",
-    "layout-list": "列表"
+    "layout-list": "列表",
+    "create-deck": "创建卡组"
   }
 }

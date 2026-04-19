@@ -204,6 +204,7 @@
     "all-decks": "All Decks",
     "sort-by": "Sort by",
     "layout-grid": "Grid",
-    "layout-list": "List"
+    "layout-list": "List",
+    "create-deck": "Create Deck"
   }
 }
