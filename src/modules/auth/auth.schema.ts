@@ -28,27 +28,17 @@ export const registerSchema = z.object({
 
 export type RegisterDTO = z.infer<typeof registerSchema>
 
-// API 响应类型
-export interface LoginResponseDTO {
-  data: { token: string }
-  meta: { expires: string }
-}
+export type LoginResponseDTO = BaseApiResult<
+  { token: string },
+  { expires: string }
+>
 
-export interface RegisterResponseDTO {
-  data: { email: string; username: string }
-  meta: { created_at: string }
-}
+export type RegisterResponseDTO = BaseApiResult<
+  { email: string; username: string },
+  { created_at: string }
+>
 
-export interface ProfileResponseDTO {
-  data: { email: string; username: string }
-  meta: { created_at: string }
-}
-
-export interface AuthResultDTO {
-  user: { username: string; email: string; createdAt: string }
-  token: string
-}
-
-export type ApiResult<T> =
-  | { ok: true; data: T }
-  | { ok: false; error: string }
+export type ProfileResponseDTO = BaseApiResult<
+  { email: string; username: string },
+  { created_at: string }
+>
