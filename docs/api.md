@@ -97,7 +97,7 @@ This guide walks you through using the Retentio API via Swagger UI.
 | `/api/decks/{id}`                             | PATCH  | Update deck                                                                                                                                                                                     |
 | `/api/decks/{id}`                             | DELETE | Delete deck                                                                                                                                                                                     |
 | `/api/decks/{id}/facts/{operation}`           | POST   | Add facts (operation: `append`, `prepend`, `shuffle`, `spread`). Body: `facts` (required) and optional `template`. To add a card for an existing fact, use POST `/api/decks/{id}/card` instead. |
-| `/api/decks/{id}/facts`                       | GET    | Get all facts                                                                                                                                                                                   |
+| `/api/decks/{id}/facts`                       | GET    | List facts (optional `limit`/`offset` paging; omit both for full list)                                                                                                                          |
 | `/api/decks/{id}/facts/{factId}`              | GET    | Get a specific fact                                                                                                                                                                             |
 | `/api/decks/{id}/facts/{factId}`              | PATCH  | Update a fact                                                                                                                                                                                   |
 | `/api/decks/{id}/facts/{factId}`              | DELETE | Delete a fact                                                                                                                                                                                   |
@@ -591,7 +591,18 @@ Each fact gets one card with front=0/back=1 and one with front=1/back=0. To add 
 
 **Endpoint:** `GET /api/decks/{id}/facts`
 
-**Response:**
+**Query parameters (optional):**
+
+| Name     | Description                                                                                                                                                                                                                 |
+| -------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `limit`  | When **either** `limit` **or** `offset` is present in the query string, the response is **paginated**. `limit` is the page size (default **50**, maximum **200**). Invalid or non-positive values fall back to the default. |
+| `offset` | Number of facts to skip after a **stable sort by fact `id`** (ascending). Default **0** if omitted; negative values are treated as **0**.                                                                                   |
+
+If **neither** `limit` nor `offset` appears in the query string, the handler returns **every** fact in the deck (legacy behavior). In that case `meta` contains only `msg` (no `count`, `has_more`, `limit`, or `offset`).
+
+When paging is active, `meta` also includes `count` (facts in this response), `has_more`, and echoes `limit` and `offset` after defaults and clamping.
+
+**Response (non-paginated, no `limit`/`offset` query keys):**
 
 ```json
 {
@@ -614,6 +625,23 @@ Each fact gets one card with front=0/back=1 and one with front=1/back=0. To add 
     ]
   },
   "meta": { "msg": "Facts retrieved successfully" }
+}
+```
+
+**Response (paginated example):** `GET /api/decks/{id}/facts?limit=50&offset=0`
+
+```json
+{
+  "data": {
+    "facts": []
+  },
+  "meta": {
+    "msg": "Facts retrieved successfully",
+    "count": 50,
+    "has_more": true,
+    "limit": 50,
+    "offset": 0
+  }
 }
 ```
 
@@ -1337,7 +1365,7 @@ You can attach audio, images, and video to facts. Fact fields reference media by
 | Query    | Description                                                                   |
 | -------- | ----------------------------------------------------------------------------- |
 | `since`  | Optional. Unix timestamp (number); return only media created after this time. |
-| `limit`  | Optional. Max items (default 200, max 1000).                                  |
+| `limit`  | Optional. Max items (default 50, max 200).                                    |
 | `offset` | Optional. Number of items to skip (default 0).                                |
 
 **Response:**
@@ -1420,7 +1448,7 @@ For full design (upload, delete, display, sync), see **[Media Upload design doc]
 | `/api/decks/{id}`                             | DELETE      | `{ "data": { "deck_id" }, "meta": { "msg" } }`                                                                                                             |
 | `/api/decks/{id}/facts/{op}`                  | POST        | Add facts: `{ "data": { "fact_length" }, "meta": { "msg" } }`                                                                                              |
 | `/api/decks/{id}/card`                        | POST        | Add card from existing fact: `{ "data": { "card_id" }, "meta": { "msg" } }`                                                                                |
-| `/api/decks/{id}/facts`                       | GET         | `{ "data": { "facts": [ { …, "tags": [ … ] } ] }, "meta": { "msg" } }`                                                                                     |
+| `/api/decks/{id}/facts`                       | GET         | `{ "data": { "facts": [ … ] }, "meta": { "msg" } }` or paginated: `meta` adds `count`, `has_more`, `limit`, `offset`                                       |
 | `/api/decks/{id}/facts/{factId}`              | GET         | `{ "data": { "fact": { …, "tags": [ … ] } }, "meta": { "msg" } }`                                                                                          |
 | `/api/decks/{id}/facts/{factId}`              | PATCH       | `{ "data": { "fact_id" }, "meta": { "msg" } }`                                                                                                             |
 | `/api/decks/{id}/facts/{factId}`              | DELETE      | `{ "data": { "fact_id" }, "meta": { "msg" } }`                                                                                                             |
