@@ -7,7 +7,7 @@
 @custom-variant dark (&:where([data-theme=dark], [data-theme=dark] *));
 
 :root {
-  --background: #ffffff;
+  --background: #f5f5f5;
   --foreground: #171717;
 }
 
@@ -23,7 +23,7 @@
 }
 
 body {
-  background: var(--color-fd-background);
+  background: var(--background);
   font-family: Arial, Helvetica, sans-serif;
 }
 
