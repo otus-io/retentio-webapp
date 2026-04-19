@@ -12,8 +12,6 @@ export default async function Page() {
     )
   }
   return (
-    <div className="py-4 max-w-content mx-auto px-3.5">
-      <DecksList data={data?.decks || []} />
-    </div>
+    <DecksList data={data?.decks || []} />
   )
 }
