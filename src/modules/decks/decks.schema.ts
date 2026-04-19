@@ -1,3 +1,5 @@
+import z from 'zod'
+
 /**
  * 卡组
  */
@@ -17,7 +19,7 @@ export interface Deck {
   /**
    * 字段列表
    */
-  field: string[];
+  field: string[] | string;
   /**
    * 评分
    */
@@ -92,6 +94,35 @@ interface Meta {
    */
   msg: string;
 }
+
+/**
+ * 创建或更新卡组请求 DTO
+ */
+export const crateOrUpdateDeckSchema = z.object({
+  name: z.string().min(1, 'Name is required').max(100, 'Name must be at most 100 characters'),
+  fields: z.array(z.string().min(1, 'Field cannot be empty')).min(2, 'At least 2 fields are required'),
+  rate: z.coerce.number().min(1, 'Rate must be at least 1').max(1000, 'Rate must be at most 1000'),
+})
+
+/**
+ * 创建或更新卡组请求 DTO
+ */
+export type CreateOrUpdateDeckDTO = z.infer<typeof crateOrUpdateDeckSchema>
+
+/**
+ * 创建或更新卡组响应 DTO
+ */
+export type CreateOrUpdateDeckResponseDTO = BaseApiResult<{ deck_id: string }>
+
+/**
+ * 删除卡组
+ */
+export type DeleteDeckResponseDTO = BaseApiResult<{ deck_id: string }>
+
+/**
+ * 单个卡组
+ */
+export type DeckResponseDTO = BaseApiResult<Deck>
 
 /**
  * 获取卡组列表的响应 DTO
