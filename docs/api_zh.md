@@ -97,7 +97,7 @@
 | `/api/decks/{id}`                             | PATCH  | 更新卡组                                                                                                                                             |
 | `/api/decks/{id}`                             | DELETE | 删除卡组                                                                                                                                             |
 | `/api/decks/{id}/facts/{operation}`           | POST   | 添加词条：operation 为 append/prepend/shuffle/spread。请求体：facts（必填）及可选 template。为已有词条添加一张卡请使用 POST `/api/decks/{id}/card`。 |
-| `/api/decks/{id}/facts`                       | GET    | 获取词条（可选 `limit`/`offset` 分页；不传则全部）                                                                                                   |
+| `/api/decks/{id}/facts`                       | GET    | 获取词条（分页）：默认 `limit` **50**、`offset` **0**；`limit` 最大 **200**。`meta` 含 `count`、`has_more`、`limit`、`offset`、`total`。             |
 | `/api/decks/{id}/facts/{factId}`              | GET    | 获取单个词条                                                                                                                                         |
 | `/api/decks/{id}/facts/{factId}`              | PATCH  | 更新词条                                                                                                                                             |
 | `/api/decks/{id}/facts/{factId}`              | DELETE | 删除词条                                                                                                                                             |
@@ -598,18 +598,14 @@
 
 **接口：** `GET /api/decks/{id}/facts`
 
-**查询参数（可选）：**
+**查询参数（可选）：** `limit`（默认 **50**，最大 **200**）、`offset`（默认 **0**）。省略时使用默认值；**`meta` 回显 `limit` 与 `offset`**，并含 `count`、`has_more`、`total`。
 
-| 名称     | 说明                                                                                                                                 |
-| -------- | ------------------------------------------------------------------------------------------------------------------------------------ |
-| `limit`  | 当查询串中出现 **`limit` 或 `offset` 任一键**时启用分页。`limit` 为每页条数（默认 **50**，最大 **200**）。非法或非正数回退为默认值。 |
-| `offset` | 在按词条 **`id` 升序**稳定排序后跳过的条数。省略时为 **0**；负数视为 **0**。                                                         |
+| 名称     | 说明                                               |
+| -------- | -------------------------------------------------- |
+| `limit`  | 每页条数。非法或非正数→默认；超过最大→**200**。    |
+| `offset` | 按词条 **`id` 升序**排序后跳过的条数。负数→**0**。 |
 
-若查询串中**既不**含 `limit` **也不**含 `offset`，则返回卡组内**全部**词条（兼容旧行为）。此时 `meta` 仅含 `msg`，不含 `count`、`has_more`、`limit`、`offset`。
-
-启用分页时，`meta` 另含：`count`（本页条数）、`has_more`，以及应用默认值与上限后的 `limit`、`offset`。
-
-**响应示例（未分页，查询串无 `limit`/`offset`）：**
+**响应示例**（两条例词、首页；URL 不传参数时 `meta` 同样为默认 `limit`/`offset`）：
 
 ```json
 {
@@ -631,23 +627,13 @@
       }
     ]
   },
-  "meta": { "msg": "Facts retrieved successfully" }
-}
-```
-
-**响应示例（分页）：** `GET /api/decks/{id}/facts?limit=50&offset=0`
-
-```json
-{
-  "data": {
-    "facts": []
-  },
   "meta": {
     "msg": "Facts retrieved successfully",
-    "count": 50,
-    "has_more": true,
+    "count": 2,
+    "has_more": false,
     "limit": 50,
-    "offset": 0
+    "offset": 0,
+    "total": 2
   }
 }
 ```
