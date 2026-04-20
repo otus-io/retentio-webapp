@@ -1,8 +1,12 @@
-import { AppButtonLink } from '@/components/app/AppButtonLink'
-import DecksDeleteButton from '@/components/decks/DecksDeleteButton'
+'use client'
+import AppLink from '@/components/app/AppLink'
 import { Deck } from '@/modules/decks/decks.schema'
-import { Card, Chip, ProgressCircle } from '@heroui/react'
-
+import { Card, Dropdown, Label, useOverlayState } from '@heroui/react'
+import { useRouter } from 'next/navigation'
+import { Key } from 'react'
+import { ChartPie, EllipsisVertical, ListTodo, Pencil, Trash2 } from 'lucide-react'
+import DecksIconLabel from '@/components/decks/DecksLabel'
+import DecksDeleteModal from '@/components/decks/DecksDeleteModal'
 interface DecksCardProps {
   deck: Deck,
 }
@@ -10,69 +14,80 @@ interface DecksCardProps {
 export default function DecksCard({
   deck,
 }: DecksCardProps) {
-  return (
-    <Card
-      variant="default"
-      className="hover:cursor-pointer hover:shadow-lg"
-    >
-      <div>
-        <Card.Header>
-          <div className="flex">
-            <Card.Title className="text-xl">
-              {deck.name}
-            </Card.Title>
-            <ProgressCircle
-              aria-label="Loading"
-              className={'ml-auto sm:ml-2 shrink-0'}
-              value={deck.rate}
-            >
-              <ProgressCircle.Track strokeWidth={6} viewBox="0 0 36 36">
-                <ProgressCircle.TrackCircle cx={18} cy={18} r={15} strokeWidth={6} />
-                <ProgressCircle.FillCircle cx={18} cy={18} r={15} strokeWidth={6} />
-              </ProgressCircle.Track>
-            </ProgressCircle>
-          </div>
 
+  const router = useRouter()
+
+  const progress = (deck.stats.reviewed_cards / deck.stats.cards_count * 100).toFixed(2)
+
+  const state = useOverlayState()
+
+  function handleAction(id: Key) {
+    switch (id) {
+      case 'edit':
+        router.push(`/decks/${deck.id}/edit`)
+        break
+      case 'delete':
+        state.open()
+        break
+      default:
+    }
+  }
+  return (
+    <>
+      <Card variant="default" className="hover:shadow-sm transition-all duration-200">
+        <Card.Header>
+          <div className="flex items-center justify-between">
+            <Card.Title>
+              <AppLink
+                href={`/decks/${deck.id}`}
+                className="text-lg font-semibold tracking-tight text-foreground hover:text-accent hover:underline transition-colors"
+              >
+                {deck.name}
+              </AppLink>
+            </Card.Title>
+            <Dropdown>
+              <Dropdown.Trigger>
+                <EllipsisVertical className="size-4" />
+              </Dropdown.Trigger>
+              <Dropdown.Popover>
+                <Dropdown.Menu onAction={handleAction}>
+                  <Dropdown.Item id="edit" textValue="edit">
+                    {/* 建议给下拉菜单也加上极简小图标 */}
+                    <div className="flex items-center gap-1">
+                      <Pencil className="size-3.5 text-muted-foreground" />
+                      <Label>Edit</Label>
+                    </div>
+                  </Dropdown.Item>
+                  <Dropdown.Item id="delete" textValue="delete" variant="danger">
+                    <div className="flex items-center gap-1">
+                      <Trash2 className="size-3.5 text-danger" />
+                      <Label>Delete</Label>
+                    </div>
+                  </Dropdown.Item>
+                </Dropdown.Menu>
+              </Dropdown.Popover>
+            </Dropdown>
+          </div>
         </Card.Header>
-        <Card.Content className="mt-2">
-          <div className="flex gap-1 text-muted text-xs items-center font-bold ">
-            <span>{'Field'}: </span>
-            {Array.isArray(deck.fields) ? deck.fields.map((e, index)=>{
-              return (
-                <Chip key={index} size="sm">
-                  {e}
-                </Chip>
-              )
-            }) : (
-              <Chip size="sm">{deck.fields}</Chip>
-            )}
+
+        {/* 内容区域 */}
+        <Card.Content>
+          <div className="flex items-center gap-6">
+
+            <DecksIconLabel icon={ListTodo} color={'orange'}>
+              Due: <span className="font-medium ml-0.5">{deck.stats.due_cards}</span>
+            </DecksIconLabel>
+
+            <DecksIconLabel icon={ChartPie} color={'emerald'}>
+              Progress: <span className="font-medium  ml-0.5">{progress}%</span>
+            </DecksIconLabel>
           </div>
-          <Card.Description className="flex gap-1 text-xs items-center">
-            <span>Rate: {deck.rate}</span>
-            <span>|</span>
-            <span>Cards: {deck.stats.cards_count}</span>
-            <span>|</span>
-            <span>Facts: {deck.stats.facts_count}</span>
-            <span>|</span>
-            <span>Due: {deck.stats.due_cards}</span>
-          </Card.Description>
         </Card.Content>
-        <Card.Footer className="grid md:flex gap-2 md:justify-between">
-          <p className="flex gap-1 text-xs items-center">
-            <span>Last reviewed at: {new Date(deck.stats.last_reviewed_at * 1e3).toLocaleDateString()}</span>
-          </p>
-          <div className="flex gap-1 justify-end">
-            <AppButtonLink href={`/decks/${deck.id}`} size="sm" variant="secondary">
-              details
-            </AppButtonLink>
-            <AppButtonLink href={`/decks/${deck.id}/edit`} size="sm" variant="secondary">
-              edit
-            </AppButtonLink>
-            <DecksDeleteButton deckId={deck.id} />
-          </div>
-        </Card.Footer>
-      </div>
-    </Card>
+      </Card>
+
+      <DecksDeleteModal {...state} deckId={deck.id} />
+
+    </>
   )
 }
 
