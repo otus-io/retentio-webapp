@@ -2,9 +2,11 @@
 
 import { useRef, useState, useEffect } from 'react'
 import { useTranslations } from 'next-intl'
-import { Languages, Brain, Palette, Bot, ArrowDown, ArrowRight, Clock, BookOpen, TrendingUp, Layers, Download } from 'lucide-react'
+import { Languages, Brain, Palette, Bot, ArrowDown, ArrowRight, Clock, BookOpen, TrendingUp, Download, Book } from 'lucide-react'
 import clsx from 'clsx'
 import AppLink from '@/components/app/AppLink'
+import AppButton from '@/components/app/AppButton'
+import { AppButtonLink } from '@/components/app/AppButtonLink'
 
 function AnimatedSection({ children, className, delay = 0 }: {
   children: React.ReactNode
@@ -59,7 +61,7 @@ const steps = [
 ] as const
 
 export default function HomePage() {
-  const t = useTranslations('home')
+  const t = useTranslations()
 
   return (
     <div>
@@ -67,43 +69,35 @@ export default function HomePage() {
       <section className="flex items-center relative overflow-hidden  bg-linear-to-br from-blue-50 via-indigo-50 to-blue-100 dark:from-slate-900 dark:via-slate-800 dark:to-slate-900  px-6 md:px-12">
         <div className="absolute -top-48 -right-48  rounded-full bg-blue-500/10 dark:bg-blue-400/5 blur-3xl" />
         <div className="absolute -bottom-36 -left-36 w-96 h-96 rounded-full bg-purple-500/8 dark:bg-purple-400/5 blur-3xl" />
-
-        <div className="relative max-w-content mx-auto z-10 w-full grid grid-cols-1 md:grid-cols-2 gap-10 items-center py-16">
+        <div className="relative max-w-content mx-auto z-10 w-full grid grid-cols-1 gap-10 items-center py-16">
           <div className="animate-[fade-in-left_0.8s_ease-out_both]">
-            <h1 className="text-4xl sm:text-5xl md:text-6xl font-bold leading-tight mb-6">
-              {t('hero.title')}
-              <span className="text-accent block">{t('hero.titleHighlight')}</span>
+            <h1 className="text-4xl sm:text-5xl md:text-6xl font-bold leading-tight mb-6 text-center">
+              {t('home.hero.title')}
+              <span className="text-accent block">{t('home.hero.titleHighlight')}</span>
             </h1>
-            <p className="text-lg text-gray-600 dark:text-gray-400 mb-8 max-w-lg leading-relaxed animate-[fade-in_0.6s_0.3s_ease-out_both]">
-              {t('hero.subtitle')}
+            <p className="text-lg text-gray-600 dark:text-gray-400 mb-8 max-w-3xl mx-auto leading-relaxed animate-[fade-in_0.6s_0.3s_ease-out_both] text-center">
+              {t('home.hero.subtitle')}
             </p>
-            <div className="flex gap-3 flex-wrap animate-[fade-in-up_0.5s_0.5s_ease-out_both]">
-              <a
-                href="https://apps.apple.com"
-                target="_blank"
+            <div className="flex gap-2 flex-wrap animate-[fade-in-up_0.5s_0.5s_ease-out_both] items-center justify-center">
+              <AppButtonLink
+                href="/guide"
                 rel="noopener noreferrer"
-                className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-accent text-white font-medium hover:opacity-90 transition-opacity"
+                className="rounded-md!"
+                size="lg"
               >
-                <Download className="size-5" />
-                {t('hero.cta')}
-              </a>
-              <button
-                type="button"
-                onClick={() => document.getElementById('features')?.scrollIntoView({ behavior: 'smooth' })}
-                className="inline-flex items-center gap-2 px-6 py-3 rounded-xl border border-accent text-accent font-medium hover:bg-accent/5 transition-colors cursor-pointer"
-              >
-                {t('hero.learnMore')}
-                <ArrowDown className="size-4" />
-              </button>
-            </div>
-          </div>
+                <Book className="size-5" />
+                {t('nav.guide')}
+              </AppButtonLink>
 
-          <div className="flex justify-center animate-[fade-in-right_0.8s_0.2s_ease-out_both]">
-            <div className="w-full max-w-md aspect-4/3 rounded-2xl bg-linear-to-br from-indigo-200 via-indigo-300 to-indigo-400 dark:from-indigo-900 dark:via-indigo-800 dark:to-indigo-700 flex flex-col items-center justify-center shadow-2xl">
-              <Layers className="size-16 text-indigo-700 dark:text-indigo-300" />
-              <span className="mt-2 text-sm text-indigo-600/70 dark:text-indigo-300/70">
-                {t('hero.appPreview')}
-              </span>
+              <AppButton
+                variant="outline"
+                size="lg"
+                className="rounded-md!"
+                onClick={() => document.getElementById('features')?.scrollIntoView({ behavior: 'smooth' })}
+              >
+                {t('home.hero.learnMore')}
+                <ArrowDown className="size-4" />
+              </AppButton>
             </div>
           </div>
         </div>
@@ -112,9 +106,9 @@ export default function HomePage() {
       {/* About Section */}
       <section className="py-16 md:py-24 max-w-content px-4 md:px-2 mx-auto">
         <AnimatedSection className="text-center max-w-3xl mx-auto">
-          <h2 className="text-3xl md:text-4xl font-bold mb-4 ">{t('about.title')}</h2>
+          <h2 className="text-3xl md:text-4xl font-bold mb-4 ">{t('home.about.title')}</h2>
           <p className="text-gray-600 dark:text-gray-400 leading-relaxed text-lg">
-            {t('about.description')}
+            {t('home.about.description')}
           </p>
         </AnimatedSection>
       </section>
@@ -122,7 +116,7 @@ export default function HomePage() {
       {/* Features Section */}
       <section id="features" className="py-16 md:py-24 max-w-content px-4 md:px-2 mx-auto">
         <AnimatedSection className="text-center mb-12">
-          <h2 className="text-3xl md:text-4xl font-bold">{t('features.sectionTitle')}</h2>
+          <h2 className="text-3xl md:text-4xl font-bold">{t('home.features.sectionTitle')}</h2>
         </AnimatedSection>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
           {features.map((feature, i) => (
@@ -132,10 +126,10 @@ export default function HomePage() {
                   <feature.icon className="size-7" />
                 </div>
                 <h3 className="text-lg font-semibold mb-2">
-                  {t(`features.${feature.key}.title` as 'features.verified.title')}
+                  {t(`home.features.${feature.key}.title` as 'home.features.verified.title')}
                 </h3>
                 <p className="text-sm text-gray-600 dark:text-gray-400 leading-relaxed">
-                  {t(`features.${feature.key}.description` as 'features.verified.description')}
+                  {t(`home.features.${feature.key}.description` as 'home.features.verified.description')}
                 </p>
               </div>
             </AnimatedSection>
@@ -146,7 +140,7 @@ export default function HomePage() {
       {/* How It Works Section */}
       <section className="py-16 md:py-24 max-w-content px-4 md:px-2 mx-auto">
         <AnimatedSection className="text-center mb-12">
-          <h2 className="text-3xl md:text-4xl font-bold">{t('howItWorks.sectionTitle')}</h2>
+          <h2 className="text-3xl md:text-4xl font-bold">{t('home.howItWorks.sectionTitle')}</h2>
         </AnimatedSection>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
           {steps.map((step, i) => (
@@ -156,10 +150,10 @@ export default function HomePage() {
                   <step.icon className="size-12 opacity-60" />
                 </div>
                 <h3 className="text-xl font-semibold mb-2">
-                  {t(`howItWorks.${step.key}.title` as 'howItWorks.step1.title')}
+                  {t(`home.howItWorks.${step.key}.title` as 'home.howItWorks.step1.title')}
                 </h3>
                 <p className="text-gray-600 dark:text-gray-400 leading-relaxed max-w-sm mx-auto">
-                  {t(`howItWorks.${step.key}.description` as 'howItWorks.step1.description')}
+                  {t(`home.howItWorks.${step.key}.description` as 'home.howItWorks.step1.description')}
                 </p>
               </div>
             </AnimatedSection>
@@ -170,7 +164,7 @@ export default function HomePage() {
             href="/guide/background/read-more"
             className="inline-flex items-center gap-1 font-semibold hover:gap-2 transition-all"
           >
-            {t('howItWorks.readMore')}
+            {t('home.howItWorks.readMore')}
             <ArrowRight className="size-4" />
           </AppLink>
         </AnimatedSection>
@@ -179,9 +173,9 @@ export default function HomePage() {
       {/* CTA Section */}
       <section className="py-16 md:py-24">
         <AnimatedSection className="text-center max-w-lg mx-auto px-4 md:px-2">
-          <h2 className="text-3xl md:text-4xl font-bold mb-4">{t('cta.title')}</h2>
+          <h2 className="text-3xl md:text-4xl font-bold mb-4">{t('home.cta.title')}</h2>
           <p className="text-gray-600 dark:text-gray-400 leading-relaxed mb-8">
-            {t('cta.subtitle')}
+            {t('home.cta.subtitle')}
           </p>
           <a
             href="https://apps.apple.com"
@@ -190,7 +184,7 @@ export default function HomePage() {
             className="inline-flex items-center gap-2 px-8 py-3.5 rounded-xl bg-accent text-white font-medium text-lg hover:opacity-90 transition-opacity"
           >
             <Download className="size-5" />
-            {t('cta.button')}
+            {t('home.cta.button')}
           </a>
         </AnimatedSection>
       </section>
