@@ -37,14 +37,14 @@ export default function DecksCard({
         <Card.Content className="mt-2">
           <div className="flex gap-1 text-muted text-xs items-center font-bold ">
             <span>{'Field'}: </span>
-            {Array.isArray(deck.field) ? deck.field.map((e, index)=>{
+            {Array.isArray(deck.fields) ? deck.fields.map((e, index)=>{
               return (
                 <Chip key={index} size="sm">
                   {e}
                 </Chip>
               )
             }) : (
-              <Chip size="sm">{deck.field}</Chip>
+              <Chip size="sm">{deck.fields}</Chip>
             )}
           </div>
           <Card.Description className="flex gap-1 text-xs items-center">

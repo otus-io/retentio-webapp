@@ -4,7 +4,6 @@ import { Deck } from '@/modules/decks/decks.schema'
 import { useTranslations } from 'next-intl'
 import { Breadcrumbs } from '@heroui/react'
 import { Home, Info, Plus } from 'lucide-react'
-import { useMemo } from 'react'
 import DecksCard from '@/components/decks/DecksCard'
 import { AppButtonLink } from '@/components/app/AppButtonLink'
 import AppLink from '@/components/app/AppLink'
@@ -16,13 +15,7 @@ export default function DecksList({
 }) {
   const t = useTranslations()
 
-  const totalCards = useMemo(()=>{
-    return data.reduce((sum, deck) => sum + deck.stats.cards_count, 0)
-  }, [data])
-
-
   return (
-
     <div className="py-4 max-w-content mx-auto px-3.5 min-h-[calc(100vh-19.375rem)] md:min-h-[calc(100vh-16.625rem)]">
       <div className=" max-w-content w-full md:px-6 mx-auto">
         {/* Breadcrumbs */}
@@ -44,23 +37,12 @@ export default function DecksList({
           <div className="flex items-center gap-2">
             <div className="flex items-center gap-1">
               <span className="text-foreground text-base font-semibold">
-                {t('decks.all-decks')}
+                {t('decks.all-decks')}({data.length})
               </span>
-
-              <AppLink className="hover:text-accent" href={'/guide/getting-started/decks'} title="What`s Deck?">
-                <sup>
-                  <Info className="size-3" />
-                </sup>
+              <AppLink className="hover:text-accent ml-2" href={'/guide/getting-started/decks'} title="What`s Deck?">
+                <Info className="size-4" />
               </AppLink>
             </div>
-            <span className="px-2 py-0.5 rounded-full bg-default/50 text-xs font-medium">
-              {data.length}
-            </span>
-            {totalCards > 0 && (
-              <span className="text-sm text-muted">
-                ({totalCards} cards)
-              </span>
-            )}
           </div>
 
           {/* Right side: Sort, layout, search */}
