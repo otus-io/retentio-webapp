@@ -38,7 +38,7 @@ export default function DecksForm({
       return {
         data: {
           name: data.name,
-          fields: data.field,
+          fields: data.fields,
           rate: data.rate,
           submissionId: '',
         },
@@ -53,7 +53,7 @@ export default function DecksForm({
         },
       }
     }
-  }, [data?.field, data?.name, data?.rate, type])
+  }, [data?.fields, data?.name, data?.rate, type])
 
 
   const [state, action, isPending] = useActionState(actionHandler, defaultState)

@@ -19,7 +19,7 @@ export interface Deck {
   /**
    * 字段列表
    */
-  field: string[] | string;
+  fields: string[];
   /**
    * 评分
    */
