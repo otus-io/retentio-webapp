@@ -605,6 +605,13 @@
 | `limit`  | 每页条数。非法或非正数→默认；超过最大→**200**。    |
 | `offset` | 按词条 **`id` 升序**排序后跳过的条数。负数→**0**。 |
 
+**请求示例**（首页；省略查询串则使用默认 `limit` 与 `offset`）：
+
+```http
+GET /api/decks/{id}/facts?limit=50&offset=0
+Authorization: Bearer <token>
+```
+
 **响应示例**（两条例词、首页；URL 不传参数时 `meta` 同样为默认 `limit`/`offset`）：
 
 ```json

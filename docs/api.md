@@ -598,6 +598,13 @@ Each fact gets one card with front=0/back=1 and one with front=1/back=0. To add 
 | `limit`  | Page size. Invalid or non-positive values → default **50**; above max → **200**. |
 | `offset` | Facts to skip after stable sort by fact **`id`**. Negative → **0**.              |
 
+**Request example** (first page; omit query string to use default `limit` and `offset`):
+
+```http
+GET /api/decks/{id}/facts?limit=50&offset=0
+Authorization: Bearer <token>
+```
+
 **Response example** (two facts on first page; same `meta` shape when `limit`/`offset` are omitted from the URL):
 
 ```json
