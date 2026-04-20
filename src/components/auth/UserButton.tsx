@@ -60,7 +60,7 @@ function UserAvatar({ user }: { user: ProfileResponseDTO }) {
             {user.data.username.charAt(0).toUpperCase()}
           </AppAvatar>
         </Dropdown.Trigger>
-        <Dropdown.Popover>
+        <Dropdown.Popover isNonModal>
           <Dropdown.Menu onAction={handleAction}>
             <Dropdown.Item id="profile">
               <Label>个人中心</Label>
