@@ -26,13 +26,16 @@ export function formatErrorMessage(error: unknown, defaultError: string = ''): s
   if (typeof error === 'string') {
     return error
   }
+  const errorMessageKeys = ['message', 'msg']
+  for (const key of errorMessageKeys) {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    if (key in (error as any) && typeof (error as any)[key] === 'string') {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      return (error as any)[key]
+    }
+  }
   if (defaultError) {
     return defaultError
-  }
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  if ('message' in (error as any) && typeof (error as any).message === 'string') {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    return (error as any).message
   }
   const msg = JSON.stringify(error) || '未知错误'
   return msg
