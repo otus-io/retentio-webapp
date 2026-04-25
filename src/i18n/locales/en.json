@@ -208,6 +208,15 @@
     "change-theme": "Change theme",
     "logout": "Logout"
   },
+  "facts": {
+    "title": "Facts",
+    "create": "Add Fact",
+    "empty": "This deck has no facts yet",
+    "columns": {
+      "tags": "Tags",
+      "actions": "Actions"
+    }
+  },
   "decks": {
     "created-at": "Created At",
     "updated-at": "Updated At",
