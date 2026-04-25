@@ -1,11 +1,9 @@
-
 'use server'
 
 import { getToken } from '@/lib/token.server'
+import { formatErrorMessage } from '@/utils/format'
 
 const BASE_URL = 'https://api.retentio.app:8443'
-
-
 
 export async function request<T>(
   endpoint: string,
@@ -16,8 +14,6 @@ export async function request<T>(
     'Content-Type': 'application/json',
     ...((options.headers as Record<string, string>) || {}),
   }
-
-
   if (token) {
     headers['Authorization'] = `Bearer ${token}`
   }
@@ -25,10 +21,16 @@ export async function request<T>(
     ...options,
     headers,
   })
-  if (!res.ok) {
-    const text = await res.json().catch(() => 'Unknown error')
-    throw new Error(text)
+  const blob = await res.blob()
+  const text = await blob.text()
+  let json = null
+  if (blob.type === 'application/json') {
+    json = JSON.parse(text)
   }
-  return res.json()
+  if (!res.ok) {
+    // 如果有 json 错误信息，优先使用它，否则使用纯文本错误信息，最后使用默认错误信息
+    throw new Error(formatErrorMessage(json ?? text))
+  }
+  return json
 }
 

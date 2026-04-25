@@ -5,7 +5,8 @@
     "guide": "指南",
     "dashboard": "控制台",
     "profile": "个人资料",
-    "library": "资料库"
+    "library": "资料库",
+    "decks": "卡组"
   },
   "profile": {
     "title": "个人资料",
@@ -151,7 +152,17 @@
   },
   "common": {
     "login": "登录",
-    "logout": "退出登录"
+    "logout": "退出登录",
+    "no-data": "没有更多数据了",
+    "search": "搜索",
+    "delete": "删除",
+    "edit": "编辑",
+    "tips": "提示",
+    "delete-confirm": "确认删除吗？删除后将无法恢复，请谨慎操作。",
+    "confirm": "确认",
+    "cancel": "取消",
+    "remove": "移除",
+    "submit": "提交"
   },
   "guide-sidebar": {
     "menu": "菜单",
@@ -196,5 +207,30 @@
     "change-language": "更改语言",
     "change-theme": "更改主题",
     "logout": "退出登录"
+  },
+  "decks": {
+    "created-at": "创建日期",
+    "updated-at": "更新日期",
+    "all-decks": "所有卡组",
+    "sort-by": "排序方式",
+    "layout-grid": "网格",
+    "layout-list": "列表",
+    "create-deck": "创建卡组",
+    "update-deck": "更新卡组",
+    "desc": "管理你的卡组",
+    "tips": "卡组是什么？",
+    "name": "名称",
+    "due": "待复习",
+    "progress": "进度",
+    "fields": "字段",
+    "rate": "频率",
+    "facts": "词条",
+    "cards": "卡片",
+    "unseen": "未学习",
+    "reviewed": "已复习",
+    "hidden": "已隐藏",
+    "new-today": "今日新增",
+    "last-review": "上次复习",
+    "add-field": "添加字段"
   }
 }

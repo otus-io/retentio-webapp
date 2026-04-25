@@ -1,0 +1,21 @@
+import AppError from '@/components/app/AppError'
+import { getAllDecksService } from '@/modules/decks/decks.service'
+import DecksList from '@/components/decks/DecksList'
+import { getTranslations } from 'next-intl/server'
+import { Metadata } from 'next'
+
+export default async function Page() {
+  const { data, success, message } = await getAllDecksService()
+  if(!success){
+    return <AppError error={message} />
+  }
+  return <DecksList data={data?.decks || []} />
+}
+
+export async function generateMetadata() {
+  const t = await getTranslations()
+  return {
+    title: t('nav.decks'),
+    description: t('decks.desc'),
+  } satisfies Metadata
+}
