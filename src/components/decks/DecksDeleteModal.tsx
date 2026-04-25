@@ -2,6 +2,7 @@
 
 import { deleteDeckAction } from '@/modules/decks/decks.action'
 import { AlertDialog, Button, UseOverlayStateReturn } from '@heroui/react'
+import { useTranslations } from 'next-intl'
 import { useActionState, useEffect } from 'react'
 
 
@@ -13,6 +14,7 @@ export default function DecksDeleteModal({
   deckId,
   ...state
 }: DecksDeleteModalProps) {
+  const t = useTranslations()
   const deleteDeck = deleteDeckAction.bind(null, deckId)
   const [_state, action, isPending] = useActionState(deleteDeck, null)
   useEffect(()=>{
@@ -27,20 +29,20 @@ export default function DecksDeleteModal({
           <AlertDialog.CloseTrigger />
           <AlertDialog.Header>
             <AlertDialog.Icon status="danger" />
-            <AlertDialog.Heading>提示</AlertDialog.Heading>
+            <AlertDialog.Heading>{t('common.tips')}</AlertDialog.Heading>
           </AlertDialog.Header>
           <AlertDialog.Body>
             <p>
-              确认删除吗？删除后将无法恢复，请谨慎操作。
+              {t('common.delete-confirm')}
             </p>
           </AlertDialog.Body>
           <AlertDialog.Footer>
             <Button slot="close" variant="tertiary">
-              Cancel
+              {t('common.cancel')}
             </Button>
             <form action={action}>
               <Button slot="close" isPending={isPending} variant="danger" type="submit">
-                确认删除
+                {t('common.confirm')}
               </Button>
             </form>
           </AlertDialog.Footer>
