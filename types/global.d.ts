@@ -185,6 +185,18 @@ declare global {
     meta: Meta & BaseApiResultMetaWithMsg
   }
 
+
+  interface PaginationMeta {
+    msg: string;
+    count: number;
+    has_more: boolean;
+    limit: number;
+    offset: number;
+    total: number;
+  }
+
+  type PaginationResult<T extends BaseApiResultData> = BaseApiResult<T, PaginationMeta>
+
   type KeyOfStringOrNumber<T> = {
     [K in keyof T]: T[K] extends string | number ? K : never
   }[keyof T]
@@ -196,6 +208,7 @@ declare global {
     pageSize: number
     totalPages: number
   }
+
 
   type PaginationParams<T> = {
     pageSize?: number
