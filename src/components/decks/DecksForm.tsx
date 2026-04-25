@@ -9,6 +9,7 @@ import clsx from 'clsx'
 import { ChevronDown, ChevronUp } from 'lucide-react'
 import { createDeckAction, updateDeckAction } from '@/modules/decks/decks.action'
 import { Deck } from '@/modules/decks/decks.schema'
+import { useTranslations } from 'next-intl'
 
 
 type DecksCreateFormProps = {
@@ -48,7 +49,7 @@ export default function DecksForm({
         data: {
           name: '',
           fields: ['', ''],
-          rate: '',
+          rate: '20',
           submissionId: '',
         },
       }
@@ -57,7 +58,6 @@ export default function DecksForm({
 
 
   const [state, action, isPending] = useActionState(actionHandler, defaultState)
-  console.log({ state })
 
   return (
     <DecksFormInner
@@ -82,14 +82,15 @@ function DecksFormInner({
   isPending: boolean,
   type: DecksCreateFormProps['type']
 }) {
+
+  const t = useTranslations()
+
   const [fields, setFields] = useState<{ name: string, id: string }[]>(() => {
     if (state?.data?.fields && Array.isArray(state.data.fields) && state.data.fields.length >= 2) {
       return state.data.fields.map((f: string) => ({ name: f, id: crypto.randomUUID() }))
     }
     return Array.from({ length: 2 }).map(() => ({ name: '', id: crypto.randomUUID() }))
   })
-
-  console.log(fields)
 
   function addField() {
     setFields((prev) => [...prev, { name: '', id: crypto.randomUUID() }])
@@ -102,7 +103,7 @@ function DecksFormInner({
       <div className="max-w-lg mx-auto space-y-4 py-8 px-2 sm:p-0">
         <Card>
           <Card.Header>
-            <Card.Title> {type==='create'?' Create Your Deck':'Update Your Deck'}</Card.Title>
+            <Card.Title>{type==='create'?t('decks.create-deck'):t('decks.update-deck')}</Card.Title>
           </Card.Header>
           <Form
             action={action}
@@ -110,10 +111,9 @@ function DecksFormInner({
           >
             <Card.Content>
               <AppInput
-                label={'decks.name'}
+                label={t('decks.name')}
                 name="name"
                 isRequired
-                placeholder={'decks.name-placeholder'}
                 variant="secondary"
                 defaultValue={state?.data?.name}
               />
@@ -125,7 +125,6 @@ function DecksFormInner({
                       name="fields"
                       aria-label="filed"
                       isRequired
-                      placeholder={`Enter field ${index + 1}`}
                       variant="secondary"
                       className={'flex-1'}
                       defaultValue={field.name}
@@ -138,7 +137,7 @@ function DecksFormInner({
                           setFields((prev) => prev.filter((f) => f.id !== field.id))
                         }}
                       >
-                        remove
+                        {t('common.remove')}
                       </AppButton>
                     </div>
                   </div>
@@ -149,7 +148,7 @@ function DecksFormInner({
                 variant="secondary"
                 onClick={addField}
               >
-                add field
+                {t('decks.add-field')}
               </AppButton>
               <NumberField
                 formatOptions={{
@@ -162,13 +161,11 @@ function DecksFormInner({
                 variant="secondary"
                 isRequired
               >
-                <Label>Rate (1–1000)</Label>
+                <Label>{t('decks.rate')} (1–1000)</Label>
                 <NumberField.Group
                   className={'grid-cols-[1fr_auto]'}
                 >
-                  <NumberField.Input
-                    placeholder="please enter rate"
-                  />
+                  <NumberField.Input />
                   <div className="flex h-[calc(100%+2px)] flex-col border-l border-field-placeholder/15">
                     <NumberField.IncrementButton className="-ml-px flex h-1/2 w-6 flex-1 rounded-none border-r-0 border-l-0 pt-0.5 text-sm">
                       <ChevronUp className="size-3" />
@@ -187,7 +184,7 @@ function DecksFormInner({
                 type="submit"
                 size="lg"
               >
-                submit
+                {t('common.submit')}
               </AppButton>
             </Card.Footer>
           </Form>

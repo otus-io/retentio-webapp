@@ -1,5 +1,7 @@
 import DecksForm from '@/components/decks/DecksForm'
 import { getDeckService } from '@/modules/decks/decks.service'
+import { Metadata } from 'next'
+import { getTranslations } from 'next-intl/server'
 import { notFound } from 'next/navigation'
 
 export default async function Page(props: PageProps<'/decks/[id]/edit'>) {
@@ -8,6 +10,13 @@ export default async function Page(props: PageProps<'/decks/[id]/edit'>) {
   if(!data.success){
     notFound()
   }
-  console.log(data.data)
   return <DecksForm type="update" data={data.data} />
+}
+
+
+export async function generateMetadata() {
+  const t = await getTranslations()
+  return {
+    title: t('decks.update-deck'),
+  } satisfies Metadata
 }
