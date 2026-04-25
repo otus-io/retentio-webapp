@@ -2,7 +2,7 @@
 import { Deck } from '@/modules/decks/decks.schema'
 import { Card, Chip, Disclosure, Dropdown, Label, Separator, useOverlayState } from '@heroui/react'
 import { useRouter } from 'next/navigation'
-import { Key, useState } from 'react'
+import { Key, useMemo, useState } from 'react'
 import DecksIconLabel from '@/components/decks/DecksLabel'
 import DecksDeleteModal from '@/components/decks/DecksDeleteModal'
 interface DecksDetailProps {
@@ -26,19 +26,30 @@ import {
   ChevronUp,
 } from 'lucide-react'
 import clsx from 'clsx'
-// 请确保导入了你的其他 UI 组件 (Card, Dropdown, Label, Chip, Separator 等)
+import { useTranslations } from 'next-intl'
 
 export default function DecksDetail({
   deck,
 }: DecksDetailProps) {
   const router = useRouter()
   const state = useOverlayState()
+  const [isExpanded, setIsExpanded] = useState(false)
+  const t = useTranslations()
 
-  // 避免分母为 0 的 NaN 情况
   const progress = deck.stats.cards_count > 0
     ? ((deck.stats.reviewed_cards / deck.stats.cards_count) * 100).toFixed(2)
     : '0.00'
-  const [isExpanded, setIsExpanded] = useState(true)
+
+
+  const last_reviewed_at = useMemo(()=>{
+    if(deck.stats.last_reviewed_at){
+      const date = new Date(deck.stats.last_reviewed_at*1000)
+      return date.toLocaleString()
+    }
+    return 'never'
+  }, [deck.stats.last_reviewed_at])
+
+
   function handleAction(id: Key) {
     switch (id) {
       case 'edit':
@@ -68,13 +79,13 @@ export default function DecksDetail({
                   <Dropdown.Item id="edit" textValue="edit">
                     <div className="flex items-center gap-2">
                       <Pencil className="size-3.5 text-muted-foreground" />
-                      <Label>Edit</Label>
+                      <Label>{t('common.edit')}</Label>
                     </div>
                   </Dropdown.Item>
                   <Dropdown.Item id="delete" textValue="delete" variant="danger">
                     <div className="flex items-center text-danger gap-2">
                       <Trash2 className="size-3.5" />
-                      <Label>Delete</Label>
+                      <Label>{t('common.delete')}</Label>
                     </div>
                   </Dropdown.Item>
                 </Dropdown.Menu>
@@ -91,7 +102,7 @@ export default function DecksDetail({
           <div className="flex flex-col gap-2">
             {/* Fields 区域：加了 flex-wrap 防止标签过多溢出 */}
             <DecksIconLabel icon={Type}>
-              <span className="text-muted-foreground mr-1">Fields:</span>
+              <span className="text-muted-foreground mr-1">{t('decks.fields')}:</span>
               <div className=" flex-wrap items-center gap-1.5 inline-flex">
                 {deck.fields.map((e, index) => (
                   <Chip className="font-medium bg-secondary/50" key={index} size="sm">
@@ -102,19 +113,19 @@ export default function DecksDetail({
             </DecksIconLabel>
 
             {/* 核心指标 */}
-            <div className="flex flex-wrap items-center gap-x-6 gap-y-2">
+            <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
               <DecksIconLabel icon={History}>
-                <span className="text-muted-foreground">Rate:</span>
+                <span className="text-muted-foreground">{t('decks.rate')}:</span>
                 <span className="font-medium text-foreground ml-1">{deck.rate}</span>
               </DecksIconLabel>
 
               <DecksIconLabel icon={ListTodo}>
-                <span className="text-muted-foreground">Due:</span>
+                <span className="text-muted-foreground">{t('decks.due')}:</span>
                 <span className="font-medium text-foreground ml-1">{deck.stats.due_cards}</span>
               </DecksIconLabel>
 
               <DecksIconLabel icon={ChartPie}>
-                <span className="text-muted-foreground">Progress:</span>
+                <span className="text-muted-foreground">{t('decks.progress')}:</span>
                 <span className="font-medium text-foreground ml-1">{progress}%</span>
               </DecksIconLabel>
             </div>
@@ -122,44 +133,44 @@ export default function DecksDetail({
 
           <Disclosure isExpanded={isExpanded} onExpandedChange={setIsExpanded}>
             <Disclosure.Content>
-              <Disclosure.Body className="flex flex-col gap-1">
-                <div className="flex flex-col gap-1">
-                  <Separator className="bg-border/60" />
-                  <div className="grid grid-cols-2 gap-x-4 gap-y-1">
+              <Disclosure.Body className="flex flex-col gap-1 min-w-0">
+                <div className="flex flex-col gap-1 min-w-0">
+                  <Separator className="bg-border/60 mb-3" />
+                  <div className="grid grid-cols-2 gap-x-4 gap-y-2">
                     <DecksIconLabel icon={Brain}>
-                      <span className="text-muted-foreground">Facts:</span>
+                      <span className="text-muted-foreground">{t('decks.facts')}:</span>
                       <span className="font-medium text-foreground ml-1">{deck.stats.facts_count}</span>
                     </DecksIconLabel>
 
                     <DecksIconLabel icon={Layers}>
-                      <span className="text-muted-foreground">Cards:</span>
+                      <span className="text-muted-foreground">{t('decks.cards')}:</span>
                       <span className="font-medium text-foreground ml-1">{deck.stats.cards_count}</span>
                     </DecksIconLabel>
 
                     <DecksIconLabel icon={Inbox}>
-                      <span className="text-muted-foreground">Unseen:</span>
+                      <span className="text-muted-foreground">{t('decks.unseen')}:</span>
                       <span className="font-medium text-foreground ml-1">{deck.stats.unseen_cards}</span>
                     </DecksIconLabel>
 
                     <DecksIconLabel icon={CheckCircle2}>
-                      <span className="text-muted-foreground">Reviewed:</span>
+                      <span className="text-muted-foreground">{t('decks.reviewed')}:</span>
                       <span className="font-medium text-foreground ml-1">{deck.stats.reviewed_cards}</span>
                     </DecksIconLabel>
 
                     <DecksIconLabel icon={EyeOff}>
-                      <span className="text-muted-foreground">Hidden:</span>
+                      <span className="text-muted-foreground">{t('decks.hidden')}:</span>
                       <span className="font-medium text-foreground ml-1">{deck.stats.hidden_cards}</span>
                     </DecksIconLabel>
 
+
                     <DecksIconLabel icon={Sparkles}>
-                      <span className="text-muted-foreground">New today:</span>
+                      <span className="text-muted-foreground">{t('decks.new-today')}:</span>
                       <span className="font-medium text-foreground ml-1">{deck.stats.new_cards_today}</span>
                     </DecksIconLabel>
 
-
-                    <DecksIconLabel icon={Clock}>
-                      <span className="text-muted-foreground">Last review:</span>
-                      <span className="font-medium text-foreground ml-1">{deck.stats.last_reviewed_at || 'Never'}</span>
+                    <DecksIconLabel icon={Clock} className="col-span-2">
+                      <span className="text-muted-foreground">{t('decks.last-review')}:</span>
+                      <span className="font-medium text-foreground ml-1">{last_reviewed_at}</span>
                     </DecksIconLabel>
                   </div>
                 </div>
@@ -173,7 +184,6 @@ export default function DecksDetail({
           </button>
         </Card.Content>
       </Card>
-
       <DecksDeleteModal {...state} deckId={deck.id} />
     </>
   )
