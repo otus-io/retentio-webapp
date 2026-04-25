@@ -152,7 +152,17 @@
   },
   "common": {
     "login": "Login",
-    "logout": "Logout"
+    "logout": "Logout",
+    "no-data": "No data",
+    "search": "Search",
+    "delete": "Delete",
+    "edit": "Edit",
+    "tips": "Tips",
+    "delete-confirm": "Are you sure you want to delete this item? This action cannot be undone.",
+    "confirm": "Confirm",
+    "cancel": "Cancel",
+    "remove": "Remove",
+    "submit": "Submit"
   },
   "guide-sidebar": {
     "menu": "Menu",
@@ -205,6 +215,22 @@
     "sort-by": "Sort by",
     "layout-grid": "Grid",
     "layout-list": "List",
-    "create-deck": "Create Deck"
+    "create-deck": "Create Deck",
+    "update-deck": "Update Deck",
+    "desc": "Manage your decks",
+    "tips": "What`s Deck?",
+    "due": "Due",
+    "name": "Name",
+    "progress": "Progress",
+    "fields": "Fields",
+    "rate": "Rate",
+    "facts": "Facts",
+    "cards": "Cards",
+    "unseen": "Unseen",
+    "reviewed": "Reviewed",
+    "hidden": "Hidden",
+    "new-today": "New today",
+    "last-review": "Last review",
+    "add-field": "Add field"
   }
 }
