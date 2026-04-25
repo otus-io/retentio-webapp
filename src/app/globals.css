@@ -15,6 +15,10 @@
 @theme inline {
   --accent: #2563eb;
   --container-content: 75rem;
+
+   /* Border Radius */
+  --radius: 0.125rem;
+  --field-radius: 0.25rem;
 }
 
 :root.dark {
