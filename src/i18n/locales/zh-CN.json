@@ -208,6 +208,15 @@
     "change-theme": "更改主题",
     "logout": "退出登录"
   },
+  "facts": {
+    "title": "词条列表",
+    "create": "添加词条",
+    "empty": "该卡组还没有词条",
+    "columns": {
+      "tags": "标签",
+      "actions": "操作"
+    }
+  },
   "decks": {
     "created-at": "创建日期",
     "updated-at": "更新日期",
