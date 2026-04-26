@@ -20,15 +20,19 @@ export default function HighlightedText({
 
   return (
     <>
-      {parts.map((part, i) =>
-        // 验证当前分片是否属于我们需要高亮的字符集
-        regex.test(part) ? (
+    <>
+      {parts.map((part, i) => {
+        // Reset regex lastIndex before each test to avoid stateful regex bugs
+        const shouldHighlight = chars.includes(part)
+        return shouldHighlight ? (
           <mark key={i} className="text-white bg-accent">
             {part}
           </mark>
         ) : (
           <span key={i}>{part}</span>
-        ))}
+        )
+      })}
+    </>
     </>
   )
 }
