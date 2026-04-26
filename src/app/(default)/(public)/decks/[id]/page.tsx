@@ -5,7 +5,7 @@ import { Metadata } from 'next'
 import { getTranslations } from 'next-intl/server'
 import { notFound } from 'next/navigation'
 
-export default async function Page(props: PageProps<'/decks/[id]/edit'>) {
+export default async function Page(props: PageProps<'/decks/[id]'>) {
   const id = (await props.params).id
   const data = await getDeckService(id)
   if(!data.success){
