@@ -20,7 +20,6 @@ export default function HighlightedText({
 
   return (
     <>
-    <>
       {parts.map((part, i) => {
         // Reset regex lastIndex before each test to avoid stateful regex bugs
         const shouldHighlight = chars.includes(part)
@@ -32,7 +31,6 @@ export default function HighlightedText({
           <span key={i}>{part}</span>
         )
       })}
-    </>
     </>
   )
 }
