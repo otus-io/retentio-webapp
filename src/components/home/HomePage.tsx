@@ -82,7 +82,6 @@ export default function HomePage() {
               <AppButtonLink
                 href="/guide"
                 rel="noopener noreferrer"
-                className="rounded-md!"
                 size="lg"
               >
                 <Book className="size-5" />
@@ -92,7 +91,6 @@ export default function HomePage() {
               <AppButton
                 variant="outline"
                 size="lg"
-                className="rounded-md!"
                 onClick={() => document.getElementById('features')?.scrollIntoView({ behavior: 'smooth' })}
               >
                 {t('home.hero.learnMore')}
