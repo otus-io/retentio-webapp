@@ -32,57 +32,56 @@ export default function DecksList({
 
   return (
     <div className="py-4 max-w-content mx-auto px-3.5 min-h-[calc(100vh-19.375rem)] md:min-h-[calc(100vh-16.625rem)]">
-      <div className=" max-w-content w-full md:px-6 mx-auto">
-        <div className="md:flex gap-2 items-center mb-2">
-          <div className="flex flex-1 items-center gap-2  pl-2  ">
-            <div className="flex items-center gap-1">
-              <span className="text-foreground text-base font-semibold">
-                {t('decks.all-decks')} ({data.length})
-              </span>
-              <Tooltip delay={0}>
-                <Tooltip.Trigger>
-                  <AppLink className="hover:text-accent" href={'/guide/getting-started/decks'}>
-                    <CircleQuestionMark className="size-4" />
-                  </AppLink>
-                </Tooltip.Trigger>
-                <Tooltip.Content>
-                  <p>{t('decks.tips')}</p>
-                </Tooltip.Content>
-              </Tooltip>
-            </div>
-          </div>
 
-          <div className="flex mt-2 md:mt-0 md:ml-auto items-center gap-2 min-w-0 ml-0 ">
-            <DecksSearch
-              value={keywords}
-              setValue={setKeywords}
-            />
-            <DeckCreateButton />
+      <div className="md:flex gap-2 items-center mb-2">
+        <div className="flex flex-1 items-center gap-2  pl-1  ">
+          <div className="flex items-center gap-1">
+            <span className="text-foreground text-base font-semibold">
+              {t('decks.all-decks')} ({data.length})
+            </span>
+            <Tooltip delay={0}>
+              <Tooltip.Trigger>
+                <AppLink className="hover:text-accent" href={'/guide/getting-started/decks'}>
+                  <CircleQuestionMark className="size-4" />
+                </AppLink>
+              </Tooltip.Trigger>
+              <Tooltip.Content>
+                <p>{t('decks.tips')}</p>
+              </Tooltip.Content>
+            </Tooltip>
           </div>
         </div>
 
-        {
-          results.length === 0 ? (
-            <div className="flex flex-col items-center justify-center gap-4 py-10 text-muted">
-              <FolderOpen size={48} />
-              <p>{t('common.no-data')}</p>
-            </div>
-          ): (
-            <div className="grid gap-2 md:grid-cols-2 lg:grid-cols-3">
-              {
-                results.map((item)=>{
-                  return (
-                    <DecksCard
-                      highlight={deferredQuery}
-                      key={item.id}
-                      deck={item}
-                    />
-                  )
-                })
-              }
-            </div>
-          )}
+        <div className="flex mt-2 md:mt-0 md:ml-auto items-center gap-2 min-w-0 ml-0 ">
+          <DecksSearch
+            value={keywords}
+            setValue={setKeywords}
+          />
+          <DeckCreateButton />
+        </div>
       </div>
+
+      {
+        results.length === 0 ? (
+          <div className="flex flex-col items-center justify-center gap-4 py-10 text-muted">
+            <FolderOpen size={48} />
+            <p>{t('common.no-data')}</p>
+          </div>
+        ): (
+          <div className="grid gap-2 md:grid-cols-2 lg:grid-cols-3">
+            {
+              results.map((item)=>{
+                return (
+                  <DecksCard
+                    highlight={deferredQuery}
+                    key={item.id}
+                    deck={item}
+                  />
+                )
+              })
+            }
+          </div>
+        )}
     </div>
   )
 }

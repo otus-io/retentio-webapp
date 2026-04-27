@@ -1,6 +1,5 @@
 'use server'
 import DecksDetail from '@/components/decks/DecksDetail'
-import FactsPageList from '@/components/facts/FactsPageList'
 import { getDeckService } from '@/modules/decks/decks.service'
 import { getFactsPageService } from '@/modules/facts/facts.service'
 import { Metadata } from 'next'
@@ -23,15 +22,7 @@ export default async function Page(props: PageProps<'/decks/[id]'>) {
   }
 
   return (
-    <div className="mx-auto max-w-content py-4 gap-2 grid md:grid-cols-[auto_1fr] px-3.5 items-start">
-      <DecksDetail deck={data.data} />
-      <FactsPageList
-        facts={page.data.facts}
-        meta={page.meta}
-        deckId={id}
-        createHref={`/decks/${id}/facts/create`}
-      />
-    </div>
+    <DecksDetail deck={data.data} />
   )
 }
 
