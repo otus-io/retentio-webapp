@@ -3,7 +3,7 @@ import { revalidatePath } from 'next/cache'
 import { redirect } from 'next/navigation'
 import z from 'zod'
 import { formatErrorMessage, formDataToObject } from '@/utils/format'
-import { createFactsSchema, updateFactSchema } from '@/modules/facts/facts.schema'
+import { createFactsSchema, updateFactSchema, type Entry } from '@/modules/facts/facts.schema'
 import { createFactsService, deleteFactService, updateFactService } from '@/modules/facts/facts.service'
 
 /**
@@ -56,6 +56,26 @@ export const updateFactAction: ActionFunctionPayload<{ deckId: string; factId: s
   }
   revalidatePath(`/decks/${deckId}`)
   redirect(`/decks/${deckId}`)
+}
+
+/**
+ * 词条条目快速保存（供行内编辑使用）
+ */
+export async function updateFactEntriesAction(
+  deckId: string,
+  factId: string,
+  entries: Entry[],
+): Promise<{ success: true } | { error: string; success: false }> {
+  const result = updateFactSchema.safeParse({ entries })
+  if (!result.success) {
+    return { error: formatErrorMessage(result.error, 'updateFactEntriesAction validation failed'), success: false }
+  }
+  const res = await updateFactService(deckId, factId, result.data)
+  if (!res.success) {
+    return { error: res.message, success: false }
+  }
+  revalidatePath(`/decks/${deckId}/facts`)
+  return { success: true }
 }
 
 /**
