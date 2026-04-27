@@ -5,7 +5,6 @@ import { Pagination } from '@heroui/react'
 import useSearchParamsQuery from '@/hooks/useSearchParamsQuery'
 
 export interface TablePaginationProps {
-  pageSize: number
   totalPages: number
 }
 
