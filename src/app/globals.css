@@ -91,3 +91,7 @@ body {
    --cell-display: block;
 }
 
+
+.ag-cell-wrapper {
+  height: 100%;
+}
