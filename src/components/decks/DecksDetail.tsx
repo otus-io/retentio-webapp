@@ -1,15 +1,12 @@
 'use client'
 import { Deck } from '@/modules/decks/decks.schema'
-import { Card, Chip, Dropdown, Key, Label, useOverlayState } from '@heroui/react'
+import { Card, Chip } from '@heroui/react'
 import { useMemo } from 'react'
 import { motion } from 'framer-motion'
 import DecksIconLabel from '@/components/decks/DecksLabel'
-import DecksDeleteModal from '@/components/decks/DecksDeleteModal'
 import {
   ListTodo,
   ChartPie,
-  Pencil,
-  Trash2,
   History,
   Layers,
   Brain,
@@ -18,12 +15,10 @@ import {
   EyeOff,
   Sparkles,
   Clock,
-  EllipsisVertical,
-  BookA,
 } from 'lucide-react'
 import { useTranslations } from 'next-intl'
-import { useRouter } from 'next/navigation'
 import AppBreadcrumbs from '@/components/app/AppBreadcrumbs'
+import DecksAction from '@/components/decks/DecksAction'
 
 interface DecksDetailProps {
   deck: Deck
@@ -38,9 +33,7 @@ const containerVariants = {
 }
 
 export default function DecksDetail({ deck }: DecksDetailProps) {
-  const state = useOverlayState()
   const t = useTranslations()
-  const router = useRouter()
 
   const progress =
     deck.stats.cards_count > 0
@@ -55,20 +48,7 @@ export default function DecksDetail({ deck }: DecksDetailProps) {
     return 'never'
   }, [deck.stats.last_reviewed_at])
 
-  function handleAction(id: Key) {
-    switch (id) {
-      case 'edit':
-        router.push(`/decks/${deck.id}/edit`)
-        break
-      case 'facts':
-        router.push(`/decks/${deck.id}/facts`)
-        break
-      case 'delete':
-        state.open()
-        break
-      default:
-    }
-  }
+
 
   return (
     <div className="mx-auto grid w-full max-w-content items-start gap-4 px-4 py-6 sm:px-6 lg:px-8 xl:px-10">
@@ -95,33 +75,7 @@ export default function DecksDetail({ deck }: DecksDetailProps) {
                     </Chip>
                   ))}
                 </div>
-                <Dropdown className="">
-                  <Dropdown.Trigger className="ml-auto">
-                    <EllipsisVertical className="size-4  text-muted" />
-                  </Dropdown.Trigger>
-                  <Dropdown.Popover>
-                    <Dropdown.Menu onAction={handleAction}>
-                      <Dropdown.Item id="edit" textValue="edit">
-                        <div className="flex items-center gap-1">
-                          <Pencil className="size-3.5 text-muted-foreground" />
-                          <Label>{t('common.edit')}</Label>
-                        </div>
-                      </Dropdown.Item>
-                      <Dropdown.Item id="facts" textValue="facts" variant="default">
-                        <div className="flex items-center gap-1">
-                          <BookA className="size-3.5 text-muted-foreground" />
-                          <Label>{t('decks.facts')}</Label>
-                        </div>
-                      </Dropdown.Item>
-                      <Dropdown.Item id="delete" textValue="delete" variant="danger">
-                        <div className="flex items-center gap-1">
-                          <Trash2 className="size-3.5 text-danger" />
-                          <Label>{t('common.delete')}</Label>
-                        </div>
-                      </Dropdown.Item>
-                    </Dropdown.Menu>
-                  </Dropdown.Popover>
-                </Dropdown>
+                <DecksAction deck={deck} />
               </Card.Title>
             </div>
           </Card.Header>
@@ -188,7 +142,6 @@ export default function DecksDetail({ deck }: DecksDetailProps) {
           </Card.Content>
         </Card>
       </motion.div>
-      <DecksDeleteModal {...state} deckId={deck.id} />
     </div>
   )
 }
