@@ -4,7 +4,7 @@ import { ICellRendererParams } from 'ag-grid-community'
 import { Paperclip, Trash2 } from 'lucide-react'
 
 export function FactsCellRenderer(params: ICellRendererParams) {
-  if (params.colDef?.context?.__isActionColumn__) {
+  if (params.colDef?.context?.isActionColumn) {
     return (
       <div className="flex items-center justify-center w-full  h-full">
         <AppButton isIconOnly size="sm" variant="danger-soft">
@@ -13,8 +13,9 @@ export function FactsCellRenderer(params: ICellRendererParams) {
       </div>
     )
   }
+
   return (
-    <div className="flex items-center h-full ">
+    <div className="flex items-center  h-full">
       <span className="truncate">{params.getValue?.()}</span>
       <Tooltip delay={0}>
         <Tooltip.Trigger className=" ml-auto">
