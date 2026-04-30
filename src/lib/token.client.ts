@@ -7,7 +7,7 @@ export async function getClientToken() {
   return document.cookie
     .split('; ')
     .find((row) => row.startsWith(`${JWT_COOKIE_NAME }=`))
-    ?.split('=')[1]
+    ?.split('=')?.[1] ?? null
 }
 
 
