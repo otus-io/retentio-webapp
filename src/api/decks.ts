@@ -12,3 +12,5 @@ export function updateDecksFields(id: string, deck: CreateOrUpdateDeckDTO) {
     body: JSON.stringify(deck),
   })
 }
+
+
