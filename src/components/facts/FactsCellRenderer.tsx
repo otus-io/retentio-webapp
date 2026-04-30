@@ -17,15 +17,21 @@ export function FactsCellRenderer(params: ICellRendererParams) {
   return (
     <div className="flex items-center  h-full">
       <span className="truncate">{params.getValue?.()}</span>
-      <Tooltip delay={0}>
-        <Tooltip.Trigger className=" ml-auto">
+      <Tooltip
+        delay={0}
+      >
+        <button
+          type="button"
+          tabIndex={0}
+          className=" ml-auto"
+          style={{
+            display: 'var(--cell-display, none)',
+          }}
+        >
           <Paperclip
-            style={{
-              display: 'var(--cell-display, none)',
-            }}
             className="size-3.5 hover:text-accent hover:cursor-pointer"
           />
-        </Tooltip.Trigger>
+        </button>
         <Tooltip.Content>
           <p>附件</p>
         </Tooltip.Content>

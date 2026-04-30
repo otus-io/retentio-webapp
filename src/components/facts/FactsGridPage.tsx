@@ -2,8 +2,8 @@
 'use client'
 
 import { AgGridReact } from 'ag-grid-react'
-import type { ColDef, IHeaderParams } from 'ag-grid-community'
-import { Fact } from '@/modules/facts/facts.schema'
+import type { ColDef, IHeaderParams, IRowNode } from 'ag-grid-community'
+import { Entry, Fact } from '@/modules/facts/facts.schema'
 import { useCallback, useMemo, useRef, useState } from 'react'
 import { Deck } from '@/modules/decks/decks.schema'
 import { ModuleRegistry } from 'ag-grid-community'
@@ -18,6 +18,7 @@ import { useDebouncedCallback } from 'use-debounce'
 import { updateDecksFields } from '@/api/decks'
 import AppButton from '@/components/app/AppButton'
 import { Plus, RefreshCcw } from 'lucide-react'
+import { updateFactsFields } from '@/api/facts'
 
 const lightTheme = themeQuartz.withPart(colorSchemeLight)
 const darkTheme = themeQuartz.withPart(colorSchemeDark)
@@ -26,11 +27,12 @@ ModuleRegistry.registerModules([AllCommunityModule])
 
 
 const actionSymbol = Symbol('action')
+const rawSymbol = Symbol('raw')
 
-function isAction(value?: string | symbol): value is typeof actionSymbol {
-  return typeof value === 'symbol' && value === actionSymbol
+
+function isString(value?: string | symbol): value is string {
+  return typeof value === 'string'
 }
-
 
 interface FactsGridPageProps {
   facts: Fact[]
@@ -53,16 +55,17 @@ export default function FactsGridPage({ facts, meta, deck }: FactsGridPageProps)
     return [...fields, actionSymbol]
   }, [deck.fields, facts])
 
-  const lastDecksFields = useRef<string[]>(fullFields.filter((e)=>!isAction(e)) as string[])
+  const lastDecksFields = useRef<string[]>(fullFields.filter((e)=>isString(e)) as string[])
 
   const rowData = useMemo(()=>{
     const data = facts.map((fact)=>{
       const result: Record<string, any> = {
         id: fact.id,
+        [rawSymbol]: fact,
       }
       fullFields.forEach((key, index)=>{
         if(typeof key === 'string'){
-          result[key] = fact.entries[index]?.text || ''
+          result[key] = fact.entries[index]
         }
       })
       return result
@@ -77,22 +80,73 @@ export default function FactsGridPage({ facts, meta, deck }: FactsGridPageProps)
   }, [])
 
 
-  const handleFieldsChange = useCallback((force=false) => {
-    const currentDefs = getCurrentColDefs().filter((def)=>!def.context.isActionColumn) .map((e)=>e.headerName || '')
+  const handleFieldsChange = useCallback(async (force=false) => {
+    const currentDefs = getCurrentColDefs()
+      .filter((def)=>!def.context.isActionColumn)
+      .map((e)=>e.headerName || '')
     if(force || JSON.stringify(currentDefs) !== JSON.stringify(lastDecksFields.current)){
       setLoading(true)
       lastDecksFields.current = currentDefs
-      updateDecksFields(deck.id, {
+      await updateDecksFields(deck.id, {
         ...deck,
         fields: currentDefs,
       })
-        .then(()=>{
-          setLoading(false)
-        })
+      setLoading(false)
     }
   }, [deck, getCurrentColDefs])
 
   const handleDebouncedFieldsChange = useDebouncedCallback(handleFieldsChange, 100)
+
+  const getEntriesFromData = useCallback(
+    (data: Record<string, Entry>) => {
+      return getCurrentColDefs()
+        .filter((def) => !def.context?.isActionColumn)
+        .map((e) => {
+          const key = e.headerName || ''
+          return (data[key] ?? { text: '' }) as Entry
+        })
+    },
+    [getCurrentColDefs],
+  )
+  const handleCellChange = useCallback(async () => {
+    const changedNodes: { node: IRowNode; entries: Entry[] }[] = []
+    gridRef.current?.api.forEachNode((node) => {
+      const data = node.data
+      const raw = data[rawSymbol] as Fact
+      const entries = getEntriesFromData(data)
+      const hasChanged = entries.some((entry, i) => {
+        const rawEntry = raw.entries[i]
+        return !rawEntry || entry.text !== rawEntry.text
+      })
+      if (hasChanged) {
+        changedNodes.push({ node, entries })
+      }
+    })
+
+    if (!changedNodes.length) return
+
+    setLoading(true)
+    try {
+      await Promise.all(
+        changedNodes.map(({ node, entries }) =>
+          updateFactsFields(deck.id, node.data.id, { entries })),
+      )
+
+      // 批量更新 rawSymbol，仅在请求成功后
+      changedNodes.forEach(({ node, entries }) => {
+        node.data[rawSymbol].entries = entries
+      })
+    } finally {
+      setLoading(false)
+    }
+  }, [deck.id, getEntriesFromData])
+
+  const handleDebouncedCellChange = useDebouncedCallback(handleCellChange, 100)
+
+  const handleDebouncedChange = useDebouncedCallback(()=>{
+    handleFieldsChange(true)
+    handleCellChange()
+  }, 100)
 
   const handleRenameColDef = useDebouncedCallback((uid: string, newName: string) => {
     const currentDefs = getCurrentColDefs()
@@ -112,7 +166,7 @@ export default function FactsGridPage({ facts, meta, deck }: FactsGridPageProps)
   }, [getCurrentColDefs, handleDebouncedFieldsChange])
 
   const createColDef = useCallback((e: string | symbol) => {
-    const isActionColumn = isAction(e)
+    const isActionColumn = !isString(e)
     const colId: string = isActionColumn? 'action' : `${e as string}`
     return {
       field: colId,
@@ -120,6 +174,26 @@ export default function FactsGridPage({ facts, meta, deck }: FactsGridPageProps)
       autoHeight: true,
       headerName: isActionColumn? '操作' : e as string,
       cellRenderer: FactsCellRenderer,
+      valueGetter: (params)=>{
+        const key = params.colDef.field ?? ''
+        if(!isString(key)){
+          return ''
+        }
+        const data = (params.data ?? {})[key] ?? {}
+        return data?.text ?? ''
+      },
+      valueSetter: (params)=>{
+        const key = params.colDef.field ?? ''
+        if(!isString(key)){
+          return false
+        }
+        const newValue = params.newValue
+        params.data[key] = {
+          ...params.data[key],
+          text: newValue,
+        }
+        return true
+      },
       headerComponent: (props: IHeaderParams)=>{
         return (
           <FactsHeaderRenderer
@@ -144,6 +218,7 @@ export default function FactsGridPage({ facts, meta, deck }: FactsGridPageProps)
         },
       }:{
         editable: true,
+        flex: 1,
         context: {
           uid: crypto.randomUUID(),
         },
@@ -175,6 +250,7 @@ export default function FactsGridPage({ facts, meta, deck }: FactsGridPageProps)
 
 
 
+
   return (
     <div className="p-4 space-y-4">
       <div className="flex items-center gap-2">
@@ -186,7 +262,7 @@ export default function FactsGridPage({ facts, meta, deck }: FactsGridPageProps)
           size="sm"
           variant="outline"
           isPending={loading}
-          onClick={()=>handleAddColDef()}
+          onClick={handleAddColDef}
           icon={<Plus />}
         >
           创建列
@@ -195,7 +271,7 @@ export default function FactsGridPage({ facts, meta, deck }: FactsGridPageProps)
           className={''}
           size="sm"
           variant="outline"
-          onClick={()=>handleFieldsChange(true)}
+          onClick={handleDebouncedChange}
           isPending={loading}
           icon={<RefreshCcw className="size-4" />}
         >
@@ -212,7 +288,8 @@ export default function FactsGridPage({ facts, meta, deck }: FactsGridPageProps)
             suppressDragLeaveHidesColumns
             rowData={rowData}
             columnDefs={colDefs}
-            onColumnMoved={()=>handleFieldsChange()}
+            onColumnMoved={()=>handleDebouncedFieldsChange()}
+            onCellValueChanged={() => handleDebouncedCellChange()}
           />
         </div>
       </AgGridProvider>
