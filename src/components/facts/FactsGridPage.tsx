@@ -19,15 +19,14 @@ import { updateDecksFields } from '@/api/decks'
 import AppButton from '@/components/app/AppButton'
 import { Plus, RefreshCcw } from 'lucide-react'
 import { updateFactsFields } from '@/api/facts'
+import FactsCellAttachment from '@/components/facts/FactsCellAttachment'
+import { useOverlayState } from '@heroui/react'
+import { actionSymbol, rawSymbol } from '@/components/facts/token'
 
 const lightTheme = themeQuartz.withPart(colorSchemeLight)
 const darkTheme = themeQuartz.withPart(colorSchemeDark)
 const modules = [AllCommunityModule]
 ModuleRegistry.registerModules([AllCommunityModule])
-
-
-const actionSymbol = Symbol('action')
-const rawSymbol = Symbol('raw')
 
 
 function isString(value?: string | symbol): value is string {
@@ -42,10 +41,14 @@ interface FactsGridPageProps {
 }
 
 export default function FactsGridPage({ facts, meta, deck }: FactsGridPageProps) {
-  const total = meta.total || 0
   const { resolvedTheme } = useTheme()
+  const state = useOverlayState()
   const gridRef = useRef<AgGridReact>(null)
   const [loading, setLoading]= useState(false)
+  const [currentFact, setCurrentFact] = useState<Fact>()
+  const [fieldIndex, setFieldIndext] = useState<number>()
+
+  const total = meta.total || 0
 
   const fullFields = useMemo(() => {
     const factsFields= facts.reduce((longest, fact) =>
@@ -148,6 +151,12 @@ export default function FactsGridPage({ facts, meta, deck }: FactsGridPageProps)
     handleCellChange()
   }, 100)
 
+  const handleAttachmentClick = useCallback((fact: Fact, fieldIndex: number) => {
+    setCurrentFact(fact)
+    setFieldIndext(fieldIndex)
+    state.open()
+  }, [state])
+
   const handleRenameColDef = useDebouncedCallback((uid: string, newName: string) => {
     const currentDefs = getCurrentColDefs()
     const colDef = currentDefs.find((def) => def.context?.uid === uid)
@@ -160,7 +169,6 @@ export default function FactsGridPage({ facts, meta, deck }: FactsGridPageProps)
   const handleDeleteColDef = useCallback((uid: string) => {
     const currentDefs = getCurrentColDefs()
     const newDefs = currentDefs.filter((def) => def.context?.uid !== uid)
-    console.log('删除列', uid, newDefs)
     gridRef.current?.api.setGridOption('columnDefs', newDefs)
     handleDebouncedFieldsChange()
   }, [getCurrentColDefs, handleDebouncedFieldsChange])
@@ -173,7 +181,9 @@ export default function FactsGridPage({ facts, meta, deck }: FactsGridPageProps)
       sortable: false,
       autoHeight: true,
       headerName: isActionColumn? '操作' : e as string,
-      cellRenderer: FactsCellRenderer,
+      cellRenderer: (props: any)=>{
+        return <FactsCellRenderer {...props} onAttachmentClick={handleAttachmentClick} />
+      },
       valueGetter: (params)=>{
         const key = params.colDef.field ?? ''
         if(!isString(key)){
@@ -224,7 +234,7 @@ export default function FactsGridPage({ facts, meta, deck }: FactsGridPageProps)
         },
       }),
     } satisfies ColDef<Record<string, any>>
-  }, [handleDeleteColDef, handleDebouncedFieldsChange, handleRenameColDef])
+  }, [handleAttachmentClick, handleRenameColDef, handleDebouncedFieldsChange, handleDeleteColDef])
 
   const handleAddColDef = useCallback(() => {
     const currentDefs=getCurrentColDefs()
@@ -247,9 +257,6 @@ export default function FactsGridPage({ facts, meta, deck }: FactsGridPageProps)
   const colDefs = useMemo(()=>{
     return fullFields.map(createColDef)
   }, [fullFields, createColDef])
-
-
-
 
   return (
     <div className="p-4 space-y-4">
@@ -276,7 +283,7 @@ export default function FactsGridPage({ facts, meta, deck }: FactsGridPageProps)
           icon={<RefreshCcw className="size-4" />}
         >
           {(props)=>{
-            return props.isPending?'loading...':'save'
+            return props.isPending?'保存中...':'保存'
           }}
         </AppButton>
       </div>
@@ -296,6 +303,7 @@ export default function FactsGridPage({ facts, meta, deck }: FactsGridPageProps)
       <TablePagination
         totalPages={total}
       />
+      <FactsCellAttachment {...state} fact={currentFact} fieldIndex={fieldIndex} />
     </div>
   )
 }
