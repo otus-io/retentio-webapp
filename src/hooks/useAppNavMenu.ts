@@ -20,14 +20,9 @@ export default function useAppNavMenu() {
         isActive: pathname.startsWith('/guide'),
       },
       {
-        title: t('dashboard'),
-        href: '/dashboard',
-        isActive: pathname.startsWith('/dashboard'),
-      },
-      {
-        title: t('library'),
-        href: '/library',
-        isActive: pathname.startsWith('/library'),
+        title: t('decks'),
+        href: '/decks',
+        isActive: pathname.startsWith('/decks'),
       },
     ] satisfies IAppNavMenu[]
   }, [t, pathname])

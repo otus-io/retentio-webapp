@@ -8,14 +8,16 @@ export default function AppError({
     return null
   const message = formatErrorMessage(error)
   return (
-    <Alert status="danger">
-      <Alert.Indicator />
-      <Alert.Content>
-        <Alert.Title>发生错误</Alert.Title>
-        <Alert.Description>
-          {message}
-        </Alert.Description>
-      </Alert.Content>
-    </Alert>
+    <div className="py-4 max-w-content mx-auto px-3.5">
+      <Alert status="danger">
+        <Alert.Indicator />
+        <Alert.Content>
+          <Alert.Title>发生错误</Alert.Title>
+          <Alert.Description>
+            {message}
+          </Alert.Description>
+        </Alert.Content>
+      </Alert>
+    </div>
   )
 }

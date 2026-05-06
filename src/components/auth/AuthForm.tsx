@@ -43,12 +43,12 @@ export default function AuthForm({ type }: { type: 'login' | 'register' }) {
     event.preventDefault()
     const formData = new FormData(event.target as HTMLFormElement)
     // 校验表单中的 terms 字段
-    if (!formData.get('terms')) {
+    if (!formData.get('terms') && !isLogin) {
       showWarningToast(t('termsWarning'))
       return
     }
     startTransition(() => action(formData))
-  }, [action, t])
+  }, [action, t, isLogin])
 
 
   return (
@@ -120,10 +120,14 @@ export default function AuthForm({ type }: { type: 'login' | 'register' }) {
             </Card.Content>
             <Card.Footer>
               <div className="flex flex-col gap-4 w-full">
-                <TermsAgreement
-                  defaultSelected={isTermsAccepted}
-                  onChange={setIsTermsAccepted}
-                />
+                {
+                  !isLogin && (
+                    <TermsAgreement
+                      defaultSelected={isTermsAccepted}
+                      onChange={setIsTermsAccepted}
+                    />
+                  )
+                }
                 <div className="flex gap-4">
                   <AppButton
                     isPending={isPending}
