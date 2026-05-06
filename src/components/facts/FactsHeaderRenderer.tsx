@@ -42,8 +42,6 @@ export function FactsHeaderRenderer(props: FactsHeaderRendererProps) {
 
   const onChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setValue(e.target.value)
-    // const colDef = props.column.getColDef()
-    // colDef.headerName = e.target.value
     props.onChange?.(uid(), e.target.value)
   }
 

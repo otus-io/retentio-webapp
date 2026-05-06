@@ -22,12 +22,13 @@ import { updateFactsFields } from '@/api/facts'
 import FactsCellAttachment from '@/components/facts/FactsCellAttachment'
 import { useOverlayState } from '@heroui/react'
 import { actionSymbol, rawSymbol } from '@/components/facts/token'
+import { useTranslations } from 'next-intl'
+import LayoutPage from '@/components/layout/LayoutPage'
 
 const lightTheme = themeQuartz.withPart(colorSchemeLight)
 const darkTheme = themeQuartz.withPart(colorSchemeDark)
 const modules = [AllCommunityModule]
 ModuleRegistry.registerModules([AllCommunityModule])
-
 
 function isString(value?: string | symbol): value is string {
   return typeof value === 'string'
@@ -42,24 +43,23 @@ interface FactsGridPageProps {
 
 export default function FactsGridPage({ facts, meta, deck }: FactsGridPageProps) {
   const { resolvedTheme } = useTheme()
+  const total = meta.total || 0
+  const totalPages = meta.total ? Math.ceil(meta.total/meta.limit) :0
   const state = useOverlayState()
   const gridRef = useRef<AgGridReact>(null)
   const [loading, setLoading]= useState(false)
+  const t = useTranslations()
   const [currentFact, setCurrentFact] = useState<Fact>()
   const [fieldIndex, setFieldIndext] = useState<number>()
-
-  const total = meta.total || 0
-
   const fullFields = useMemo(() => {
     const factsFields= facts.reduce((longest, fact) =>
       fact.fields.length > longest.length ? fact.fields : longest
     , [] as string[])
-    const fields = [...deck.fields].concat(...factsFields.filter((_, index)=>index>=deck.fields.length))
+    const fields = [...deck.fields].concat(...factsFields.filter((_, index) => index >= deck.fields.length))
     return [...fields, actionSymbol]
   }, [deck.fields, facts])
 
   const lastDecksFields = useRef<string[]>(fullFields.filter((e)=>isString(e)) as string[])
-
   const rowData = useMemo(()=>{
     const data = facts.map((fact)=>{
       const result: Record<string, any> = {
@@ -76,17 +76,15 @@ export default function FactsGridPage({ facts, meta, deck }: FactsGridPageProps)
     return data
   }, [facts, fullFields])
 
-
   const getCurrentColDefs = useCallback(() => {
     const currentDefs: ColDef<Record<string, any>>[] = gridRef.current?.api.getColumnDefs() ?? []
     return currentDefs
   }, [])
 
-
   const handleFieldsChange = useCallback(async (force=false) => {
     const currentDefs = getCurrentColDefs()
-      .filter((def)=>!def.context.isActionColumn)
-      .map((e)=>e.headerName || '')
+      .filter((def) => !def.context.isActionColumn)
+      .map((e) => e.headerName || '')
     if(force || JSON.stringify(currentDefs) !== JSON.stringify(lastDecksFields.current)){
       setLoading(true)
       lastDecksFields.current = currentDefs
@@ -128,14 +126,9 @@ export default function FactsGridPage({ facts, meta, deck }: FactsGridPageProps)
 
     if (!changedNodes.length) return
 
-    setLoading(true)
     try {
-      await Promise.all(
-        changedNodes.map(({ node, entries }) =>
-          updateFactsFields(deck.id, node.data.id, { entries })),
-      )
-
-      // 批量更新 rawSymbol，仅在请求成功后
+      setLoading(true)
+      await Promise.all(changedNodes.map(({ node, entries }) => updateFactsFields(deck.id, node.data.id, { entries })))
       changedNodes.forEach(({ node, entries }) => {
         node.data[rawSymbol].entries = entries
       })
@@ -181,6 +174,17 @@ export default function FactsGridPage({ facts, meta, deck }: FactsGridPageProps)
       sortable: false,
       autoHeight: true,
       headerName: isActionColumn? '操作' : e as string,
+      headerComponent: (props: IHeaderParams)=>{
+        return (
+          <FactsHeaderRenderer
+            {...props}
+            autoFocus={true}
+            onChange={handleRenameColDef}
+            onBlur={handleDebouncedFieldsChange}
+            onDelete={handleDeleteColDef}
+          />
+        )
+      },
       cellRenderer: (props: any)=>{
         return <FactsCellRenderer {...props} onAttachmentClick={handleAttachmentClick} />
       },
@@ -204,17 +208,6 @@ export default function FactsGridPage({ facts, meta, deck }: FactsGridPageProps)
         }
         return true
       },
-      headerComponent: (props: IHeaderParams)=>{
-        return (
-          <FactsHeaderRenderer
-            {...props}
-            autoFocus={true}
-            onChange={handleRenameColDef}
-            onBlur={handleDebouncedFieldsChange}
-            onDelete={handleDeleteColDef}
-          />
-        )
-      },
       ...(isActionColumn ? {
         pinned: 'right',
         suppressMovable: true,
@@ -237,7 +230,7 @@ export default function FactsGridPage({ facts, meta, deck }: FactsGridPageProps)
   }, [handleAttachmentClick, handleRenameColDef, handleDebouncedFieldsChange, handleDeleteColDef])
 
   const handleAddColDef = useCallback(() => {
-    const currentDefs=getCurrentColDefs()
+    const currentDefs = getCurrentColDefs()
     const uid = `field_${currentDefs.length}`
     const newCol= createColDef(uid)
     // 插到 action 列前面
@@ -259,10 +252,17 @@ export default function FactsGridPage({ facts, meta, deck }: FactsGridPageProps)
   }, [fullFields, createColDef])
 
   return (
-    <div className="p-4 space-y-4">
-      <div className="flex items-center gap-2">
+    <LayoutPage
+      breadcrumbs={[
+        { href: '/decks', title: t('nav.decks') },
+        { href: `/decks/${deck.id}`, title: deck.name },
+        { href: `/decks/${deck.id}/facts`, title: '词组' },
+      ]}
+    >
+
+      <div className="flex items-center gap-2 my-2">
         <h1>
-          所有词组
+          所有词组（{total}）
         </h1>
         <AppButton
           className={'ml-auto'}
@@ -301,10 +301,14 @@ export default function FactsGridPage({ facts, meta, deck }: FactsGridPageProps)
         </div>
       </AgGridProvider>
       <TablePagination
-        totalPages={total}
+        totalPages={totalPages}
       />
-      <FactsCellAttachment {...state} fact={currentFact} fieldIndex={fieldIndex} />
-    </div>
+      <FactsCellAttachment
+        {...state}
+        fact={currentFact}
+        fieldIndex={fieldIndex}
+      />
+    </LayoutPage>
   )
 }
 

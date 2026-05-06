@@ -157,6 +157,7 @@
     "search": "Search",
     "delete": "Delete",
     "edit": "Edit",
+    "detail": "Detail",
     "tips": "Tips",
     "delete-confirm": "Are you sure you want to delete this item? This action cannot be undone.",
     "confirm": "Confirm",
