@@ -20,9 +20,6 @@ export async function getMedia(id: string) {
     return ServiceResponse.error('getMedia failed', e)
   }
 }
-// JSON = 'application/json;charset=UTF-8',
-// FORM_URLENCODED = 'application/x-www-form-urlencoded;charset=UTF-8',
-// FORM_DATA = 'multipart/form-data;charset=UTF-8',
 
 /**
  * 上传
