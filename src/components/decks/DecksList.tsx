@@ -10,6 +10,7 @@ import { DecksSearch } from '@/components/decks/DecksSearch'
 import { useDeferredValue, useMemo, useState } from 'react'
 import Fuse from 'fuse.js'
 import DeckCreateButton from '@/components/decks/DeckCreateButton'
+import LayoutPage from '@/components/layout/LayoutPage'
 
 export default function DecksList({
   data,
@@ -31,9 +32,12 @@ export default function DecksList({
   }, [fuse, deferredQuery, data])
 
   return (
-    <div className="py-4 max-w-content mx-auto px-3.5 min-h-[calc(100vh-19.375rem)] md:min-h-[calc(100vh-16.625rem)]">
-
-      <div className="md:flex gap-2 items-center mb-2">
+    <LayoutPage
+      breadcrumbs={[
+        { href: '/decks', title: t('nav.decks') },
+      ]}
+    >
+      <div className="md:flex gap-2 items-center my-2">
         <div className="flex flex-1 items-center gap-2  pl-1  ">
           <div className="flex items-center gap-1">
             <span className="text-foreground text-base font-semibold">
@@ -82,7 +86,7 @@ export default function DecksList({
             }
           </div>
         )}
-    </div>
+    </LayoutPage>
   )
 }
 

@@ -17,8 +17,8 @@ import {
   Clock,
 } from 'lucide-react'
 import { useTranslations } from 'next-intl'
-import AppBreadcrumbs from '@/components/app/AppBreadcrumbs'
 import DecksAction from '@/components/decks/DecksAction'
+import LayoutPage from '@/components/layout/LayoutPage'
 
 interface DecksDetailProps {
   deck: Deck
@@ -51,13 +51,12 @@ export default function DecksDetail({ deck }: DecksDetailProps) {
 
 
   return (
-    <div className="mx-auto grid w-full max-w-content items-start gap-4 px-4 py-6 sm:px-6 lg:px-8 xl:px-10">
-      <AppBreadcrumbs
-        items={[
-          { href: '/decks', title: t('nav.decks') },
-          { href: `/decks/${deck.id}`, title: deck.name },
-        ]}
-      />
+    <LayoutPage
+      breadcrumbs={[
+        { href: '/decks', title: t('nav.decks') },
+        { href: `/decks/${deck.id}`, title: deck.name },
+      ]}
+    >
       <motion.div
         initial={{ opacity: 0, y: 12 }}
         animate={{ opacity: 1, y: 0 }}
@@ -142,6 +141,6 @@ export default function DecksDetail({ deck }: DecksDetailProps) {
           </Card.Content>
         </Card>
       </motion.div>
-    </div>
+    </LayoutPage>
   )
 }
