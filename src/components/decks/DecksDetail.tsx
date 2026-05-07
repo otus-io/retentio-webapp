@@ -9,12 +9,12 @@ import {
   ChartPie,
   History,
   Layers,
-  Brain,
   Inbox,
   CheckCircle2,
   EyeOff,
   Sparkles,
   Clock,
+  ListIcon,
 } from 'lucide-react'
 import { useTranslations } from 'next-intl'
 import DecksAction from '@/components/decks/DecksAction'
@@ -74,7 +74,9 @@ export default function DecksDetail({ deck }: DecksDetailProps) {
                     </Chip>
                   ))}
                 </div>
-                <DecksAction deck={deck} />
+                <div className="ml-auto">
+                  <DecksAction deck={deck} />
+                </div>
               </Card.Title>
             </div>
           </Card.Header>
@@ -103,7 +105,7 @@ export default function DecksDetail({ deck }: DecksDetailProps) {
               </DecksIconLabel>
 
 
-              <DecksIconLabel icon={Brain} color="violet">
+              <DecksIconLabel icon={ListIcon} color="violet">
                 <span className="text-muted-foreground">{t('decks.facts')}:</span>
                 <span className="font-medium text-foreground ml-1">{deck.stats.facts_count}</span>
               </DecksIconLabel>

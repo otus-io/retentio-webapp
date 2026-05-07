@@ -1,23 +1,24 @@
 'use client'
 import { Deck } from '@/modules/decks/decks.schema'
-import { Dropdown, Label, useOverlayState } from '@heroui/react'
+import { Dropdown, Label } from '@heroui/react'
 import { useRouter } from 'next/navigation'
-import { Key } from 'react'
+import { Key, useCallback, useMemo, useState } from 'react'
 import { BookA, EllipsisVertical, Pencil, Trash2 } from 'lucide-react'
-import DecksDeleteModal from '@/components/decks/DecksDeleteModal'
 import { useTranslations } from 'next-intl'
+import DeleteModal from '@/components/common/DeleteModal'
+import { deleteDeckAction } from '@/modules/decks/decks.action'
 
 interface DecksActionProps {
   deck: Deck,
 }
 
-
 export default function DecksAction({ deck }: DecksActionProps) {
   const t = useTranslations()
   const router = useRouter()
-  const state = useOverlayState()
+  const [isOpen, setIsOpen] = useState(false)
+  const deleteDeck = useMemo(()=>deleteDeckAction.bind(null, deck.id), [deck.id])
 
-  function handleAction(id: Key) {
+  const handleAction = useCallback((id: Key) => {
     switch (id) {
       case 'edit':
         router.push(`/decks/${deck.id}/edit`)
@@ -26,11 +27,11 @@ export default function DecksAction({ deck }: DecksActionProps) {
         router.push(`/decks/${deck.id}/facts`)
         break
       case 'delete':
-        state.open()
+        setIsOpen(true)
         break
       default:
     }
-  }
+  }, [deck.id, router])
 
   return (
     <>
@@ -61,8 +62,7 @@ export default function DecksAction({ deck }: DecksActionProps) {
           </Dropdown.Menu>
         </Dropdown.Popover>
       </Dropdown>
-      <DecksDeleteModal {...state} deckId={deck.id} />
+      <DeleteModal isOpen={isOpen} setIsOpen={setIsOpen} action={deleteDeck} />
     </>
-
   )
 }
