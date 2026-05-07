@@ -4,7 +4,7 @@ import { Description, FieldError, InputGroup, Label, TextField } from '@heroui/r
 import { useMemo } from 'react'
 
 export interface AppInputProps extends TextFieldProps {
-  label: ReactNode
+  label?: ReactNode
   description?: ReactNode
   placeholder?: string
   inputProps?: Omit<InputProps, 'placeholder'>
