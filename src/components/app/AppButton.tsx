@@ -22,7 +22,7 @@ export default function AppButton({
             ? (
               <Spinner
                 color="current"
-                size="sm"
+                className="size-3.5"
               />
             )
             : icon}
