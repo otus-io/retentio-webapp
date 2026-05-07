@@ -7,7 +7,7 @@ import { Metadata } from 'next'
 export default async function Page() {
   const { data, success, message } = await getAllDecksService()
   if(!success){
-    return <AppError error={message} />
+    return <AppError error={message} page />
   }
   return <DecksList data={data?.decks || []} />
 }
