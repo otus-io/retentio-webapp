@@ -26,23 +26,26 @@ export default function DecksForm({
   data,
 }: DecksCreateFormProps) {
 
-  const defaultState = type === 'update' ? {
-    data: {
-      name: data.name,
-      fields: data.fields,
-      rate: data.rate,
-      submissionId: '',
-    },
-  }: {
-    data: {
-      name: '',
-      fields: ['', ''],
-      rate: '20',
-      submissionId: '',
-    },
-  }
+  const defaultState = type === 'update'
+    ? {
+      data: {
+        name: data.name,
+        fields: data.fields,
+        rate: data.rate,
+        submissionId: '',
+      },
+    }
+    : {
+      data: {
+        name: '',
+        fields: ['', ''],
+        rate: '20',
+        submissionId: '',
+      },
+    }
 
-  const actionHandler = type === 'create' ?createDeckAction
+  const actionHandler = type === 'create'
+    ?createDeckAction
     : updateDeckAction.bind(null, data.id)
 
   const [state, action, isPending] = useActionState(actionHandler, defaultState)
@@ -64,7 +67,7 @@ function DecksFormInner({
   action,
   isPending,
 }: {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+
   state: ActionState<any> | null,
   action: (payload: FormData) => void,
   isPending: boolean,

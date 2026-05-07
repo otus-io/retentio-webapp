@@ -42,7 +42,7 @@ export function createRequest(getToken: GetTokenFn) {
 
     const text = await blob.text()
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+
     let json: any = null
     if (blob.type === 'application/json') {
       json = JSON.parse(text)

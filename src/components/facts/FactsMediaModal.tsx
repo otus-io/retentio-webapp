@@ -82,15 +82,17 @@ function FactsAttachmentInner({
                       <div className="flex flex-col flex-1">
                         <Label>{item.label}</Label>
                         <Description className="pointer-events-auto!">
-                          {hasValue ? (
-                            <span>
-                              {item.value}
-                            </span>
-                          ) : (
-                            <span className="text-muted">
-                              {`No ${item.label.toLowerCase()} attached`}
-                            </span>
-                          )}
+                          {hasValue
+                            ? (
+                              <span>
+                                {item.value}
+                              </span>
+                            )
+                            : (
+                              <span className="text-muted">
+                                {`No ${item.label.toLowerCase()} attached`}
+                              </span>
+                            )}
                         </Description>
                       </div>
 

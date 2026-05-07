@@ -1,4 +1,4 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
+
 'use client'
 import { Card, ErrorMessage, Form } from '@heroui/react'
 import { FormEvent, startTransition, useActionState, useCallback, useMemo, useReducer, useState } from 'react'

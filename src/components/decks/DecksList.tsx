@@ -66,26 +66,28 @@ export default function DecksList({
       </div>
 
       {
-        results.length === 0 ? (
-          <div className="flex flex-col items-center justify-center gap-4 py-10 text-muted">
-            <FolderOpen size={48} />
-            <p>{t('common.no-data')}</p>
-          </div>
-        ): (
-          <div className="grid gap-2 md:grid-cols-2 lg:grid-cols-3">
-            {
-              results.map((item)=>{
-                return (
-                  <DecksCard
-                    highlight={deferredQuery}
-                    key={item.id}
-                    deck={item}
-                  />
-                )
-              })
-            }
-          </div>
-        )}
+        results.length === 0
+          ? (
+            <div className="flex flex-col items-center justify-center gap-4 py-10 text-muted">
+              <FolderOpen size={48} />
+              <p>{t('common.no-data')}</p>
+            </div>
+          )
+          : (
+            <div className="grid gap-2 md:grid-cols-2 lg:grid-cols-3">
+              {
+                results.map((item)=>{
+                  return (
+                    <DecksCard
+                      highlight={deferredQuery}
+                      key={item.id}
+                      deck={item}
+                    />
+                  )
+                })
+              }
+            </div>
+          )}
     </LayoutPage>
   )
 }

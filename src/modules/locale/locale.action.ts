@@ -3,7 +3,7 @@
 import { cookies } from 'next/headers'
 import { revalidatePath } from 'next/cache'
 
-export async function setLocale(locale: string) {
+export async function setLocaleAction(locale: string) {
   // 注意：Next.js 15 开始 cookies() 是异步的，和你之前代码保持一致
   const cookieStore = await cookies()
 

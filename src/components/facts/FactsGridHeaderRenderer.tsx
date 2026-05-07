@@ -63,40 +63,42 @@ export default function FactsGridHeaderRenderer(props: FactsGridHeaderRendererPr
       onDoubleClick={startEdit}
       className="flex-1 h-full py-2 items-center flex group"
     >
-      {editing ? (
-        <input
-          ref={inputRef}
-          value={value}
-          onChange={onChange}
-          onBlur={stopEdit}
-          onKeyDown={(e) => {
-            if (e.key === 'Enter')
-              stopEdit()
-            if (e.key === 'Escape')
-              stopEdit()
-          }}
-          className="h-full"
-        />
-      ) : (
-        <>
-          <span>{value}</span>
-          <Dropdown>
-            <Dropdown.Trigger className={'ml-auto shrink-0'}>
-              <EllipsisVertical className="size-4 text-muted" />
-            </Dropdown.Trigger>
-            <Dropdown.Popover>
-              <Dropdown.Menu onAction={handleAction}>
-                <Dropdown.Item id="delete" textValue="delete" variant="danger">
-                  <div className="flex items-center gap-1">
-                    <Trash2 className="size-3.5 text-danger" />
-                    <Label>{t('common.delete')}</Label>
-                  </div>
-                </Dropdown.Item>
-              </Dropdown.Menu>
-            </Dropdown.Popover>
-          </Dropdown>
-        </>
-      )}
+      {editing
+        ? (
+          <input
+            ref={inputRef}
+            value={value}
+            onChange={onChange}
+            onBlur={stopEdit}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter')
+                stopEdit()
+              if (e.key === 'Escape')
+                stopEdit()
+            }}
+            className="h-full"
+          />
+        )
+        : (
+          <>
+            <span>{value}</span>
+            <Dropdown>
+              <Dropdown.Trigger className={'ml-auto shrink-0'}>
+                <EllipsisVertical className="size-4 text-muted" />
+              </Dropdown.Trigger>
+              <Dropdown.Popover>
+                <Dropdown.Menu onAction={handleAction}>
+                  <Dropdown.Item id="delete" textValue="delete" variant="danger">
+                    <div className="flex items-center gap-1">
+                      <Trash2 className="size-3.5 text-danger" />
+                      <Label>{t('common.delete')}</Label>
+                    </div>
+                  </Dropdown.Item>
+                </Dropdown.Menu>
+              </Dropdown.Popover>
+            </Dropdown>
+          </>
+        )}
     </div>
   )
 }

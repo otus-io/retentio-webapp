@@ -1,4 +1,4 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
+
 'use client'
 
 import { AgGridReact } from 'ag-grid-react'
@@ -214,24 +214,26 @@ export default function FactsGridPage({ facts, meta, deck }: FactsGridPageProps)
         }
         return true
       },
-      ...(isActionColumn ? {
-        pinned: 'right',
-        suppressMovable: true,
-        lockPosition: 'right',
-        width: 75,
-        minWidth: 75,
-        maxWidth: 75,
-        resizable: false,
-        context: {
-          isActionColumn: true,
-        },
-      }:{
-        editable: true,
-        flex: 1,
-        context: {
-          uid: crypto.randomUUID(),
-        },
-      }),
+      ...(isActionColumn
+        ? {
+          pinned: 'right',
+          suppressMovable: true,
+          lockPosition: 'right',
+          width: 75,
+          minWidth: 75,
+          maxWidth: 75,
+          resizable: false,
+          context: {
+            isActionColumn: true,
+          },
+        }
+        :{
+          editable: true,
+          flex: 1,
+          context: {
+            uid: crypto.randomUUID(),
+          },
+        }),
     } satisfies ColDef<Record<string, any>>
   }, [handleRenameColDef, handleDebouncedFieldsChange, handleDeleteColDef, deck, handleAttachmentClick, t])
 
@@ -349,7 +351,7 @@ function CrateRowButton({
   }, [fields])
 
 
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+
   const [_state, action, isPending] = useActionState(createFactsAction.bind(null, deckId), null)
 
   return (

@@ -119,9 +119,11 @@ function FactEntryItem({ entry, index }: { entry: Entry; index: number }) {
                   )
                 }
               >
-                {(hasValue && item.loading) ? (
-                  <Spinner className="size-3.5 shrink-0" />
-                ): <item.icon className="size-3.5 shrink-0 text-muted" />}
+                {(hasValue && item.loading)
+                  ? (
+                    <Spinner className="size-3.5 shrink-0" />
+                  )
+                  : <item.icon className="size-3.5 shrink-0 text-muted" />}
               </button>
             )
           })}

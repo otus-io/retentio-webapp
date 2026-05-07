@@ -1,4 +1,4 @@
-import { setLocale } from '@/modules/locale/locale.action'
+import { setLocaleAction } from '@/modules/locale/locale.action'
 import { useLocale } from 'next-intl'
 import { startTransition, useMemo } from 'react'
 import { Dropdown, Label, Selection } from '@heroui/react'
@@ -14,7 +14,7 @@ export default function LocaleSwitcher() {
     if(!keys) return
     startTransition(async () => {
       const [locale] = keys
-      await setLocale(`${locale}`)
+      await setLocaleAction(`${locale}`)
     })
   }
 
