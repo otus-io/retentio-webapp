@@ -38,7 +38,6 @@ export function BreakpointProvider({ children }: { children: ReactNode }) {
       },
     )
 
-    // 直接从已创建的 mql 读初始值，不重复调用 matchMedia
     setState(
       mqls.reduce(
         (acc, { key, mql }) => ({ ...acc, [key]: mql.matches }),
@@ -51,7 +50,6 @@ export function BreakpointProvider({ children }: { children: ReactNode }) {
     }
   }, [])
 
-  // 派生 current 断点
   const value = useMemo(() => {
     const current: Breakpoint | 'xs' = state['2xl']
       ? '2xl'
@@ -75,7 +73,6 @@ export function BreakpointProvider({ children }: { children: ReactNode }) {
   )
 }
 
-// 消费 Hook
 // eslint-disable-next-line react-refresh/only-export-components
 export function useBreakpointContext() {
   return useContext(BreakpointContext)

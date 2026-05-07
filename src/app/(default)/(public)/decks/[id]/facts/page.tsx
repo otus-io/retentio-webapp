@@ -29,6 +29,6 @@ export default async function Page(props: PageProps<'/decks/[id]/facts'>) {
 export async function generateMetadata() {
   const t = await getTranslations()
   return {
-    title: t('nav.decks'),
+    title: t('term.decks'),
   } satisfies Metadata
 }

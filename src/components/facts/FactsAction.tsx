@@ -48,7 +48,7 @@ export default function FactsAction({ deck, fact }: DecksActionProps) {
         <Dropdown.Popover>
           <Dropdown.Menu onAction={handleAction}>
             {
-              !params && (
+              !params.factId && (
                 <Dropdown.Item id="detail" textValue="detail">
                   <div className="flex items-center gap-1">
                     <EyeIcon className="size-3.5" />

@@ -24,10 +24,10 @@ export default function FactsDetail({ fact, deck }: FactsDetailProps) {
   return (
     <LayoutPage
       breadcrumbs={[
-        { href: '/decks', title: t('nav.decks') },
+        { href: '/decks', title: t('term.decks') },
         { href: `/decks/${deck.id}`, title: deck.name },
-        { href: `/decks/${deck.id}/facts`, title: '词组' },
-        { href: `/decks/${deck.id}/facts/${fact.id}`, title: '词组详情' },
+        { href: `/decks/${deck.id}/facts`, title: t('term.facts') },
+        { href: `/decks/${deck.id}/facts/${fact.id}`, title: t('common.detail') },
       ]}
     >
       <Card variant="default" className=" overflow-hidden">
@@ -35,7 +35,7 @@ export default function FactsDetail({ fact, deck }: FactsDetailProps) {
           <div className="flex flex-col gap-2.5 w-full">
             <div className="flex items-start gap-2">
               <span className="text-xs font-medium text-muted-foreground shrink-0 uppercase tracking-wide pt-0.5 w-10">
-                {t('decks.fields')}
+                {t('term.fields')}
               </span>
               <div className="flex flex-wrap gap-1.5">
                 {fact.fields.map((e, i) => (
@@ -48,7 +48,7 @@ export default function FactsDetail({ fact, deck }: FactsDetailProps) {
             </div>
             <div className="flex items-start gap-2">
               <span className="text-xs font-medium text-muted-foreground shrink-0 uppercase tracking-wide pt-0.5 w-10">
-                Tags
+                {t('term.tags')}
               </span>
               <div className="flex flex-wrap gap-1.5">
                 {fact.tags.map((e, i) => (
@@ -61,7 +61,7 @@ export default function FactsDetail({ fact, deck }: FactsDetailProps) {
 
         <Card.Content className="">
           <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-3">
-            Entries
+            {t('term.entries')}
           </p>
           <ul className="flex flex-col gap-2">
             {fact.entries.map((e, i) => (

@@ -1,12 +1,8 @@
 {
   "nav": {
     "home": "Home",
-    "about": "About",
-    "guide": "Guide",
     "dashboard": "Dashboard",
-    "profile": "Profile",
-    "library": "Library",
-    "decks": "Decks"
+    "guide": "Guide"
   },
   "profile": {
     "title": "Profile",
@@ -74,11 +70,11 @@
     }
   },
   "error": {
-    "reset": "Reset",
     "not-find": "Resource Not Found",
     "not-find-desc": "The page you are looking for does not exist. <br></br>Please try <back> going back </back> or return to the <home> home </home>.",
     "unauthorized": "Unauthorized Access",
-    "forbidden": "Access Forbidden"
+    "forbidden": "Access Forbidden",
+    "title": "Somethings Wrong"
   },
   "footer": {
     "tagline": "Remember More, For Longer.",
@@ -107,25 +103,6 @@
     "cards": "{count} cards",
     "due": "{count} due"
   },
-  "library": {
-    "title": "My Library",
-    "import": "Import",
-    "export": "Export",
-    "decks": "Decks",
-    "cards": "Cards",
-    "facts": "Facts",
-    "cardCount": "{count} cards",
-    "createDeck": "Create Deck",
-    "deckName": "Deck Name",
-    "deckDescription": "Description",
-    "emptyDecks": "No decks yet. Create your first deck to get started.",
-    "emptyCards": "Select a deck to view its cards.",
-    "emptyFacts": "Select a card to view its facts.",
-    "front": "Front",
-    "back": "Back",
-    "cancel": "Cancel",
-    "save": "Save"
-  },
   "auth": {
     "loginTitle": "Login",
     "registerTitle": "Register",
@@ -153,6 +130,7 @@
   "common": {
     "login": "Login",
     "logout": "Logout",
+    "logout-confirm": "Are you sure you want to log out?",
     "no-data": "No data",
     "search": "Search",
     "delete": "Delete",
@@ -163,7 +141,19 @@
     "confirm": "Confirm",
     "cancel": "Cancel",
     "remove": "Remove",
-    "submit": "Submit"
+    "submit": "Submit",
+    "add": "Add {name}",
+    "create": "Create {name}",
+    "update": "Update {name}",
+    "created-at": "Created At",
+    "updated-at": "Updated At",
+    "all": "All {name}({count})",
+    "actions": "Actions",
+    "what-is": "What`s {name}?",
+    "manage": "Manage your {name}",
+    "placeholder-enter": "Please enter {name}",
+    "save": "Save",
+    "reset": "Reset"
   },
   "guide-sidebar": {
     "menu": "Menu",
@@ -209,38 +199,25 @@
     "change-theme": "Change theme",
     "logout": "Logout"
   },
-  "facts": {
-    "title": "Facts",
-    "create": "Add Fact",
-    "empty": "This deck has no facts yet",
-    "columns": {
-      "tags": "Tags",
-      "actions": "Actions"
-    }
-  },
-  "decks": {
-    "created-at": "Created At",
-    "updated-at": "Updated At",
-    "all-decks": "All Decks",
-    "sort-by": "Sort by",
-    "layout-grid": "Grid",
-    "layout-list": "List",
-    "create-deck": "Create Deck",
-    "update-deck": "Update Deck",
-    "desc": "Manage your decks",
-    "tips": "What`s Deck?",
-    "due": "Due",
+  "term": {
+    "decks": "Decks",
+    "facts": "Facts",
     "name": "Name",
+    "due": "Due",
     "progress": "Progress",
     "fields": "Fields",
+    "field": "Field",
     "rate": "Rate",
-    "facts": "Facts",
     "cards": "Cards",
     "unseen": "Unseen",
     "reviewed": "Reviewed",
     "hidden": "Hidden",
-    "new-today": "New today",
-    "last-review": "Last review",
-    "add-field": "Add field"
+    "new-today": "Today",
+    "last-review": "Last Review",
+    "tags": "Tags",
+    "column": "Column",
+    "row": "Row",
+    "entry": "Entry",
+    "entries": "Entries"
   }
 }

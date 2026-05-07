@@ -34,14 +34,14 @@ export default function DecksList({
   return (
     <LayoutPage
       breadcrumbs={[
-        { href: '/decks', title: t('nav.decks') },
+        { href: '/decks', title: t('term.decks') },
       ]}
     >
       <div className="md:flex gap-2 items-center my-2">
         <div className="flex flex-1 items-center gap-2  pl-1  ">
           <div className="flex items-center gap-1">
             <span className="text-foreground text-base font-semibold">
-              {t('decks.all-decks')} ({data.length})
+              {t('common.all', { name: t('term.decks'), count: data.length })}
             </span>
             <Tooltip delay={0}>
               <Tooltip.Trigger>
@@ -50,7 +50,7 @@ export default function DecksList({
                 </AppLink>
               </Tooltip.Trigger>
               <Tooltip.Content>
-                <p>{t('decks.tips')}</p>
+                <p>{t('common.what-is', { name: t('term.decks') })}</p>
               </Tooltip.Content>
             </Tooltip>
           </div>

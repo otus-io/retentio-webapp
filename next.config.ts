@@ -16,7 +16,6 @@ const withNextIntl = createNextIntlPlugin({
 const withMDX = createMDX({
   extension: /\.(md|mdx)$/,
   options: {
-    // 加入这两个插件，注意顺序
     remarkPlugins: [
       'remark-frontmatter',
       'remark-mdx-frontmatter',

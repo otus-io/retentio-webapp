@@ -5,12 +5,14 @@ import { InfoIcon } from 'lucide-react'
 import { useCallback, useTransition } from 'react'
 import { logoutAction } from '@/modules/auth/auth.action'
 import AppButton from '../app/AppButton'
+import { useTranslations } from 'next-intl'
 
 export default function LogoutModal({
   isOpen,
   setOpen,
   close,
 }: UseOverlayStateReturn) {
+  const t = useTranslations()
   const [_isPending, startTransition] = useTransition()
 
   const handleSignOut = useCallback(() => {
@@ -34,12 +36,12 @@ export default function LogoutModal({
               <InfoIcon className="size-5" />
             </Modal.Icon>
             <Modal.Heading>
-              退出登录
+              {t('common.logout')}
             </Modal.Heading>
           </Modal.Header>
           <Modal.Body>
             <p>
-              确定退出登录吗？
+              {t('common.logout-confirm')}
             </p>
           </Modal.Body>
           <Modal.Footer>
@@ -48,13 +50,13 @@ export default function LogoutModal({
               onClick={handleSignOut}
               isPending={_isPending}
             >
-              确定
+              {t('common.confirm')}
             </AppButton>
             <AppButton
               slot="close"
               isDisabled={_isPending}
             >
-              取消
+              {t('common.cancel')}
             </AppButton>
           </Modal.Footer>
         </Modal.Dialog>

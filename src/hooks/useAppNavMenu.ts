@@ -9,18 +9,18 @@ export interface IAppNavMenu {
 }
 
 export default function useAppNavMenu() {
-  const t = useTranslations('nav')
+  const t = useTranslations()
   const pathname = usePathname()
 
   const navMenu = useMemo(() => {
     return [
       {
-        title: t('guide'),
+        title: t('nav.guide'),
         href: '/guide',
         isActive: pathname.startsWith('/guide'),
       },
       {
-        title: t('decks'),
+        title: t('term.decks'),
         href: '/decks',
         isActive: pathname.startsWith('/decks'),
       },

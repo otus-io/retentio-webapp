@@ -15,7 +15,7 @@ export default async function Page() {
 export async function generateMetadata() {
   const t = await getTranslations()
   return {
-    title: t('nav.decks'),
-    description: t('decks.desc'),
+    title: t('term.decks'),
+    description: t('common.manage', { name: t('term.decks') }),
   } satisfies Metadata
 }

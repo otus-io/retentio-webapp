@@ -84,6 +84,8 @@ function DecksFormInner({
     setFields((prev) => [...prev, { name: '', id: crypto.randomUUID() }])
   }
 
+  const title = type === 'create' ? t('common.create', { name: t('term.decks') }) : t('common.update', { name: t('term.decks') })
+
   return (
     <div
       className="mx-auto grid w-full max-w-content items-start gap-4 px-4 py-6 sm:px-6 lg:px-8 xl:px-10"
@@ -91,15 +93,15 @@ function DecksFormInner({
 
       <AppBreadcrumbs
         items={[
-          { href: '/decks', title: t('nav.decks') },
-          { title: type === 'create' ? t('decks.create-deck') : t('decks.update-deck'), href: '' },
+          { href: '/decks', title: t('term.decks') },
+          { title: title, href: '' },
         ]}
       />
 
       <div className="max-w-lg w-full mx-auto space-y-4">
         <Card>
           <Card.Header>
-            <Card.Title>{type==='create'?t('decks.create-deck'):t('decks.update-deck')}</Card.Title>
+            <Card.Title>{title}</Card.Title>
           </Card.Header>
           <Form
             action={action}
@@ -107,8 +109,9 @@ function DecksFormInner({
           >
             <Card.Content>
               <AppInput
-                label={t('decks.name')}
+                label={t('term.name')}
                 name="name"
+                placeholder={t('common.placeholder-enter', { name: t('term.name') })}
                 isRequired
                 variant="secondary"
                 defaultValue={state?.data?.name}
@@ -124,6 +127,8 @@ function DecksFormInner({
                       variant="secondary"
                       className={'flex-1'}
                       defaultValue={field.name}
+                      placeholder={t('common.placeholder-enter', { name: t('term.fields') })}
+
                     />
                     <div className={clsx(index===0&&'pt-6')}>
                       <AppButton
@@ -144,7 +149,7 @@ function DecksFormInner({
                 variant="secondary"
                 onClick={addField}
               >
-                {t('decks.add-field')}
+                {t('common.add', { name: t('term.fields') })}
               </AppButton>
               <NumberField
                 formatOptions={{
@@ -157,7 +162,7 @@ function DecksFormInner({
                 variant="secondary"
                 isRequired
               >
-                <Label>{t('decks.rate')} (1–1000)</Label>
+                <Label>{t('term.rate')} (1–1000)</Label>
                 <NumberField.Group
                   className={'grid-cols-[1fr_auto]'}
                 >

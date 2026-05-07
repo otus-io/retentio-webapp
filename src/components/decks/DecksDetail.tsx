@@ -53,7 +53,7 @@ export default function DecksDetail({ deck }: DecksDetailProps) {
   return (
     <LayoutPage
       breadcrumbs={[
-        { href: '/decks', title: t('nav.decks') },
+        { href: '/decks', title: t('term.decks') },
         { href: `/decks/${deck.id}`, title: deck.name },
       ]}
     >
@@ -90,53 +90,53 @@ export default function DecksDetail({ deck }: DecksDetailProps) {
             >
 
               <DecksIconLabel icon={History} color="amber">
-                <span className="text-muted-foreground">{t('decks.rate')}:</span>
+                <span className="text-muted-foreground">{t('term.rate')}:</span>
                 <span className="font-medium text-foreground ml-1">{deck.rate}</span>
               </DecksIconLabel>
 
               <DecksIconLabel icon={ListTodo} color="rose">
-                <span className="text-muted-foreground">{t('decks.due')}:</span>
+                <span className="text-muted-foreground">{t('term.due')}:</span>
                 <span className="font-medium text-foreground ml-1">{deck.stats.due_cards}</span>
               </DecksIconLabel>
 
               <DecksIconLabel icon={ChartPie} color="emerald">
-                <span className="text-muted-foreground">{t('decks.progress')}:</span>
+                <span className="text-muted-foreground">{t('term.progress')}:</span>
                 <span className="font-medium text-foreground ml-1">{progress}%</span>
               </DecksIconLabel>
 
 
               <DecksIconLabel icon={ListIcon} color="violet">
-                <span className="text-muted-foreground">{t('decks.facts')}:</span>
+                <span className="text-muted-foreground">{t('term.facts')}:</span>
                 <span className="font-medium text-foreground ml-1">{deck.stats.facts_count}</span>
               </DecksIconLabel>
 
               <DecksIconLabel icon={Layers} color="cyan">
-                <span className="text-muted-foreground">{t('decks.cards')}:</span>
+                <span className="text-muted-foreground">{t('term.cards')}:</span>
                 <span className="font-medium text-foreground ml-1">{deck.stats.cards_count}</span>
               </DecksIconLabel>
 
               <DecksIconLabel icon={Inbox} color="slate">
-                <span className="text-muted-foreground">{t('decks.unseen')}:</span>
+                <span className="text-muted-foreground">{t('term.unseen')}:</span>
                 <span className="font-medium text-foreground ml-1">{deck.stats.unseen_cards}</span>
               </DecksIconLabel>
 
               <DecksIconLabel icon={CheckCircle2} color="emerald">
-                <span className="text-muted-foreground">{t('decks.reviewed')}:</span>
+                <span className="text-muted-foreground">{t('term.reviewed')}:</span>
                 <span className="font-medium text-foreground ml-1">{deck.stats.reviewed_cards}</span>
               </DecksIconLabel>
 
               <DecksIconLabel icon={EyeOff} color="orange">
-                <span className="text-muted-foreground">{t('decks.hidden')}:</span>
+                <span className="text-muted-foreground">{t('term.hidden')}:</span>
                 <span className="font-medium text-foreground ml-1">{deck.stats.hidden_cards}</span>
               </DecksIconLabel>
 
               <DecksIconLabel icon={Sparkles} color="yellow">
-                <span className="text-muted-foreground">{t('decks.new-today')}:</span>
+                <span className="text-muted-foreground">{t('term.new-today')}:</span>
                 <span className="font-medium text-foreground ml-1">{deck.stats.new_cards_today}</span>
               </DecksIconLabel>
 
               <DecksIconLabel icon={Clock} color="slate">
-                <span className="text-muted-foreground">{t('decks.last-review')}:</span>
+                <span className="text-muted-foreground">{t('term.last-review')}:</span>
                 <span className="font-medium text-foreground ml-1">{last_reviewed_at}</span>
               </DecksIconLabel>
             </motion.div>

@@ -43,14 +43,13 @@ export default function DecksCard({
           </div>
         </Card.Header>
 
-        {/* 内容区域 */}
         <Card.Content>
           <div className="flex items-center gap-2">
             <DecksIconLabel icon={ListTodo} color={'orange'}>
-              {t('decks.due')}: <span className="font-medium ml-0.5">{deck.stats.due_cards}</span>
+              {t('term.due')}: <span className="font-medium ml-0.5">{deck.stats.due_cards}</span>
             </DecksIconLabel>
             <DecksIconLabel icon={ChartPie} color={'emerald'}>
-              {t('decks.progress')}: <span className="font-medium  ml-0.5">{progress}%</span>
+              {t('term.progress')}: <span className="font-medium  ml-0.5">{progress}%</span>
             </DecksIconLabel>
           </div>
         </Card.Content>

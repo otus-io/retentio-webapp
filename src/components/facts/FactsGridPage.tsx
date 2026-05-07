@@ -17,7 +17,7 @@ import TablePagination from '@/components/common/TablePagination'
 import { useDebouncedCallback } from 'use-debounce'
 import { updateDecksFields } from '@/api/decks'
 import AppButton from '@/components/app/AppButton'
-import { CheckIcon, Columns4Icon, ListIcon, Rows4Icon } from 'lucide-react'
+import { CheckIcon, Columns4Icon, PlusIcon, Rows4Icon } from 'lucide-react'
 import { updateFactsFields } from '@/api/facts'
 import FactsMediaModal from '@/components/facts/FactsMediaModal'
 import { actionSymbol, rawSymbol } from '@/components/facts/token'
@@ -43,14 +43,12 @@ interface FactsGridPageProps {
 }
 
 export default function FactsGridPage({ facts, meta, deck }: FactsGridPageProps) {
+  const t = useTranslations()
   const { resolvedTheme } = useTheme()
-  const total = meta.total || 0
-  const totalPages = meta.total ? Math.ceil(meta.total/meta.limit) :0
   const [isOpen, setIsOpen] = useState(false)
   const [currentEntry, setCurrentEntry] = useState<Entry>()
   const gridRef = useRef<AgGridReact>(null)
   const [loading, setLoading]= useState(false)
-  const t = useTranslations()
   const fullFields = useMemo(() => {
     const factsFields= facts.reduce((longest, fact) =>
       fact.fields.length > longest.length ? fact.fields : longest
@@ -58,6 +56,8 @@ export default function FactsGridPage({ facts, meta, deck }: FactsGridPageProps)
     const fields = [...deck.fields].concat(...factsFields.filter((_, index) => index >= deck.fields.length))
     return [...fields, actionSymbol]
   }, [deck.fields, facts])
+  const total = meta.total || 0
+  const totalPages = meta.total ? Math.ceil(meta.total/meta.limit) :0
 
   const createRowData = useCallback((fact?: Fact) => {
     const result: Record<string, any> = {
@@ -179,7 +179,7 @@ export default function FactsGridPage({ facts, meta, deck }: FactsGridPageProps)
       field: colId,
       sortable: false,
       autoHeight: true,
-      headerName: isActionColumn? '操作' : e as string,
+      headerName: isActionColumn? t('common.actions') : e as string,
       headerComponent: (props: IHeaderParams)=>{
         return (
           <FactsGridHeaderRenderer
@@ -233,13 +233,12 @@ export default function FactsGridPage({ facts, meta, deck }: FactsGridPageProps)
         },
       }),
     } satisfies ColDef<Record<string, any>>
-  }, [handleRenameColDef, handleDebouncedFieldsChange, handleDeleteColDef, deck, handleAttachmentClick])
+  }, [handleRenameColDef, handleDebouncedFieldsChange, handleDeleteColDef, deck, handleAttachmentClick, t])
 
   const handleAddCol = useCallback(() => {
     const currentDefs = getCurrentColDefs()
     const uid = `field_${currentDefs.length}`
     const newCol= createColDef(uid)
-    // 插到 action 列前面
     const actionIndex = currentDefs.findIndex((def) => def.context?.isActionColumn)
     const newDefs = actionIndex === -1
       ? [
@@ -263,14 +262,14 @@ export default function FactsGridPage({ facts, meta, deck }: FactsGridPageProps)
   return (
     <LayoutPage
       breadcrumbs={[
-        { href: '/decks', title: t('nav.decks') },
+        { href: '/decks', title: t('term.decks') },
         { href: `/decks/${deck.id}`, title: deck.name },
-        { href: `/decks/${deck.id}/facts`, title: '词组' },
+        { href: `/decks/${deck.id}/facts`, title: t('term.facts') },
       ]}
     >
       <div className="flex items-center gap-2 my-2">
         <h1>
-          所有词组（{total}）
+          {t('common.all', { name: t('term.facts'), count: total })}
         </h1>
         <AppButton
           className={'ml-auto'}
@@ -280,32 +279,30 @@ export default function FactsGridPage({ facts, meta, deck }: FactsGridPageProps)
           onClick={handleAddCol}
           icon={<Columns4Icon className="size-4" />}
         >
-          <span>创建列</span>
+          <span>{t('common.create', { name: t('term.column') })}</span>
         </AppButton>
 
         <CrateRowButton deckId={deck.id} fields={fullFields} />
 
 
-        <AppButtonLink
-          size="sm"
-          variant="outline"
-          href={`/decks/${deck.id}/facts/create`}
-        >
-          <ListIcon className="size-4" />
-          <span>创建facts</span>
-        </AppButtonLink>
         <AppButton
           className={''}
           size="sm"
-          variant="outline"
+          variant="secondary"
           onClick={handleDebouncedChange}
           isPending={loading}
           icon={<CheckIcon className="size-4" />}
         >
-          {(props)=>{
-            return props.isPending?'保存中...':'保存'
-          }}
+          {t('common.save')}
         </AppButton>
+
+        <AppButtonLink
+          size="sm"
+          href={`/decks/${deck.id}/facts/create`}
+        >
+          <PlusIcon className="size-4" />
+          <span>{t('common.create', { name: t('term.facts') })}</span>
+        </AppButtonLink>
       </div>
       <AgGridProvider modules={modules}>
         <div style={{ height: 500 }}>
@@ -341,6 +338,7 @@ function CrateRowButton({
   deckId: string,
   fields: (string | symbol)[]
 }){
+  const t = useTranslations()
   const value = useMemo(() => {
     const _fields = fields.filter(isString)
     const facts = [{
@@ -351,9 +349,9 @@ function CrateRowButton({
   }, [fields])
 
 
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [_state, action, isPending] = useActionState(createFactsAction.bind(null, deckId), null)
 
-  console.log(_state)
   return (
     <form action={action}>
       <input type="hidden" name="facts" value={value} />
@@ -365,7 +363,7 @@ function CrateRowButton({
         isPending={isPending}
         icon={<Rows4Icon className="size-4" />}
       >
-        <span>创建行</span>
+        <span>{t('common.create', { name: t('term.row') })}</span>
       </AppButton>
     </form>
   )

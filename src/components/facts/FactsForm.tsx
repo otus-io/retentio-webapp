@@ -145,31 +145,34 @@ function FactsFormInner({
     return undefined
   }, [state?.validationErrors])
 
+  const title = type === 'create' ? t('common.create', { name: t('term.facts') }) : t('common.update', { name: t('term.facts') })
+
+
   return (
     <div className="mx-auto grid w-full max-w-content items-start gap-4 px-4 py-6 sm:px-6 lg:px-8 xl:px-10">
       <AppBreadcrumbs
         items={[
-          { href: '/decks', title: t('nav.decks') },
+          { href: '/decks', title: t('term.decks') },
           { href: `/decks/${deck.id}`, title: deck.name },
-          { href: `/decks/${deck.id}/facts`, title: '词组' },
-          { href: '', title: type === 'create' ? '新增词组' : '编辑词组' },
+          { href: `/decks/${deck.id}/facts`, title: t('term.facts') },
+          { href: '', title },
         ]}
       />
 
       <div className="max-w-lg w-full mx-auto space-y-4">
         <Card>
           <Card.Header>
-            <Card.Title>{type === 'create' ? '新增词组' : '编辑词组'}</Card.Title>
+            <Card.Title>{title}</Card.Title>
           </Card.Header>
 
           <Form validationErrors={state?.validationErrors} onSubmit={handleSubmit}>
             <Card.Content className="space-y-2">
               <div className="grid grid-cols-[1fr_1fr_auto_auto] gap-x-2 items-center px-1">
                 <span className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
-                  Field
+                  {t('term.field')}
                 </span>
                 <span className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
-                  Entry
+                  {t('term.entry')}
                 </span>
                 <span className="w-8" />
                 <span className="w-8" />
@@ -183,6 +186,7 @@ function FactsFormInner({
                       variant="secondary"
                       value={pair.field}
                       onChange={(e) => dispatch({ type: 'UPDATE_FIELD', id: pair.id, field: e })}
+                      placeholder={t('common.placeholder-enter', { name: t('term.field') })}
                     />
                     <div className="space-y-1">
                       <AppInput
@@ -190,6 +194,7 @@ function FactsFormInner({
                         variant="secondary"
                         value={pair.text}
                         onChange={(e) => dispatch({ type: 'UPDATE_TEXT', id: pair.id, text: e })}
+                        placeholder={t('common.placeholder-enter', { name: t('term.entry') })}
                       />
                     </div>
                     <AppButton

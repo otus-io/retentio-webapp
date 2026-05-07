@@ -50,7 +50,7 @@ export default function DecksAction({ deck }: DecksActionProps) {
             <Dropdown.Item id="facts" textValue="facts" variant="default">
               <div className="flex items-center gap-1">
                 <BookA className="size-3.5 text-muted-foreground" />
-                <Label>{t('decks.facts')}</Label>
+                <Label>{t('term.facts')}</Label>
               </div>
             </Dropdown.Item>
             <Dropdown.Item id="delete" textValue="delete" variant="danger">

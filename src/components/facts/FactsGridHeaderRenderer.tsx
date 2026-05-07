@@ -21,7 +21,6 @@ export default function FactsGridHeaderRenderer(props: FactsGridHeaderRendererPr
     return props.column.getColDef().context?.uid
   }
 
-  // 进入编辑
   const startEdit = () => {
     setEditing(true)
     setTimeout(() => {
@@ -30,7 +29,6 @@ export default function FactsGridHeaderRenderer(props: FactsGridHeaderRendererPr
     })
   }
 
-  // 退出编辑
   const stopEdit = () => {
     setEditing(false)
     props.onBlur?.()
@@ -45,13 +43,12 @@ export default function FactsGridHeaderRenderer(props: FactsGridHeaderRendererPr
     props.onChange?.(uid(), e.target.value)
   }
 
-  // autoFocus 时挂载后聚焦
   useEffect(() => {
     if (props.autoFocus) {
       inputRef.current?.focus()
       inputRef.current?.select()
     }
-  }, [props.autoFocus]) // 只在 mount 时执行一次
+  }, [props.autoFocus])
 
   if (props.column.getColDef().context?.isActionColumn) {
     return (
