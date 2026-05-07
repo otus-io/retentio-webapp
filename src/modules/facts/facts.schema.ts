@@ -40,8 +40,13 @@ export interface Fact {
   tags: TagInfo[];
 }
 
-
-
+/**
+ *  - append — 追加到末尾，新内容加在现有内容后面
+ *  - prepend — 插入到头部，新内容加在现有内容前面
+ *  - shuffle — 打乱顺序，随机重排
+ *  - spread — 分散/展开，把内容分布到各个位置（类似数组 spread）
+ */
+const operationSchema = z.enum(['append', 'prepend', 'shuffle', 'spread'])
 /**
  * 添加词条请求 DTO
  */
@@ -56,6 +61,7 @@ export const createFactsSchema = z.object({
     fields: z.array(z.string()).optional(),
   })).min(1, 'At least one fact is required'),
   template: z.array(z.array(z.array(z.number()))).optional(),
+  operation: operationSchema,
 })
 
 export type CreateFactsDTO = z.infer<typeof createFactsSchema>

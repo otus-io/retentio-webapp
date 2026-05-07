@@ -4,7 +4,7 @@ import { EllipsisVertical, Trash2 } from 'lucide-react'
 import { useTranslations } from 'next-intl'
 import { useEffect, useRef, useState } from 'react'
 
-interface FactsHeaderRendererProps extends IHeaderParams {
+interface FactsGridHeaderRendererProps extends IHeaderParams {
   autoFocus?: boolean
   onBlur?: () => void
   onChange?: (uid: string, newName: string) => void
@@ -12,7 +12,7 @@ interface FactsHeaderRendererProps extends IHeaderParams {
 }
 
 
-export function FactsHeaderRenderer(props: FactsHeaderRendererProps) {
+export default function FactsGridHeaderRenderer(props: FactsGridHeaderRendererProps) {
   const [editing, setEditing] = useState(!!props.autoFocus)
   const [value, setValue] = useState(props.displayName)
   const inputRef = useRef<HTMLInputElement>(null)

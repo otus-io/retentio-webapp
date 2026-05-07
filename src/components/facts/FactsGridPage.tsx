@@ -4,26 +4,27 @@
 import { AgGridReact } from 'ag-grid-react'
 import type { ColDef, IHeaderParams, IRowNode } from 'ag-grid-community'
 import { Entry, Fact } from '@/modules/facts/facts.schema'
-import { useCallback, useMemo, useRef, useState } from 'react'
+import { useActionState, useCallback, useMemo, useRef, useState } from 'react'
 import { Deck } from '@/modules/decks/decks.schema'
 import { ModuleRegistry } from 'ag-grid-community'
 import { AllCommunityModule } from 'ag-grid-community'
 import { AgGridProvider } from 'ag-grid-react'
-import { FactsCellRenderer } from '@/components/facts/FactsCellRenderer'
-import { FactsHeaderRenderer } from '@/components/facts/FactsHeaderRenderer'
+import FactsGridCellRenderer from '@/components/facts/FactsGridCellRenderer'
+import FactsGridHeaderRenderer from '@/components/facts/FactsGridHeaderRenderer'
 import { themeQuartz, colorSchemeDark, colorSchemeLight } from 'ag-grid-community'
 import { useTheme } from 'next-themes'
 import TablePagination from '@/components/common/TablePagination'
 import { useDebouncedCallback } from 'use-debounce'
 import { updateDecksFields } from '@/api/decks'
 import AppButton from '@/components/app/AppButton'
-import { Plus, RefreshCcw } from 'lucide-react'
+import { CheckIcon, Columns4Icon, ListIcon, Rows4Icon } from 'lucide-react'
 import { updateFactsFields } from '@/api/facts'
-import FactsCellAttachment from '@/components/facts/FactsCellAttachment'
-import { useOverlayState } from '@heroui/react'
+import FactsMediaModal from '@/components/facts/FactsMediaModal'
 import { actionSymbol, rawSymbol } from '@/components/facts/token'
 import { useTranslations } from 'next-intl'
 import LayoutPage from '@/components/layout/LayoutPage'
+import { createFactsAction } from '@/modules/facts/facts.action'
+import { AppButtonLink } from '@/components/app/AppButtonLink'
 
 const lightTheme = themeQuartz.withPart(colorSchemeLight)
 const darkTheme = themeQuartz.withPart(colorSchemeDark)
@@ -45,12 +46,11 @@ export default function FactsGridPage({ facts, meta, deck }: FactsGridPageProps)
   const { resolvedTheme } = useTheme()
   const total = meta.total || 0
   const totalPages = meta.total ? Math.ceil(meta.total/meta.limit) :0
-  const state = useOverlayState()
+  const [isOpen, setIsOpen] = useState(false)
+  const [currentEntry, setCurrentEntry] = useState<Entry>()
   const gridRef = useRef<AgGridReact>(null)
   const [loading, setLoading]= useState(false)
   const t = useTranslations()
-  const [currentFact, setCurrentFact] = useState<Fact>()
-  const [fieldIndex, setFieldIndext] = useState<number>()
   const fullFields = useMemo(() => {
     const factsFields= facts.reduce((longest, fact) =>
       fact.fields.length > longest.length ? fact.fields : longest
@@ -59,22 +59,28 @@ export default function FactsGridPage({ facts, meta, deck }: FactsGridPageProps)
     return [...fields, actionSymbol]
   }, [deck.fields, facts])
 
+  const createRowData = useCallback((fact?: Fact) => {
+    const result: Record<string, any> = {
+      id: fact?.id,
+      [rawSymbol]: fact,
+    }
+    fullFields.forEach((key, index)=>{
+      if(typeof key === 'string'){
+        if(!fact){
+          result[key] = { text: key, audio: '', image: '', video: '' }
+        }else{
+          result[key] = fact?.entries[index]
+        }
+      }
+    })
+    return result
+  }, [fullFields])
+
   const lastDecksFields = useRef<string[]>(fullFields.filter((e)=>isString(e)) as string[])
   const rowData = useMemo(()=>{
-    const data = facts.map((fact)=>{
-      const result: Record<string, any> = {
-        id: fact.id,
-        [rawSymbol]: fact,
-      }
-      fullFields.forEach((key, index)=>{
-        if(typeof key === 'string'){
-          result[key] = fact.entries[index]
-        }
-      })
-      return result
-    })
+    const data = facts.map(createRowData)
     return data
-  }, [facts, fullFields])
+  }, [facts, createRowData])
 
   const getCurrentColDefs = useCallback(() => {
     const currentDefs: ColDef<Record<string, any>>[] = gridRef.current?.api.getColumnDefs() ?? []
@@ -145,10 +151,10 @@ export default function FactsGridPage({ facts, meta, deck }: FactsGridPageProps)
   }, 100)
 
   const handleAttachmentClick = useCallback((fact: Fact, fieldIndex: number) => {
-    setCurrentFact(fact)
-    setFieldIndext(fieldIndex)
-    state.open()
-  }, [state])
+    console.log(fact, fact.entries[fieldIndex])
+    setCurrentEntry(fact.entries[fieldIndex])
+    setIsOpen(true)
+  }, [setIsOpen])
 
   const handleRenameColDef = useDebouncedCallback((uid: string, newName: string) => {
     const currentDefs = getCurrentColDefs()
@@ -176,7 +182,7 @@ export default function FactsGridPage({ facts, meta, deck }: FactsGridPageProps)
       headerName: isActionColumn? '操作' : e as string,
       headerComponent: (props: IHeaderParams)=>{
         return (
-          <FactsHeaderRenderer
+          <FactsGridHeaderRenderer
             {...props}
             autoFocus={true}
             onChange={handleRenameColDef}
@@ -186,7 +192,7 @@ export default function FactsGridPage({ facts, meta, deck }: FactsGridPageProps)
         )
       },
       cellRenderer: (props: any)=>{
-        return <FactsCellRenderer {...props} onAttachmentClick={handleAttachmentClick} />
+        return <FactsGridCellRenderer deck={deck} {...props} onAttachmentClick={handleAttachmentClick} />
       },
       valueGetter: (params)=>{
         const key = params.colDef.field ?? ''
@@ -212,9 +218,9 @@ export default function FactsGridPage({ facts, meta, deck }: FactsGridPageProps)
         pinned: 'right',
         suppressMovable: true,
         lockPosition: 'right',
-        width: 80,
-        minWidth: 80,
-        maxWidth: 80,
+        width: 75,
+        minWidth: 75,
+        maxWidth: 75,
         resizable: false,
         context: {
           isActionColumn: true,
@@ -227,9 +233,9 @@ export default function FactsGridPage({ facts, meta, deck }: FactsGridPageProps)
         },
       }),
     } satisfies ColDef<Record<string, any>>
-  }, [handleAttachmentClick, handleRenameColDef, handleDebouncedFieldsChange, handleDeleteColDef])
+  }, [handleRenameColDef, handleDebouncedFieldsChange, handleDeleteColDef, deck, handleAttachmentClick])
 
-  const handleAddColDef = useCallback(() => {
+  const handleAddCol = useCallback(() => {
     const currentDefs = getCurrentColDefs()
     const uid = `field_${currentDefs.length}`
     const newCol= createColDef(uid)
@@ -247,7 +253,10 @@ export default function FactsGridPage({ facts, meta, deck }: FactsGridPageProps)
     gridRef.current?.api.setGridOption('columnDefs', newDefs)
   }, [createColDef, getCurrentColDefs])
 
-  const colDefs = useMemo(()=>{
+
+
+
+  const columnDefs = useMemo(()=>{
     return fullFields.map(createColDef)
   }, [fullFields, createColDef])
 
@@ -259,7 +268,6 @@ export default function FactsGridPage({ facts, meta, deck }: FactsGridPageProps)
         { href: `/decks/${deck.id}/facts`, title: '词组' },
       ]}
     >
-
       <div className="flex items-center gap-2 my-2">
         <h1>
           所有词组（{total}）
@@ -269,18 +277,30 @@ export default function FactsGridPage({ facts, meta, deck }: FactsGridPageProps)
           size="sm"
           variant="outline"
           isPending={loading}
-          onClick={handleAddColDef}
-          icon={<Plus />}
+          onClick={handleAddCol}
+          icon={<Columns4Icon className="size-4" />}
         >
-          创建列
+          <span>创建列</span>
         </AppButton>
+
+        <CrateRowButton deckId={deck.id} fields={fullFields} />
+
+
+        <AppButtonLink
+          size="sm"
+          variant="outline"
+          href={`/decks/${deck.id}/facts/create`}
+        >
+          <ListIcon className="size-4" />
+          <span>创建facts</span>
+        </AppButtonLink>
         <AppButton
           className={''}
           size="sm"
           variant="outline"
           onClick={handleDebouncedChange}
           isPending={loading}
-          icon={<RefreshCcw className="size-4" />}
+          icon={<CheckIcon className="size-4" />}
         >
           {(props)=>{
             return props.isPending?'保存中...':'保存'
@@ -294,7 +314,7 @@ export default function FactsGridPage({ facts, meta, deck }: FactsGridPageProps)
             theme={resolvedTheme === 'dark' ? darkTheme : lightTheme}
             suppressDragLeaveHidesColumns
             rowData={rowData}
-            columnDefs={colDefs}
+            columnDefs={columnDefs}
             onColumnMoved={()=>handleDebouncedFieldsChange()}
             onCellValueChanged={() => handleDebouncedCellChange()}
           />
@@ -303,12 +323,50 @@ export default function FactsGridPage({ facts, meta, deck }: FactsGridPageProps)
       <TablePagination
         totalPages={totalPages}
       />
-      <FactsCellAttachment
-        {...state}
-        fact={currentFact}
-        fieldIndex={fieldIndex}
+      <FactsMediaModal
+        isOpen={isOpen}
+        setIsOpen={setIsOpen}
+        entry={currentEntry}
       />
     </LayoutPage>
   )
 }
 
+
+
+function CrateRowButton({
+  deckId,
+  fields,
+}: {
+  deckId: string,
+  fields: (string | symbol)[]
+}){
+  const value = useMemo(() => {
+    const _fields = fields.filter(isString)
+    const facts = [{
+      entries: _fields.map((text)=>({ text })),
+      fields: _fields,
+    }]
+    return JSON.stringify(facts)
+  }, [fields])
+
+
+  const [_state, action, isPending] = useActionState(createFactsAction.bind(null, deckId), null)
+
+  console.log(_state)
+  return (
+    <form action={action}>
+      <input type="hidden" name="facts" value={value} />
+      <input type="hidden" name="operation" value="prepend" />
+      <AppButton
+        size="sm"
+        variant="outline"
+        type="submit"
+        isPending={isPending}
+        icon={<Rows4Icon className="size-4" />}
+      >
+        <span>创建行</span>
+      </AppButton>
+    </form>
+  )
+}

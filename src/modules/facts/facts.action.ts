@@ -1,45 +1,79 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 'use server'
 import { revalidatePath } from 'next/cache'
 import { redirect } from 'next/navigation'
 import z from 'zod'
 import { formatErrorMessage, formDataToObject } from '@/utils/format'
-import { createFactsSchema, updateFactSchema, type Entry } from '@/modules/facts/facts.schema'
+import { createFactsSchema, updateFactSchema } from '@/modules/facts/facts.schema'
 import { createFactsService, deleteFactService, updateFactService } from '@/modules/facts/facts.service'
 
 /**
  * 添加词条的 Action
  */
-export const createFactsAction: ActionFunctionPayload<{ deckId: string; operation: string }> = async ({ deckId, operation }, _, formData) => {
-  const data = formDataToObject(formData)
-  data['submissionId'] = crypto.randomUUID()
-
-  const result = createFactsSchema.safeParse(data)
-  if (!result.success) {
-    return {
-      validationErrors: z.flattenError(result.error).fieldErrors,
-      data,
+export const createFactsAction: ActionFunctionPayload<string> = async (deckId, _, formData) => {
+  try {
+    const _data = formDataToObject(formData)
+    const data: Record<string, any> = {
+      submissionId: crypto.randomUUID(),
+      ..._data,
     }
-  }
-  const res = await createFactsService(deckId, operation, result.data)
-  if (!res.success) {
+
+    if(_data.facts && typeof _data.facts === 'string'){
+      data['facts'] = JSON.parse(_data.facts)
+    }
+
+    if(_data.template && typeof _data.template === 'string'){
+      data['template'] = JSON.parse(_data.template)
+    }
+
+    const result = createFactsSchema.safeParse(data)
+
+
+    if (!result.success) {
+      return {
+        validationErrors: z.flattenError(result.error).fieldErrors,
+        data,
+        success: false,
+      }
+    }
+    const res = await createFactsService(deckId, result.data)
+    if (!res.success) {
+      return {
+        error: res.message,
+        data,
+        success: false,
+      }
+    }
+  } catch (error) {
     return {
-      error: res.message,
-      data,
+      error: formatErrorMessage(error, 'createFactsAction failed'),
       success: false,
     }
   }
-  revalidatePath(`/decks/${deckId}`)
-  redirect(`/decks/${deckId}`)
+  revalidatePath(`/decks/${deckId}/facts`)
+  redirect(`/decks/${deckId}/facts`)
 }
 
 /**
  * 更新词条的 Action
  */
 export const updateFactAction: ActionFunctionPayload<{ deckId: string; factId: string }> = async ({ deckId, factId }, _, formData) => {
-  const data = formDataToObject(formData)
-  data['submissionId'] = crypto.randomUUID()
+  const _data = formDataToObject(formData)
 
-  const result = updateFactSchema.safeParse(data)
+  const data: Record<string, any> = {
+    submissionId: crypto.randomUUID(),
+    ..._data,
+  }
+
+  if(_data.facts && typeof _data.facts === 'string'){
+    data['facts'] = JSON.parse(_data.facts)
+  }
+
+  if(_data.template && typeof _data.template === 'string'){
+    data['template'] = JSON.parse(_data.template)
+  }
+
+  const result = updateFactSchema.safeParse(data['facts'][0])
   if (!result.success) {
     return {
       validationErrors: z.flattenError(result.error).fieldErrors,
@@ -54,29 +88,10 @@ export const updateFactAction: ActionFunctionPayload<{ deckId: string; factId: s
       success: false,
     }
   }
-  revalidatePath(`/decks/${deckId}`)
-  redirect(`/decks/${deckId}`)
+  revalidatePath(`/decks/${deckId}/facts`)
+  redirect(`/decks/${deckId}/facts`)
 }
 
-/**
- * 词条条目快速保存（供行内编辑使用）
- */
-export async function updateFactEntriesAction(
-  deckId: string,
-  factId: string,
-  entries: Entry[],
-): Promise<{ success: true } | { error: string; success: false }> {
-  const result = updateFactSchema.safeParse({ entries })
-  if (!result.success) {
-    return { error: formatErrorMessage(result.error, 'updateFactEntriesAction validation failed'), success: false }
-  }
-  const res = await updateFactService(deckId, factId, result.data)
-  if (!res.success) {
-    return { error: res.message, success: false }
-  }
-  revalidatePath(`/decks/${deckId}/facts`)
-  return { success: true }
-}
 
 /**
  * 删除词条的 Action
@@ -96,6 +111,6 @@ export const deleteFactAction: ActionFunctionPayload<{ deckId: string; factId: s
       success: false,
     }
   }
-  revalidatePath(`/decks/${deckId}`)
-  redirect(`/decks/${deckId}`)
+  revalidatePath(`/decks/${deckId}/facts`)
+  redirect(`/decks/${deckId}/facts`)
 }

@@ -1,14 +1,17 @@
 import { getMedia } from '@/api/media'
-import { FactsCellAttachmentPreviewProps } from '@/components/facts/FactsCellAttachmentPreview'
+import { FactsMediaPreviewModalProps } from '@/components/facts/FactsMediaPreviewModal'
+import { useMediaUpload } from '@/hooks/useMediaUpload'
 import { Entry } from '@/modules/facts/facts.schema'
 import { UploadMediaResult } from '@/modules/media/media.schema'
 import { requestClient } from '@/utils/request.client'
-import { useOverlayState } from '@heroui/react'
 import { ImageIcon, LucideIcon, MicIcon, VideoIcon } from 'lucide-react'
-import { useCallback, useReducer, useRef, useState } from 'react'
+import { useCallback, useReducer, useState } from 'react'
 
-interface MediaItem {
-  key: string;
+
+export type MediaType = 'audio' | 'image' | 'video'
+
+export interface MediaItem {
+  key: MediaType;
   label: string;
   icon: LucideIcon;
   loading: boolean;
@@ -18,8 +21,8 @@ interface MediaItem {
 const initialMediaList: MediaItem[] = []
 
 type MediaAction =
-  | { type: 'SET_LOADING'; key: string; loading: boolean }
-  | { type: 'SET_VALUE'; key: string; value: string | undefined }
+  | { type: 'SET_LOADING'; key: MediaType; loading: boolean }
+  | { type: 'SET_VALUE'; key: MediaType; value: string | undefined }
 
 function mediaReducer(state: MediaItem[], action: MediaAction) {
   switch (action.type) {
@@ -34,24 +37,37 @@ function mediaReducer(state: MediaItem[], action: MediaAction) {
   }
 }
 
-export function useFactsCellAttachments(entry?: Entry){
-  const [file, setFile] = useState<FactsCellAttachmentPreviewProps['file']>()
-  const [fileType, setFileType] = useState<FactsCellAttachmentPreviewProps['fileType']>()
-  const cache = useRef(new Map<string, string>())
-  const [loading, setLoading] = useState(false)
-  const previewState = useOverlayState()
+const cache = new Map<string, string>()
 
+
+function mimeToMediaType(mime: string): MediaType {
+  if(mime .startsWith('image')){
+    return 'image'
+  }
+  if(mime.startsWith('audio')){
+    return 'audio'
+  }
+  if(mime.startsWith('video')){
+    return 'video'
+  }
+  throw new Error('unknown Media Type ')
+}
+
+export function useFactsCellAttachments(entry?: Entry, onUpload?: (fileId: string, mediaType: MediaType) => void){
+  const [file, setFile] = useState<FactsMediaPreviewModalProps['file']>()
+  const [fileType, setFileType] = useState<MediaType>()
+  const [loading, setLoading] = useState(false)
+  const [isOpen, setIsOpen] = useState(false)
   const [mediaList, dispatch] = useReducer(mediaReducer, initialMediaList, ()=>{
     if(!entry){
-      return []
+      return [] as MediaItem[]
     }
     return [
       { key: 'audio', label: 'Audio', icon: MicIcon, value: entry.audio, loading: false },
       { key: 'image', label: 'Image', icon: ImageIcon, value: entry.image, loading: false },
       { key: 'video', label: 'Video', icon: VideoIcon, value: entry.video, loading: false },
-    ]
+    ] as MediaItem[]
   })
-
   const handleUpload = useCallback(async(files: File[]) => {
     if(loading){
       return
@@ -63,44 +79,56 @@ export function useFactsCellAttachments(entry?: Entry){
       method: 'POST',
       body: formData,
     })
-    dispatch({ type: 'SET_VALUE', key: fileType ?? '', value: data.id })
+    const mediaType = mimeToMediaType(data.mime)
+    dispatch({
+      type: 'SET_VALUE',
+      key: mediaType,
+      value: data.id,
+    })
+    onUpload?.(data.id, mediaType)
     setLoading(false)
-  }, [fileType, loading])
+  }, [loading, onUpload])
 
-  const handlePreview = useCallback(async (fileType: string)=> {
-    const _key = fileType as Required<FactsCellAttachmentPreviewProps>['fileType']
+  const handlePreview = useCallback(async (item: MediaItem)=> {
     try {
-      const media = entry?.[fileType as keyof typeof entry]
+      const media = item.value
       if(!media){
         return
       }
-      const cacheFile = cache.current.get(media)
+      const cacheFile = cache.get(media)
       if(cacheFile){
         setFile(cacheFile)
-        setFileType(_key)
+        setFileType(item.key)
       }else{
-        dispatch({ type: 'SET_LOADING', key: _key, loading: true })
+        dispatch({ type: 'SET_LOADING', key: item.key, loading: true })
         const { data, success } = await getMedia(media ?? '')
         if(!success){
           return
         }
         setFile(data?.url)
-        setFileType(_key)
-        cache.current.set(media, data?.url)
+        setFileType(item.key)
+        cache.set(media, data?.url)
       }
-      previewState.open()
+      setIsOpen(true)
     } finally {
-      dispatch({ type: 'SET_LOADING', key: _key, loading: false })
+      dispatch({ type: 'SET_LOADING', key: item.key, loading: false })
     }
-  }, [entry, previewState])
+  }, [setIsOpen])
+
+
+  const { getInputProps, open: upload } = useMediaUpload({
+    onAccepted: handleUpload,
+  })
 
   return {
-    ...previewState,
+    isOpen,
     mediaList,
     file,
     fileType,
     loading,
+    setIsOpen,
     preview: handlePreview,
-    upload: handleUpload,
+    upload: upload,
+    getInputProps,
   }
 }

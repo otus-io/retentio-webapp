@@ -43,9 +43,9 @@ export async function getFactService(deckId: string, factId: string) {
 /**
  * 添加词条
  */
-export async function createFactsService(deckId: string, operation: string, data: CreateFactsDTO) {
+export async function createFactsService(deckId: string, data: CreateFactsDTO) {
   try {
-    const res = await request<CreateFactsResponseDTO>(`/api/decks/${deckId}/facts/${operation}`, {
+    const res = await request<CreateFactsResponseDTO>(`/api/decks/${deckId}/facts/${data.operation}`, {
       method: 'POST',
       body: JSON.stringify(data),
     })

@@ -1,19 +1,23 @@
 import AppButton from '@/components/app/AppButton'
-import { Modal, UseOverlayStateReturn } from '@heroui/react'
+import { MediaType } from '@/hooks/useFactsCellAttachments'
+import { Modal } from '@heroui/react'
 import { ImageIcon, MicIcon, VideoIcon } from 'lucide-react'
 
-export interface FactsCellAttachmentPreviewProps extends UseOverlayStateReturn {
+export interface FactsMediaPreviewModalProps {
   file?: string
-  fileType?: 'audio' | 'image' | 'video'
+  fileType?: MediaType
+  isOpen: boolean,
+  setIsOpen: (isOpen: boolean) => void
 }
 
-export default function FactsCellAttachmentPreview({
+export default function FactsMediaPreviewModal({
   file,
   fileType,
-  ...state
-}: FactsCellAttachmentPreviewProps) {
+  isOpen,
+  setIsOpen,
+}: FactsMediaPreviewModalProps) {
   return (
-    <Modal.Backdrop isOpen={state.isOpen} onOpenChange={state.setOpen}>
+    <Modal.Backdrop isOpen={isOpen} onOpenChange={setIsOpen}>
       <Modal.Container>
         <Modal.Dialog className="sm:max-w-90">
           <Modal.CloseTrigger />

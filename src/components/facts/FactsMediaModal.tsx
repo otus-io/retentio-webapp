@@ -1,39 +1,61 @@
-import { Fact } from '@/modules/facts/facts.schema'
-import { Modal, Spinner, UseOverlayStateReturn } from '@heroui/react'
+import { Entry } from '@/modules/facts/facts.schema'
+import { Modal, Spinner } from '@heroui/react'
 import { Paperclip } from 'lucide-react'
 import { Description, Label, ListBox } from '@heroui/react'
-import { useMediaUpload } from '@/hooks/useMediaUpload'
 import AppButton from '@/components/app/AppButton'
-import FactsCellAttachmentPreview from '@/components/facts/FactsCellAttachmentPreview'
+import FactsMediaPreviewModal from '@/components/facts/FactsMediaPreviewModal'
 import { useFactsCellAttachments } from '@/hooks/useFactsCellAttachments'
 
-export interface FactsCellAttachmentProps extends UseOverlayStateReturn {
-  fact?: Fact
-  fieldIndex?: number
+export interface FactsMediaModalProps {
+  entry?: Entry
+  id?: string
+  isOpen: boolean,
+  setIsOpen: (isOpen: boolean) => void
+  onUpload?: Parameters<typeof useFactsCellAttachments>[1]
 }
 
-export default function FactsCellAttachment(props: FactsCellAttachmentProps) {
-  if(!props.fact || !props.isOpen){
+export default function FactsMediaModal({
+  entry,
+  id,
+  isOpen,
+  setIsOpen,
+  onUpload,
+}: FactsMediaModalProps) {
+  if(!entry || !isOpen){
     return null
   }
   return (
-    <FactsCellAttachmentInner {...props} key={props.fact.id} />
+    <FactsAttachmentInner
+      onUpload={onUpload}
+      isOpen={isOpen}
+      setIsOpen={setIsOpen}
+      entry={entry}
+      key={id}
+    />
   )
 }
 
+function FactsAttachmentInner({
+  entry,
+  isOpen,
+  setIsOpen,
+  onUpload,
+}: FactsMediaModalProps) {
+  const {
+    file,
+    fileType,
+    mediaList,
+    loading,
+    upload,
+    getInputProps,
+    preview,
+    isOpen: isPreviewOpen,
+    setIsOpen: setIsPreviewOpen,
+  } = useFactsCellAttachments(entry, onUpload)
 
-function FactsCellAttachmentInner({
-  fact,
-  fieldIndex = 0,
-  ...state
-}: FactsCellAttachmentProps) {
-  const { file, fileType, mediaList, loading, upload, preview, ...previewState } = useFactsCellAttachments(fact?.entries[fieldIndex])
-  const { getInputProps, open } = useMediaUpload({
-    onAccepted: upload,
-  })
   return (
     <>
-      <Modal.Backdrop isOpen={state.isOpen} onOpenChange={state.setOpen}>
+      <Modal.Backdrop isOpen={isOpen} onOpenChange={setIsOpen}>
         <Modal.Container>
           <Modal.Dialog className="sm:max-w-90">
             <Modal.CloseTrigger />
@@ -54,7 +76,7 @@ function FactsCellAttachmentInner({
                       key={item.key}
                       id={item.key}
                       textValue={item.label}
-                      onAction={() => preview(item.key)}
+                      onAction={() => preview(item)}
                     >
                       <item.icon />
                       <div className="flex flex-col flex-1">
@@ -85,7 +107,7 @@ function FactsCellAttachmentInner({
             <Modal.Footer>
               <input {...getInputProps()} />
               <AppButton
-                onClick={open}
+                onClick={upload}
                 isPending={loading}
               >
                 Upload
@@ -97,7 +119,12 @@ function FactsCellAttachmentInner({
           </Modal.Dialog>
         </Modal.Container>
       </Modal.Backdrop>
-      <FactsCellAttachmentPreview {...previewState} file={file} fileType={fileType} />
+      <FactsMediaPreviewModal
+        isOpen={isPreviewOpen}
+        setIsOpen={setIsPreviewOpen}
+        file={file}
+        fileType={fileType}
+      />
     </>
   )
 }
