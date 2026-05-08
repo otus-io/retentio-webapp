@@ -1,7 +1,7 @@
 'use client'
 
 import { Card, Form, Label, NumberField } from '@heroui/react'
-import { useActionState, useMemo, useState } from 'react'
+import { useActionState, useState } from 'react'
 import AppButton from '@/components/app/AppButton'
 import AppError from '@/components/app/AppError'
 import AppInput from '@/components/app/AppInput'
@@ -10,6 +10,7 @@ import { ChevronDown, ChevronUp } from 'lucide-react'
 import { createDeckAction, updateDeckAction } from '@/modules/decks/decks.action'
 import { Deck } from '@/modules/decks/decks.schema'
 import { useTranslations } from 'next-intl'
+import AppBreadcrumbs from '@/components/app/AppBreadcrumbs'
 
 
 type DecksCreateFormProps = {
@@ -25,37 +26,27 @@ export default function DecksForm({
   data,
 }: DecksCreateFormProps) {
 
-  // eslint-disable-next-line react-hooks/preserve-manual-memoization
-  const actionHandler = useMemo(()=>{
-    if(type === 'create'){
-      return createDeckAction
+  const defaultState = type === 'update'
+    ? {
+      data: {
+        name: data.name,
+        fields: data.fields,
+        rate: data.rate,
+        submissionId: '',
+      },
     }
-    return updateDeckAction.bind(null, data.id)
-  }, [data?.id, type])
-
-  // eslint-disable-next-line react-hooks/preserve-manual-memoization
-  const defaultState = useMemo(()=>{
-    if(type === 'update'){
-      return {
-        data: {
-          name: data.name,
-          fields: data.fields,
-          rate: data.rate,
-          submissionId: '',
-        },
-      }
-    }else {
-      return {
-        data: {
-          name: '',
-          fields: ['', ''],
-          rate: '20',
-          submissionId: '',
-        },
-      }
+    : {
+      data: {
+        name: '',
+        fields: ['', ''],
+        rate: '20',
+        submissionId: '',
+      },
     }
-  }, [data?.fields, data?.name, data?.rate, type])
 
+  const actionHandler = type === 'create'
+    ?createDeckAction
+    : updateDeckAction.bind(null, data.id)
 
   const [state, action, isPending] = useActionState(actionHandler, defaultState)
 
@@ -68,15 +59,15 @@ export default function DecksForm({
       type={type}
     />
   )
-
 }
+
 function DecksFormInner({
   type,
   state,
   action,
   isPending,
 }: {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+
   state: ActionState<any> | null,
   action: (payload: FormData) => void,
   isPending: boolean,
@@ -96,14 +87,24 @@ function DecksFormInner({
     setFields((prev) => [...prev, { name: '', id: crypto.randomUUID() }])
   }
 
+  const title = type === 'create' ? t('common.create', { name: t('term.decks') }) : t('common.update', { name: t('term.decks') })
+
   return (
     <div
-      className="flex-1 sm:min-h-[calc(100vh-270px)] pt-8 max-w-content w-full px-2 sm:px-4 md:px-6 mx-auto box-border space-y-2"
+      className="mx-auto grid w-full max-w-content items-start gap-4 px-4 py-6 sm:px-6 lg:px-8 xl:px-10"
     >
-      <div className="max-w-lg mx-auto space-y-4 py-8 px-2 sm:p-0">
+
+      <AppBreadcrumbs
+        items={[
+          { href: '/decks', title: t('term.decks') },
+          { title: title, href: '' },
+        ]}
+      />
+
+      <div className="max-w-lg w-full mx-auto space-y-4">
         <Card>
           <Card.Header>
-            <Card.Title>{type==='create'?t('decks.create-deck'):t('decks.update-deck')}</Card.Title>
+            <Card.Title>{title}</Card.Title>
           </Card.Header>
           <Form
             action={action}
@@ -111,8 +112,9 @@ function DecksFormInner({
           >
             <Card.Content>
               <AppInput
-                label={t('decks.name')}
+                label={t('term.name')}
                 name="name"
+                placeholder={t('common.placeholder-enter', { name: t('term.name') })}
                 isRequired
                 variant="secondary"
                 defaultValue={state?.data?.name}
@@ -128,6 +130,8 @@ function DecksFormInner({
                       variant="secondary"
                       className={'flex-1'}
                       defaultValue={field.name}
+                      placeholder={t('common.placeholder-enter', { name: t('term.fields') })}
+
                     />
                     <div className={clsx(index===0&&'pt-6')}>
                       <AppButton
@@ -148,7 +152,7 @@ function DecksFormInner({
                 variant="secondary"
                 onClick={addField}
               >
-                {t('decks.add-field')}
+                {t('common.add', { name: t('term.fields') })}
               </AppButton>
               <NumberField
                 formatOptions={{
@@ -161,7 +165,7 @@ function DecksFormInner({
                 variant="secondary"
                 isRequired
               >
-                <Label>{t('decks.rate')} (1–1000)</Label>
+                <Label>{t('term.rate')} (1–1000)</Label>
                 <NumberField.Group
                   className={'grid-cols-[1fr_auto]'}
                 >

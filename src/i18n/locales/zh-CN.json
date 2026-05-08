@@ -1,12 +1,8 @@
 {
   "nav": {
     "home": "首页",
-    "about": "关于",
-    "guide": "指南",
     "dashboard": "控制台",
-    "profile": "个人资料",
-    "library": "资料库",
-    "decks": "卡组"
+    "guide": "指南"
   },
   "profile": {
     "title": "个人资料",
@@ -21,7 +17,7 @@
   },
   "home": {
     "hero": {
-      "title": "记住更多，",
+      "title": "记住更多",
       "titleHighlight": "记得更久",
       "subtitle": "Retentio 使用经过科学验证的间隔重复算法，帮助您高效记忆任何内容——词汇、概念以及更多。",
       "cta": "在 App Store 下载",
@@ -74,11 +70,11 @@
     }
   },
   "error": {
-    "reset": "重置",
     "not-find": "资源未找到",
     "not-find-desc": "您正在寻找的页面不存在。<br></br>请尝试 <back> 返回 </back> 或返回 <home> 首页 </home>。",
     "unauthorized": "未授权访问",
-    "forbidden": "访问被禁止"
+    "forbidden": "访问被禁止",
+    "title": "发生错误"
   },
   "footer": {
     "tagline": "记住更多，记得更久。",
@@ -107,25 +103,6 @@
     "cards": "{count} 张卡片",
     "due": "{count} 待复习"
   },
-  "library": {
-    "title": "我的资料库",
-    "import": "导入",
-    "export": "导出",
-    "decks": "卡组",
-    "cards": "卡片",
-    "facts": "知识点",
-    "cardCount": "{count} 张卡片",
-    "createDeck": "创建卡组",
-    "deckName": "卡组名称",
-    "deckDescription": "描述",
-    "emptyDecks": "还没有卡组。创建你的第一个卡组开始吧。",
-    "emptyCards": "选择一个卡组来查看其卡片。",
-    "emptyFacts": "选择一张卡片来查看其知识点。",
-    "front": "正面",
-    "back": "背面",
-    "cancel": "取消",
-    "save": "保存"
-  },
   "auth": {
     "loginTitle": "登录",
     "registerTitle": "注册",
@@ -153,16 +130,30 @@
   "common": {
     "login": "登录",
     "logout": "退出登录",
+    "logout-confirm": "确定退出登录吗?",
     "no-data": "没有更多数据了",
     "search": "搜索",
     "delete": "删除",
     "edit": "编辑",
+    "detail": "详情",
     "tips": "提示",
     "delete-confirm": "确认删除吗？删除后将无法恢复，请谨慎操作。",
     "confirm": "确认",
     "cancel": "取消",
     "remove": "移除",
-    "submit": "提交"
+    "submit": "提交",
+    "add": "新增{name}",
+    "create": "创建{name}",
+    "update": "更新{name}",
+    "created-at": "创建日期",
+    "updated-at": "更新日期",
+    "all": "所有{name}({count})",
+    "actions": "操作",
+    "what-is": "什么是{name}?",
+    "manage": "管理你的{name}",
+    "placeholder-enter": "请输入{name}",
+    "save": "保存",
+    "reset": "重置"
   },
   "guide-sidebar": {
     "menu": "菜单",
@@ -208,29 +199,25 @@
     "change-theme": "更改主题",
     "logout": "退出登录"
   },
-  "decks": {
-    "created-at": "创建日期",
-    "updated-at": "更新日期",
-    "all-decks": "所有卡组",
-    "sort-by": "排序方式",
-    "layout-grid": "网格",
-    "layout-list": "列表",
-    "create-deck": "创建卡组",
-    "update-deck": "更新卡组",
-    "desc": "管理你的卡组",
-    "tips": "卡组是什么？",
+  "term": {
+    "decks": "卡组",
+    "facts": "词条",
     "name": "名称",
     "due": "待复习",
     "progress": "进度",
     "fields": "字段",
+    "field": "字段",
     "rate": "频率",
-    "facts": "词条",
     "cards": "卡片",
     "unseen": "未学习",
     "reviewed": "已复习",
     "hidden": "已隐藏",
     "new-today": "今日新增",
     "last-review": "上次复习",
-    "add-field": "添加字段"
+    "tags": "标签",
+    "column": "列",
+    "row": "行",
+    "entry": "条目",
+    "entries": "条目"
   }
 }

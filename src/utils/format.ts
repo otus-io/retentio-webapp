@@ -4,7 +4,7 @@ export function urlSearchParamsToObject(params: URLSearchParams) {
   const obj: Record<string, string | string[]> = {}
   for (const [k, v] of params) {
     obj[k] = k in obj
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+
       ? ([] as string[]).concat(obj[k] as any, v)
       : v
   }
@@ -28,9 +28,9 @@ export function formatErrorMessage(error: unknown, defaultError: string = ''): s
   }
   const errorMessageKeys = ['message', 'msg']
   for (const key of errorMessageKeys) {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+
     if (key in (error as any) && typeof (error as any)[key] === 'string') {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+
       return (error as any)[key]
     }
   }

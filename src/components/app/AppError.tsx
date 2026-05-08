@@ -1,18 +1,26 @@
+'use client'
 import { Alert } from '@heroui/react'
 import { formatErrorMessage } from '@/utils/format'
+import clsx from 'clsx'
+import { useTranslations } from 'next-intl'
 
 export default function AppError({
   error,
-}: { error: Error | string | null | undefined }) {
+  page,
+}: {
+  error: Error | string | null | undefined,
+  page?: boolean
+}) {
+  const t = useTranslations()
   if (!error)
     return null
   const message = formatErrorMessage(error)
   return (
-    <div className="py-4 max-w-content mx-auto px-3.5">
+    <div className={clsx(page?'py-4 max-w-content mx-auto px-3.5':undefined)}>
       <Alert status="danger">
         <Alert.Indicator />
         <Alert.Content>
-          <Alert.Title>发生错误</Alert.Title>
+          <Alert.Title>{t('error.title')}</Alert.Title>
           <Alert.Description>
             {message}
           </Alert.Description>

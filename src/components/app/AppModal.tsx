@@ -2,6 +2,7 @@
 import type { ModalDialogProps, UseOverlayStateReturn } from '@heroui/react'
 import { Modal } from '@heroui/react'
 import AppButton from '@/components/app/AppButton'
+import { useTranslations } from 'next-intl'
 
 interface AppModalProps extends UseOverlayStateReturn {
   title?: string
@@ -22,6 +23,7 @@ export default function AppModal({
   dialogProps,
   footer,
 }: AppModalProps) {
+  const t = useTranslations()
   function handleComfirm() {
     close()
     onComfirm?.()
@@ -64,13 +66,13 @@ export default function AppModal({
                         variant="secondary"
                         onClick={handleCancel}
                       >
-                        取消
+                        {t('common.cancel')}
                       </AppButton>
                       <AppButton
                         variant="primary"
                         onClick={handleComfirm}
                       >
-                        确定
+                        {t('common.confirm')}
                       </AppButton>
                     </Modal.Footer>
                   </>

@@ -2,7 +2,7 @@ import type { NextRequest } from 'next/server'
 import { NextResponse } from 'next/server'
 import { JWT_COOKIE_NAME, LOGIN_PATH, REGISTER_PATH } from '@/config'
 import { logger } from '@/lib/logger'
-import { getToken } from '@/lib/token.server'
+import { getToken } from '@/lib/token'
 
 const blacklist = [
   '/dashboard',

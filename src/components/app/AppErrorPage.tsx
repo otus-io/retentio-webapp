@@ -52,7 +52,7 @@ export default function AppErrorPage({
             type="button"
           >
             <LucideRefreshCcw size={14} />
-            {t('error.reset')}
+            {t('common.reset')}
           </button>
         )
       }

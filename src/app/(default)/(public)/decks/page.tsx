@@ -7,7 +7,7 @@ import { Metadata } from 'next'
 export default async function Page() {
   const { data, success, message } = await getAllDecksService()
   if(!success){
-    return <AppError error={message} />
+    return <AppError error={message} page />
   }
   return <DecksList data={data?.decks || []} />
 }
@@ -15,7 +15,7 @@ export default async function Page() {
 export async function generateMetadata() {
   const t = await getTranslations()
   return {
-    title: t('nav.decks'),
-    description: t('decks.desc'),
+    title: t('term.decks'),
+    description: t('common.manage', { name: t('term.decks') }),
   } satisfies Metadata
 }

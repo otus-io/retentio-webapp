@@ -38,6 +38,7 @@ export default function UserButton({ user }: UserButtonProps) {
 function UserAvatar({ user }: { user: ProfileResponseDTO }) {
   const router = useRouter()
   const state = useOverlayState()
+  const t = useTranslations()
   function handleAction(key: Key) {
     switch (key) {
       case 'profile':
@@ -63,10 +64,10 @@ function UserAvatar({ user }: { user: ProfileResponseDTO }) {
         <Dropdown.Popover isNonModal>
           <Dropdown.Menu onAction={handleAction}>
             <Dropdown.Item id="profile">
-              <Label>个人中心</Label>
+              <Label>{t('profile.title')}</Label>
             </Dropdown.Item>
-            <Dropdown.Item id="logout" textValue="退出登录" variant="danger">
-              <Label>退出登录</Label>
+            <Dropdown.Item id="logout"variant="danger">
+              <Label>{t('common.logout')}</Label>
             </Dropdown.Item>
           </Dropdown.Menu>
         </Dropdown.Popover>

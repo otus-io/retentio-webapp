@@ -5,10 +5,8 @@ interface HeadingProps extends React.HTMLAttributes<HTMLHeadingElement> {
 }
 
 export const Heading = ({ level, children, id, className = '', ...props }: HeadingProps) => {
-  // 💡 修复点：定义一个具体的标题标签类型，替换掉找不到的 JSX.IntrinsicElements
   type HeadingTag = 'h1' | 'h2' | 'h3' | 'h4' | 'h5' | 'h6'
 
-  // 将动态生成的字符串断言为具体的 HeadingTag 类型
   const Tag = `h${level}` as HeadingTag
 
   return (

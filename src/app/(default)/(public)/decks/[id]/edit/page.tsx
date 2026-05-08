@@ -17,6 +17,6 @@ export default async function Page(props: PageProps<'/decks/[id]/edit'>) {
 export async function generateMetadata() {
   const t = await getTranslations()
   return {
-    title: t('decks.update-deck'),
+    title: t('common.update', { name: t('term.decks') }),
   } satisfies Metadata
 }

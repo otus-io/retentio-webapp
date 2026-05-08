@@ -9,6 +9,6 @@ export default function Page() {
 export async function generateMetadata() {
   const t = await getTranslations()
   return {
-    title: t('decks.create-deck'),
+    title: t('common.create', { name: t('term.decks') }),
   } satisfies Metadata
 }

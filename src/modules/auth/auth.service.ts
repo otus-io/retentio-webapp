@@ -6,7 +6,7 @@ import type {
   RegisterDTO,
   RegisterResponseDTO,
 } from './auth.schema'
-import { getToken, setToken, removeToken } from '@/lib/token.server'
+import { getToken, setToken, removeToken } from '@/lib/token'
 import { ServiceResponse } from '@/lib/response'
 
 async function fetchProfileWithTokenService(token: string){

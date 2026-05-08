@@ -35,14 +35,11 @@ export default function AuthForm({ type }: { type: 'login' | 'register' }) {
     },
   })
 
-  // 1. 管理复选框的受控状态
   const [isTermsAccepted, setIsTermsAccepted] = useState(state?.data?.terms === 'true')
 
-  // 2. 表单提交的拦截与校验逻辑
   const handleSubmit = useCallback((event: FormEvent<HTMLFormElement>) => {
     event.preventDefault()
     const formData = new FormData(event.target as HTMLFormElement)
-    // 校验表单中的 terms 字段
     if (!formData.get('terms') && !isLogin) {
       showWarningToast(t('termsWarning'))
       return

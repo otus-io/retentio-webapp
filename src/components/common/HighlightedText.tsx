@@ -23,13 +23,15 @@ export default function HighlightedText({
       {parts.map((part, i) => {
         // Reset regex lastIndex before each test to avoid stateful regex bugs
         const shouldHighlight = chars.includes(part)
-        return shouldHighlight ? (
-          <mark key={i} className="text-white bg-accent">
-            {part}
-          </mark>
-        ) : (
-          <span key={i}>{part}</span>
-        )
+        return shouldHighlight
+          ? (
+            <mark key={i} className="text-white bg-accent">
+              {part}
+            </mark>
+          )
+          : (
+            <span key={i}>{part}</span>
+          )
       })}
     </>
   )

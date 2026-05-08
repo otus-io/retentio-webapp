@@ -1,29 +1,31 @@
 'use client'
 
-import { deleteDeckAction } from '@/modules/decks/decks.action'
-import { AlertDialog, Button, UseOverlayStateReturn } from '@heroui/react'
+import AppButton from '@/components/app/AppButton'
+import { AlertDialog } from '@heroui/react'
 import { useTranslations } from 'next-intl'
 import { useActionState, useEffect } from 'react'
 
 
-interface DecksDeleteModalProps extends UseOverlayStateReturn{
-  deckId: string
+interface DeleteModalProps {
+  action: ActionFunction
+  isOpen: boolean,
+  setIsOpen: (isOpen: boolean) => void
 }
 
-export default function DecksDeleteModal({
-  deckId,
-  ...state
-}: DecksDeleteModalProps) {
+export default function DeleteModal({
+  action: deleteAction,
+  isOpen,
+  setIsOpen,
+}: DeleteModalProps) {
   const t = useTranslations()
-  const deleteDeck = deleteDeckAction.bind(null, deckId)
-  const [_state, action, isPending] = useActionState(deleteDeck, null)
+  const [_state, action, isPending] = useActionState(deleteAction, null)
   useEffect(()=>{
     if(_state?.success){
-      state.setOpen(false)
+      setIsOpen(false)
     }
-  }, [_state?.success, state])
+  }, [_state?.success, setIsOpen])
   return (
-    <AlertDialog.Backdrop isOpen={state.isOpen} onOpenChange={state.setOpen}>
+    <AlertDialog.Backdrop isOpen={isOpen} onOpenChange={setIsOpen}>
       <AlertDialog.Container>
         <AlertDialog.Dialog className="sm:max-w-100">
           <AlertDialog.CloseTrigger />
@@ -37,13 +39,17 @@ export default function DecksDeleteModal({
             </p>
           </AlertDialog.Body>
           <AlertDialog.Footer>
-            <Button slot="close" variant="tertiary">
+            <AppButton slot="close" variant="tertiary">
               {t('common.cancel')}
-            </Button>
+            </AppButton>
             <form action={action}>
-              <Button slot="close" isPending={isPending} variant="danger" type="submit">
+              <AppButton
+                isPending={isPending}
+                variant="danger"
+                type="submit"
+              >
                 {t('common.confirm')}
-              </Button>
+              </AppButton>
             </form>
           </AlertDialog.Footer>
         </AlertDialog.Dialog>
