@@ -18,11 +18,13 @@ const components: MDXComponents = {
   h5: (props) => <Heading level={5} {...props} />,
   h6: (props) => <Heading level={6} {...props} />,
   a: ({ href, target, rel, ...props }) =>
-    isExternalHref(href) ? (
-      <a href={href} target="_blank" rel="noopener noreferrer" {...props} />
-    ) : (
-      <a href={href} target={target} rel={rel} {...props} />
-    ),
+    isExternalHref(href)
+      ? (
+        <a href={href} target="_blank" rel="noopener noreferrer" {...props} />
+      )
+      : (
+        <a href={href} target={target} rel={rel} {...props} />
+      ),
 }
 
 export function useMDXComponents(): MDXComponents {
