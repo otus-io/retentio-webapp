@@ -46,5 +46,10 @@
   "editor.quickSuggestions": {
     "strings": "on"
   },
-  "js/ts.preferences.importModuleSpecifier": "non-relative"
+  "js/ts.preferences.importModuleSpecifier": "non-relative",
+  "i18n-ally.localesPaths": [
+    "src/i18n",
+    "src/modules/locale",
+    "src/i18n/locales"
+  ]
 }
