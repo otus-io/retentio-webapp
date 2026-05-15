@@ -2,7 +2,7 @@
 import FactsGridPage from '@/components/facts/FactsGridPage'
 import { getDeckService } from '@/modules/decks/decks.service'
 import { getFactsPageService } from '@/modules/facts/facts.service'
-import { Metadata } from 'next'
+import type { Metadata } from 'next'
 import { getTranslations } from 'next-intl/server'
 import { notFound } from 'next/navigation'
 

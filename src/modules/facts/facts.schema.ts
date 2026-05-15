@@ -34,7 +34,9 @@ export interface Fact {
   id: string;
   /** 条目列表 */
   entries: Entry[];
-  /** 字段名列表 */
+  /**
+   * @deprecated
+   */
   fields: string[];
   /** 标签列表 */
   tags: TagInfo[];
@@ -58,7 +60,7 @@ export const createFactsSchema = z.object({
       image: z.string().optional(),
       video: z.string().optional(),
     })).min(1, 'At least one entry is required'),
-    fields: z.array(z.string()).optional(),
+    // fields: z.array(z.string()).optional(),
   })).min(1, 'At least one fact is required'),
   template: z.array(z.array(z.array(z.number()))).optional(),
   operation: operationSchema,

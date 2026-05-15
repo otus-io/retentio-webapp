@@ -1,8 +1,9 @@
 'use client'
-import { Deck } from '@/modules/decks/decks.schema'
+import type { Deck } from '@/modules/decks/decks.schema'
 import { Dropdown, Label } from '@heroui/react'
 import { useRouter } from 'next/navigation'
-import { Key, useCallback, useMemo, useState } from 'react'
+import type { Key } from 'react'
+import { useCallback, useMemo, useState } from 'react'
 import { BookA, EllipsisVertical, Pencil, Trash2 } from 'lucide-react'
 import { useTranslations } from 'next-intl'
 import DeleteModal from '@/components/common/DeleteModal'
@@ -16,7 +17,7 @@ export default function DecksAction({ deck }: DecksActionProps) {
   const t = useTranslations()
   const router = useRouter()
   const [isOpen, setIsOpen] = useState(false)
-  const deleteDeck = useMemo(()=>deleteDeckAction.bind(null, deck.id), [deck.id])
+  const deleteDeck = useMemo(() => deleteDeckAction.bind(null, deck.id), [deck.id])
 
   const handleAction = useCallback((id: Key) => {
     switch (id) {

@@ -19,7 +19,7 @@ export default function DeleteModal({
 }: DeleteModalProps) {
   const t = useTranslations()
   const [_state, action, isPending] = useActionState(deleteAction, null)
-  useEffect(()=>{
+  useEffect(() => {
     if(_state?.success){
       setIsOpen(false)
     }

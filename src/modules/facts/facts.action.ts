@@ -5,7 +5,7 @@ import { redirect } from 'next/navigation'
 import z from 'zod'
 import { formatErrorMessage, formDataToObject } from '@/utils/format'
 import { createFactsSchema, updateFactSchema } from '@/modules/facts/facts.schema'
-import { createFactsService, deleteFactService, updateFactService } from '@/modules/facts/facts.service'
+import { createFactsService, deleteFactService, deleteFactsService, updateFactService } from '@/modules/facts/facts.service'
 
 /**
  * 添加词条的 Action
@@ -99,6 +99,29 @@ export const updateFactAction: ActionFunctionPayload<{ deckId: string; factId: s
 export const deleteFactAction: ActionFunctionPayload<{ deckId: string; factId: string }> = async ({ deckId, factId }) => {
   try {
     const res = await deleteFactService(deckId, factId)
+    if (!res.success) {
+      return {
+        error: res.message,
+        success: false,
+      }
+    }
+  } catch (error) {
+    return {
+      error: formatErrorMessage(error, 'deleteFactAction failed'),
+      success: false,
+    }
+  }
+  revalidatePath(`/decks/${deckId}/facts`)
+  redirect(`/decks/${deckId}/facts`)
+}
+
+
+/**
+ * 批量删除词条的 Action
+ */
+export const deleteFactsAction: ActionFunctionPayload<{ deckId: string; factIds: string[] }> = async ({ deckId, factIds }) => {
+  try {
+    const res = await deleteFactsService(deckId, factIds)
     if (!res.success) {
       return {
         error: res.message,

@@ -8,7 +8,7 @@ import AppInput from '@/components/app/AppInput'
 import clsx from 'clsx'
 import { ChevronDown, ChevronUp } from 'lucide-react'
 import { createDeckAction, updateDeckAction } from '@/modules/decks/decks.action'
-import { Deck } from '@/modules/decks/decks.schema'
+import type { Deck } from '@/modules/decks/decks.schema'
 import { useTranslations } from 'next-intl'
 import AppBreadcrumbs from '@/components/app/AppBreadcrumbs'
 
@@ -16,7 +16,7 @@ import AppBreadcrumbs from '@/components/app/AppBreadcrumbs'
 type DecksCreateFormProps = {
   type: 'create',
   data: null
-}|{
+} | {
   type: 'update',
   data: Deck
 }
@@ -45,7 +45,7 @@ export default function DecksForm({
     }
 
   const actionHandler = type === 'create'
-    ?createDeckAction
+    ? createDeckAction
     : updateDeckAction.bind(null, data.id)
 
   const [state, action, isPending] = useActionState(actionHandler, defaultState)
@@ -123,17 +123,17 @@ function DecksFormInner({
                 fields.map((field, index) => (
                   <div key={field.id} className="flex items-start justify-start gap-2">
                     <AppInput
-                      label={index===0 && 'Field One box per field (at least 2).'}
+                      label={index === 0 && 'Field One box per field (at least 2).'}
                       name="fields"
                       aria-label="filed"
                       isRequired
                       variant="secondary"
-                      className={'flex-1'}
+                      className="flex-1"
                       defaultValue={field.name}
                       placeholder={t('common.placeholder-enter', { name: t('term.fields') })}
 
                     />
-                    <div className={clsx(index===0&&'pt-6')}>
+                    <div className={clsx(index === 0 && 'pt-6')}>
                       <AppButton
                         variant="danger-soft"
                         isDisabled={fields.length <= 2}
@@ -167,7 +167,7 @@ function DecksFormInner({
               >
                 <Label>{t('term.rate')} (1–1000)</Label>
                 <NumberField.Group
-                  className={'grid-cols-[1fr_auto]'}
+                  className="grid-cols-[1fr_auto]"
                 >
                   <NumberField.Input />
                   <div className="flex h-[calc(100%+2px)] flex-col border-l border-field-placeholder/15">

@@ -16,7 +16,7 @@ export function DecksSearch({
       onChange={setValue}
       name="search"
       aria-label={t('common.search')}
-      className={'flex-1'}
+      className="flex-1"
     >
       <SearchField.Group>
         <SearchField.SearchIcon />

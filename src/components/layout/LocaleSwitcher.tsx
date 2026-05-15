@@ -1,7 +1,8 @@
 import { setLocaleAction } from '@/modules/locale/locale.action'
 import { useLocale } from 'next-intl'
 import { startTransition, useMemo } from 'react'
-import { Dropdown, Label, Selection } from '@heroui/react'
+import type { Selection } from '@heroui/react'
+import { Dropdown, Label } from '@heroui/react'
 import { Check, Languages } from 'lucide-react'
 
 import { Button } from '@heroui/react'
@@ -18,7 +19,7 @@ export default function LocaleSwitcher() {
     })
   }
 
-  const currentLocale = useMemo(()=>{
+  const currentLocale = useMemo(() => {
     return (new Set([locale])) as unknown as Selection
   }, [locale])
 
@@ -39,7 +40,7 @@ export default function LocaleSwitcher() {
           onSelectionChange={handleSwitch}
         >
           <Dropdown.Section>
-            {locales.map((item)=>{
+            {locales.map((item) => {
               return (
                 <Dropdown.Item
                   id={item.value}

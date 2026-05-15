@@ -19,7 +19,7 @@ export default function AppBreadcrumbs({
           key={index}
         >
           {
-            item.href ? <Link href={item.href}>{item.title}</Link>: item.title
+            item.href ? <Link href={item.href}>{item.title}</Link> : item.title
           }
         </Breadcrumbs.Item>
       ))}

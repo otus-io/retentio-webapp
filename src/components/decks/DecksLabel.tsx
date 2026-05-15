@@ -1,5 +1,5 @@
 import clsx from 'clsx'
-import { LucideIcon } from 'lucide-react'
+import type { LucideIcon } from 'lucide-react'
 import { motion } from 'framer-motion'
 
 const colorMap = {

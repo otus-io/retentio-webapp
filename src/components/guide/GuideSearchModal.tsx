@@ -130,7 +130,7 @@ export default function GuideSearchModal({ isOpen, onOpenChange }: GuideSearchMo
       isOpen={isOpen}
       onOpenChange={onOpenChange}
       variant="blur"
-      className={'z-9999'}
+      className="z-9999"
     >
       <Modal.Container placement="top" aria-label="Guide Search">
         <Modal.Dialog className="sm:max-w-xl" aria-label="Guide Search">

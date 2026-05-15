@@ -1,15 +1,15 @@
+import AppTooltip from '@/components/app/AppTooltip'
 import FactsAction from '@/components/facts/FactsAction'
 import { rawSymbol } from '@/components/facts/token'
-import { Deck } from '@/modules/decks/decks.schema'
-import { Fact } from '@/modules/facts/facts.schema'
-import { Tooltip } from '@heroui/react'
-import { ICellRendererParams } from 'ag-grid-community'
+import type { Deck } from '@/modules/decks/decks.schema'
+import type { Fact } from '@/modules/facts/facts.schema'
+import type { ICellRendererParams } from 'ag-grid-community'
 import { Paperclip } from 'lucide-react'
 
 import { useCallback } from 'react'
 
 interface FactsGridCellRendererProps extends ICellRendererParams {
-  onAttachmentClick?: (fact: Fact, fieldIndex: number) => void
+  onAttachmentClick?: (fact: Fact, fieldIndex: number, fieldKey: string) => void
   deck: Deck
 }
 
@@ -18,7 +18,8 @@ export default function FactsGridCellRenderer(props: FactsGridCellRendererProps)
     const currentFact = props.data?.[rawSymbol] as Fact
     const allColumns = props.api.getAllDisplayedColumns()
     const fieldIndex = allColumns.findIndex((col) => col === props.column)
-    props.onAttachmentClick?.(currentFact, fieldIndex)
+    const fieldKey = props.column?.getColId() ?? ''
+    props.onAttachmentClick?.(currentFact, fieldIndex, fieldKey)
   }, [props])
 
 
@@ -33,8 +34,9 @@ export default function FactsGridCellRenderer(props: FactsGridCellRendererProps)
   return (
     <div className="flex items-center  h-full">
       <span className="truncate">{props.getValue?.()}</span>
-      <Tooltip
-        delay={0}
+      <AppTooltip
+        trigger={false}
+        content={<p>附件</p>}
       >
         <button
           type="button"
@@ -49,10 +51,7 @@ export default function FactsGridCellRenderer(props: FactsGridCellRendererProps)
             className="size-3.5 hover:text-accent hover:cursor-pointer"
           />
         </button>
-        <Tooltip.Content>
-          <p>附件</p>
-        </Tooltip.Content>
-      </Tooltip>
+      </AppTooltip>
     </div>
   )
 }

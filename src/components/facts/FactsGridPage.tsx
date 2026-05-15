@@ -2,10 +2,10 @@
 'use client'
 
 import { AgGridReact } from 'ag-grid-react'
-import type { ColDef, IHeaderParams, IRowNode } from 'ag-grid-community'
-import { Entry, Fact } from '@/modules/facts/facts.schema'
+import type { ColDef, IHeaderParams, IRowNode, SelectionChangedEvent } from 'ag-grid-community'
+import type { Entry, Fact } from '@/modules/facts/facts.schema'
 import { useActionState, useCallback, useMemo, useRef, useState } from 'react'
-import { Deck } from '@/modules/decks/decks.schema'
+import type { Deck } from '@/modules/decks/decks.schema'
 import { ModuleRegistry } from 'ag-grid-community'
 import { AllCommunityModule } from 'ag-grid-community'
 import { AgGridProvider } from 'ag-grid-react'
@@ -16,15 +16,21 @@ import { useTheme } from 'next-themes'
 import TablePagination from '@/components/common/TablePagination'
 import { useDebouncedCallback } from 'use-debounce'
 import { updateDecksFields } from '@/api/decks'
+import type { AppButtonProps } from '@/components/app/AppButton'
 import AppButton from '@/components/app/AppButton'
-import { CheckIcon, Columns4Icon, PlusIcon, Rows4Icon } from 'lucide-react'
+import { CircleQuestionMark, Columns4Icon, RefreshCwIcon, Rows4Icon, Trash2Icon } from 'lucide-react'
 import { updateFactsFields } from '@/api/facts'
 import FactsMediaModal from '@/components/facts/FactsMediaModal'
+import type { MediaType } from '@/hooks/useFactsCellAttachments'
 import { actionSymbol, rawSymbol } from '@/components/facts/token'
 import { useTranslations } from 'next-intl'
 import LayoutPage from '@/components/layout/LayoutPage'
-import { createFactsAction } from '@/modules/facts/facts.action'
-import { AppButtonLink } from '@/components/app/AppButtonLink'
+import { createFactsAction, deleteFactsAction } from '@/modules/facts/facts.action'
+import { Button } from '@heroui/react'
+import clsx from 'clsx'
+import AppTooltip from '@/components/app/AppTooltip'
+import AppLink from '@/components/app/AppLink'
+import DeleteModal from '@/components/common/DeleteModal'
 
 const lightTheme = themeQuartz.withPart(colorSchemeLight)
 const darkTheme = themeQuartz.withPart(colorSchemeDark)
@@ -46,25 +52,21 @@ export default function FactsGridPage({ facts, meta, deck }: FactsGridPageProps)
   const t = useTranslations()
   const { resolvedTheme } = useTheme()
   const [isOpen, setIsOpen] = useState(false)
-  const [currentEntry, setCurrentEntry] = useState<Entry>()
+  const [target, setTarget] = useState<{ factId: string; fieldKey: string; entry: Entry }>()
   const gridRef = useRef<AgGridReact>(null)
-  const [loading, setLoading]= useState(false)
+  const [loading, setLoading] = useState(false)
   const fullFields = useMemo(() => {
-    const factsFields= facts.reduce((longest, fact) =>
-      fact.fields.length > longest.length ? fact.fields : longest
-    , [] as string[])
-    const fields = [...deck.fields].concat(...factsFields.filter((_, index) => index >= deck.fields.length))
-    return [...fields, actionSymbol]
-  }, [deck.fields, facts])
+    return [...deck.fields, actionSymbol]
+  }, [deck.fields])
   const total = meta.total || 0
-  const totalPages = meta.total ? Math.ceil(meta.total/meta.limit) :0
+  const totalPages = meta.total ? Math.ceil(meta.total / meta.limit) : 0
 
   const createRowData = useCallback((fact?: Fact) => {
     const result: Record<string, any> = {
       id: fact?.id,
       [rawSymbol]: fact,
     }
-    fullFields.forEach((key, index)=>{
+    fullFields.forEach((key, index) => {
       if(typeof key === 'string'){
         if(!fact){
           result[key] = { text: key, audio: '', image: '', video: '' }
@@ -76,8 +78,8 @@ export default function FactsGridPage({ facts, meta, deck }: FactsGridPageProps)
     return result
   }, [fullFields])
 
-  const lastDecksFields = useRef<string[]>(fullFields.filter((e)=>isString(e)) as string[])
-  const rowData = useMemo(()=>{
+  const lastDecksFields = useRef<string[]>(fullFields.filter((e) => isString(e)) as string[])
+  const rowData = useMemo(() => {
     const data = facts.map(createRowData)
     return data
   }, [facts, createRowData])
@@ -87,7 +89,7 @@ export default function FactsGridPage({ facts, meta, deck }: FactsGridPageProps)
     return currentDefs
   }, [])
 
-  const handleFieldsChange = useCallback(async (force=false) => {
+  const handleFieldsChange = useCallback(async (force = false) => {
     const currentDefs = getCurrentColDefs()
       .filter((def) => !def.context.isActionColumn)
       .map((e) => e.headerName || '')
@@ -123,7 +125,11 @@ export default function FactsGridPage({ facts, meta, deck }: FactsGridPageProps)
       const entries = getEntriesFromData(data)
       const hasChanged = entries.some((entry, i) => {
         const rawEntry = raw.entries[i]
-        return !rawEntry || entry.text !== rawEntry.text
+        if (!rawEntry) return true
+        return entry.text !== rawEntry.text
+          || entry.audio !== rawEntry.audio
+          || entry.image !== rawEntry.image
+          || entry.video !== rawEntry.video
       })
       if (hasChanged) {
         changedNodes.push({ node, entries })
@@ -145,16 +151,25 @@ export default function FactsGridPage({ facts, meta, deck }: FactsGridPageProps)
 
   const handleDebouncedCellChange = useDebouncedCallback(handleCellChange, 100)
 
-  const handleDebouncedChange = useDebouncedCallback(()=>{
+  const handleDebouncedChange = useDebouncedCallback(() => {
     handleFieldsChange(true)
     handleCellChange()
   }, 100)
 
-  const handleAttachmentClick = useCallback((fact: Fact, fieldIndex: number) => {
-    console.log(fact, fact.entries[fieldIndex])
-    setCurrentEntry(fact.entries[fieldIndex])
+  const handleAttachmentClick = useCallback((fact: Fact, fieldIndex: number, fieldKey: string) => {
+    setTarget({ factId: fact.id, fieldKey, entry: fact.entries[fieldIndex] })
     setIsOpen(true)
   }, [setIsOpen])
+
+  const handleAttachmentUpload = useCallback((fileId: string, mediaType: MediaType) => {
+    if (!target) return
+    const node = gridRef.current?.api.getRowNode(target.factId)
+    if (!node) return
+    const prevEntry: Entry = node.data[target.fieldKey] ?? { text: '' }
+    const nextEntry: Entry = { ...prevEntry, [mediaType]: fileId }
+    node.updateData({ ...node.data, [target.fieldKey]: nextEntry })
+    handleDebouncedCellChange()
+  }, [target, handleDebouncedCellChange])
 
   const handleRenameColDef = useDebouncedCallback((uid: string, newName: string) => {
     const currentDefs = getCurrentColDefs()
@@ -174,13 +189,13 @@ export default function FactsGridPage({ facts, meta, deck }: FactsGridPageProps)
 
   const createColDef = useCallback((e: string | symbol) => {
     const isActionColumn = !isString(e)
-    const colId: string = isActionColumn? 'action' : `${e as string}`
+    const colId: string = isActionColumn ? 'action' : `${e as string}`
     return {
       field: colId,
       sortable: false,
       autoHeight: true,
-      headerName: isActionColumn? t('common.actions') : e as string,
-      headerComponent: (props: IHeaderParams)=>{
+      headerName: isActionColumn ? t('common.actions') : e as string,
+      headerComponent: (props: IHeaderParams) => {
         return (
           <FactsGridHeaderRenderer
             {...props}
@@ -191,10 +206,16 @@ export default function FactsGridPage({ facts, meta, deck }: FactsGridPageProps)
           />
         )
       },
-      cellRenderer: (props: any)=>{
-        return <FactsGridCellRenderer deck={deck} {...props} onAttachmentClick={handleAttachmentClick} />
+      cellRenderer: (props: any) => {
+        return (
+          <FactsGridCellRenderer
+            deck={deck}
+            onAttachmentClick={handleAttachmentClick}
+            {...props}
+          />
+        )
       },
-      valueGetter: (params)=>{
+      valueGetter: (params) => {
         const key = params.colDef.field ?? ''
         if(!isString(key)){
           return ''
@@ -202,7 +223,7 @@ export default function FactsGridPage({ facts, meta, deck }: FactsGridPageProps)
         const data = (params.data ?? {})[key] ?? {}
         return data?.text ?? ''
       },
-      valueSetter: (params)=>{
+      valueSetter: (params) => {
         const key = params.colDef.field ?? ''
         if(!isString(key)){
           return false
@@ -227,9 +248,10 @@ export default function FactsGridPage({ facts, meta, deck }: FactsGridPageProps)
             isActionColumn: true,
           },
         }
-        :{
+        : {
           editable: true,
           flex: 1,
+          minWidth: 100,
           context: {
             uid: crypto.randomUUID(),
           },
@@ -240,7 +262,7 @@ export default function FactsGridPage({ facts, meta, deck }: FactsGridPageProps)
   const handleAddCol = useCallback(() => {
     const currentDefs = getCurrentColDefs()
     const uid = `field_${currentDefs.length}`
-    const newCol= createColDef(uid)
+    const newCol = createColDef(uid)
     const actionIndex = currentDefs.findIndex((def) => def.context?.isActionColumn)
     const newDefs = actionIndex === -1
       ? [
@@ -254,12 +276,17 @@ export default function FactsGridPage({ facts, meta, deck }: FactsGridPageProps)
     gridRef.current?.api.setGridOption('columnDefs', newDefs)
   }, [createColDef, getCurrentColDefs])
 
-
-
-
-  const columnDefs = useMemo(()=>{
+  const columnDefs = useMemo(() => {
     return fullFields.map(createColDef)
   }, [fullFields, createColDef])
+
+  const [selectIds, setSelectIds] = useState<string[]>([])
+
+  const handleSelectionChanged = useCallback((event:SelectionChangedEvent<Record<string, any>>) => {
+    const ids = event.selectedNodes?.map((e) => e.data?.id).filter((e) => typeof e === 'string')
+    if(ids)
+      setSelectIds(ids)
+  }, [setSelectIds])
 
   return (
     <LayoutPage
@@ -270,41 +297,44 @@ export default function FactsGridPage({ facts, meta, deck }: FactsGridPageProps)
       ]}
     >
       <div className="flex items-center gap-2 my-2">
-        <h1>
-          {t('common.all', { name: t('term.facts'), count: total })}
-        </h1>
-        <AppButton
-          className={'ml-auto'}
-          size="sm"
-          variant="outline"
+        <div className="flex items-center gap-1">
+          <span className="text-foreground text-base font-semibold">
+            {t('common.all', { name: t('term.facts'), count: total })}
+          </span>
+          <AppTooltip content={ <p>{t('common.what-is', { name: t('term.facts') })}</p>}>
+            <AppLink className="hover:text-accent" href="/guide/getting-started/facts">
+              <CircleQuestionMark className="size-4" />
+            </AppLink>
+          </AppTooltip>
+        </div>
+
+        <div className="ml-auto"></div>
+
+        {
+          selectIds.length != 0 && (
+            <DeleteButton
+              deckId={deck.id}
+              isPending={loading}
+              factIds={selectIds}
+            />
+          )
+        }
+
+        <CreateColButton
           isPending={loading}
           onClick={handleAddCol}
-          icon={<Columns4Icon className="size-4" />}
-        >
-          <span>{t('common.create', { name: t('term.column') })}</span>
-        </AppButton>
+        />
 
-        <CrateRowButton deckId={deck.id} fields={fullFields} />
+        <CrateRowButton
+          isPending={loading}
+          deckId={deck.id}
+          fields={fullFields}
+        />
 
-
-        <AppButton
-          className={''}
-          size="sm"
-          variant="secondary"
+        <SyncButton
           onClick={handleDebouncedChange}
           isPending={loading}
-          icon={<CheckIcon className="size-4" />}
-        >
-          {t('common.save')}
-        </AppButton>
-
-        <AppButtonLink
-          size="sm"
-          href={`/decks/${deck.id}/facts/create`}
-        >
-          <PlusIcon className="size-4" />
-          <span>{t('common.create', { name: t('term.facts') })}</span>
-        </AppButtonLink>
+        />
       </div>
       <AgGridProvider modules={modules}>
         <div style={{ height: 500 }}>
@@ -312,10 +342,18 @@ export default function FactsGridPage({ facts, meta, deck }: FactsGridPageProps)
             ref={gridRef}
             theme={resolvedTheme === 'dark' ? darkTheme : lightTheme}
             suppressDragLeaveHidesColumns
+            suppressMovableColumns
             rowData={rowData}
             columnDefs={columnDefs}
-            onColumnMoved={()=>handleDebouncedFieldsChange()}
+            getRowId={(p) => p.data.id}
             onCellValueChanged={() => handleDebouncedCellChange()}
+            rowSelection={{
+              mode: 'multiRow',
+              checkboxes: true,
+              headerCheckbox: true,
+              enableClickSelection: false,
+            }}
+            onSelectionChanged={handleSelectionChanged}
           />
         </div>
       </AgGridProvider>
@@ -323,9 +361,11 @@ export default function FactsGridPage({ facts, meta, deck }: FactsGridPageProps)
         totalPages={totalPages}
       />
       <FactsMediaModal
-        isOpen={isOpen}
         setIsOpen={setIsOpen}
-        entry={currentEntry}
+        isOpen={isOpen}
+        entry={target?.entry}
+        getApi={() => gridRef.current!.api}
+        onUpload={handleAttachmentUpload}
       />
     </LayoutPage>
   )
@@ -336,21 +376,20 @@ export default function FactsGridPage({ facts, meta, deck }: FactsGridPageProps)
 function CrateRowButton({
   deckId,
   fields,
+  isPending: isLoading,
 }: {
   deckId: string,
   fields: (string | symbol)[]
+  isPending: boolean
 }){
   const t = useTranslations()
   const value = useMemo(() => {
     const _fields = fields.filter(isString)
     const facts = [{
-      entries: _fields.map((text)=>({ text })),
-      fields: _fields,
+      entries: _fields.map((text) => ({ text })),
     }]
     return JSON.stringify(facts)
   }, [fields])
-
-
 
   const [_state, action, isPending] = useActionState(createFactsAction.bind(null, deckId), null)
 
@@ -358,15 +397,90 @@ function CrateRowButton({
     <form action={action}>
       <input type="hidden" name="facts" value={value} />
       <input type="hidden" name="operation" value="prepend" />
-      <AppButton
-        size="sm"
-        variant="outline"
-        type="submit"
-        isPending={isPending}
-        icon={<Rows4Icon className="size-4" />}
+      <AppTooltip
+        content={t('common.add', { name: t('term.facts') })}
       >
-        <span>{t('common.create', { name: t('term.row') })}</span>
-      </AppButton>
+        <AppButton
+          size="sm"
+          variant="outline"
+          type="submit"
+          isPending={isPending || isLoading}
+          isIconOnly
+          icon={<Rows4Icon className="size-4" />}
+        />
+      </AppTooltip>
     </form>
   )
+}
+
+
+function CreateColButton({ ...rest }: AppButtonProps){
+  const t = useTranslations()
+  return (
+    <AppTooltip
+      content={t('common.add', { name: t('term.field') })}
+    >
+      <AppButton
+        className="ml-auto"
+        size="sm"
+        variant="outline"
+        isIconOnly
+        icon={<Columns4Icon className="size-4" />}
+        {...rest}
+      />
+    </AppTooltip>
+  )
+}
+
+
+
+function SyncButton({ ...rest }: AppButtonProps){
+  const t = useTranslations()
+  return (
+    <AppTooltip
+      content={t('common.sync')}
+    >
+      <Button
+        size="sm"
+        variant="outline"
+        isIconOnly
+        {...rest}
+      >
+        {
+          ({ isPending }) => <RefreshCwIcon className={clsx('size-4', isPending && 'animate-spin')} />
+        }
+      </Button>
+    </AppTooltip>
+  )
+}
+
+interface DeleteButtonProps extends AppButtonProps {
+  deckId: string,
+  factIds: string[]
+}
+
+
+function DeleteButton({ factIds, deckId, ...rest } : DeleteButtonProps){
+  const t = useTranslations()
+  const [isOpen, setIsOpen] = useState(false)
+  const action = deleteFactsAction.bind(null, { deckId, factIds })
+  return (
+    <>
+      <AppTooltip
+        content={t('common.delete', { name: t('term.fields') })}
+      >
+        <AppButton
+          className="ml-auto"
+          size="sm"
+          variant="outline"
+          isIconOnly
+          icon={<Trash2Icon className="size-4" />}
+          onClick={() => setIsOpen(true)}
+          {...rest}
+        />
+      </AppTooltip>
+      <DeleteModal isOpen={isOpen} setIsOpen={setIsOpen} action={action} />
+    </>
+  )
+
 }

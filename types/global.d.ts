@@ -9,6 +9,7 @@ declare global {
     /**
      * 表单错误
      */
+    // eslint-disable-next-line @typescript-eslint/consistent-type-imports
     validationErrors?: import('@react-types/shared').ValidationErrors
     /**
      * 服务错误

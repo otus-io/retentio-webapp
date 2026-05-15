@@ -1,7 +1,8 @@
 import AppButton from '@/components/app/AppButton'
-import { MediaType } from '@/hooks/useFactsCellAttachments'
+import type { MediaType } from '@/hooks/useFactsCellAttachments'
 import { Modal } from '@heroui/react'
 import { ImageIcon, MicIcon, VideoIcon } from 'lucide-react'
+import { useTranslations } from 'next-intl'
 
 export interface FactsMediaPreviewModalProps {
   file?: string
@@ -16,6 +17,7 @@ export default function FactsMediaPreviewModal({
   isOpen,
   setIsOpen,
 }: FactsMediaPreviewModalProps) {
+  const t = useTranslations()
   return (
     <Modal.Backdrop isOpen={isOpen} onOpenChange={setIsOpen}>
       <Modal.Container>
@@ -33,7 +35,7 @@ export default function FactsMediaPreviewModal({
                 fileType === 'video' && <VideoIcon className="size-5" />
               }
             </Modal.Icon>
-            <Modal.Heading>Attachment Preview</Modal.Heading>
+            <Modal.Heading>{t('common.preview', { name: t('term.attachment') })}</Modal.Heading>
           </Modal.Header>
           <Modal.Body>
             <div className="py-4">
@@ -47,7 +49,7 @@ export default function FactsMediaPreviewModal({
                 // eslint-disable-next-line @next/next/no-img-element
                   <img
                     src={file}
-                    alt="attachment"
+                    alt={t('term.attachment')}
                     className="max-w-full w-full max-h-[80vh] object-contain"
                   />
                 )
@@ -65,7 +67,7 @@ export default function FactsMediaPreviewModal({
           </Modal.Body>
           <Modal.Footer>
             <AppButton className="w-full" slot="close">
-              Continue
+              {t('common.continue')}
             </AppButton>
           </Modal.Footer>
         </Modal.Dialog>

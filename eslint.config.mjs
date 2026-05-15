@@ -33,7 +33,8 @@ export default defineConfig([
     '**/pnpm-lock.yaml',
     'package-lock.json',
     '.agents',
-
+    '.claude',
+    '.heroui-docs',
     'runtime',
   ]),
 
@@ -218,12 +219,9 @@ export default defineConfig([
 
       // 类型冒号：前无空格、后有空格；箭头返回类型前后均有空格
       // 示例：const fn = (a: string): void => {}
-      '@stylistic/type-annotation-spacing': ['error', {
-        before: false,
+      '@stylistic/arrow-spacing': ['error', {
+        before: true,
         after: true,
-        overrides: {
-          arrow: { before: true, after: true }, // => 前后均有空格
-        },
       }],
 
       // 统一使用 interface 而不是 type 定义对象类型（便于声明合并与扩展）
@@ -239,11 +237,27 @@ export default defineConfig([
       '@typescript-eslint/no-unused-vars': [
         'error',
         {
+          // 变量忽略正则：允许以下划线开头，或名为 'ignore' 的变量
+          varsIgnorePattern: '^_|^ignore$',
+          // 核心配置：忽略剩余属性（Rest Property）同级的同级兄弟变量
+          // 这允许你为了从 ...props 中排除某些值而进行解构，即便这些值没被使用
+          ignoreRestSiblings: true,
+          // 参数忽略正则：允许函数参数以下划线开头
           argsIgnorePattern: '^_',
-          varsIgnorePattern: '^_',
+          // 捕获的错误变量忽略正则
           caughtErrorsIgnorePattern: '^_',
         },
       ],
+      // --- 1. 强制类型导入 (与您之前的配置合并) ---
+      '@typescript-eslint/consistent-type-imports': [
+        'error',
+        {
+          prefer: 'type-imports',
+          disallowTypeAnnotations: true,
+          fixStyle: 'separate-type-imports',
+        },
+      ],
+
       // ----------- 字符串 -----------
 
       // 有变量拼接时强制使用模板字符串，禁止 "hello " + name 写法
@@ -299,8 +313,26 @@ export default defineConfig([
 
       'react/no-danger': ['error', {}],
 
+      // 强制在 JSX 属性值为字符串时，禁止使用不必要的花括号
+      // 这会将 size={"sm"} 自动修复为 size="sm"
+      'react/jsx-curly-brace-presence': [
+        'error',
+        {
+          props: 'never', // 属性中禁止不必要的花括号
+          children: 'never', // 子元素中禁止不必要的花括号
+          propElementValues: 'always', // 如果属性值是 JSX 元素，则允许/要求花括号
+        },
+      ],
+
 
       'preserve-caught-error': 'off',
+
+
+      // 强制三元运算符 ? 和 : 前后必须有空格
+      '@stylistic/space-infix-ops': ['error', { int32Hint: false }],
+
+
+
 
 
       // '@eslint-react/dom/no-dangerously-set-innerhtml': 'error',
@@ -311,7 +343,27 @@ export default defineConfig([
       //     message: '请使用 @/ 别名进行绝对路径导入，保持项目导入风格统一！',
       //   }],
       // }],
+      'no-restricted-imports': [
+        'error',
+        {
+          paths: [
+            {
+              name: 'lucide-react',
+              importNames: [
+                '/^(?!.*Icon$).*$/',
+              ],
+              message: "从 'lucide-react' 导入图标时，必须使用以 'Icon' 结尾的成员名（例如：使用 'PiIcon' 而不是 'Pi'）。",
+            },
+          ],
+        },
+      ],
+      // 强制循环条件中的变量必须在循环体内被修改，防止死循环
+      'no-unmodified-loop-condition': 'error',
+      // 禁止模板字符串的变量花括号内部出现空格
+      '@stylistic/template-curly-spacing': ['error', 'never'],
     },
+
+
   },
 
 

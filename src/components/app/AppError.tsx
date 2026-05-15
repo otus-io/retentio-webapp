@@ -16,7 +16,7 @@ export default function AppError({
     return null
   const message = formatErrorMessage(error)
   return (
-    <div className={clsx(page?'py-4 max-w-content mx-auto px-3.5':undefined)}>
+    <div className={clsx(page ? 'py-4 max-w-content mx-auto px-3.5' : undefined)}>
       <Alert status="danger">
         <Alert.Indicator />
         <Alert.Content>

@@ -153,7 +153,13 @@
     "manage": "Manage your {name}",
     "placeholder-enter": "Please enter {name}",
     "save": "Save",
-    "reset": "Reset"
+    "reset": "Reset",
+    "sync": "Sync",
+    "upload": "Upload",
+    "close": "Close",
+    "continue": "Continue",
+    "preview": "{name} Preview",
+    "no-attached": "No {name} attached"
   },
   "guide-sidebar": {
     "menu": "Menu",
@@ -218,6 +224,10 @@
     "column": "Column",
     "row": "Row",
     "entry": "Entry",
-    "entries": "Entries"
+    "entries": "Entries",
+    "audio": "Audio",
+    "image": "Image",
+    "video": "Video",
+    "attachment": "Attachment"
   }
 }

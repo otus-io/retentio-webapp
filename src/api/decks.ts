@@ -1,4 +1,4 @@
-import { CreateOrUpdateDeckDTO } from '@/modules/decks/decks.schema'
+import type { CreateOrUpdateDeckDTO } from '@/modules/decks/decks.schema'
 
 /**
  *
