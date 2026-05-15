@@ -61,7 +61,7 @@ export default function FactsGridHeaderRenderer(props: FactsGridHeaderRendererPr
   return (
     <div
       onDoubleClick={startEdit}
-      className="flex-1 h-full py-2 items-center flex group"
+      className="flex-1 h-full py-2 items-center flex group w-full"
     >
       {editing
         ? (
@@ -76,7 +76,7 @@ export default function FactsGridHeaderRenderer(props: FactsGridHeaderRendererPr
               if (e.key === 'Escape')
                 stopEdit()
             }}
-            className="h-full"
+            className="h-full max-w-full "
           />
         )
         : (

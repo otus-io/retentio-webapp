@@ -83,3 +83,19 @@ export async function deleteFactService(deckId: string, factId: string) {
     return ServiceResponse.error('deleteFactService failed', e)
   }
 }
+
+/**
+ * 删除词条批量
+ */
+export async function deleteFactsService(deckId: string, factIds: string[]) {
+  try {
+    await Promise.allSettled(factIds.map((factId) => request<DeleteFactResponseDTO>(
+      `/api/decks/${deckId}/facts/${factId}`,
+      { method: 'DELETE' },
+    )))
+    return ServiceResponse.success({ data: {}, meta: { msg: 'deleteFactsService success' } })
+  } catch (e) {
+    return ServiceResponse.error('deleteFactService failed', e)
+  }
+}
+

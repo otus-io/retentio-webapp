@@ -2,7 +2,7 @@
 'use client'
 
 import { AgGridReact } from 'ag-grid-react'
-import type { ColDef, IHeaderParams, IRowNode } from 'ag-grid-community'
+import type { ColDef, IHeaderParams, IRowNode, SelectionChangedEvent } from 'ag-grid-community'
 import type { Entry, Fact } from '@/modules/facts/facts.schema'
 import { useActionState, useCallback, useMemo, useRef, useState } from 'react'
 import type { Deck } from '@/modules/decks/decks.schema'
@@ -18,18 +18,19 @@ import { useDebouncedCallback } from 'use-debounce'
 import { updateDecksFields } from '@/api/decks'
 import type { AppButtonProps } from '@/components/app/AppButton'
 import AppButton from '@/components/app/AppButton'
-import { CircleQuestionMark, Columns4Icon, RefreshCwIcon, Rows4Icon } from 'lucide-react'
+import { CircleQuestionMark, Columns4Icon, RefreshCwIcon, Rows4Icon, Trash2Icon } from 'lucide-react'
 import { updateFactsFields } from '@/api/facts'
 import FactsMediaModal from '@/components/facts/FactsMediaModal'
 import type { MediaType } from '@/hooks/useFactsCellAttachments'
 import { actionSymbol, rawSymbol } from '@/components/facts/token'
 import { useTranslations } from 'next-intl'
 import LayoutPage from '@/components/layout/LayoutPage'
-import { createFactsAction } from '@/modules/facts/facts.action'
+import { createFactsAction, deleteFactsAction } from '@/modules/facts/facts.action'
 import { Button } from '@heroui/react'
 import clsx from 'clsx'
 import AppTooltip from '@/components/app/AppTooltip'
 import AppLink from '@/components/app/AppLink'
+import DeleteModal from '@/components/common/DeleteModal'
 
 const lightTheme = themeQuartz.withPart(colorSchemeLight)
 const darkTheme = themeQuartz.withPart(colorSchemeDark)
@@ -250,6 +251,7 @@ export default function FactsGridPage({ facts, meta, deck }: FactsGridPageProps)
         : {
           editable: true,
           flex: 1,
+          minWidth: 100,
           context: {
             uid: crypto.randomUUID(),
           },
@@ -274,12 +276,17 @@ export default function FactsGridPage({ facts, meta, deck }: FactsGridPageProps)
     gridRef.current?.api.setGridOption('columnDefs', newDefs)
   }, [createColDef, getCurrentColDefs])
 
-
-
-
   const columnDefs = useMemo(() => {
     return fullFields.map(createColDef)
   }, [fullFields, createColDef])
+
+  const [selectIds, setSelectIds] = useState<string[]>([])
+
+  const handleSelectionChanged = useCallback((event:SelectionChangedEvent<Record<string, any>>) => {
+    const ids = event.selectedNodes?.map((e) => e.data?.id).filter((e) => typeof e === 'string')
+    if(ids)
+      setSelectIds(ids)
+  }, [setSelectIds])
 
   return (
     <LayoutPage
@@ -303,6 +310,16 @@ export default function FactsGridPage({ facts, meta, deck }: FactsGridPageProps)
 
         <div className="ml-auto"></div>
 
+        {
+          selectIds.length != 0 && (
+            <DeleteButton
+              deckId={deck.id}
+              isPending={loading}
+              factIds={selectIds}
+            />
+          )
+        }
+
         <CreateColButton
           isPending={loading}
           onClick={handleAddCol}
@@ -325,10 +342,18 @@ export default function FactsGridPage({ facts, meta, deck }: FactsGridPageProps)
             ref={gridRef}
             theme={resolvedTheme === 'dark' ? darkTheme : lightTheme}
             suppressDragLeaveHidesColumns
+            suppressMovableColumns
             rowData={rowData}
             columnDefs={columnDefs}
             getRowId={(p) => p.data.id}
             onCellValueChanged={() => handleDebouncedCellChange()}
+            rowSelection={{
+              mode: 'multiRow',
+              checkboxes: true,
+              headerCheckbox: true,
+              enableClickSelection: false,
+            }}
+            onSelectionChanged={handleSelectionChanged}
           />
         </div>
       </AgGridProvider>
@@ -427,4 +452,35 @@ function SyncButton({ ...rest }: AppButtonProps){
       </Button>
     </AppTooltip>
   )
+}
+
+interface DeleteButtonProps extends AppButtonProps {
+  deckId: string,
+  factIds: string[]
+}
+
+
+function DeleteButton({ factIds, deckId, ...rest } : DeleteButtonProps){
+  const t = useTranslations()
+  const [isOpen, setIsOpen] = useState(false)
+  const action = deleteFactsAction.bind(null, { deckId, factIds })
+  return (
+    <>
+      <AppTooltip
+        content={t('common.delete', { name: t('term.fields') })}
+      >
+        <AppButton
+          className="ml-auto"
+          size="sm"
+          variant="outline"
+          isIconOnly
+          icon={<Trash2Icon className="size-4" />}
+          onClick={() => setIsOpen(true)}
+          {...rest}
+        />
+      </AppTooltip>
+      <DeleteModal isOpen={isOpen} setIsOpen={setIsOpen} action={action} />
+    </>
+  )
+
 }
