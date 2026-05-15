@@ -9,7 +9,7 @@ import { Paperclip } from 'lucide-react'
 import { useCallback } from 'react'
 
 interface FactsGridCellRendererProps extends ICellRendererParams {
-  onAttachmentClick?: (fact: Fact, fieldIndex: number) => void
+  onAttachmentClick?: (fact: Fact, fieldIndex: number, fieldKey: string) => void
   deck: Deck
 }
 
@@ -18,7 +18,8 @@ export default function FactsGridCellRenderer(props: FactsGridCellRendererProps)
     const currentFact = props.data?.[rawSymbol] as Fact
     const allColumns = props.api.getAllDisplayedColumns()
     const fieldIndex = allColumns.findIndex((col) => col === props.column)
-    props.onAttachmentClick?.(currentFact, fieldIndex)
+    const fieldKey = props.column?.getColId() ?? ''
+    props.onAttachmentClick?.(currentFact, fieldIndex, fieldKey)
   }, [props])
 
 

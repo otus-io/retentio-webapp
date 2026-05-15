@@ -1,12 +1,13 @@
 import { ServiceResponse } from '@/lib/response'
-import { request } from '@/utils/request'
+import { OnProgress } from '@/utils/createRequest'
+import { requestClient } from '@/utils/request.client'
 
 /**
  * 获取
  */
-export async function getMedia(id: string) {
+export async function getMedia(id: string, onDownloadProgress?: OnProgress) {
   try {
-    const blob = await request<Blob>(`/api/media/${id}`)
+    const blob = await requestClient<Blob>(`/api/media/${id}`, { onDownloadProgress })
     const url = URL.createObjectURL(blob)
     return ServiceResponse.success({
       data: {
@@ -27,7 +28,7 @@ export async function getMedia(id: string) {
  */
 export async function uploadMedia(formData: FormData) {
   try {
-    const res = await request('/api/media', {
+    const res = await requestClient('/api/media', {
       method: 'POST',
       body: formData,
     })

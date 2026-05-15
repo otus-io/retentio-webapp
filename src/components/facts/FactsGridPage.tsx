@@ -20,6 +20,7 @@ import AppButton, { AppButtonProps } from '@/components/app/AppButton'
 import { CircleQuestionMark, Columns4Icon, RefreshCwIcon, Rows4Icon } from 'lucide-react'
 import { updateFactsFields } from '@/api/facts'
 import FactsMediaModal from '@/components/facts/FactsMediaModal'
+import { MediaType } from '@/hooks/useFactsCellAttachments'
 import { actionSymbol, rawSymbol } from '@/components/facts/token'
 import { useTranslations } from 'next-intl'
 import LayoutPage from '@/components/layout/LayoutPage'
@@ -49,7 +50,7 @@ export default function FactsGridPage({ facts, meta, deck }: FactsGridPageProps)
   const t = useTranslations()
   const { resolvedTheme } = useTheme()
   const [isOpen, setIsOpen] = useState(false)
-  const [currentEntry, setCurrentEntry] = useState<Entry>()
+  const [target, setTarget] = useState<{ factId: string; fieldKey: string; entry: Entry }>()
   const gridRef = useRef<AgGridReact>(null)
   const [loading, setLoading]= useState(false)
   const fullFields = useMemo(() => {
@@ -122,7 +123,11 @@ export default function FactsGridPage({ facts, meta, deck }: FactsGridPageProps)
       const entries = getEntriesFromData(data)
       const hasChanged = entries.some((entry, i) => {
         const rawEntry = raw.entries[i]
-        return !rawEntry || entry.text !== rawEntry.text
+        if (!rawEntry) return true
+        return entry.text !== rawEntry.text
+          || entry.audio !== rawEntry.audio
+          || entry.image !== rawEntry.image
+          || entry.video !== rawEntry.video
       })
       if (hasChanged) {
         changedNodes.push({ node, entries })
@@ -149,11 +154,20 @@ export default function FactsGridPage({ facts, meta, deck }: FactsGridPageProps)
     handleCellChange()
   }, 100)
 
-  const handleAttachmentClick = useCallback((fact: Fact, fieldIndex: number) => {
-    console.log(fact, fact.entries[fieldIndex])
-    setCurrentEntry(fact.entries[fieldIndex])
+  const handleAttachmentClick = useCallback((fact: Fact, fieldIndex: number, fieldKey: string) => {
+    setTarget({ factId: fact.id, fieldKey, entry: fact.entries[fieldIndex] })
     setIsOpen(true)
   }, [setIsOpen])
+
+  const handleAttachmentUpload = useCallback((fileId: string, mediaType: MediaType) => {
+    if (!target) return
+    const node = gridRef.current?.api.getRowNode(target.factId)
+    if (!node) return
+    const prevEntry: Entry = node.data[target.fieldKey] ?? { text: '' }
+    const nextEntry: Entry = { ...prevEntry, [mediaType]: fileId }
+    node.updateData({ ...node.data, [target.fieldKey]: nextEntry })
+    handleDebouncedCellChange()
+  }, [target, handleDebouncedCellChange])
 
   const handleRenameColDef = useDebouncedCallback((uid: string, newName: string) => {
     const currentDefs = getCurrentColDefs()
@@ -191,7 +205,13 @@ export default function FactsGridPage({ facts, meta, deck }: FactsGridPageProps)
         )
       },
       cellRenderer: (props: any)=>{
-        return <FactsGridCellRenderer deck={deck} {...props} onAttachmentClick={handleAttachmentClick} />
+        return (
+          <FactsGridCellRenderer
+            deck={deck}
+            onAttachmentClick={handleAttachmentClick}
+            {...props}
+          />
+        )
       },
       valueGetter: (params)=>{
         const key = params.colDef.field ?? ''
@@ -306,7 +326,7 @@ export default function FactsGridPage({ facts, meta, deck }: FactsGridPageProps)
             suppressDragLeaveHidesColumns
             rowData={rowData}
             columnDefs={columnDefs}
-            onColumnMoved={()=>handleDebouncedFieldsChange()}
+            getRowId={(p) => p.data.id}
             onCellValueChanged={() => handleDebouncedCellChange()}
           />
         </div>
@@ -315,9 +335,11 @@ export default function FactsGridPage({ facts, meta, deck }: FactsGridPageProps)
         totalPages={totalPages}
       />
       <FactsMediaModal
-        isOpen={isOpen}
         setIsOpen={setIsOpen}
-        entry={currentEntry}
+        isOpen={isOpen}
+        entry={target?.entry}
+        getApi={()=>gridRef.current!.api}
+        onUpload={handleAttachmentUpload}
       />
     </LayoutPage>
   )

@@ -5,12 +5,14 @@ import { Description, Label, ListBox } from '@heroui/react'
 import { useTranslations } from 'next-intl'
 import AppButton from '@/components/app/AppButton'
 import FactsMediaPreviewModal from '@/components/facts/FactsMediaPreviewModal'
-import { useFactsCellAttachments } from '@/hooks/useFactsCellAttachments'
+import { MediaType, useFactsCellAttachments } from '@/hooks/useFactsCellAttachments'
+import { GridApi } from 'ag-grid-community'
 
 export interface FactsMediaModalProps {
   entry?: Entry
   id?: string
   isOpen: boolean,
+  getApi: () => GridApi<any>
   setIsOpen: (isOpen: boolean) => void
   onUpload?: Parameters<typeof useFactsCellAttachments>[1]
 }
@@ -19,6 +21,7 @@ export default function FactsMediaModal({
   entry,
   id,
   isOpen,
+  getApi,
   setIsOpen,
   onUpload,
 }: FactsMediaModalProps) {
@@ -28,8 +31,9 @@ export default function FactsMediaModal({
   return (
     <FactsAttachmentInner
       onUpload={onUpload}
-      isOpen={isOpen}
       setIsOpen={setIsOpen}
+      getApi={getApi}
+      isOpen={isOpen}
       entry={entry}
       key={id}
     />
@@ -53,7 +57,9 @@ function FactsAttachmentInner({
     preview,
     isOpen: isPreviewOpen,
     setIsOpen: setIsPreviewOpen,
-  } = useFactsCellAttachments(entry, onUpload)
+  } = useFactsCellAttachments(entry, (fileId: string, mediaType: MediaType)=>{
+    return onUpload?.(fileId, mediaType)
+  })
 
   return (
     <>
@@ -98,11 +104,16 @@ function FactsAttachmentInner({
                         </Description>
                       </div>
 
-                      <div className="flex items-center gap-4 w-6">
-                        {
-                          item.loading && <Spinner />
-                        }
-                      </div>
+                      {
+                        item.loading && (
+                          <>
+                            <span>{item.progress}%</span>
+                            <div className="flex items-center gap-4 w-6">
+                              <Spinner />
+                            </div>
+                          </>
+                        )
+                      }
                     </ListBox.Item>
                   )
                 })}
