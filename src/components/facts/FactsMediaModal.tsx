@@ -2,6 +2,7 @@ import { Entry } from '@/modules/facts/facts.schema'
 import { Modal, Spinner } from '@heroui/react'
 import { Paperclip } from 'lucide-react'
 import { Description, Label, ListBox } from '@heroui/react'
+import { useTranslations } from 'next-intl'
 import AppButton from '@/components/app/AppButton'
 import FactsMediaPreviewModal from '@/components/facts/FactsMediaPreviewModal'
 import { useFactsCellAttachments } from '@/hooks/useFactsCellAttachments'
@@ -41,6 +42,7 @@ function FactsAttachmentInner({
   setIsOpen,
   onUpload,
 }: FactsMediaModalProps) {
+  const t = useTranslations()
   const {
     file,
     fileType,
@@ -65,10 +67,10 @@ function FactsAttachmentInner({
                   className="size-5"
                 />
               </Modal.Icon>
-              <Modal.Heading>Attachment</Modal.Heading>
+              <Modal.Heading>{t('term.attachment')}</Modal.Heading>
             </Modal.Header>
             <Modal.Body>
-              <ListBox aria-label="Attachment">
+              <ListBox aria-label={t('term.attachment')}>
                 {mediaList.map((item) => {
                   const hasValue = !!item.value
                   return (
@@ -90,7 +92,7 @@ function FactsAttachmentInner({
                             )
                             : (
                               <span className="text-muted">
-                                {`No ${item.label.toLowerCase()} attached`}
+                                {t('common.no-attached', { name: item.label.toLowerCase() })}
                               </span>
                             )}
                         </Description>
@@ -112,10 +114,10 @@ function FactsAttachmentInner({
                 onClick={upload}
                 isPending={loading}
               >
-                Upload
+                {t('common.upload')}
               </AppButton>
               <AppButton slot="close" variant="secondary">
-                Close
+                {t('common.close')}
               </AppButton>
             </Modal.Footer>
           </Modal.Dialog>

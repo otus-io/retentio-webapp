@@ -5,6 +5,7 @@ import { Entry } from '@/modules/facts/facts.schema'
 import { UploadMediaResult } from '@/modules/media/media.schema'
 import { requestClient } from '@/utils/request.client'
 import { ImageIcon, LucideIcon, MicIcon, VideoIcon } from 'lucide-react'
+import { useTranslations } from 'next-intl'
 import { useCallback, useReducer, useState } from 'react'
 
 
@@ -54,6 +55,7 @@ function mimeToMediaType(mime: string): MediaType {
 }
 
 export function useFactsCellAttachments(entry?: Entry, onUpload?: (fileId: string, mediaType: MediaType) => void){
+  const t = useTranslations()
   const [file, setFile] = useState<FactsMediaPreviewModalProps['file']>()
   const [fileType, setFileType] = useState<MediaType>()
   const [loading, setLoading] = useState(false)
@@ -63,9 +65,9 @@ export function useFactsCellAttachments(entry?: Entry, onUpload?: (fileId: strin
       return [] as MediaItem[]
     }
     return [
-      { key: 'audio', label: 'Audio', icon: MicIcon, value: entry.audio, loading: false },
-      { key: 'image', label: 'Image', icon: ImageIcon, value: entry.image, loading: false },
-      { key: 'video', label: 'Video', icon: VideoIcon, value: entry.video, loading: false },
+      { key: 'audio', label: t('term.audio'), icon: MicIcon, value: entry.audio, loading: false },
+      { key: 'image', label: t('term.image'), icon: ImageIcon, value: entry.image, loading: false },
+      { key: 'video', label: t('term.video'), icon: VideoIcon, value: entry.video, loading: false },
     ] as MediaItem[]
   })
   const handleUpload = useCallback(async(files: File[]) => {

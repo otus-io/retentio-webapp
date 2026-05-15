@@ -16,15 +16,18 @@ import { useTheme } from 'next-themes'
 import TablePagination from '@/components/common/TablePagination'
 import { useDebouncedCallback } from 'use-debounce'
 import { updateDecksFields } from '@/api/decks'
-import AppButton from '@/components/app/AppButton'
-import { CheckIcon, Columns4Icon, PlusIcon, Rows4Icon } from 'lucide-react'
+import AppButton, { AppButtonProps } from '@/components/app/AppButton'
+import { CircleQuestionMark, Columns4Icon, RefreshCwIcon, Rows4Icon } from 'lucide-react'
 import { updateFactsFields } from '@/api/facts'
 import FactsMediaModal from '@/components/facts/FactsMediaModal'
 import { actionSymbol, rawSymbol } from '@/components/facts/token'
 import { useTranslations } from 'next-intl'
 import LayoutPage from '@/components/layout/LayoutPage'
 import { createFactsAction } from '@/modules/facts/facts.action'
-import { AppButtonLink } from '@/components/app/AppButtonLink'
+import { Button } from '@heroui/react'
+import clsx from 'clsx'
+import AppTooltip from '@/components/app/AppTooltip'
+import AppLink from '@/components/app/AppLink'
 
 const lightTheme = themeQuartz.withPart(colorSchemeLight)
 const darkTheme = themeQuartz.withPart(colorSchemeDark)
@@ -50,12 +53,8 @@ export default function FactsGridPage({ facts, meta, deck }: FactsGridPageProps)
   const gridRef = useRef<AgGridReact>(null)
   const [loading, setLoading]= useState(false)
   const fullFields = useMemo(() => {
-    const factsFields= facts.reduce((longest, fact) =>
-      fact.fields.length > longest.length ? fact.fields : longest
-    , [] as string[])
-    const fields = [...deck.fields].concat(...factsFields.filter((_, index) => index >= deck.fields.length))
-    return [...fields, actionSymbol]
-  }, [deck.fields, facts])
+    return [...deck.fields, actionSymbol]
+  }, [deck.fields])
   const total = meta.total || 0
   const totalPages = meta.total ? Math.ceil(meta.total/meta.limit) :0
 
@@ -270,41 +269,34 @@ export default function FactsGridPage({ facts, meta, deck }: FactsGridPageProps)
       ]}
     >
       <div className="flex items-center gap-2 my-2">
-        <h1>
-          {t('common.all', { name: t('term.facts'), count: total })}
-        </h1>
-        <AppButton
-          className={'ml-auto'}
-          size="sm"
-          variant="outline"
+        <div className="flex items-center gap-1">
+          <span className="text-foreground text-base font-semibold">
+            {t('common.all', { name: t('term.facts'), count: total })}
+          </span>
+          <AppTooltip content={ <p>{t('common.what-is', { name: t('term.facts') })}</p>}>
+            <AppLink className="hover:text-accent" href={'/guide/getting-started/facts'}>
+              <CircleQuestionMark className="size-4" />
+            </AppLink>
+          </AppTooltip>
+        </div>
+
+        <div className="ml-auto"></div>
+
+        <CreateColButton
           isPending={loading}
           onClick={handleAddCol}
-          icon={<Columns4Icon className="size-4" />}
-        >
-          <span>{t('common.create', { name: t('term.column') })}</span>
-        </AppButton>
+        />
 
-        <CrateRowButton deckId={deck.id} fields={fullFields} />
+        <CrateRowButton
+          isPending={loading}
+          deckId={deck.id}
+          fields={fullFields}
+        />
 
-
-        <AppButton
-          className={''}
-          size="sm"
-          variant="secondary"
+        <SyncButton
           onClick={handleDebouncedChange}
           isPending={loading}
-          icon={<CheckIcon className="size-4" />}
-        >
-          {t('common.save')}
-        </AppButton>
-
-        <AppButtonLink
-          size="sm"
-          href={`/decks/${deck.id}/facts/create`}
-        >
-          <PlusIcon className="size-4" />
-          <span>{t('common.create', { name: t('term.facts') })}</span>
-        </AppButtonLink>
+        />
       </div>
       <AgGridProvider modules={modules}>
         <div style={{ height: 500 }}>
@@ -336,21 +328,20 @@ export default function FactsGridPage({ facts, meta, deck }: FactsGridPageProps)
 function CrateRowButton({
   deckId,
   fields,
+  isPending: isLoading,
 }: {
   deckId: string,
   fields: (string | symbol)[]
+  isPending: boolean
 }){
   const t = useTranslations()
   const value = useMemo(() => {
     const _fields = fields.filter(isString)
     const facts = [{
       entries: _fields.map((text)=>({ text })),
-      fields: _fields,
     }]
     return JSON.stringify(facts)
   }, [fields])
-
-
 
   const [_state, action, isPending] = useActionState(createFactsAction.bind(null, deckId), null)
 
@@ -358,15 +349,59 @@ function CrateRowButton({
     <form action={action}>
       <input type="hidden" name="facts" value={value} />
       <input type="hidden" name="operation" value="prepend" />
+      <AppTooltip
+        content={t('common.add', { name: t('term.facts') })}
+      >
+        <AppButton
+          size="sm"
+          variant="outline"
+          type="submit"
+          isPending={isPending||isLoading}
+          isIconOnly
+          icon={<Rows4Icon className="size-4" />}
+        />
+      </AppTooltip>
+    </form>
+  )
+}
+
+
+function CreateColButton({ ...rest }: AppButtonProps){
+  const t = useTranslations()
+  return (
+    <AppTooltip
+      content={t('common.add', { name: t('term.field') })}
+    >
       <AppButton
+        className={'ml-auto'}
         size="sm"
         variant="outline"
-        type="submit"
-        isPending={isPending}
-        icon={<Rows4Icon className="size-4" />}
+        isIconOnly
+        icon={<Columns4Icon className="size-4" />}
+        {...rest}
+      />
+    </AppTooltip>
+  )
+}
+
+
+
+function SyncButton({ ...rest }: AppButtonProps){
+  const t = useTranslations()
+  return (
+    <AppTooltip
+      content={t('common.sync')}
+    >
+      <Button
+        size="sm"
+        variant="outline"
+        isIconOnly
+        {...rest}
       >
-        <span>{t('common.create', { name: t('term.row') })}</span>
-      </AppButton>
-    </form>
+        {
+          ({ isPending })=><RefreshCwIcon className={clsx('size-4', isPending && 'animate-spin')} />
+        }
+      </Button>
+    </AppTooltip>
   )
 }

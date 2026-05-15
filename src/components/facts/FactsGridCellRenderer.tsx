@@ -1,8 +1,8 @@
+import AppTooltip from '@/components/app/AppTooltip'
 import FactsAction from '@/components/facts/FactsAction'
 import { rawSymbol } from '@/components/facts/token'
 import { Deck } from '@/modules/decks/decks.schema'
 import { Fact } from '@/modules/facts/facts.schema'
-import { Tooltip } from '@heroui/react'
 import { ICellRendererParams } from 'ag-grid-community'
 import { Paperclip } from 'lucide-react'
 
@@ -33,8 +33,9 @@ export default function FactsGridCellRenderer(props: FactsGridCellRendererProps)
   return (
     <div className="flex items-center  h-full">
       <span className="truncate">{props.getValue?.()}</span>
-      <Tooltip
-        delay={0}
+      <AppTooltip
+        trigger={false}
+        content={<p>附件</p>}
       >
         <button
           type="button"
@@ -49,10 +50,7 @@ export default function FactsGridCellRenderer(props: FactsGridCellRendererProps)
             className="size-3.5 hover:text-accent hover:cursor-pointer"
           />
         </button>
-        <Tooltip.Content>
-          <p>附件</p>
-        </Tooltip.Content>
-      </Tooltip>
+      </AppTooltip>
     </div>
   )
 }
