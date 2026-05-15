@@ -2,7 +2,6 @@
 
 import { Deck } from '@/modules/decks/decks.schema'
 import { useTranslations } from 'next-intl'
-import { Tooltip } from '@heroui/react'
 import { FolderOpen, CircleQuestionMark } from 'lucide-react'
 import DecksCard from '@/components/decks/DecksCard'
 import AppLink from '@/components/app/AppLink'
@@ -11,6 +10,7 @@ import { useDeferredValue, useMemo, useState } from 'react'
 import Fuse from 'fuse.js'
 import DeckCreateButton from '@/components/decks/DeckCreateButton'
 import LayoutPage from '@/components/layout/LayoutPage'
+import AppTooltip from '@/components/app/AppTooltip'
 
 export default function DecksList({
   data,
@@ -43,16 +43,11 @@ export default function DecksList({
             <span className="text-foreground text-base font-semibold">
               {t('common.all', { name: t('term.decks'), count: data.length })}
             </span>
-            <Tooltip delay={0}>
-              <Tooltip.Trigger>
-                <AppLink className="hover:text-accent" href={'/guide/getting-started/decks'}>
-                  <CircleQuestionMark className="size-4" />
-                </AppLink>
-              </Tooltip.Trigger>
-              <Tooltip.Content>
-                <p>{t('common.what-is', { name: t('term.decks') })}</p>
-              </Tooltip.Content>
-            </Tooltip>
+            <AppTooltip content={ <p>{t('common.what-is', { name: t('term.decks') })}</p>}>
+              <AppLink className="hover:text-accent" href={'/guide/getting-started/decks'}>
+                <CircleQuestionMark className="size-4" />
+              </AppLink>
+            </AppTooltip>
           </div>
         </div>
 
