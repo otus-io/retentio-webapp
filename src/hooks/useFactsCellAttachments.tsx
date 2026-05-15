@@ -1,6 +1,7 @@
 import { getMedia } from '@/api/media'
 import { FactsMediaPreviewModalProps } from '@/components/facts/FactsMediaPreviewModal'
 import { useMediaUpload } from '@/hooks/useMediaUpload'
+import { createBlobCache } from '@/lib/idb-cache'
 import { Entry } from '@/modules/facts/facts.schema'
 import { UploadMediaResult } from '@/modules/media/media.schema'
 import { requestClient } from '@/utils/request.client'
@@ -38,7 +39,7 @@ function mediaReducer(state: MediaItem[], action: MediaAction) {
   }
 }
 
-const cache = new Map<string, string>()
+const mediaCache = createBlobCache('retentio', 'media-blobs')
 
 
 function mimeToMediaType(mime: string): MediaType {
@@ -97,9 +98,9 @@ export function useFactsCellAttachments(entry?: Entry, onUpload?: (fileId: strin
       if(!media){
         return
       }
-      const cacheFile = cache.get(media)
-      if(cacheFile){
-        setFile(cacheFile)
+      const cachedBlob = await mediaCache.get(media)
+      if(cachedBlob){
+        setFile(URL.createObjectURL(cachedBlob))
         setFileType(item.key)
       }else{
         dispatch({ type: 'SET_LOADING', key: item.key, loading: true })
@@ -109,7 +110,7 @@ export function useFactsCellAttachments(entry?: Entry, onUpload?: (fileId: strin
         }
         setFile(data?.url)
         setFileType(item.key)
-        cache.set(media, data?.url)
+        await mediaCache.set(media, data.blob)
       }
       setIsOpen(true)
     } finally {

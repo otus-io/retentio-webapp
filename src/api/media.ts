@@ -6,11 +6,12 @@ import { request } from '@/utils/request'
  */
 export async function getMedia(id: string) {
   try {
-    const res = await request<Blob>(`/api/media/${id}`)
-    const url = URL.createObjectURL(res)
+    const blob = await request<Blob>(`/api/media/${id}`)
+    const url = URL.createObjectURL(blob)
     return ServiceResponse.success({
       data: {
         url,
+        blob,
       },
       meta: {
         msg: 'Media fetched successfully',
