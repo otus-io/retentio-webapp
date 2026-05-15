@@ -1,5 +1,5 @@
 import HomePage from '@/components/home/HomePage'
-import { Metadata } from 'next'
+import type { Metadata } from 'next'
 import { getTranslations } from 'next-intl/server'
 
 export default async function Page() {

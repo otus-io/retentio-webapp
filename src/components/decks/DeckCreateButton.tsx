@@ -7,7 +7,7 @@ export default function DeckCreateButton() {
   return (
     <AppButtonLink
       variant="outline"
-      size={ md?undefined:'sm'}
+      size={ md ? undefined : 'sm'}
       href="/decks/create"
       isIconOnly
     >

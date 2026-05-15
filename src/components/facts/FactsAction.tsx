@@ -1,11 +1,12 @@
 'use client'
-import { Deck } from '@/modules/decks/decks.schema'
+import type { Deck } from '@/modules/decks/decks.schema'
 import { Dropdown, Label } from '@heroui/react'
-import { Key, useCallback, useMemo, useState } from 'react'
+import type { Key } from 'react'
+import { useCallback, useMemo, useState } from 'react'
 import { EllipsisVertical, Trash2 } from 'lucide-react'
 import { useTranslations } from 'next-intl'
 import DeleteModal from '@/components/common/DeleteModal'
-import { Fact } from '@/modules/facts/facts.schema'
+import type { Fact } from '@/modules/facts/facts.schema'
 import { deleteFactAction } from '@/modules/facts/facts.action'
 
 interface DecksActionProps {
@@ -15,13 +16,13 @@ interface DecksActionProps {
 
 export default function FactsAction({ deck, fact }: DecksActionProps) {
   const t = useTranslations()
-  const deleteDeck = useMemo(()=>{
+  const deleteDeck = useMemo(() => {
     return deleteFactAction.bind(null, { deckId: deck.id, factId: fact.id })
   }, [deck.id, fact.id])
   const [isOpen, setIsOpen] = useState(false)
 
 
-  const handleAction = useCallback((id: Key)=> {
+  const handleAction = useCallback((id: Key) => {
     switch (id) {
       case 'delete':
         setIsOpen(true)

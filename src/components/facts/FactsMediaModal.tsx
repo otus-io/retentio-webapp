@@ -1,12 +1,13 @@
-import { Entry } from '@/modules/facts/facts.schema'
+import type { Entry } from '@/modules/facts/facts.schema'
 import { Modal, Spinner } from '@heroui/react'
 import { Paperclip } from 'lucide-react'
 import { Description, Label, ListBox } from '@heroui/react'
 import { useTranslations } from 'next-intl'
 import AppButton from '@/components/app/AppButton'
 import FactsMediaPreviewModal from '@/components/facts/FactsMediaPreviewModal'
-import { MediaType, useFactsCellAttachments } from '@/hooks/useFactsCellAttachments'
-import { GridApi } from 'ag-grid-community'
+import type { MediaType } from '@/hooks/useFactsCellAttachments'
+import { useFactsCellAttachments } from '@/hooks/useFactsCellAttachments'
+import type { GridApi } from 'ag-grid-community'
 
 export interface FactsMediaModalProps {
   entry?: Entry
@@ -57,7 +58,7 @@ function FactsAttachmentInner({
     preview,
     isOpen: isPreviewOpen,
     setIsOpen: setIsPreviewOpen,
-  } = useFactsCellAttachments(entry, (fileId: string, mediaType: MediaType)=>{
+  } = useFactsCellAttachments(entry, (fileId: string, mediaType: MediaType) => {
     return onUpload?.(fileId, mediaType)
   })
 

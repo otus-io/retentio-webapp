@@ -1,4 +1,4 @@
-import { UpdateFactDTO } from '@/modules/facts/facts.schema'
+import type { UpdateFactDTO } from '@/modules/facts/facts.schema'
 
 /**
  *

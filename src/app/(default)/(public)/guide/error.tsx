@@ -7,7 +7,7 @@ export default function Error() {
     <>
       <AppErrorPage
         code={500}
-        message={'Something went wrong!'}
+        message="Something went wrong!"
       />
     </>
   )

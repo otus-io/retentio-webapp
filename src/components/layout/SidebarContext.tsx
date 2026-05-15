@@ -1,6 +1,6 @@
 'use client'
 
-import { SidebarNavItem } from '@/config/sidebar'
+import type { SidebarNavItem } from '@/config/sidebar'
 import { createContext, useContext, useMemo, useState, type ReactNode } from 'react'
 
 interface SidebarContextType {

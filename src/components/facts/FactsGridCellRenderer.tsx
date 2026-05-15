@@ -1,9 +1,9 @@
 import AppTooltip from '@/components/app/AppTooltip'
 import FactsAction from '@/components/facts/FactsAction'
 import { rawSymbol } from '@/components/facts/token'
-import { Deck } from '@/modules/decks/decks.schema'
-import { Fact } from '@/modules/facts/facts.schema'
-import { ICellRendererParams } from 'ag-grid-community'
+import type { Deck } from '@/modules/decks/decks.schema'
+import type { Fact } from '@/modules/facts/facts.schema'
+import type { ICellRendererParams } from 'ag-grid-community'
 import { Paperclip } from 'lucide-react'
 
 import { useCallback } from 'react'

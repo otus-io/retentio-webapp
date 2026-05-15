@@ -1,6 +1,6 @@
 'use client'
 
-import { Deck } from '@/modules/decks/decks.schema'
+import type { Deck } from '@/modules/decks/decks.schema'
 import { useTranslations } from 'next-intl'
 import { FolderOpen, CircleQuestionMark } from 'lucide-react'
 import DecksCard from '@/components/decks/DecksCard'
@@ -21,7 +21,7 @@ export default function DecksList({
   const [keywords, setKeywords] = useState('')
   const deferredQuery = useDeferredValue(keywords)
 
-  const fuse = useMemo(() =>{
+  const fuse = useMemo(() => {
     return new Fuse(data, { keys: ['name'] })
   }, [data])
 
@@ -44,7 +44,7 @@ export default function DecksList({
               {t('common.all', { name: t('term.decks'), count: data.length })}
             </span>
             <AppTooltip content={ <p>{t('common.what-is', { name: t('term.decks') })}</p>}>
-              <AppLink className="hover:text-accent" href={'/guide/getting-started/decks'}>
+              <AppLink className="hover:text-accent" href="/guide/getting-started/decks">
                 <CircleQuestionMark className="size-4" />
               </AppLink>
             </AppTooltip>
@@ -71,7 +71,7 @@ export default function DecksList({
           : (
             <div className="grid gap-2 md:grid-cols-2 lg:grid-cols-3">
               {
-                results.map((item)=>{
+                results.map((item) => {
                   return (
                     <DecksCard
                       highlight={deferredQuery}

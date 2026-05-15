@@ -3,7 +3,7 @@ import { LOGIN_PATH } from '@/config'
 import Dashboard from '@/components/retentio/Dashboard'
 import { getProfileService } from '@/modules/auth/auth.service'
 import { getTranslations } from 'next-intl/server'
-import { Metadata } from 'next'
+import type { Metadata } from 'next'
 
 export default async function Page() {
   const user = await getProfileService()

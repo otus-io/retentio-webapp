@@ -1,6 +1,6 @@
 'use client'
 import AppLink from '@/components/app/AppLink'
-import { Deck } from '@/modules/decks/decks.schema'
+import type { Deck } from '@/modules/decks/decks.schema'
 import { Card } from '@heroui/react'
 import { ChartPie, ListTodo } from 'lucide-react'
 import DecksIconLabel from '@/components/decks/DecksLabel'
@@ -45,10 +45,10 @@ export default function DecksCard({
 
         <Card.Content>
           <div className="flex items-center gap-2">
-            <DecksIconLabel icon={ListTodo} color={'orange'}>
+            <DecksIconLabel icon={ListTodo} color="orange">
               {t('term.due')}: <span className="font-medium ml-0.5">{deck.stats.due_cards}</span>
             </DecksIconLabel>
-            <DecksIconLabel icon={ChartPie} color={'emerald'}>
+            <DecksIconLabel icon={ChartPie} color="emerald">
               {t('term.progress')}: <span className="font-medium  ml-0.5">{progress}%</span>
             </DecksIconLabel>
           </div>

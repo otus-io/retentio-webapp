@@ -12,8 +12,10 @@ type IsEqual<T, U> =
   [T] extends [U] ? ([U] extends [T] ? true : false) : false
 
 
+// eslint-disable-next-line @typescript-eslint/consistent-type-imports
 type ZhKeysDeep = DeepKeys<typeof import('./locales/zh-CN.json')>
 
+// eslint-disable-next-line @typescript-eslint/consistent-type-imports
 type EnKeysDeep = DeepKeys<typeof import('./locales/en.json')>
 
 type KeysMatchDeep = IsEqual<ZhKeysDeep, EnKeysDeep>

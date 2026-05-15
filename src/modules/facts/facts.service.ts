@@ -1,7 +1,7 @@
 import { request } from '@/utils/request'
 
 import { ServiceResponse } from '@/lib/response'
-import {
+import type {
   CreateFactsDTO,
   CreateFactsResponseDTO,
   FactResponseDTO,

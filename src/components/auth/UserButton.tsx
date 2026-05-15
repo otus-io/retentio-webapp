@@ -3,10 +3,11 @@
 import { useTranslations } from 'next-intl'
 import AppAvatar from '@/components/app/AppAvatar'
 import { AppButtonLink } from '@/components/app/AppButtonLink'
-import { ProfileResponseDTO } from '@/modules/auth/auth.schema'
+import type { ProfileResponseDTO } from '@/modules/auth/auth.schema'
 import { LOGIN_PATH } from '@/config'
 import { useRouter } from 'next/navigation'
-import { Dropdown, Key, Label, useOverlayState } from '@heroui/react'
+import type { Key } from '@heroui/react'
+import { Dropdown, Label, useOverlayState } from '@heroui/react'
 import LogoutModal from '@/components/auth/LogoutModal'
 
 interface UserButtonProps {

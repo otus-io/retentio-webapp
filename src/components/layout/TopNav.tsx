@@ -9,7 +9,7 @@ import AppLogo from '@/components/app/AppLogo'
 import useAppNavMenu from '@/hooks/useAppNavMenu'
 import { AppButtonLink } from '@/components/app/AppButtonLink'
 import GuideSearchButton from '@/components/guide/GuideSearchButton'
-import { ProfileResponseDTO } from '@/modules/auth/auth.schema'
+import type { ProfileResponseDTO } from '@/modules/auth/auth.schema'
 
 interface TopNavProps {
   user?: ProfileResponseDTO | null

@@ -13,7 +13,7 @@ export default function AppLogo({
 }: AppLogoProps) {
   return (
     <AppLink
-      href={'/'}
+      href="/"
       className={clsx('flex items-center text-accent gap-2', className)}
     >
       <svg
@@ -27,7 +27,7 @@ export default function AppLogo({
         />
       </svg>
       {
-        hideName!==true && (
+        hideName !== true && (
           <span className="font-bold text-lg">
             {APP_NAME}
           </span>

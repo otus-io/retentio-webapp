@@ -1,5 +1,5 @@
 import DecksForm from '@/components/decks/DecksForm'
-import { Metadata } from 'next'
+import type { Metadata } from 'next'
 import { getTranslations } from 'next-intl/server'
 
 export default function Page() {

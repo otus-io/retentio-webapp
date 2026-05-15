@@ -64,7 +64,7 @@ export function createRequest(getToken: GetTokenFn) {
 
     const mediaTypes = ['image/', 'audio/', 'video/']
 
-    if (mediaTypes.some((e)=>blob.type.startsWith(e))) {
+    if (mediaTypes.some((e) => blob.type.startsWith(e))) {
       return blob as unknown as T
     }
 

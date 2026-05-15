@@ -1,4 +1,5 @@
-import { useDropzone, FileRejection } from 'react-dropzone'
+import type { FileRejection } from 'react-dropzone'
+import { useDropzone } from 'react-dropzone'
 
 const MB = 1024 * 1024
 const MAX_IMAGE = 5 * MB

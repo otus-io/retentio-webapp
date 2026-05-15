@@ -1,5 +1,5 @@
 import AppButton from '@/components/app/AppButton'
-import { MediaType } from '@/hooks/useFactsCellAttachments'
+import type { MediaType } from '@/hooks/useFactsCellAttachments'
 import { Modal } from '@heroui/react'
 import { ImageIcon, MicIcon, VideoIcon } from 'lucide-react'
 import { useTranslations } from 'next-intl'

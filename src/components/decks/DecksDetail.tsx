@@ -1,5 +1,5 @@
 'use client'
-import { Deck } from '@/modules/decks/decks.schema'
+import type { Deck } from '@/modules/decks/decks.schema'
 import { Card, Chip } from '@heroui/react'
 import { useMemo } from 'react'
 import { motion } from 'framer-motion'

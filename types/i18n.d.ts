@@ -1,6 +1,6 @@
 import 'next-intl'
-import messages from '@/i18n/locales/en.json'
-import { Locale } from '@/lib/locale.server'
+import type messages from '@/i18n/locales/en.json'
+import type { Locale } from '@/lib/locale.server'
 
 declare module 'next-intl' {
   interface AppConfig {

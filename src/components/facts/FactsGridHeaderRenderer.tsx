@@ -1,5 +1,5 @@
 import { Dropdown, Label } from '@heroui/react'
-import { IHeaderParams } from 'ag-grid-community'
+import type { IHeaderParams } from 'ag-grid-community'
 import { EllipsisVertical, Trash2 } from 'lucide-react'
 import { useTranslations } from 'next-intl'
 import { useEffect, useRef, useState } from 'react'
@@ -17,7 +17,7 @@ export default function FactsGridHeaderRenderer(props: FactsGridHeaderRendererPr
   const [value, setValue] = useState(props.displayName)
   const inputRef = useRef<HTMLInputElement>(null)
   const t = useTranslations()
-  const uid = ()=>{
+  const uid = () => {
     return props.column.getColDef().context?.uid
   }
 
@@ -83,7 +83,7 @@ export default function FactsGridHeaderRenderer(props: FactsGridHeaderRendererPr
           <>
             <span>{value}</span>
             <Dropdown>
-              <Dropdown.Trigger className={'ml-auto shrink-0'}>
+              <Dropdown.Trigger className="ml-auto shrink-0">
                 <EllipsisVertical className="size-4 text-muted" />
               </Dropdown.Trigger>
               <Dropdown.Popover>

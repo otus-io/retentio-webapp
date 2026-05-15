@@ -1,5 +1,5 @@
 import { Tooltip } from '@heroui/react'
-import { ReactNode } from 'react'
+import type { ReactNode } from 'react'
 
 interface AppTooltipProps {
   children: ReactNode
@@ -20,7 +20,7 @@ export default function AppTooltip({
               {children}
             </Tooltip.Trigger>
           )
-          :children
+          : children
       }
 
       <Tooltip.Content>

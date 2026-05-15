@@ -1,6 +1,6 @@
 import DecksForm from '@/components/decks/DecksForm'
 import { getDeckService } from '@/modules/decks/decks.service'
-import { Metadata } from 'next'
+import type { Metadata } from 'next'
 import { getTranslations } from 'next-intl/server'
 import { notFound } from 'next/navigation'
 

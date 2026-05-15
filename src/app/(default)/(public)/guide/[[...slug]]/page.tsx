@@ -4,7 +4,7 @@ import { APP_DESC, APP_NAME, SITE_URL } from '@/config'
 import type { Locale } from '@/lib/locale.server'
 import { getLocale } from '@/lib/locale.server'
 import { DEFAULT_LOCALE } from '@/lib/locale'
-import { Metadata } from 'next'
+import type { Metadata } from 'next'
 import { notFound } from 'next/navigation'
 
 

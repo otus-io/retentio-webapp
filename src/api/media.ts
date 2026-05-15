@@ -1,5 +1,5 @@
 import { ServiceResponse } from '@/lib/response'
-import { OnProgress } from '@/utils/createRequest'
+import type { OnProgress } from '@/utils/createRequest'
 import { requestClient } from '@/utils/request.client'
 
 /**

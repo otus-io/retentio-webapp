@@ -1,7 +1,7 @@
 import { request } from '@/utils/request'
 
 import { ServiceResponse } from '@/lib/response'
-import { CreateOrUpdateDeckDTO, CreateOrUpdateDeckResponseDTO, DeckResponseDTO, DecksListResponseDTO, DeleteDeckResponseDTO } from '@/modules/decks/decks.schema'
+import type { CreateOrUpdateDeckDTO, CreateOrUpdateDeckResponseDTO, DeckResponseDTO, DecksListResponseDTO, DeleteDeckResponseDTO } from '@/modules/decks/decks.schema'
 
 /**
  * 获取所有卡组的服务函数

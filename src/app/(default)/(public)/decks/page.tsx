@@ -2,7 +2,7 @@ import AppError from '@/components/app/AppError'
 import { getAllDecksService } from '@/modules/decks/decks.service'
 import DecksList from '@/components/decks/DecksList'
 import { getTranslations } from 'next-intl/server'
-import { Metadata } from 'next'
+import type { Metadata } from 'next'
 
 export default async function Page() {
   const { data, success, message } = await getAllDecksService()

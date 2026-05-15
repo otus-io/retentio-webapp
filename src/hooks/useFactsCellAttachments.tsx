@@ -1,11 +1,12 @@
 import { getMedia } from '@/api/media'
-import { FactsMediaPreviewModalProps } from '@/components/facts/FactsMediaPreviewModal'
+import type { FactsMediaPreviewModalProps } from '@/components/facts/FactsMediaPreviewModal'
 import { useMediaUpload } from '@/hooks/useMediaUpload'
 import { createBlobCache } from '@/lib/idb-cache'
-import { Entry } from '@/modules/facts/facts.schema'
-import { UploadMediaResult } from '@/modules/media/media.schema'
+import type { Entry } from '@/modules/facts/facts.schema'
+import type { UploadMediaResult } from '@/modules/media/media.schema'
 import { requestClient } from '@/utils/request.client'
-import { ImageIcon, LucideIcon, MicIcon, VideoIcon } from 'lucide-react'
+import type { LucideIcon } from 'lucide-react'
+import { ImageIcon, MicIcon, VideoIcon } from 'lucide-react'
 import { useTranslations } from 'next-intl'
 import { useCallback, useReducer, useState } from 'react'
 
@@ -66,7 +67,7 @@ export function useFactsCellAttachments(entry?: Entry, onUpload?: (fileId: strin
   const [fileType, setFileType] = useState<MediaType>()
   const [loading, setLoading] = useState(false)
   const [isOpen, setIsOpen] = useState(false)
-  const [mediaList, dispatch] = useReducer(mediaReducer, initialMediaList, ()=>{
+  const [mediaList, dispatch] = useReducer(mediaReducer, initialMediaList, () => {
     if(!entry){
       return [] as MediaItem[]
     }
@@ -97,7 +98,7 @@ export function useFactsCellAttachments(entry?: Entry, onUpload?: (fileId: strin
     setLoading(false)
   }, [loading, onUpload])
 
-  const handlePreview = useCallback(async (item: MediaItem)=> {
+  const handlePreview = useCallback(async (item: MediaItem) => {
     try {
       const media = item.value
       if(!media){
@@ -111,7 +112,7 @@ export function useFactsCellAttachments(entry?: Entry, onUpload?: (fileId: strin
         dispatch({ type: 'SET_LOADING', key: item.key, loading: true })
         dispatch({ type: 'SET_PROGRESS', key: item.key, progress: '0' })
         const { data, success } = await getMedia(media, ({ progress: p }) => {
-          dispatch({ type: 'SET_PROGRESS', key: item.key, progress: `${Number((p??0) * 100).toFixed(0)}` })
+          dispatch({ type: 'SET_PROGRESS', key: item.key, progress: `${Number((p ?? 0) * 100).toFixed(0)}` })
         })
         if(!success){
           return
