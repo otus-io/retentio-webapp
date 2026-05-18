@@ -22,6 +22,7 @@ export default function FactsGridCellRenderer(props: FactsGridCellRendererProps)
     const entry = fieldIndex >= 0 ? currentFact.entries[fieldIndex] : undefined
     if (entry) {
       props.onAttachmentClick?.(currentFact, fieldKey, entry)
+    }
   }, [props])
 
 
