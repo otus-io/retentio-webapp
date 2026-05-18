@@ -20,7 +20,7 @@ export default function FactsGridCellRenderer(props: FactsGridCellRendererProps)
     const fieldKey = props.column?.getColId() ?? ''
     const fieldIndex = allColumns.findIndex((col) => col.field === fieldKey)
     const entry = fieldIndex >= 0 ? currentFact.entries[fieldIndex] : undefined
-    if(entry)
+    if (entry) {
       props.onAttachmentClick?.(currentFact, fieldKey, entry)
   }, [props])
 
