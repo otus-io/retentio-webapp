@@ -79,6 +79,7 @@ export default function FactsGridPage({ facts, meta, deck }: FactsGridPageProps)
   }, [fullFields])
 
   const lastDecksFields = useRef<string[]>(fullFields.filter((e) => isString(e)) as string[])
+
   const rowData = useMemo(() => {
     const data = facts.map(createRowData)
     return data
@@ -156,8 +157,8 @@ export default function FactsGridPage({ facts, meta, deck }: FactsGridPageProps)
     handleCellChange()
   }, 100)
 
-  const handleAttachmentClick = useCallback((fact: Fact, fieldIndex: number, fieldKey: string) => {
-    setTarget({ factId: fact.id, fieldKey, entry: fact.entries[fieldIndex] })
+  const handleAttachmentClick = useCallback((fact: Fact, fieldKey: string, entry: Entry) => {
+    setTarget({ factId: fact.id, fieldKey, entry })
     setIsOpen(true)
   }, [setIsOpen])
 
@@ -347,13 +348,13 @@ export default function FactsGridPage({ facts, meta, deck }: FactsGridPageProps)
             columnDefs={columnDefs}
             getRowId={(p) => p.data.id}
             onCellValueChanged={() => handleDebouncedCellChange()}
+            onSelectionChanged={handleSelectionChanged}
             rowSelection={{
               mode: 'multiRow',
               checkboxes: true,
               headerCheckbox: true,
               enableClickSelection: false,
             }}
-            onSelectionChanged={handleSelectionChanged}
           />
         </div>
       </AgGridProvider>

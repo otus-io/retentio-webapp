@@ -2,24 +2,27 @@ import AppTooltip from '@/components/app/AppTooltip'
 import FactsAction from '@/components/facts/FactsAction'
 import { rawSymbol } from '@/components/facts/token'
 import type { Deck } from '@/modules/decks/decks.schema'
-import type { Fact } from '@/modules/facts/facts.schema'
-import type { ICellRendererParams } from 'ag-grid-community'
+import type { Entry, Fact } from '@/modules/facts/facts.schema'
+import type { ColDef, ICellRendererParams } from 'ag-grid-community'
 import { Paperclip } from 'lucide-react'
 
 import { useCallback } from 'react'
 
 interface FactsGridCellRendererProps extends ICellRendererParams {
-  onAttachmentClick?: (fact: Fact, fieldIndex: number, fieldKey: string) => void
+  onAttachmentClick?: (fact: Fact, fieldKey: string, entry: Entry) => void
   deck: Deck
 }
 
 export default function FactsGridCellRenderer(props: FactsGridCellRendererProps) {
   const handleAttachmentClick = useCallback(() => {
     const currentFact = props.data?.[rawSymbol] as Fact
-    const allColumns = props.api.getAllDisplayedColumns()
-    const fieldIndex = allColumns.findIndex((col) => col === props.column)
+    const allColumns = (props.api.getColumnDefs() ?? []) as ColDef<Record<string, any>>[]
     const fieldKey = props.column?.getColId() ?? ''
-    props.onAttachmentClick?.(currentFact, fieldIndex, fieldKey)
+    const fieldIndex = allColumns.findIndex((col) => col.field === fieldKey)
+    const entry = fieldIndex >= 0 ? currentFact.entries[fieldIndex] : undefined
+    if (entry) {
+      props.onAttachmentClick?.(currentFact, fieldKey, entry)
+    }
   }, [props])
 
 
