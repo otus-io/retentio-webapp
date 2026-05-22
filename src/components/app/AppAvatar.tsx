@@ -1,7 +1,10 @@
-import type { AvatarFallbackProps, AvatarImageProps, AvatarProps } from '@heroui/react'
 import { Avatar } from '@heroui/react'
+import type { AvatarProps } from '@heroui/react'
+import type { ComponentProps } from 'react'
 
-export type AppAvatarProps = AvatarProps & AvatarImageProps & AvatarFallbackProps
+export type AppAvatarProps = AvatarProps &
+  ComponentProps<typeof Avatar.Image> &
+  Pick<ComponentProps<typeof Avatar.Fallback>, 'delayMs'>
 
 export default function AppAvatar({
   size,

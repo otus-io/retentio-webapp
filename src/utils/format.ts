@@ -26,6 +26,9 @@ export function formatErrorMessage(error: unknown, defaultError: string = ''): s
   if (typeof error === 'string') {
     return error
   }
+  if (error == null) {
+    return defaultError || JSON.stringify(error) || '未知错误'
+  }
   const errorMessageKeys = ['message', 'msg']
   for (const key of errorMessageKeys) {
 

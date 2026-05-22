@@ -1,5 +1,5 @@
 
 export function normalizePath(path: string) {
   if (path === '/') return '/'
-  return path.replace(/\/index$/, '').replace(/\/$/, '')
+  return path.replace(/\/$/, '').replace(/\/index$/, '')
 }
