@@ -370,9 +370,10 @@ export default defineConfig([
   // ---------------------- 测试文件 ----------------------
   // 测试文件不需要遵守"只导出组件"的限制（测试用例会导出各种工具函数）
   {
-    files: ['tests/**/*.{ts,js,jsx,tsx}'],
+    files: ['**/*.test.{ts,js,jsx,tsx}'],
     rules: {
       'react-refresh/only-export-components': 'off',
+      'react/display-name': 'off',
     },
   },
 
