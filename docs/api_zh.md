@@ -59,7 +59,6 @@
   - [删除媒体](#删除媒体)
   - [列出或查询共享媒体（开发中）](#列出或查询共享媒体开发中)
   - [下载共享媒体（开发中）](#下载共享媒体开发中)
-  - [管理端共享媒体（开发中）](#管理端共享媒体开发中)
   - [在词条中使用媒体（开发中）](#在词条中使用媒体开发中)
 - [响应示例速查](#响应示例速查)
 - [后续步骤](#后续步骤)
@@ -126,11 +125,6 @@
 | `/api/media/{id}/meta`                        | GET    | 获取媒体元数据（不含文件体）                                                                                                                         |
 | `/api/media/{id}`                             | GET    | 下载媒体文件                                                                                                                                         |
 | `/api/media/{id}`                             | DELETE | 删除媒体                                                                                                                                             |
-| `/api/admin/media/shared`                     | POST   | **（管理端）** 上传共享媒体                                                                                                                          |
-| `/api/admin/media/shared/{id}`                | DELETE | **（管理端）** 删除共享媒体                                                                                                                          |
-| `/api/admin/decks/import`                     | POST   | **（管理端）** 导入共享卡组（zip + manifest）                                                                                                        |
-
-> **说明：** 管理端媒体相关接口为**开发中**，行为可能变更。
 
 ---
 
@@ -422,6 +416,10 @@
 ```
 
 > 除 `name` 外，所有字段都是可选的。如果提供了 `fields`，数量必须与现有字段数匹配。`rate` 必须在 1 到 1000 之间。
+
+当请求体中的 **`rate`** 与卡组当前 **`rate`** **不同** 时，服务器对**未学习**卡片（`due_date - last_review == 1`）做**仅调整间隔（gap）**的重排：按加载顺序，**第一张**未学习卡的时间戳不变；之后每张未学习卡的 `due_date` 相对前一张按 **`86400 / 新 rate`** 秒递增（与新增卡片时的间隔定义一致）。**已学习**卡片时间戳不变。卡组 JSON 与相关卡片键在同一 Redis 事务中写入。若未传 `rate` 或 `rate` 未变化，则不重写卡片时间戳。
+
+设计说明见后端 [rate-change-update.md](../../retentio-backend/docs/design-doc/rate-change-update.md)。
 
 **响应:**
 
@@ -1327,7 +1325,7 @@ Authorization: Bearer <token>
 
 **大小限制：** 图片最大 **5 MB**；音频与视频各最大 **200 MB**。可通过环境变量覆盖：`MEDIA_MAX_SIZE_IMAGE`、`MEDIA_MAX_SIZE_VIDEO`、`MEDIA_MAX_SIZE_AUDIO`。
 
-**格式与转换：** 支持的输入：图片（JPEG、PNG、GIF、HEIC、HEIF、WebP），音频（MPEG/MP3、WAV、OGG、MP4/AAC），视频（MP4、QuickTime、WebM）。仅 **PNG、HEIC、HEIF** 会转换为 WebP，**WAV** 会转换为 AAC；其余格式原样存储。下载时返回存储后的文件（二进制）。
+**格式：** 支持的输入：图片（JPEG、PNG、GIF、HEIC、HEIF、WebP），音频（MPEG/MP3、WAV、OGG、MP4/AAC），视频（MP4、QuickTime、WebM），以及 JSON（`application/json`）。文件按上传原样存储，不做转码。下载时返回存储后的文件（二进制）。
 
 ### 上传媒体
 
@@ -1415,10 +1413,6 @@ Authorization: Bearer <token>
 ### 下载共享媒体（开发中）
 
 **接口：** `GET /api/media/shared/{id}` — 按 ID 下载共享媒体文件。
-
-### 管理端共享媒体（开发中）
-
-**接口：** `POST /api/admin/media/shared`（上传）、`DELETE /api/admin/media/shared/{id}`（删除）。仅管理端。
 
 ### 在词条中使用媒体（开发中）
 

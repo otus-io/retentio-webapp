@@ -58,7 +58,6 @@ This guide walks you through using the Retentio API via Swagger UI.
   - [Delete media](#delete-media)
   - [List or lookup shared media (work in progress)](#list-or-lookup-shared-media-work-in-progress)
   - [Download shared media (work in progress)](#download-shared-media-work-in-progress)
-  - [Admin shared media (work in progress)](#admin-shared-media-work-in-progress)
   - [Using media in facts (work in progress)](#using-media-in-facts)
 - [Response examples reference](#response-examples-reference)
 - [Next Steps](#next-steps)
@@ -126,9 +125,6 @@ This guide walks you through using the Retentio API via Swagger UI.
 | `/api/media/{id}/meta`                        | GET    | Get media metadata (no file body)                                                                                                                                                               |
 | `/api/media/{id}`                             | GET    | Download media file                                                                                                                                                                             |
 | `/api/media/{id}`                             | DELETE | Delete media                                                                                                                                                                                    |
-| `/api/admin/media/shared`                     | POST   | **(Admin)** Upload shared media                                                                                                                                                                 |
-| `/api/admin/media/shared/{id}`                | DELETE | **(Admin)** Delete shared media                                                                                                                                                                 |
-| `/api/admin/decks/import`                     | POST   | **(Admin)** Import shared deck (zip with manifest)                                                                                                                                              |
 
 ---
 
@@ -415,6 +411,10 @@ Requires the `Authorization: Bearer <token>` header. Invalidates the token so it
 > All fields are optional except `name`. If `fields` is provided,
 > the count must match the existing number of fields.
 > `rate` must be between 1 and 1000.
+
+When **`rate`** is present and **differs** from the stored deck rate, the server applies a **gap-only restagger** to **unseen** cards (`DueDate - LastReview == 1`): the first unseen card in load order keeps its timestamps; each following unseen gets `DueDate` spaced by **`86400 / new_rate`** seconds from the previous unseen’s `DueDate` (same gap definition as new-card introduction). **Seen** cards are unchanged. Deck JSON and card keys are updated in **one** Redis transaction. If `rate` is omitted or unchanged, card timestamps are not rewritten.
+
+See backend [rate-change-update.md](../../retentio-backend/docs/design-doc/rate-change-update.md) for the full design.
 
 **Response:**
 
@@ -1323,7 +1323,7 @@ You can attach audio, images, and video to facts. Fact fields reference media by
 
 **Size limits:** Images max **5 MB**; audio and video max **200 MB** each. Env overrides: `MEDIA_MAX_SIZE_IMAGE`, `MEDIA_MAX_SIZE_VIDEO`, `MEDIA_MAX_SIZE_AUDIO`.
 
-**Formats and conversion:** Supported input: image (JPEG, PNG, GIF, HEIC, HEIF, WebP), audio (MPEG/MP3, WAV, OGG, MP4/AAC), video (MP4, QuickTime, WebM). Only **PNG, HEIC, HEIF** are converted to WebP and **WAV** to AAC; all other formats are stored as-is. Download returns the stored file (binary). **Size limits:** images 5 MB, audio and video 200 MB each.
+**Formats:** Supported input: image (JPEG, PNG, GIF, HEIC, HEIF, WebP), audio (MPEG/MP3, WAV, OGG, MP4/AAC), video (MP4, QuickTime, WebM), and JSON (`application/json`). Files are stored as uploaded without transcoding. Download returns the stored file (binary).
 
 ### Upload media
 
@@ -1412,10 +1412,6 @@ Returns the media file (binary) for user-owned media by ID. Requires `Authorizat
 
 **Endpoint:** `GET /api/media/shared/{id}` — download shared media file by ID.
 
-### Admin shared media (work in progress)
-
-**Endpoints:** `POST /api/admin/media/shared` (upload), `DELETE /api/admin/media/shared/{id}` (delete). Admin-only.
-
 ### Using media in facts
 
 Each entry is an object with optional `text`, `audio`, `image`, `video`. Use a dedicated entry for media (e.g. `{ "audio": "abc123" }`) or combine with text in one entry (e.g. `{ "text": "Example sentence.", "audio": "ex1id" }`) so the audio is clearly for that sentence. Use optional `template` for custom front/back layout per fact; omit for default (front = first entry, back = rest).
@@ -1467,9 +1463,6 @@ For full design (upload, delete, display, sync), see **[Media Upload design doc]
 | `/api/media/{id}/meta`                        | GET         | `{ "data": { id, owner, filename, mime, size, checksum, created_at }, "meta": { "msg" } }`                                                                 |
 | `/api/media/{id}`                             | GET         | Download media (binary)                                                                                                                                    |
 | `/api/media/{id}`                             | DELETE      | `{ "data": { "msg": "media deleted" } }`                                                                                                                   |
-| `/api/admin/media/shared`                     | POST        | **(Admin)** Upload shared media                                                                                                                            |
-| `/api/admin/media/shared/{id}`                | DELETE      | **(Admin)** Delete shared media                                                                                                                            |
-| `/api/admin/decks/import`                     | POST        | **(Admin)** Import shared deck                                                                                                                             |
 
 Full JSON examples for each are in the sections above.
 
