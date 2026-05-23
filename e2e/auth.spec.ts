@@ -10,12 +10,18 @@ test.describe('Authentication', () => {
     await expect(page.locator('h3')).toBeVisible()
 
     // 填写用户名
+    const username = process.env.E2E_USERNAME
+    const password = process.env.E2E_PASSWORD
+    if (!username || !password) {
+      throw new Error('E2E_USERNAME/E2E_PASSWORD must be set')
+    }
+
     const usernameInput = page.locator('input[name="username"]')
-    await usernameInput.fill('test')
+    await usernameInput.fill(username)
 
     // 填写密码
     const passwordInput = page.locator('input[name="password"]')
-    await passwordInput.fill('test123456')
+    await passwordInput.fill(password)
 
     // 点击登录按钮
     const submitButton = page.locator('button[type="submit"]')
