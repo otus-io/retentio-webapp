@@ -13,7 +13,6 @@ test.describe('Authentication', () => {
     const username = process.env.E2E_USERNAME
     const password = process.env.E2E_PASSWORD
     if (!username || !password) {
-    if (!username || !password) {
       test.skip()
       return
     }
