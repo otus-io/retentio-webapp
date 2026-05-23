@@ -22,7 +22,7 @@ test.describe('Authentication', () => {
     await submitButton.click()
 
     // 等待登录完成并重定向
-    await page.waitForURL('/')
+    await page.waitForURL('/', { timeout: 10000 })
 
     // 验证已登录（不在登录页面）
     await expect(page).not.toHaveURL(/\/login/)
