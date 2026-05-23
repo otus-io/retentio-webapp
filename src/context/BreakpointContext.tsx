@@ -21,7 +21,7 @@ const defaultState: BreakpointState = {
   xl: false,
   '2xl': false,
   isMounted: false,
-  current: 'sm',
+  current: 'xs',
 }
 
 const BreakpointContext = createContext<BreakpointState>(defaultState)
