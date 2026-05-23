@@ -29,9 +29,24 @@ jobs:
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
+        env:
+          HUSKY: 0
 
       - name: Lint
         run: pnpm run lint:ci
 
+      - name: Test
+        run: pnpm run test
+
       - name: Build
         run: pnpm run build
+
+      - name: Install Playwright browsers
+        run: pnpm exec playwright install --with-deps chromium
+
+      - name: E2E tests
+        run: pnpm run test:e2e
+        env:
+          CI: true
+          E2E_USERNAME: ${{ secrets.E2E_USERNAME }}
+          E2E_PASSWORD: ${{ secrets.E2E_PASSWORD }}

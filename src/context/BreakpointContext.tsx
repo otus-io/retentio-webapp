@@ -11,15 +11,17 @@ import {
 import { BREAKPOINTS, type Breakpoint } from '@/lib/breakpoints'
 import { useSafeLayoutEffect } from '@heroui/react'
 
-type BreakpointState = Record<Breakpoint, boolean> & { isMounted: boolean }
+type BreakpointState = Record<Breakpoint, boolean> & { isMounted: boolean, current: Breakpoint }
 
 const defaultState: BreakpointState = {
+  xs: false,
   sm: false,
   md: false,
   lg: false,
   xl: false,
   '2xl': false,
   isMounted: false,
+  current: 'xs',
 }
 
 const BreakpointContext = createContext<BreakpointState>(defaultState)
@@ -62,7 +64,7 @@ export function BreakpointProvider({ children }: { children: ReactNode }) {
             : state.sm
               ? 'sm'
               : 'xs'
-    return { ...state, current }
+    return { ...state, current } satisfies BreakpointState
   }, [state])
 
 

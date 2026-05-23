@@ -41,7 +41,12 @@
     ]
   ],
   "cSpell.words": [
-    "Retentio"
+    "Retentio",
+    "mqls",
+    "unstub",
+    "flac",
+    "msvideo",
+    "matroska"
   ],
   "editor.quickSuggestions": {
     "strings": "on"
@@ -51,5 +56,10 @@
     "src/i18n",
     "src/modules/locale",
     "src/i18n/locales"
-  ]
+  ],
+  "explorer.fileNesting.enabled": true,
+  "explorer.fileNesting.expand": false,
+  "explorer.fileNesting.patterns": {
+    "*.ts": "$(capture).js, $(capture).d.ts.map, $(capture).*.ts, $(capture)_*.js, $(capture)_*.ts"
+  }
 }

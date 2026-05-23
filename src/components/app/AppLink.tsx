@@ -3,7 +3,7 @@ import type { ComponentProps } from 'react'
 import clsx from 'clsx'
 import NextLink from 'next/link'
 
-interface AppLinkProps extends ComponentProps<typeof NextLink> {
+export interface AppLinkProps extends ComponentProps<typeof NextLink> {
   isActive?: boolean
 }
 

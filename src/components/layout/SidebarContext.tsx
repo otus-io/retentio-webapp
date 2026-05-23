@@ -3,7 +3,7 @@
 import type { SidebarNavItem } from '@/config/sidebar'
 import { createContext, useContext, useMemo, useState, type ReactNode } from 'react'
 
-interface SidebarContextType {
+export interface SidebarContextType {
   mobileOpen: boolean
   setMobileOpen: (open: boolean) => void
   items: SidebarNavItem[]
