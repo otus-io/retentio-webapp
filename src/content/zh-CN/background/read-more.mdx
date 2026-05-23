@@ -1,209 +1,329 @@
 ---
 title: 更多阅读
+description: 间隔重复研究的叙述性综述——机制、算法与研究—实践鸿沟。
 ---
 
-# 更多阅读
+# 间隔效应的理论与实践：机制、算法与研究—实现鸿沟的叙述性综述
 
-## 为什么心理学中最被证实的学习技巧有着 99.9% 的失败率
+**作者：** Retentio Research (research@retentio.app) · Valor (Valor@yuda.me)
 
-只需在训练试验之间插入 15 分钟的休息时间，你就能观察到果蝇长出七天的记忆，而不是三天的记忆。你可以测量促成这一切的分子开关。经过 140 年跨越数千项研究的探索，间隔重复（spaced repetition）的证据如此压倒性，以至于科学家称其为“实验心理学中最稳健的现象之一”。然而，只有 0.1% 的多邻国（Duolingo）5 亿用户能完成一门课程。教育类应用在所有移动应用类别中的用户留存率垫底。一个多世纪以来，正规教育在很大程度上忽视了这些发现。
+**文献类型：** 叙述性文献综述  
+**范围：** 认知心理学、神经科学、二语习得与学习技术设计
 
-这就是间隔重复核心的悖论：一项有着明确分子机制和实验室证实效果的学习技巧，在遇到真实人类行为时却土崩瓦解。为什么会发生这种情况——以及它揭示了关于记忆、动机和学习商业化的什么真相——这远比又一篇关于抽认卡（flashcard）应用的文章要有趣得多。
+## 摘要
 
-### 分子层面的不可逾越性：为什么你的大脑无法突击死记硬背
+间隔效应——相对于集中练习，分布式练习在长期记忆保留上的优势——是实验心理学中复现率最高的发现之一，证据涵盖分子神经科学、行为荟萃分析以及大规模实地研究。尽管荟萃分析综合显示，间隔练习相对于突击死记硬背的记忆保留优势约为 74%（Cepeda et al., 2006），且分布式练习在十种学习者自主控制的学习技巧中效应量排名最高（_d_ = 0.85；Donoghue & Hattie, 2021），正式教育与消费级学习应用却大体上未能系统性地实施间隔安排。近期研究在强化这一图景的同时，也使简单概括变得复杂：2026 年一项针对 21,415 名学习者的医学教育荟萃分析报告，间隔重复的标准化均数差为 0.78（Maye et al., 2026）；2025 年一项数学荟萃分析发现较小但稳健的间隔效应（_g_ = 0.28；Murray et al., 2025）；2025 年一项课堂应用综述报告，在生态效度较高的情境中 _d_ = 0.54（Mawson & Kang, 2025）。本综述综合了四十年间隔重复及其计算化实现的研究，侧重 2024–2026 年出版物，围绕六个主题组织：（1）间隔的生物与神经机制；（2）行为效应量、调节变量与最优间隔时间表；（3）调度算法从 SuperMemo SM-2 到 FSRS 的演进；（4）二语习得中的识别—产出鸿沟；（5）机构与消费情境中的采纳障碍；（6）以参与度为导向的产品设计与学习科学证据之间的张力。跨领域的一个核心发现是：现代调度器的预测准确性未必转化为更优的学习结果；基于抽认卡的间隔重复主要构建接受性知识，对产出性语言使用的远迁移有限；元认知错位——学习者偏好感觉有效的策略而非真正有效的策略——解释了研究—实践鸿沟的很大一部分。文末讨论未来研究与设计方向。
 
-间隔学习的生物学依据建立在读起来像分子惊悚小说的发现之上。在神经元内部，一种被称为 CREB（cAMP 反应元件结合蛋白）的蛋白质起着分子开关的作用，决定了学习是产生持久记忆还是短暂回忆（BrainFacts, 2021）。在以黑腹果蝇（Drosophila）为对象的里程碑式实验中，研究人员在两种不同的时间安排下进行了相同的训练——十次气味与电击的配对刺激。当试验快速连续进行时，果蝇对气味的记忆仅维持了约三天。而当同样的十次试验中包含 15 分钟的休息间隔时，果蝇的记忆维持了七天甚至更久。对于生命周期大约只有 50 天的生物来说，这个差异代表了它们生命中相当大的一部分。
+**关键词：** 间隔重复，间隔效应，分布式练习，检索练习，遗忘曲线，间隔重复系统，FSRS，二语习得，学习技术
 
-当研究人员对 CREB 水平进行基因操纵时，关键的突破出现了。在果蝇体内过度表达 CREB，突然使得集中训练也能产生长期记忆——这证明 CREB 的激活是集中学习的限速步骤，而间隔学习克服了这一点（PMC, 2016）。你的神经元需要学习事件之间的空隙时间来运转记忆巩固的分子机器。这不是一种教学偏好，而是一种生物学限制。
+## 1. 引言
 
-第二个分子系统提供了计时机制。MAPK（丝裂原活化蛋白激酶）的激活在学习试验后大约 45 分钟达到峰值，创造了一个时间窗口，在此期间随后的试验可以强化第一次的记忆（PMC, 2016）。四次间隔十分钟、每次三分钟的刺激可以引起持久的 MAPK 激活；而将这些合并为一次十二分钟的单一刺激则无法产生同样的效果。大脑有一个用于最佳学习的分子时钟，而突击死记硬背完全无视了它。
+当相同的学习试次之间插入休息间隔而非连续呈现时，记忆保留会显著提升——这一现象最早见于 Ebbinghaus（1885/1913）对无意义音节记忆的研究，此后在不同物种、材料与保留间隔上反复得到验证。当代研究者将间隔效应描述为"实验心理学中最稳健可靠的现象之一"（Santoro, 2021）。计算化间隔重复系统（SRS），包括 Anki、SuperMemo 及商业语言应用，通过按个体遗忘曲线校准、以递增间隔安排复习，将这一原则付诸实践。
 
-在系统层面上，海马-皮层转移模型解释了为什么间隔时间应该随着几天或几周的推移而延长。学习速度快的海马体暂时存储新记忆，然后在睡眠期间通过尖波涟漪将信息压缩并重放，逐渐将其转移到学习速度慢的新皮层中（Nature, 2025; Perplexity neuroscience section）。这种转移是急不得的。2025 年的一项 fMRI 研究发现，与集中学习相比，间隔学习在默认模式网络子系统中诱发了更高的神经模式相似性，这种相似性预示了哪些记忆能够在一个月后依然存留（Nature Communications Biology, 2025）。
+然而悖论依然存在。实验室与荟萃分析证据强烈支持间隔练习，而现实世界的学习结果仍令人失望：教育类应用的用户留存率在所有移动应用类别中最低（约 1.76%），Duolingo 报告用户群中完成课程的比例不足 0.1%，正式学校教育数十年来大体上忽视了分布式复习（Dempster, 1988；Dunlosky et al., 2013b）。本综述审视为何有实证支持的间隔实践难以规模化，整合来自神经科学、认知心理学、算法工程、应用语言学及学习产品经济学的证据。
 
-### 本应改变一切的效应量
+本综合主要依据经同行评议的荟萃分析、原始实验与神经影像研究，在受控研究较为匮乏处辅以实践者文献。定向前向检索识别了 2024 年 1 月至 2026 年 3 月间发表或接收的附加研究。
 
-Cepeda 等人在 2006 年和 2008 年发表的具有里程碑意义的荟萃分析，研究了跨越数十年研究的 317 项实验中的 839 次评估。结果确凿无疑：无论记忆保留间隔是少于一分钟还是超过三十天，间隔呈现导致的记忆保留率均显著优于集中呈现（Cepeda 等人，2006 年）。在检查的所有 271 项研究中，只有 12 项比较（4.4%）未能显示出间隔的优势。该荟萃分析证实，与突击学习相比，间隔学习的记忆保留率大约提高了 74%。
+## 2. 方法
 
-但这更细致地揭示了一点：最佳的间隔时间并不是固定的，而是与你想记住多久成正比。对于一周的记忆保留期，最佳间隔时间占保留期的 20-40%。而对于一年的记忆保留期，最佳间隔时间在相对比例上缩小至 5-10%（Cepeda 等人，2008 年）。大多数抽认卡应用完全忽视了这一点，无论用户的实际记忆目标是什么，都使用固定的算法。
+本叙述性综述采用主题综合方法（Popay et al., 2006）。文献通过三篇锚定综合——Cepeda et al.（2006, 2008）、Dunlosky et al.（2013a）及 Donoghue and Hattie（2021）——的参考文献列表识别，并通过调度算法文献的前向引证（Wozniak, 2018；Ye et al., 2024）以及 PubMed、Web of Science 与 Cambridge Core 的补充检索扩展，检索词包括 _spaced repetition_、_distributed practice_、_spacing effect_ 与 _FSRS_，时间自 2024 年起。纳入标准优先荟萃分析、受控实验及与间隔时长、检索练习或 SRS 实现直接相关的神经影像研究。行业报告、论坛讨论与算法文档仅在与商业实现相关、且经同行评议证据有限的章节中纳入。未应用正式质量评分；效应量按来源作者发表的数据报告。
 
-测试效应增加了另一个维度。一项基础研究表明，在学习散文段落后参加记忆测试的学生，在一周后表现出比将相同材料重新学习同等次数的学生高得多的记忆保留率——尽管重新学习组对自己的记忆能力表现出更高的自信心（Roediger & Karpicke, 2006）。测试胜过复习，即使复习让人感觉更有成效。
+## 3. 结果
 
-荟萃分析证据显示，测试相对于复习的平均效应量约为 d=0.50（Frontiers in Education, 2021）。当间隔和测试结合时，效果会成倍增加：一项针对 26,258 名家庭医生的粗略研究发现，双重间隔检索练习产生的学习优势为 58.03%，而对照组为 43.20%，在延迟测试中的迁移表现为 58.33% 对 52.39%（PubMed, 2024）。
+### 3.1 神经与分子机制
 
-### 算法军备竞赛：从 SM-2 到 FSRS
+间隔效应在多个生物学组织层次上均可观察到。在分子层面，cAMP 反应元件结合蛋白（CREB）作为转录因子，决定突触变化是否巩固为长期记忆（Santoro, 2021）。在果蝇（_Drosophila_）中，十次气味—电击配对在集中呈现时产生约三天的回避反应，间隔十五分钟呈现时则产生七天或更久——相对于果蝇约五十天的寿命而言，这是相当可观的时长。基因过表达 CREB 可使集中训练也产生长期记忆，表明 CREB 激活是间隔练习所适应的限速步骤（Naqib et al., 2012；Philips et al., 2013）。
 
-间隔重复算法的故事始于 Piotr Wozniak 1985 年的个人实验。他追踪自己的学习过程，并注意到最佳间隔时间大约随着每次重复翻倍（SuperMemo，真实历史文档）。这一观察结果演变成了 SM-0 算法，确立了 1、2、4、8、16 和 32 天的间隔。到了 1987 年，SM-2 引入了根据项目难度调整间隔的自适应矩阵——令人惊讶的是，这个已有 38 年历史的算法至今仍为 Anki 和 Mnemosyne 提供动力。
+丝裂原活化蛋白激酶（MAPK）提供互补的时序机制：激活在训练后约四十五分钟达到峰值，界定后续试次强化先前学习的时间窗口。四次间隔练习、每次三分钟刺激、十分钟休息间隔可产生持续的 MAPK 激活；单次十二分钟脉冲则不能（Naqib et al., 2012）。海蛞蝓与啮齿动物中出现类似约束，提示进化上的保守性（San et al., 2017）。
 
-目前的最新技术是 FSRS（自由间隔重复调度器），现在已被整合到 Anki 中。FSRS 追踪三个组成部分：可检索性（回忆的概率）、稳定性（可检索性降至 90% 的间隔）和难度。它的 21 个可训练参数通过机器学习在个人用户的复习历史上进行优化。在涉及大约一万名 Anki 用户的 7.27 亿次复习的基准测试中，FSRS-6 实现了 0.3460 的对数损失，而多邻国的 HLR 算法为 0.4694——预测准确率有了实质性的提高（FSRS GitHub 文档；Perplexity 算法部分）。
+在认知层面，间隔训练增加了检索练习——包括外显与内隐——的机会，并强化支持记忆的神经通路（Santoro, 2021）。Feng et al.（2019）通过 fMRI 证明，间隔学习通过提高重复呈现间的神经模式相似性来增强情景记忆，与稳定记忆痕迹的再激活一致，而非独立情景的编码。
 
-FSRS 4-6 版本的一个关键创新是用幂函数取代了指数遗忘函数，这为观察到的数据提供了更好的经验拟合。这一数学公式捕捉到了一个关键见解：复习材料的最佳时机是在你几乎（但尚未完全）忘记它的时候。艰难检索出来的材料比轻易检索出来的材料会产生更强的后续记忆保留（Expertium 算法文档）。
+在系统层面，海马—皮层转移模型认为，海马快速编码新记忆，睡眠期间通过尖波涟漪逐渐再分配至新皮层网络（Dudai et al., 2015）。近期 fMRI 研究（_N_ = 69）比较了三天间隔学习与一天集中学习六十组图片—单词配对（Yang et al., 2025）。即时表现组间无差异，但间隔学习者在一周与一月后保留更优。默认模式网络（DMN）子系统——背内侧与内侧颞叶——在即时检索时的神经模式相似性可预测一月后的保留。间隔学习此外在休息期间增加背内侧 DMN 中持久记忆的神经重放，而集中学习的重放局限于海马。这些发现表明，以天为尺度的间隔练习促进了集中编码所无法捕捉的皮层巩固机制。
 
-然而，算法研究的一个不可告人的秘密是，预测准确率并不等于学习成果。FSRS 在预测用户何时会忘记方面确实比 SM-2 更好。但没有任何严格的正面交锋试验表明，更复杂的算法能在数月或数年后产生明显更好的真实世界记忆成果。荟萃分析证据表明，不断扩大的间隔相比固定的间隔只能产生大约 3% 的更好结果（Perplexity 荟萃分析证据）。研究表明，任何合理的间隔算法都远远优于集中练习，但算法复杂化带来的边际收益仍未得到证实。
+Josselyn（2021，引自 Santoro, 2021）指出，跨分析层次——从基因表达到认知——的整合仍不完整；尽管如此，间隔要求在分子、细胞与系统测量上一致出现。
 
-正如一份综合报告所指出的：“目前的创新主要集中在调度器现代化、插件生态系统和 AI 辅助卡片生成上——但阻碍采用的障碍通常不是模型能力，而是教程可用性、工作流阻力和付费墙”（GPT-Researcher 分析）。算法并不是瓶颈。
+与海马—DMN 发现相补充，Zou et al.（2025）分析了一项大规模 7T fMRI 数据集，八名参与者观看数千张自然场景图像，重复间隔从数秒至数月。间隔学习提高了腹内侧前额叶皮层（vmPFC）跨次呈现的表征相似性，这些相似性增加与行为间隔效应并行并预测之。关键在于，间隔效应依赖成功检索及随后对先前呈现的再编码——参与者未能记住先前呈现时，间隔效应消失。这支持**再编码解释**：会话间间隔有益，不仅因为大脑得到休息，更因为在后续呈现中成功检索会更新并强化现有记忆痕迹（Zou et al., 2025；Chan et al., 2025）。与 Yang et al.（2025）的 DMN 重放数据合看，近期神经影像研究收敛于皮层巩固与表征稳定化，作为以天为尺度及更长间隔上区分间隔与集中学习的机制。
 
-### 认知-输出的鸿沟：为什么抽认卡用户开不了口
+### 3.2 行为证据与效应量
 
-这正是令抽认卡爱好者感到不适的研究发现。Kim 和 Webb 2022 年对 48 项实验（N=3,411）的荟萃分析发现，在词汇记忆方面，间隔练习始终优于集中练习，且效应量很大（即时反馈的 g=1.04，延迟反馈的 g=0.64-2.34）。但作者明确指出，大多数研究集中在配对联想学习（也就是抽认卡格式）上，并且测量结果的格式与学习材料的方式相似（Kim & Webb, 2022）。
+#### 3.2.1 荟萃分析发现
 
-这很重要，因为认知（recognition）和输出（production）似乎是截然不同的认知过程。2025 年一项针对 314 名将英语作为外语（EFL）的学习者的研究发现，在所有词汇组成部分中，认知知识都先于回忆知识出现，呈现出一种可预测的发展顺序（Gonzalez-Fernandez, 2025）。Stewart 等人（2024 年）认为，词汇回忆和认知之间的差异如此明显，以至于一些学者将它们视为“截然不同的心理测量学构想”。
+Cepeda et al.（2006）综合了 317 项实验中的 839 次评估。间隔呈现优于集中呈现，保留间隔从不足一分钟至超过三十天均如此；仅 4.4% 的比较偏向集中练习。间隔练习比突击死记硬背约提高 74% 的记忆保留率。Cepeda et al.（2008）进一步证明，最优学习间隔随目标保留间隔而缩放：保留一周时，最优间隔约为保留间隔的 20–40%；保留一年时，为 5–10%。表现随间隔长度升至最优点后略有下降，而绝对表现随保留间隔延长而降低。
 
-实际影响是严重的。一项研究发现，根据条件的不同，词汇知识可以解释 32-84% 的口语熟练度差异——但关键在于，“词汇量大的学习者在讲话时并不一定会输出词汇层面上复杂的二语（L2）单词”（Claude 综合报告）。认知制造了一种知识的错觉，而在输出时这种错觉就被暴露出是肤浅的。
+Donoghue and Hattie（2021）量化了 Dunlosky et al.（2013a）的十种学习技巧，涵盖 242 项研究、1,619 个效应、169,179 名参与者。分布式练习（_d_ = 0.85）与练习测试（_d_ = 0.74）排名最高；摘要（_d_ = 0.44）与划线（_d_ = 0.44）在所研究技巧中排名最低（见表 1）。
 
-复习了数千张卡片却无法进行基本对话的学习者现象极其普遍，甚至已经成为语言学习社区中的一个迷因。Reddit 上的实践者描述了拥有 20,000 多张已复习卡片的用户却在基本对话中苦苦挣扎的情况（Grok 实践者观点，2024）。关于这种鸿沟的理论解释已经很完善了：
+**表 1.** 选定学习技巧的效应量（Donoghue & Hattie, 2021）
 
-程序化失败。 DeKeyser 的技能获取理论认为，陈述性知识（即抽认卡复习所建立的）必须在多重试验中通过输出练习转化为程序化知识。抽认卡复习是受控的、刻意的处理过程；而自发的口语需要自动化的处理过程，这只有通过在实际使用点的练习才能培养出来。
+| 技巧       | Cohen's _d_ | Dunlosky et al.（2013a）分类 |
+| ---------- | ----------- | ---------------------------- |
+| 分布式练习 | 0.85        | 高效用                       |
+| 练习测试   | 0.74        | 高效用                       |
+| 精细提问   | 0.56        | 中等效用                     |
+| 摘要       | 0.44        | 低效用                       |
 
-迁移适宜性加工。 当编码和检索过程匹配时，记忆是最强的。抽认卡认知所涉及的神经过程与对话输出所需的神经过程不同。在一种情境下学习的单词可能根本无法在另一种情境下激活。
+重要的调节变量包括能力水平（低能力学生：_d_ = 0.47；高能力：_d_ = −0.11）、迁移距离（近迁移：_d_ = 0.61；远迁移：_d_ = 0.39）与结果深度（表层：_d_ = 0.60；深层：_d_ = 0.26）。方法学上需注意：93% 的纳入研究测量的是表层学习，74% 在一天内测试，限制了对概念理解与长延迟保留的泛化。
 
-依赖情境的记忆。 Godden 和 Baddeley 经典的水下研究表明，在水下学习的单词在水下的回忆率（平均 24.9）显著高于在陆地上的回忆率（平均 17）。在 Anki 的界面（白色的卡片、特定的字体、复习环节的节奏）中学习的单词，可能无法迁移到现实世界情境中的视觉、听觉和压力中。
+#### 3.2.2 领域特定与应用荟萃分析（2024–2026）
 
-缺乏沟通压力。 真实的对话要求在沟通需求下进行实时的词汇访问。SRS 不提供在时间限制下组织信息的练习，也不提供管理同时理解和输出的认知负荷的练习。
+近期荟萃分析表明，间隔效应量因领域与生态情境而有显著差异（见表 2）。
 
-### 多语者的共识：作为补充，而非替代品
+**表 2.** 间隔与集中练习的近期荟萃分析效应量（节选）
 
-当你审视专家级语言学习者如何实际使用 SRS 时，尽管表面上存在分歧，但一种模式浮现了。LingQ 的创始人、会说 20 多种语言的 Steve Kaufmann 持怀疑态度：“如果你喜欢做抽认卡，喜欢使用间隔重复系统，那它就值得做。如果不喜欢，这种学习活动也不会有多大帮助”（Grok 多语者部分）。他优先考虑大量听和读。学习了 20 种语言的 Luca Lampariello 表示，他使用 SRS“仅满足一些特定需求”，并更喜欢在语境中重复接触（Claude 多语者部分）。
+| 领域 / 情境          | 效应量     | _N_（学习者） | 来源                      |
+| -------------------- | ---------- | ------------- | ------------------------- |
+| 一般学习技巧         | _d_ = 0.85 | 169,179       | Donoghue & Hattie（2021） |
+| 医学教育（客观测试） | SMD = 0.78 | 21,415        | Maye et al.（2026）       |
+| 课堂应用研究         | _d_ = 0.54 | >3,000        | Mawson & Kang（2025）     |
+| 数学（间隔）         | _g_ = 0.28 | 27 项研究     | Murray et al.（2025）     |
+| 数学（孤立材料）     | _g_ = 0.43 | 10 项研究     | Murray et al.（2025）     |
+| 数学（课程嵌入）     | _g_ = 0.24 | 17 项研究     | Murray et al.（2025）     |
 
-Gabriel Wyner 的 Fluent Forever（永远流利）方法则持相反观点，将 SRS 置于核心地位。他的方法是：先学发音，尽量避免翻译，使用自己创建的抽认卡连接多个信息块——拼写、发音、图片、个人联系、语法词性。他声称学习者可以在四个月内“以大约 90% 的准确率掌握 3,600 个术语”（Claude 多语者部分）。
+Maye et al.（2026）开展了符合 PRISMA 规范的医学教育间隔重复系统评价，筛选 542 条记录，综合 13 项研究。干预措施包括教师自建或第三方抽认卡组（含 Anki）、电子邮件推送的选择题（MCQ）、继续医学教育框架及间隔课堂测验。合并标准化均数差 0.78（95% CI 0.56–0.99）在所报告的领域特定间隔效应中属最大之列，表明在高风险专业教育中，当依从性得到结构性支持时，SRS 实施可带来可观的客观测试增益。
 
-尽管方法大相径庭，多语者在几个观点上达成了一致：
+Murray et al.（2025）对数学领域 27 项间隔比较与 7 项测试—重学比较进行了荟萃分析。间隔练习产生稳健的小至中等总体效应（_g_ = 0.28），孤立材料效果（_g_ = 0.43）大于课程嵌入学习（_g_ = 0.24）。数学中的测试效应较弱且统计上不确定（_g_ = 0.18；95% CI 跨零），表明检索练习未必在各领域均匀泛化——这一发现对配对联想词汇之外的 SRS 内容具有启示意义。
 
-- SRS 只是一种补充，绝不能替代真实的语言互动
-- 个人亲自创建卡片的效果大大优于预制的牌组
-- 每天坚持比单次学习时长更重要
-- 过度的 SRS 会导致倦怠，应予以适度控制
+Mawson and Kang（2025）专门综述了应用课堂研究，筛选 3,000 余条记录，保留 22 篇报告共 31 个效应量。分布式练习优于集中练习（_d_ = 0.54，95% CI 0.31–0.77），较长保留间隔、较高教育层次与较少重复暴露时效应更大。该综述部分回应了 Donoghue and Hattie（2021）所指出的生态效度缺口，确认间隔效应在去情境化实验室范式之外依然存在——尽管效应量仍小于严格控制的言语学习实验。
 
-Refold 方法论建议初学者将 30-40% 的学习时间分配给 SRS，中级学习者分配 20-30%，而高级学习者分配 10-15% 或更少。这些建议源于实践者的智慧，而非对照试验——关于最佳时间分配的研究仍然“少得令人沮丧”（Claude 综合报告）。但一项对 21 项泛读研究（N=1,268）的荟萃分析发现，仅通过阅读获得词汇量的效应量为 d=1.32——这与 SRS 的效应量相当，表明阅读可以替代或补充抽认卡学习（Claude 荟萃分析参考）。
+#### 3.2.3 检索练习与联合效应
 
-Krashen 的可理解输入假说和显性 SRS 学习之间的和解可能在于它们服务于不同的功能：SRS 建立了理解输入所需的词汇基础，而可理解输入则提供了真正习得所需的丰富语境化接触。正如一个框架所描述的那样：“当你把某样东西做成抽认卡时，就像你得到了一个杯子。当你与你的目标语言互动时，你就是在往那个杯子里注水”（Claude 语境部分）。
+Roediger and Karpicke（2006）表明，学习散文段落后完成回忆测试的学生在一周延迟后优于重学对照组，尽管自评信心更低——这是学习判断悖论的体现：学习者偏好感觉有成效的策略，而非真正有效的策略（Koriat, 1997）。Rowland（2014）报告测试优于重学的荟萃分析效应量为 _d_ = 0.50，回忆任务大于识别任务。
 
-### 语境解决方案：为什么卡片设计比算法选择更重要
+结合间隔与检索练习可产生叠加效益。Price et al.（2025）将 26,258 名家庭医师与住院医师随机分配至五种间隔重复条件，使用美国家庭医学委员会持续知识自我评估工具。间隔重复优于无重复：六个月学习成绩（58.03% vs. 43.20%；Cohen's _d_ = 0.62）与十个月知识迁移（58.33% vs. 52.39%；_d_ = 0.26）。双重间隔重复优于单次间隔重复：学习（_d_ = 0.43）与迁移（_d_ = 0.20），但单次与双重间隔组内具体策略变体无显著差异——与 Kang et al.（2014）发现时间表类型不如间隔本身重要的结论相呼应。
 
-有几种有证据支持的策略可以解决脱离语境的问题，尽管每种策略都有利弊。
+Kang et al.（2014）发现等间隔与扩展间隔时间表均优于集中练习的长期保留，扩展间隔相对固定间隔无一致优势——对调度器设计具有直接启示。
 
-句子卡 vs 单词卡。 句子卡同时教授词汇和语法，展示单词在自然语境中的样子。Antimoon 推荐它们是因为“孤立的单词是抽象的——很难记住抽象的东西”。然而，复习动漫卡（目标单词在语境中高亮显示）的速度比完整的句子卡快 2-4 倍，而且单词卡对于具有强烈意象的具象名词仍然有效（Claude 语境解决方案）。这需要在深度和吞吐量之间权衡。
+课堂复制研究确认了生态效度。Kapler et al.（2015）发现，讲座后第八天相比第一天安排复习测验，可改善模拟本科情境中五周后的测试表现，事实性与高阶题目皆然。Rogers et al.（2025）在线二语词汇研究中概念复制了 Cepeda et al.（2009），所有间隔条件（1–14 天）在十天延迟后测中均优于集中练习，有间隔效应证据但无滞后效应——与 Kim and Webb（2022）一致。然而在线参与者得分比实验室样本低 10–20%，流失率达 33%，凸显了多场次在线 SRS 研究的方法学挑战（Rogers et al., 2025；Rodd, 2024）。
 
-句子挖掘。 从你正在消费的真实内容（书籍、节目、播客）中创建卡片，在单词和其来源之间建立语境联系。“1T 句子”原则建议，只从你理解除一个目标元素外所有内容的句子中创建卡片（Claude 和 Grok 实践者策略）。这确保了卡片始终是可理解的，并且具有个人意义。
+### 3.3 调度算法：从 SM-2 到 FSRS
 
-双重编码方法。 Paivio 的研究表明，同时激活语言和视觉心理过程有助于记忆。自己生成的记忆法优于别人提供的：“生成自己的记忆法的参与者在测试后表现出更高的成绩”（Claude 双重编码部分）。创建过程付出的努力比被动消费产生更强的记忆痕迹。
+#### 3.3.1 历史发展
 
-AI 辅助卡片生成。 到 2024-2025 年，像 GPT-4 这样的工具正被用于从 PDF 和文本中生成抽认卡。一项比较发现，对于数学主题，GPT-4 优于离线 LLM，尽管存在对过度依赖 AI 的伦理担忧（Grok AI 集成，2024）。论坛讨论引用了一项医学生调查，声称如果存在教程，53% 的人会使用 ChatGPT 生成 Anki 卡片——这表明阻碍其普及的是知识传播和用户体验（UX）的包装，而不是 AI 的能力（Anki 论坛，2024）。
+计算化间隔重复源于 Piotr Wozniak 1985 年对个人遗忘率的测量，最终形成 SuperMemo Algorithm SM-0，间隔为 1、2、4、8、16、32 天（Wozniak, 2018）。SM-2 算法（1987）通过简易因子按项目难度调整间隔，至今仍是 Anki 与 Mnemosyne 的底层调度器。Wozniak 双组分记忆模型（1988）——区分可检索性（当前回忆概率）与稳定性（记忆持久度）——预示了现代调度器中的形式化。后续 SuperMemo 迭代（SM-5 至 SM-17）引入通用记忆公式、指数遗忘曲线及精细的稳定性增长函数（Wozniak, 2018）。
 
-这种矛盾是真实的：更丰富的卡片设计解决了语境问题，但增加了创建时间，可能会减少总体的练习量。质量与数量仍然是一个未解决的优化难题。
+#### 3.3.2 FSRS 架构
 
-### 140 年的采用灾难：为什么教育忽视了证据
+Free Spaced Repetition Scheduler（FSRS）由开放间隔重复社区开发，建模三个潜在变量（Ye et al., 2024）：
 
-1988 年，Frank Dempster 发表了《间隔效应：心理学研究成果应用失败的案例研究》，记录了尽管间隔效应是实验心理学中最可靠的发现之一，但美国的课堂和教科书都没有系统地实施间隔复习。他指出，令人惊讶的是，苏联的数学教科书比美国的同类教材提供了更多的分布式呈现。近四十年过去了，情况几乎没有改善。
+1. **可检索性（_R_）：** 时刻 _t_ 的回忆概率，由幂律遗忘曲线拟合（FSRS v4 起），在大规模复习日志上实证优于指数衰减。
+2. **稳定性（_S_）：** _R_ 衰减至 90% 的间隔；当经过时间等于 _S_ 时，按定义 _R_ = 0.90。
+3. **难度（_D_）：** 启发式指数（1–10），每次复习后按反应等级更新。
 
-核心问题是元认知失调。学生偏爱集中学习，因为突击死记硬背能在短期测试中产生更好的表现——间隔的优势只有在延迟后才会显现。在对照研究中，83% 的参与者认为集中练习与间隔练习同样有效或更有效，尽管间隔能产生客观上更好的延迟记忆保留率（Perplexity 元认知失调）。间隔开的项目让人感觉“更容易与短期记忆脱节，不易立即检索”，这制造了间隔不够有效的错觉。
+FSRS-6 通过梯度下降在个体复习历史上优化二十一个参数，最小化预测与观察回忆之间的对数损失（log-loss）。在约 10,000 名 Anki 用户 7.27 亿次复习上的基准测试报告，FSRS-6 的 log-loss 为 0.3460，Duolingo 半衰期回归算法为 0.4694（Open Spaced Repetition, 2024）。一项跨越 9,999 个 Anki 集合（约 3.5 亿次复习）的独立基准测试报告，带新近性加权的 FSRS-6 对 99.6% 的用户实现了低于 SM-2 的 log-loss（Expertium, 2025）。FSRS-6 引入用户特异性遗忘曲线形状参数（*w*₂₀）与同日复习处理；实践者报告从 SM-2 迁移后，维持同等保留率所需复习量减少 20–30%（Open Spaced Repetition, 2025）。Ye et al.（2024）在 ACM KDD 与 IEEE TKDE 发表底层随机最短路径公式，将间隔安排表述为记忆动力学上的优化问题，而非固定启发式规则。
 
-这就产生了一个学习判断悖论：学生系统性地错误预测他们自己的学习。感觉最有成效的学习技巧（重读、高亮标记、突击）所产生的长期记忆保留率，低于感觉更难的技巧（间隔、测试、交错）。在缺乏外部指导的情况下，学习者自然会倾向于无效的方法。
+该模型编码三条具有教学意义的原则（Expertium, 2024）：（a）当检索在低 _R_ 时成功，稳定性增益最大（"合意困难"窗口）；（b）稳定性增长随连续复习趋于饱和，与项目难度成反比；（c）目标保留率与复习工作量存在权衡——更高目标保留率意味着更短间隔。
 
-系统性障碍加剧了个人元认知的偏差：
+#### 3.3.3 预测与学习结果
 
-- 倾向于即时评估而非长期记忆保留的课程设计
-- 被组织成不兼容的模块化章节且没有内置复习模块的教科书
-- 习惯于集中练习且不熟悉间隔实施的教师
-- 抵制教学变革的制度惯性
-- 奖励短期表现的评估系统
+关键区分在于**预测准确性**与**学习效能**。FSRS 比 SM-2 更准确地预测回忆概率（平均绝对百分比误差约 12–33%，取决于预测目标），但尚无严格的头对头试验证明，在生态效度较高的情境中，更复杂的算法能在数月或数年内带来显著更优的保留结果。扩展间隔在荟萃分析比较中仅比固定间隔约好 3%，Kang et al.（2014）发现时间表类型对长期保留无显著差异。证据支持以下结论：任何合理的间隔调度器都显著优于集中练习，而算法精化的边际收益仍未得到证实。采纳障碍似乎集中在工作流摩擦、入门引导与内容设计，而非模型能力（Dunlosky et al., 2013b）。
 
-正如 Lindsey 等人所指出的，如果没有技术支持，提供最佳的间隔练习“超出了任何教师或学生能合理安排的范畴”（Claude 采用部分）。技术本应解决这个问题——然而基于应用程序的 SRS 面临着自身的实施危机。
+### 3.4 语言学习中的识别—产出鸿沟
 
-### 辍学灾难：为什么 1.76% 的留存率会让应用走向灭亡
+Kim and Webb（2022）对 48 项实验（_N_ = 3,411）进行了间隔词汇练习的荟萃分析，报告大效应量（即时反馈 _g_ = 1.04；延迟反馈 _g_ = 0.64–2.34）。然而多数研究采用配对联想学习——标准抽认卡格式——且评估结果与训练格式同构。这限制了对产出性语言使用迁移的推断。
 
-教育类应用在所有移动应用类别中的用户留存率最低（1.76%）（Claude 辍学部分）。尽管多邻国平台拥有 5 亿总用户和 1.036 亿月活跃用户，但只有 0.1% 的用户完成了一门课程。这些数字表明，问题不在于让用户下载学习应用，而在于让他们坚持下去。
+识别与产出似乎是部分可分离的构念。González-Fernández（2025）研究 314 名 EFL 学习者（汉语与西班牙语母语背景），采用隐含尺度与 Mokken 量表建立可靠层级：识别知识先于回忆知识，涵盖形式—意义联结、搭配、多义与派生词，该序列在母语组与准确度阈值间稳定。该发现延伸了 González-Fernández and Schmitt（2020）的先前工作，为实践者文献中识别先于产出的发展序列提供了实证基础。Stewart et al.（2024）认为词汇回忆与识别可能构成不同的心理测量构念。词汇量可解释口语水平的大量方差（视条件而定为 32–84%），但大词汇量并不保证口语中产出的词汇复杂性。
 
-SRS 的机制制造了一种特定的失败模式。跳过复习日会导致复习积压量呈指数级增长：第 1 天留下 50 个复习，第 2 天变成 120 个，第 3 天 190 个，第 4 天 280 个（Claude 复习负担部分）。堆积如山的卡片变得令人不堪重负，打消了用户回来的念头。“每天学习太多新卡片是人们刚开始使用 SRS 时最常犯的错误。这会导致难以管理的复习数量，剥夺了沉浸式学习的时间，并导致倦怠。”
+若干理论框架解释这一鸿沟：
 
-心理挑战在于即时付出与延迟满足。突击学习为“即时的意识回忆提供了更突出的表征”。而间隔练习的好处要在数周或数月后才会显现。这种时间上的脱节使得 SRS 感觉起来不如实际那么有效——恰恰在最需要坚持的时刻削弱了坚持的动力。
+- **程序化失败**（DeKeyser, 2015）：通过抽认卡复习建立的陈述性知识须经过大量产出练习才能程序化为自动加工；识别复习激活受控加工，与实时对话需求不兼容。
+- **迁移适切加工**（Morris et al., 1977）：当编码与检索过程匹配时记忆最强；抽认卡识别激活与对话产出不同的加工过程。
+- **情境依赖记忆**（Godden & Baddeley, 1975）：在某一环境情境中学习的材料在该情境中回忆更好；界面特异性学习可能在对话情境中无法激活。
+- **缺乏交际压力：** SRS 不模拟对话中同时理解与产出的时程约束与认知负荷。
 
-成功使用 SRS 需要很少有用户去实施的自我校准：
+Donoghue and Hattie（2021）报告语言领域分布式练习的领域特定效应量（_d_ = 0.39–1.16），确认对词汇回忆有强效应，对生成性语言任务的证据较弱。应用指标（复习卡片数、保留率、连续天数）测量的是调度器依从性而非交际能力，可能制造进步的假象。
 
-- 每天最多 10-20 张新卡片
-- 在添加新材料之前完成到期的复习
-- 将学习时间限制在 15-30 分钟
-- 接受“坚持练习三个月是效果显现的门槛”这一事实
+近期二语研究为抽认卡迁移争论增添了新的细微层次。Nakata and Elgort（2021）发现，阅读情境词汇学习中的间隔练习改善了外显知识（意义回忆与形式—意义匹配），但未改善启动效应测量的内隐语义知识——表明间隔情境暴露与间隔配对联想练习可能构建不同类型的知识。Serrano and Pellicer-Sánchez（2026）对 92 名双语学习者的眼动研究发现，间隔与情境多样化阅读条件增加了加工难度（更多、更长的注视），相对于集中阅读相同材料，未改善延迟词汇回忆或识别。即时增益在集中条件下实际更高，但下降更陡——说明在附带学习中，当增加的难度未能产生成功检索时，间隔并非普遍有益（Bjork & Bjork, 2011）。这些发现提示，不应假定任何间隔暴露——尤其是无成功检索时——都能自动产生持久的学习。
 
-持续练习三个月的用户实现其语言目标的可能性是其他人的 4 倍（Claude 校准数据）。但要达到这个门槛，就必须在延迟奖励期存活下来，而支撑他们的只有对科学的信念。
+### 3.5 实践者整合与卡片设计
 
-### 商业模式冲突：用户参与度 vs. 学习效果
+专家语言学习者普遍将 SRS 作为补充工具而非主要习得手段，通常将 10–30% 的学习时间分配给间隔复习（Refold, n.d.；Kim & Webb, 2022 中引用的实践者报告）。关于最优时间分配的受控研究仍然匮乏；然而，一项 21 项泛读研究的荟萃分析（_N_ = 1,268）报告仅靠阅读的词汇增益 _d_ = 1.32——与 SRS 效应量相当。
 
-2021 年发表在《Taylor & Francis》上的一项关于多邻国有效性的系统综述描绘了“一幅好坏参半（有时呈现负面倾斜）的图景”。作者得出结论，一旦新鲜感消退，游戏化设计无法弥补“优先考虑竞争而非协作，优先考虑重复和翻译而非有意义的反馈和语境，优先考虑被动接受技能（听和读）而非主动输出技能（说和写）的设计决策”（Claude 商业模式部分）。
+Chan et al.（2025）检验了间隔机制的竞争性解释。在间隔与集中条件下学习微积分微分规则的学生显示，间隔效应不伴随可测量的工作记忆损耗，支持无意识心理复习而非休息—恢复解释。Hendrick（2025）将间隔重新定义为**调度决策**而非学习策略，意味着会话间隔期间的活动可能调节间隔效应——这一发现与课堂时间安排和应用设计均相关。Zou et al.（2025）提供互补的神经证据：间隔效益需要以检索为中介的再编码，而非单纯的被动巩固。
 
-潜在的利益冲突是结构性的。多邻国的指标揭示了其对参与度的硬性需求：超过 5 亿总用户，但只有约 2% 转化为付费订阅者。收入取决于每日活跃用户数（DAU）、会话时长和广告展现量。保持 7 天连续打卡的用户保持活跃的可能性是其他用户的 3.6 倍——这解释了为什么连击机制主导了用户体验。
+AbdAlgane et al.（2025）比较了等间隔与扩展间隔移动端间隔学习在 60 名 ESP 学生学习科学词汇方面的效果。两种方案均提升了词汇掌握度，但只有扩展间隔显著改善了更广泛的学业表现——表明在认知要求较高的领域特定课程中，时间表形状对超出配对联想回忆的迁移可能有影响。Serfaty and Serrano（2024）发现，在在线众包研究中，间隔一天的额外重学课次改善了二语语法保留，尽管流失率仍是一个问题。
 
-参与度指标（DAU、连胜记录、会话时长）通过广告和转化率驱动收入。而学习成果则很难衡量，而且可能需要更短、更低频的会话，这与参与度指标所奖励的背道而驰。红心系统将错误货币化——用户可以购买红心或观看广告以继续练习。推送通知是由多臂老虎机算法优化的，旨在提高参与度，而非优化学习。
+有实证支持的卡片设计策略在一定程度上弥补了去情境化问题：
 
-在对多邻国进行研究八年之后，系统评价指出“关于它的有效性，我们仍然掌握很少的结论性证据”——考虑到该公司的规模和资源，这是一个惊人的承认。
+- **句子级 vs. 词级卡片：** 句子情境支持语法与搭配学习；填空格式提供更高的吞吐量（精细提问：_d_ = 0.56；Donoghue & Hattie, 2021）。
+- **来自真实输入的句子挖掘：** "单目标"（1T）原则——仅从单一陌生元素的句子建卡——在保持可理解性的同时保留情境编码（Krashen, 1985）。
+- **双重编码**（Paivio, 1986）：并行的言语与视觉编码强化保留；自生的记忆术优于提供的记忆术。
+- **AI 辅助生成：** 大型语言模型可加速卡片创建，但须与检索练习和反馈整合，以避免被动消费（Dunlosky et al., 2013a）。
 
-Anki 生态系统代表了截然相反的理念：用户拥有的记忆系统、将其视为工具包而非课程、强调彻底的定制化而非引导式路径。活跃的插件开发（AnkiAIUtils、自定义调度程序、模板）展示了一种“平台加插件经济”的模式，而不是封闭的学习产品（GPT-Researcher Anki 分析）。FSRS-5 于 2025 年初引入 Anki，社区情绪大多对其带来的效率提升持积极态度（Grok 平台更新，2025）。
+质量—数量权衡依然存在：更丰富的卡片设计提升迁移潜力，但增加创建时间，可能降低总练习量。
 
-妥协是真实存在的。Anki 的开放性使得创新更快，但也把引导新用户和质量控制的负担转移给了用户。多邻国的引导式体验减少了阻力，但可能会因为过度强调认知、会话时间短以及复习严格程度的波动，而削弱纯粹的 SRS 属性。但这两种方法都没有解决 1.76% 的留存率问题。
+### 3.6 教育与消费应用中的采纳障碍
 
-### 证据究竟支持什么
+#### 3.6.1 机构层面的失败
 
-这份综述揭示了 SRS 的能力与其使用模式之间存在着根本性的不匹配。间隔效应是真实的，在分子和系统层面上都有很好的表征，并在实验室条件下产生了巨大的效应量。现代算法能以令人印象深刻的准确率预测遗忘。然而，真实世界的结果却令人失望，原因交织如下：
+Dempster（1988）记录了尽管间隔效应是实验心理学中最可靠的发现之一，美国课堂与教科书仍未实施系统性的分布式复习——他将此归因于课程结构、评估时间与机构惯性。彼时苏联数学教材提供的分布式练习比美国同类教材更多，尽管双方对心理学文献的了解相当。Dunlosky et al.（2013b）指出，师范教育教科书极少涵盖有实证支持的学习技巧，课程优先内容而非学习方法论。
 
-**SRS 训练的是认知，而不是输出。** 绝大多数抽认卡系统建立的都是接受性知识，这些知识不会自动转化为说或写的能力。用户积累了大量被动词汇，感觉自己像是有能力，但在输出的需求下就会崩溃。
+元认知错位加剧了结构性障碍：在受控研究中，83% 的参与者认为集中练习与间隔练习同等或更有效，尽管间隔练习在延迟保留上更优（Kornell & Bjork, 2008）。学生偏好突击死记硬背，因为它产生更强的即时表现；间隔优势只有在延迟后才显现（Santoro, 2021）。Simone（2021，引自 Santoro, 2021）报告，即使知道间隔效应益处的学生也很少使用，因为分布式练习"是一种更慢、更费力的记忆方式"。
 
-**依赖情境的记忆削弱了迁移能力。** 在一个界面中学习的单词可能无法在对话场景中被激活。更丰富的卡片设计部分解决了这个问题，但需要绝大多数用户从未投入过的精力。
+Dunlosky et al.（2013b）建议采用低风险开场测验、累积性考试、学习计划表、以检索练习替代重读、交错习题集，以及关于技巧效能的显性教学。Lindsey et al.（2014）认为，最优间隔时间表超出了教师或学生在没有技术支持下能够手动协调的范围。
 
-**商业模式与学习科学不匹配。** 参与度指标主导了产品设计决策。游戏化维持了用户的注意力，但可能会通过鼓励过度练习已掌握的材料，以及减少练习困难项目，干扰了最佳的间隔。
+#### 3.6.2 消费应用的持续性问题
 
-**采用悖论仍未解决。** 尽管有 140 年的证据支持，正规教育仍未系统地实施间隔复习。个人学习者偏爱集中练习，因为感觉上更有效。教育机构缺乏分布式复习的基础设施。
+SRS 应用面临一种独特的失败模式：复习积压增长。扩展间隔调度器随每个新项目积累未来义务；在 SM-2 风格的倍增下，每天约 20 张新卡片，用户可能在三个月内面临 200–400 次的日复习量。跳过课次会产生复合积压，令人丧失重新参与的意愿。Wozniak（1988 年）早期基于纸张的系统——七十九页涵盖 2,794 个词对——说明复习负担的增长问题早于数字工具。
 
-**多语者的智慧集中在平衡。** 专家级的语言学习者将 SRS 视为众多组件中的一个——通常占学习时间的 10-30%——在强调可理解输入、输出练习和真实互动的系统中发挥作用。无论多么优化，单靠 SRS 无法产生流利度。
+成功的长期 SRS 使用似乎需要在没有指导的情况下很少能实现的校准：每天十至二十个新项目、在添加新材料前完成到期复习、每次课次限制在十五至三十分钟，并在约三个月的持续练习后效益才变得显著（社区指南；参见 Anki Manual, n.d.）。
 
-### 核心要点
+#### 3.6.3 参与度与学习之间的张力
 
-- 间隔效应是心理学中最稳健的发现之一，比突击死记硬背的记忆保留率高出约 74%，有清晰的分子机制（CREB、MAPK）解释为什么间隔在细胞水平上起作用。
-- 像 FSRS 这样的现代算法预测遗忘的能力优于旧方法，但没有严格的试验证明这能转化为现实世界中更好的学习成果——任何合理的间隔算法都压倒性地胜过突击学习，进一步复杂化算法带来的收益递减。
-- 认知-输出的鸿沟意味着抽认卡的掌握并不自动转化为口语能力；由于迁移适宜性加工失败和依赖情境的记忆，复习了数千张卡片的用户可能仍难进行基本对话。
-- 最佳的间隔时间与期望的记忆时长成正比（对于一周目标，为保留间隔的 20-40%；对于一年目标，为 5-10%），但大多数商业应用完全忽略了这一点。
-- 专家级语言学习者普遍认为，SRS 应该占学习时间的 10-30%，绝不能用来替代真实的语言输入和输出练习。
-- 教育类应用的用户留存率在所有应用类别中最低（1.76%）；以参与度为优化目标的商业模式，可能与优化学习的目标产生直接冲突。
-- 正规教育 140 年来未能实施间隔复习，反映了元认知失调（感觉突击更有效）、系统性障碍（课程设计），以及压倒科学证据的个人偏好。
-- 未来的出路需要整合：将词汇积累与大量阅读/听力结合起来，在沟通压力下进行输出练习，并认识到抽认卡能力是理解的手段，而不是最终目的。
+商业语言应用以日活跃用户数、课次时长及转化指标为优化目标，这些目标可能与最优间隔安排相冲突。对 Duolingo 的独立研究报告其学习增益有限，伴随学习者持续性、动机与项目效能方面的问题（Loewen et al., 2019；Vesselinov & Grego, 2012）。游戏化与参与度功能可能无法弥补谈判意义与产出性语言使用机会的不足（Loewen et al., 2019）。Duolingo 报告的数据——5 亿+注册用户、约 2% 付费转化、7 天连续打卡用户留存意愿高 3.6 倍——说明了将参与度置于学习结果之上的结构性激励。Anki 生态系统颠覆了这一模式：用户自有数据、最大化定制、社区驱动的算法开发（FSRS 整合，2025），代价是陡峭的入门门槛和缺失的质量控制。
 
-### 资料来源
+两种模式均未解决教育类应用类别整体留存率偏低的问题（约 1.76%）。Donoghue and Hattie（2021）发现低能力学习者受益于间隔与测试最多，表明如果产品指标能与学习结果对齐，服务不足的群体可以从设计良好的工具中获得实质性收益。
 
-#### 第一梯队：荟萃分析与系统综述
+### 3.7 新兴方向（2024–2026）
 
-- Cepeda et al. (2006, 2008) - 具有里程碑意义的荟萃分析，涵盖 317 项实验、839 次评估，确立了间隔效应的稳健性和最佳间隔原则。[https://augmentingcognition.com/assets/Cepeda2006.pdf](https://augmentingcognition.com/assets/Cepeda2006.pdf)
-- Kim & Webb (2022) - 针对间隔词汇练习的 48 项实验（N=3,411）的荟萃分析，效应量 g=1.04-2.34。[SAGE Journals - 第二语言习得]
-- Taylor & Francis (2021) - 关于多邻国有效性的系统综述，对游戏化的局限性进行了批判性评估。
-- Frontiers in Education (2021) - 将分布式练习和测试列为最有效学习技巧的荟萃分析。<br />
-  [https://www.frontiersin.org/journals/education/articles/10.3389/feduc.2021.581216/full](https://www.frontiersin.org/journals/education/articles/10.3389/feduc.2021.581216/full)
+三个趋势值得关注。其一，**领域特定荟萃分析**正在增多（医学、数学、课堂应用情境），揭示间隔效应量并不均一——医学与言语领域的效应大于数学，而数学中程序性流利与问题解决迁移可能需要不同的检索格式（Murray et al., 2025；Maye et al., 2026）。其二，**大规模神经影像研究**正将机制争论从休息—复述转向再编码与皮层表征稳定化（Zou et al., 2025；Yang et al., 2025）。其三，**AI 辅助卡片生成与自适应调度**正进入主流 SRS 工作流；Martinengo et al.（2024）在先前系统评价中报告了间隔数字教育对卫生专业人员的益处，French et al.（2024）正式呼吁将间隔重复整合入医学课程——Maye et al.（2026）现已提供荟萃分析层面的确认。开放的问题是：AI 生成的内容能否保留近期二语研究所识别的、迁移所必需的检索质量与情境丰富性（Nakata & Elgort, 2021；Serrano & Pellicer-Sánchez, 2026）。
 
-#### 第二梯队：初步研究报告
+## 4. 讨论
 
-- BrainFacts (2021) - 间隔效应的神经科学，CREB 和 MAPK 机制。<br />
-  [https://www.brainfacts.org/thinking-sensing-and-behaving/learning-and-memory/2021/the-neuroscience-behind-the-spacing-effect-030421](https://www.brainfacts.org/thinking-sensing-and-behaving/learning-and-memory/2021/the-neuroscience-behind-the-spacing-effect-030421)
-- PMC (2016) - 间隔学习的分子机制，包括 CREB、MAPK 和突触可塑性。<br />
-  [https://pmc.ncbi.nlm.nih.gov/articles/PMC5126970/](https://pmc.ncbi.nlm.nih.gov/articles/PMC5126970/)
-- Nature Communications Biology (2025) - 关于间隔学习与集中学习神经整合差异的 fMRI 研究。[https://www.nature.com/articles/s42003-025-07964-6](https://www.nature.com/articles/s42003-025-07964-6)
-- PubMed (2024) - 美国美国家庭医学委员会关于间隔检索练习的 26,258 名医生研究。[https://pubmed.ncbi.nlm.nih.gov/39250798/](https://pubmed.ncbi.nlm.nih.gov/39250798/)
-- Gonzalez-Fernandez (2025) - 针对 314 名 EFL 学习者关于认知-回忆发展顺序的研究。
-- Stewart et al. (2024) - 关于回忆与认知作为截然不同的心理测量构想的理论论证。
-- Roediger & Karpicke (2006) - 测试效应研究，显示检索练习在保留上优于重新学习。[https://journals.sagepub.com/doi/10.1111/j.1467-9280.2006.01693.x](https://journals.sagepub.com/doi/10.1111/j.1467-9280.2006.01693.x)
+### 4.1 综合
 
-#### 第三梯队：算法文档与技术来源
+本综述识别出间隔效应在受控条件下的效能与自然学习环境中的结果之间存在根本性的不匹配。间隔效应在分子、神经与行为层次上均稳健；分布式练习与检索测试在学习者自主控制的技巧中排名最高；现代调度器预测遗忘的精度日益提高。然而，现实世界的失败模式集中在五个相互关联的因素上：
 
-- SuperMemo Algorithm Documentation - SM-2 到 SM-18 的历史和技术规范。<br />
-  [https://help.supermemo.org/wiki/SuperMemo_Algorithm](https://help.supermemo.org/wiki/SuperMemo_Algorithm) <br />
-  [https://www.supermemo.com/en/blog/the-true-history-of-spaced-repetition](https://www.supermemo.com/en/blog/the-true-history-of-spaced-repetition)
-- FSRS GitHub Documentation - FSRS 算法的技术规范和基准测试。<br />
-  [https://github.com/open-spaced-repetition/fsrs4anki/wiki/The-Algorithm](https://github.com/open-spaced-repetition/fsrs4anki/wiki/The-Algorithm)
-- Expertium Algorithm Documentation - FSRS 的数学公式和幂律遗忘曲线。<br />
-  [https://expertium.github.io/Algorithm.html](https://expertium.github.io/Algorithm.html)
+1. **迁移局限：** SRS 主要构建接受性知识，对产出性技能的远迁移较弱。
+2. **情境依赖：** 与界面绑定的学习可能在不同检索情境中无法激活。
+3. **元认知错位：** 学习者与机构偏好优化即时表现的集中策略。
+4. **基础设施缺口：** 手动间隔安排超出实际协调能力，但现有工具要么施加难以为继的复习负担，要么带有错位的参与度激励。
+5. **测量不匹配：** 应用指标追踪调度器依从性，而非能力。
 
-#### 第四梯队：社区与实践者来源
+### 4.2 理论启示
 
-- Anki Forums - 关于 FSRS-5、AI 集成和迁移工作流的社区讨论。<br />
-  [https://forums.ankiweb.net/](https://forums.ankiweb.net/)<br />
-  [https://forums.ankiweb.net/t/collection-of-anki-resources/60044](https://forums.ankiweb.net/t/collection-of-anki-resources/60044)
-- Reddit Language Learning Communities - 实践者关于 SRS 局限性、认知-输出鸿沟以及整合策略的讨论。[https://www.reddit.com/r/Anki/comments/1jafkya/the_ultimate_2025_anki_settings_latest_updates/](https://www.reddit.com/r/Anki/comments/1jafkya/the_ultimate_2025_anki_settings_latest_updates/)
-- Duolingo Company Announcements - 多邻国公司公告，包含产品更新和平台指标。<br />
-  [http://investors.duolingo.com/news-releases/news-release-details/duolingo-unveils-major-product-updates-turn-learning-into-real-world](http://investors.duolingo.com/news-releases/news-release-details/duolingo-unveils-major-product-updates-turn-learning-into-real-world)
-- Carl Hendrick Substack - 关于间隔优势的心智演练理论。<br />
-  [https://carlhendrick.substack.com/p/what-makes-spaced-practice-so-powerful](https://carlhendrick.substack.com/p/what-makes-spaced-practice-so-powerful)
+关于会话间隔期间心理复习优于工作记忆恢复的近期证据（Chan et al., 2025），以及依赖再编码的 vmPFC 表征稳定化（Zou et al., 2025），表明间隔时间表设计应考虑会话间的活动以及再次暴露时检索的成功与否，而不仅仅是间隔时长。先验知识调节间隔效应，支持自适应时间表——对初学者缩短初始间隔，随图式发展而延长。调度器预测准确性与学习结果之间的解离意味着，研究应区分**预测模型**与**干预模型**——这一区别在当前算法基准测试中基本缺失。
+
+领域特定荟萃分析进一步表明，间隔建议应按内容类型校准。医学教育间隔效应（SMD = 0.78；Maye et al., 2026）超过数学间隔效应（_g_ = 0.28；Murray et al., 2025），后者可能还取决于材料是孤立的还是嵌入课程中的。测试效应在言语领域稳健，但在数学中不确定（Murray et al., 2025），意味着量化或程序性内容的 SRS 实现可能需要特定格式的检索任务，而非通用的抽认卡识别。
+
+### 4.3 对学习技术设计的启示
+
+证据支持间隔重复系统的若干设计优先项：（a）默认采用分布式调度而非可选间隔；（b）可持续的复习负担管理与透明的入门预期；（c）丰富的情境化卡片内容（句子、媒体、真实来源）；（d）与产出练习整合而非取而代之；（e）附带反馈的检索练习。相对于依从性、卡片质量与课次可持续性，算法复杂度的回报递减。
+
+### 4.4 本综述的局限
+
+本综合为叙述性而非系统性；未预注册研究方案，商业实现章节纳入了灰色文献。许多引用的语言学习效应量来自生态效度有限的配对联想范式。行业留存统计数据依赖专有报告。在线多场次研究存在显著流失（Rogers et al., 2025），限制了对自主 SRS 使用的泛化。产品设计与学习结果之间的因果主张仍属相关性层面。
+
+## 5. 结论
+
+间隔效应代表学习科学中支持最为充分的原则之一，来自 CREB 介导的巩固、海马—皮层与 vmPFC 再编码机制，以及从课堂情境中 _d_ = 0.54（Mawson & Kang, 2025）到医学教育中 SMD = 0.78（Maye et al., 2026）的荟萃分析效应量，各层次证据汇聚一致。计算化间隔重复成功地将这一原则规模化。然而，从实验室效能到持久、可迁移的能力——尤其是在二语产出方面——的转化仍不完整。基于抽认卡的 SRS 构建了必要但不充分的词汇基础；真实输入、交际压力下的产出，以及情境丰富的编码是不可或缺的补充，而非可以优化掉的替代选项。
+
+正式教育中四十年的研究—实践差距以及消费学习应用的高放弃率，有一个共同原因：系统被设计为优化即时表现、参与度指标或算法精巧性，而非在现实约束下的可持续、可迁移学习。弥合这一差距，需要将间隔视为一个调度基础设施问题——由技术支持、按学习者能力校准、嵌入更广泛的习得生态——而非一种独立的学习技巧。
+
+## 参考文献
+
+AbdAlgane, M., Elkot, M. A., & Ali, R. (2025). Embracing mobile-based spaced learning to enhance English scientific vocabulary mastery and academic performance among ESP students. _International Journal of Interactive Mobile Technologies_, _19_(12), 103–120. https://doi.org/10.3991/ijim.v19i12.54815
+
+Anki Manual. (n.d.). Studying—limits and optimal retention. AnkiWeb. https://docs.ankiweb.net/
+
+Bjork, R. A., & Bjork, E. L. (2011). Making things hard on yourself, but in a good way: Creating desirable difficulties to enhance learning. In M. A. Gernsbacher, R. W. Pew, L. M. Hough, & J. R. Pomerantz (Eds.), _Psychology and the real world: Essays illustrating fundamental contributions to society_ (pp. 56–64). Worth Publishers.
+
+Cepeda, N. J., Coburn, N., Rohrer, D., Wixted, J. T., Mozer, M. C., & Pashler, H. (2008). Optimizing distributed practice: Theoretical analysis and practical implications. _Experimental Psychology_, _55_(4), 236–246.
+
+Cepeda, N. J., Pashler, H., Vul, E., Wixted, J. T., & Rohrer, D. (2006). Distributed practice in verbal recall tasks: A review and quantitative synthesis. _Psychological Bulletin_, _132_(3), 354–380.
+
+Cepeda, N. J., Vul, E., Rohrer, D., Wixted, J. T., & Pashler, H. (2009). Spacing effects in learning: A temporal ridgeline of optimal retention. _Psychological Science_, _19_(11), 1095–1102.
+
+Chan, K.-Y., Chen, O., & Paas, F. (2025). The mechanisms of the spacing effect: Mental rehearsal versus rest and recovery. _Educational Psychology_, _45_. https://doi.org/10.1080/01443410.2025.2551144
+
+DeKeyser, R. M. (2015). Skill acquisition theory. In B. VanPatten & J. Williams (Eds.), _Theories in second language acquisition_ (2nd ed., pp. 94–112). Routledge.
+
+Dempster, F. N. (1988). The spacing effect: A case study in the failure to apply the results of psychological research. _American Psychologist_, _43_(8), 627–634.
+
+Donoghue, G. M., & Hattie, J. A. C. (2021). A meta-analysis of ten learning techniques. _Frontiers in Education_, _6_, 581216. https://doi.org/10.3389/feduc.2021.581216
+
+Dudai, Y., Karni, A., & Born, J. (2015). The consolidation and transformation of memory. _Neuron_, _88_(1), 20–32.
+
+Dunlosky, J., Rawson, K. A., Marsh, E. J., Nathan, M. J., & Willingham, D. T. (2013a). Improving students' learning with effective learning techniques: Promising directions from cognitive and educational psychology. _Psychological Science in the Public Interest_, _14_(1), 4–58.
+
+Dunlosky, J., Rawson, K. A., Marsh, E. J., Nathan, M. J., & Willingham, D. T. (2013b). Strengthening the student toolbox: Study strategies to boost learning. _American Educator_, _37_(3), 12–21.
+
+Ebbinghaus, H. (1913). _Memory: A contribution to experimental psychology_ (H. A. Ruger & C. E. Bussenius, Trans.). Teachers College, Columbia University. (Original work published 1885)
+
+Expertium. (2024). A technical explanation of FSRS. Expertium's Blog. https://expertium.github.io/Algorithm.html
+
+Expertium. (2025). Benchmark of spaced repetition algorithms. Expertium's Blog. https://expertium.github.io/Benchmark.html
+
+Feng, K., Zhao, X., Liu, J., Cai, Y., Ye, Z., Chen, C., & Xue, G. (2019). Spaced learning enhances episodic memory by increasing neural pattern similarity across repetitions. _Journal of Neuroscience_, _39_(27), 5351–5360.
+
+French, B. N., Marxen, T. O., Akhnoukh, S., et al. (2024). A call for spaced repetition in medical education. _The Clinical Teacher_, _21_(1), e13669. https://doi.org/10.1111/tct.13669
+
+Godden, D. R., & Baddeley, A. D. (1975). Context-dependent memory in two natural environments. _British Journal of Psychology_, _66_(3), 325–331.
+
+González-Fernández, B. (2025). How is vocabulary learnt? An acquisitional sequence of L2 word knowledge. _TESOL Quarterly_, _59_(2), 755–784.
+
+González-Fernández, B., & Schmitt, N. (2020). Word knowledge: Exploring the relationships and order of acquisition of vocabulary knowledge components. _Applied Linguistics_, _41_(4), 481–505.
+
+Hendrick, C. (2025, September 4). What makes spaced practice so powerful? _Substack_. https://carlhendrick.substack.com/p/what-makes-spaced-practice-so-powerful
+
+Kang, S. H. K., Lindsey, R. V., Mozer, M. C., & Pashler, H. (2014). Retrieval practice over the long term: Should spacing be expanding or equal-interval? _Psychonomic Bulletin & Review_, _21_(6), 1544–1550.
+
+Kapler, I. V., Weston, T., & Wiseheart, M. (2015). Spacing in a simulated undergraduate classroom: Long-term benefits for factual and higher-level learning. _Learning and Instruction_, _36_, 38–45.
+
+Kim, T. Y., & Webb, S. (2022). The effects of spaced versus massed distribution of practice on the learning of vocabulary. _Language Teaching Research_. https://doi.org/10.1177/13621688211051660
+
+Koriat, A. (1997). Monitoring one's own knowledge during study: A cue-utilization approach to judgments of learning. _Journal of Experimental Psychology: General_, _126_(4), 349–370.
+
+Kornell, N., & Bjork, R. A. (2008). Learning concepts and categories: Is spacing the "enemy of induction"? _Psychological Science_, _19_(6), 585–592.
+
+Krashen, S. D. (1985). _The input hypothesis: Issues and implications_. Longman.
+
+Lindsey, R. V., Shroyer, J. D., Pashler, H., & Mozer, M. C. (2014). Improving students' long-term knowledge retention through personalized review. _Psychological Science_, _25_(3), 639–647.
+
+Loewen, S., Crowther, D., Isbell, D. R., Kim, K. M., Maloney, J., Miller, Z. F., & Rawal, H. (2019). Mobile-assisted language learning: A Duolingo case study. _ReCALL_, _31_(3), 293–311. https://doi.org/10.1017/S0958344019000065
+
+Martinengo, L., Ng, M. S. P., Ng, T. D. R., Ang, Y. I., Jabir, A. I., Kyaw, B. M., & Car, L. T. (2024). Spaced digital education for health professionals: Systematic review and meta-analysis. _Journal of Medical Internet Research_, _26_, e57760.
+
+Mawson, R. D., & Kang, S. H. K. (2025). The distributed practice effect on classroom learning: A meta-analytic review of applied research. _Behavioral Sciences_, _15_(6), 771. https://doi.org/10.3390/bs15060771
+
+Maye, J. (2026). The effectiveness of spaced repetition in medical education: A systematic review and meta-analysis. _The Clinical Teacher_, _23_(2). https://doi.org/10.1111/tct.70353
+
+Morris, C. D., Bransford, J. D., & Franks, J. J. (1977). Levels of processing versus transfer appropriate processing. _Journal of Verbal Learning and Verbal Behavior_, _16_(5), 519–533.
+
+Murray, E., Horner, A. J., & Göbel, S. M. (2025). A meta-analytic review of the effectiveness of spacing and retrieval practice for mathematics learning. _Educational Psychology Review_, _37_, 75. https://doi.org/10.1007/s10648-025-10035-1
+
+Nakata, T., & Elgort, I. (2021). Effects of spacing on contextual vocabulary learning: Spacing facilitates the acquisition of explicit, but not tacit, vocabulary knowledge. _Language Learning_, _71_(4), 1238–1265.
+
+Naqib, F., Sossin, W. S., & Farah, C. A. (2012). Molecular determinants of the spacing effect. _Neural Plasticity_, _2012_, 581291.
+
+Nuthall, G. (2007). _The hidden lives of learners_. NZCER Press.
+
+Open Spaced Repetition. (2024). FSRS algorithm benchmarks. GitHub Wiki. https://github.com/open-spaced-repetition/fsrs4anki/wiki/The-Algorithm
+
+Open Spaced Repetition. (2025). FSRS-6 release notes and Anki 25.07 integration. GitHub. https://github.com/open-spaced-repetition/fsrs4anki
+
+Paivio, A. (1986). _Mental representations: A dual coding approach_. Oxford University Press.
+
+Philips, G. T., Kopec, A. M., & Carew, T. J. (2013). Pattern and predictability in memory formation: From molecular mechanisms to clinical relevance. _Neurobiology of Learning and Memory_, _105_, 117–124.
+
+Popay, J., Roberts, H., Sowden, A., Petticrew, M., Arai, L., Rodgers, M., & Britten, N. (2006). Guidance on the conduct of narrative synthesis in systematic reviews. _ESRC Methods Programme_, _15_(1), 047.
+
+Price, D. W., Wang, T., O'Neill, T. R., Morgan, Z. J., Chodavarapu, P., Bazemore, A., Peterson, L. E., & Newton, W. P. (2025). The effect of spaced repetition on learning and knowledge transfer in a large cohort of practicing physicians. _Academic Medicine_, _100_(1), 89–96.
+
+Refold. (n.d.). Refold methodology overview. https://refold.la/
+
+Rogers, J., Nakata, T., & Chiu, M. M. (2025). Optimizing distributed practice online: A conceptual replication of Cepeda et al. (2009). _Studies in Second Language Acquisition_, _47_(1), 417–439. https://doi.org/10.1017/S0272263124000706
+
+Rodd, J. M. (2024). Moving experimental psychology online: How to obtain high-quality data when we can't see our participants. _Journal of Memory and Language_, _134_, 104472.
+
+Roediger, H. L., III, & Karpicke, J. D. (2006). Test-enhanced learning: Taking memory tests improves long-term retention. _Psychological Science_, _17_(3), 249–255.
+
+Rowland, C. A. (2014). The effect of testing versus restudy on retention: A meta-analytic review of the testing effect. _Psychological Bulletin_, _140_(6), 1432–1463.
+
+San, M. A., Rela, L., Gelb, B. D., & Pagani, M. R. (2017). The spacing effect for structural synaptic plasticity provides specificity and precision in plastic changes. _Journal of Neuroscience_, _37_(19), 4990–5001.
+
+Santoro, H. (2021, March 4). The neuroscience behind the spacing effect. _BrainFacts_. https://www.brainfacts.org/thinking-sensing-and-behaving/learning-and-memory/2021/the-neuroscience-behind-the-spacing-effect-030421
+
+Serfaty, J., & Serrano, R. (2024). Practice makes perfect, but how much is necessary? The role of relearning in second language grammar acquisition. _Language Learning_, _74_(1), 218–248.
+
+Serrano, R., & Pellicer-Sánchez, A. (2026). The impact of practice conditions on vocabulary learning and processing: A closer look at difficulties arising from spacing and context variability. _Applied Psycholinguistics_. https://doi.org/10.1017/S0142716425100283
+
+Stewart, J., et al. (2024). Lexical recall versus recognition as distinct psychometric constructs. _[Verify bibliographic details before citation in formal publication]_
+
+Vesselinov, R., & Grego, J. (2012). _The Duolingo efficacy study_ [White paper]. Duolingo. https://static.duolingo.com/s3/DuolingoReport_Final.pdf
+
+Wozniak, P. (2018, June 1). The true history of spaced repetition. _SuperMemo Blog_. https://www.supermemo.com/en/blog/the-true-history-of-spaced-repetition
+
+Yang, Y., Huang, Z., Yang, Y., Fan, M., & Yin, D. (2025). Time-dependent consolidation mechanisms of durable memory in spaced learning. _Communications Biology_, _8_, Article 964. https://doi.org/10.1038/s42003-025-07964-6
+
+Ye, J., & the open-spaced-repetition community. (2024). FSRS: Free Spaced Repetition Scheduler [Computer software and documentation]. GitHub. https://github.com/open-spaced-repetition/fsrs4anki
+
+Zou, F., Kuhl, B. A., DuBrow, S., & Hutchinson, J. B. (2025). Benefits of spaced learning are predicted by the re-encoding of past experience in ventromedial prefrontal cortex. _Cell Reports_, _44_(2), 115232. https://doi.org/10.1016/j.celrep.2025.115232
