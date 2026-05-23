@@ -12,7 +12,7 @@ Decades of research show that spacing reviews over time leads to much better lon
 
 ## Why We Built Retentio
 
-Retentio started with a problem its founder noticed as a graduate student. Many PhD students around him were using spaced-repetition apps to pick up new languages alongside their research—reading papers in German, following talks in Japanese, or preparing for fieldwork abroad. The method worked; the tools often did not.
+Retentio started with a problem its founder noticed as a graduate student. Many PhD students around him were using spaced-repetition apps to pick up new languages alongside their research—reading papers in German, following talks in Japanese, or preparing for fieldwork abroad. Medical students faced a similar need: memorizing large volumes of difficult terminology for anatomy, pharmacology, and clinical exams. The method worked; the tools often did not.
 
 After trying several popular SRS apps, he kept running into the same friction: learning the app itself took longer than learning the material. Decks had to be imported, settings tuned, add-ons configured, and card formats wrestled into shape before a single review session felt productive. What should have been a straightforward daily habit became a side project in software literacy.
 
@@ -36,14 +36,21 @@ Spaced repetition uses this curve. By reviewing at or just before the point wher
 
 ## How Retentio's Algorithm Works
 
-Manual spacing is possible but hard to manage at scale. Algorithms like SM-2 automate the decision, and **Retentio follows this exact approach**.
+Classical spaced-repetition algorithms like SM-2 automated scheduling, but they still leave familiar problems unsolved: review backlogs that snowball into hundreds of cards per day, steep setup before your first productive session, and schedules tuned for prediction accuracy rather than sustainable daily study.
 
-After each review, the algorithm computes the next interval based on how well you recalled the item:
+Retentio uses **new scheduling algorithms** built on the same spacing science, designed specifically around those gaps:
+
+- **Sustainable review load** — intervals are managed so decks stay studyable as they grow, without the compounding backlog that pushes people off legacy SRS apps.
+- **Simple from day one** — no add-ons, no configuration rabbit holes; you open a deck and start reviewing.
+- **Adaptive to how you recall** — after each review, the next due date reflects how well you remembered the item, not a one-size-fits-all formula.
+- **Deck-aware pacing** — medical terminology, language vocabulary, and exam prep each get scheduling that fits the material and the deck's intended pace.
+
+After each review, the system updates when a card comes back:
 
 - If you remembered easily, the interval increases.
 - If you struggled or failed, the interval shortens or resets.
 
-In Retentio, each card has a due date. When you review it, the system updates the interval and the next due date. You do not choose when to see each card—the algorithm does. That way you can focus on answering and let the system handle the scheduling.
+Each card has a due date. You focus on answering; Retentio handles the timing.
 
 ## Why it Matters in Practice
 
