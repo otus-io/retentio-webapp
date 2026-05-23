@@ -4,9 +4,21 @@ title: What is Retentio
 
 # What is Retentio
 
-Retentio is an application built on the principles of a **Spaced Repetition System (SRS)** —the practice of reviewing material at increasing intervals. Instead of seeing the same item every day or cramming before a test, you review each item when it is due, and that interval grows longer each time you remember it.
+Retentio is a collaborative learning platform where people create, update, and improve spaced-repetition decks together. Anyone can build a deck, share it, and invite others to contribute—adding cards, correcting inaccuracies, refining wording, and keeping content up to date as a subject evolves. The goal is a living library of high-quality decks, continuously improved by the people who know the material best.
+
+At its core, Retentio is built on the principles of a **Spaced Repetition System (SRS)**—the practice of reviewing material at increasing intervals. Instead of seeing the same item every day or cramming before a test, you review each item when it is due, and that interval grows longer each time you remember it.
 
 Decades of research show that spacing reviews over time leads to much better long-term retention than massed practice or cramming. The idea is simple: if you see something too soon, you waste time; if you see it too late, you have already forgotten and must relearn it. Spaced repetition aims for the sweet spot—reviewing just when you are about to forget—so that each review strengthens memory without unnecessary repetition.
+
+## Why We Built Retentio
+
+Retentio started with a problem its founder noticed as a graduate student. Many students around him were using spaced-repetition apps for two things—learning a new language, or memorizing difficult medical terminology. The method worked; the tools often did not.
+
+After trying several popular SRS apps, he kept running into the same friction: learning the app itself took longer than learning the material. Decks had to be imported, settings tuned, add-ons configured, and card formats wrestled into shape before a single review session felt productive. What should have been a straightforward daily habit became a side project in software literacy.
+
+At the same time, the decks and study materials available online were uneven at best. Shared flashcard sets were full of typos, outdated facts, and cards that tested the wrong thing. Good intentions did not make up for poor quality—and bad cards waste review time just as surely as a bad algorithm.
+
+Retentio was built to address both problems: an app simple enough that you spend your time learning, not configuring; and a platform where decks are created, corrected, and improved collaboratively, so quality and accuracy compound over time rather than decay.
 
 ## The Science Behind Retentio
 
@@ -24,14 +36,21 @@ Spaced repetition uses this curve. By reviewing at or just before the point wher
 
 ## How Retentio's Algorithm Works
 
-Manual spacing is possible but hard to manage at scale. Algorithms like SM-2 automate the decision, and **Retentio follows this exact approach**.
+Classical spaced-repetition algorithms like SM-2 automated scheduling, but they still leave familiar problems unsolved: review backlogs that snowball into hundreds of cards per day, steep setup before your first productive session, and schedules tuned for prediction accuracy rather than sustainable daily study.
 
-After each review, the algorithm computes the next interval based on how well you recalled the item:
+Retentio uses **new scheduling algorithms** built on the same spacing science, designed specifically around those gaps:
+
+- **Sustainable review load** — intervals are managed so decks stay studyable as they grow, without the compounding backlog that pushes people off legacy SRS apps.
+- **Simple from day one** — no add-ons, no configuration rabbit holes; you open a deck and start reviewing.
+- **Adaptive to how you recall** — after each review, the next due date reflects how well you remembered the item, not a one-size-fits-all formula.
+- **Deck-aware pacing** — medical terminology, language vocabulary, and exam prep each get scheduling that fits the material and the deck's intended pace.
+
+After each review, the system updates when a card comes back:
 
 - If you remembered easily, the interval increases.
 - If you struggled or failed, the interval shortens or resets.
 
-In Retentio, each card has a due date. When you review it, the system updates the interval and the next due date. You do not choose when to see each card—the algorithm does. That way you can focus on answering and let the system handle the scheduling.
+Each card has a due date. You focus on answering; Retentio handles the timing.
 
 ## Why it Matters in Practice
 
@@ -39,6 +58,24 @@ Spaced repetition is not a trick; it is a way of aligning study with how memory 
 
 It also reduces stress: instead of last-minute cramming, you do a steady amount of review each day, and the system keeps track of what is due. Whether you are learning a language, preparing for exams, or building a knowledge base of facts and concepts, spacing your reviews makes the effort more efficient and the results longer-lasting.
 
-**This summary draws on the report from Yudame Research's podcast episode on spaced repetition (Algorithms for Life, Ep. 1).**
+For the full narrative review—including recent meta-analyses (2024–2026), neural mechanisms, scheduling algorithms, and adoption barriers—see [Read more](/guide/background/read-more).
 
-[Read the full report -> (Yudame Research - Algorithms for Life, Ep. 1)](https://research.yuda.me/podcast/episodes/algorithms-for-life/ep1-spaced-repetition/report.html)
+## A Note to Educators
+
+The quality of a spaced-repetition deck matters as much as the algorithm behind it. A well-structured deck—where each card tests exactly one idea, uses clear and unambiguous wording, and sequences from foundational concepts outward—can compress years of rote study into months of focused review.
+
+That kind of quality comes from people who have spent years in the classroom: knowing which misconceptions trip students up, which distinctions are worth drilling, and how to phrase a prompt so the right memory is retrieved rather than a superficial one.
+
+We invite educators to bring that expertise to Retentio. Whether you teach a language, a science, history, or a professional subject, the decks you build carry something no automated generator can replicate—the judgment of someone who has watched real learners struggle and succeed with this material. High-quality educator-built decks benefit not just your own students, but every learner on the platform who studies the same subject.
+
+## AI-Assisted Deck Quality
+
+Educator judgment sets the standard; AI helps maintain it at scale. Retentio uses an AI review pipeline that runs continuously across published decks, surfacing issues that are easy to miss during manual authoring:
+
+- **Accuracy checks** — flagging factual claims that conflict with up-to-date sources, so decks stay correct as knowledge evolves.
+- **Clarity rewrites** — identifying prompts with ambiguous wording or double-barrelled questions, where a learner could produce a valid answer without having learned the intended concept.
+- **Redundancy detection** — finding cards that test the same underlying fact in slightly different words, which inflates review load without adding retention value.
+- **Difficulty calibration** — comparing a card's observed failure rate against its position in the deck's stated difficulty sequence, catching items that are harder or easier than expected.
+- **Coverage gaps** — cross-referencing the deck's topic scope against an outline of the subject, highlighting concepts the deck may be missing entirely.
+
+Suggested edits are always reviewed before they go live. The educator stays in control; the AI handles the auditing work that would otherwise require reviewing every card by hand. The result is a deck that improves incrementally over time rather than drifting toward staleness.
