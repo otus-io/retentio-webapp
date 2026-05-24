@@ -4,86 +4,106 @@ title: Platform Notes
 
 # Retentio Platform Description
 
-## 1. App Overview
+## 1. Platform Overview
 
-Retentio is a learning app centered around memory flashcards, with a product format similar to Anki. It is designed for users who need long-term memorization, knowledge reinforcement, and efficient review.  
-By turning fragmented knowledge into structured flashcards, the app helps users break information into smaller and easier-to-remember learning units, improving both study efficiency and retention.
+Retentio—from the Latin _retentio_, meaning retention or the act of holding what you have learned in memory—is a collaborative learning platform built on **spaced repetition**. People create, update, and improve decks together: building cards, sharing decks, correcting errors, refining wording, and keeping content current as a subject evolves. The goal is a living library of high-quality decks, continuously improved by the people who know the material best.
 
-Unlike traditional flashcard tools, Retentio uses our proprietary memory algorithm to dynamically adjust review timing and learning paths based on user behavior, answer performance, forgetting patterns, and review frequency. This helps users achieve more effective memory training in less time.
+At its core, Retentio applies decades of cognitive research on the spacing effect and the forgetting curve. Instead of cramming or reviewing everything every day, you review each item when it is due; intervals grow longer when you remember easily and shorten when you struggle. You focus on answering; Retentio handles the timing.
 
 ## 2. Product Positioning
 
-Retentio is positioned as an intelligent memory training platform suitable for a wide range of learning scenarios, including language learning, exam preparation, professional knowledge building, and daily skill improvement.  
-The platform is designed to help users build a complete cycle of learning, memorization, review, and reinforcement, making study more systematic instead of relying on short-term cramming.
+Retentio is positioned for learners who need durable long-term retention—language vocabulary, medical and professional terminology, exam preparation, and ongoing knowledge building—without the friction that often comes with legacy spaced-repetition tools.
+
+The platform addresses two problems that motivated its creation:
+
+- **Complexity before learning** — Many SRS apps require imports, add-ons, and extensive configuration before the first productive review. Retentio is designed to be simple from day one: open a deck and start reviewing.
+- **Uneven shared content** — Public flashcard sets are often full of typos, outdated facts, and cards that test the wrong thing. Retentio treats decks as shared, improvable artifacts rather than static downloads.
+
+Retentio combines structured flashcard study with collaborative maintenance and scheduling designed for sustainable daily use—not short-term cramming or unsustainable review backlogs.
 
 ## 3. Core Features
 
-### 3.1 Flashcard Learning
+### 3.1 Decks and Flashcard Learning
 
-Users can create, edit, and organize their own memory flashcards, structuring knowledge in forms such as questions and answers, definitions, terms, and example sentences, and then study through repeated card-based practice.
+Users create and organize decks of flashcards—questions and answers, definitions, terms, example sentences, and other structured formats—and study through spaced review sessions.
 
-### 3.2 Intelligent Review Scheduling
+### 3.2 Collaborative Deck Building
 
-Based on our proprietary algorithm, the system dynamically calculates the review timing for each flashcard. It uses factors such as mastery level, response accuracy, and review history to recommend the most appropriate next review point.
+Anyone can build a deck, share it, and invite others to contribute. Decks improve over time as contributors add cards, fix inaccuracies, and refine prompts—so quality and accuracy compound rather than decay.
 
-### 3.3 Learning Progress Tracking
+### 3.3 Intelligent Review Scheduling
 
-The app records user learning data, including study sessions, review completion, memory performance, and mastery status, helping users better understand their progress over time.
+Retentio uses scheduling algorithms built on spacing science, designed to avoid the backlogs and setup burden common in classical SRS tools:
 
-### 3.4 Personalized Learning Pace
+- **Sustainable review load** — intervals stay manageable as decks grow, without snowballing daily queues.
+- **Simple from day one** — no add-on ecosystem or configuration rabbit holes.
+- **Adaptive to how you recall** — each card’s next due date reflects your actual performance on that item.
+- **Deck-aware pacing** — scheduling can reflect the material and intended pace of a deck (e.g. medical terminology vs. language vocabulary vs. exam prep).
 
-Different users have different learning speeds, forgetting curves, and usage habits. Retentio adapts to individual patterns and provides a more personalized and efficient learning experience.
+### 3.4 Learning Progress Tracking
 
-### 3.5 Multi-Scenario Use
+The platform records study sessions, review completion, and mastery status so learners can see progress over time and keep a steady daily rhythm instead of last-minute cramming.
 
-The platform can be used for vocabulary memorization, professional terminology accumulation, exam review, and everyday knowledge management, making it suitable for both short-term goals and long-term use.
+### 3.5 AI-Assisted Deck Quality
 
-## 4. Technical Characteristics
+Educator and community judgment set the standard; AI helps maintain quality at scale. A review pipeline runs across published decks to surface issues that are easy to miss during manual authoring:
 
-Retentio’s core strength lies in its proprietary memory algorithm.  
-Rather than simply applying fixed-interval review logic, the algorithm dynamically evaluates the user’s knowledge retention based on multiple dimensions of real learning behavior and continuously optimizes the review plan.
+- **Accuracy checks** — factual claims that conflict with up-to-date sources
+- **Clarity rewrites** — ambiguous or double-barrelled prompts
+- **Redundancy detection** — cards that test the same fact in slightly different words
+- **Difficulty calibration** — items that are harder or easier than their position in the deck suggests
+- **Coverage gaps** — concepts missing from the deck’s stated scope
 
-The algorithm mainly focuses on the following aspects:
+Suggested edits are reviewed before they go live; authors and educators stay in control.
 
-- User answer performance and feedback results
-- Changes in the memory strength of different knowledge points
-- Individual review frequency and usage habits
-- The balance between forgetting trends and review effectiveness
+## 4. Scheduling and Science
 
-Through this mechanism, Retentio improves memorization efficiency while reducing unnecessary repeated study, allowing users to focus more on the content that truly needs reinforcement.
+Retentio’s scheduling is grounded in the spacing effect—one of the most replicated findings in cognitive psychology—and Ebbinghaus’s forgetting curve: retention drops quickly after learning unless review is timed to reinforce memory just before it fades.
+
+Classical algorithms such as SM-2 automated intervals but often left users with steep setup, prediction-focused schedules, and review loads that became unsustainable. Retentio’s algorithms target those gaps while preserving the core principle: review what needs review, skip what you already know, and lengthen intervals as memories stabilize.
+
+After each review:
+
+- If you remembered easily, the interval increases.
+- If you struggled or failed, the interval shortens or resets.
 
 ## 5. Target Users
 
-Retentio is mainly intended for the following groups:
+Retentio is intended for:
 
-- Students who need long-term knowledge retention
-- Learners preparing for language tests or professional exams
-- Self-learners with ongoing review needs
-- Professionals who need to accumulate terminology, concepts, or domain knowledge
-- Users who want to improve study efficiency through scientific review methods
+- **Students at all levels** who want to improve learning efficiency through spaced, systematic review
+- **Ph.D. and medical students** and other advanced learners memorizing dense terminology or concepts
+- **Language learners** building vocabulary and expressions for long-term use
+- **Exam and certification candidates** who need systematic review rather than cramming
+- **Self-directed learners** maintaining a personal knowledge base over months or years
+- **Educators** who want to publish decks shaped by classroom experience—where each card tests one idea, wording is clear, and sequencing builds from foundations outward
 
-## 6. App Value
+High-quality educator-built decks benefit not only their authors’ students but every learner on the platform who studies the same subject.
 
-Retentio is designed to address several common problems in traditional learning methods:
+## 6. Platform Value
 
-- Learning content is forgotten quickly
-- Review schedules are disorganized and inconsistent
-- Study materials are fragmented and hard to maintain over time
-- Too much repetitive review leads to low efficiency
+Retentio is designed to replace common failure modes in both traditional study and legacy SRS tools:
 
-By combining structured flashcard management with intelligent review scheduling, the platform helps users build a clearer study system and reinforce knowledge more effectively and consistently.
+- Content forgotten soon after cramming
+- Disorganized or unsustainable review schedules
+- Time lost configuring tools instead of learning
+- Shared decks that are inaccurate, outdated, or poorly written
+- Repetitive review of items already mastered
+
+By pairing spaced repetition with collaborative deck quality and scheduling built for daily sustainability, Retentio helps learners spend time on material that actually needs reinforcement—and on decks that improve over time.
 
 ## 7. Use Cases
 
-Retentio can be applied in a variety of common scenarios, including:
+Typical scenarios include:
 
-- Memorizing vocabulary and expressions in languages such as English or Japanese
-- Reviewing knowledge points for academic or certification exams
-- Accumulating professional terms in fields such as medicine, law, finance, and programming
-- Organizing reading notes and reviewing personal knowledge
-- Building a personal long-term knowledge base and memory training system
+- Language vocabulary and expressions (e.g. English, Japanese, and other L2 study)
+- Medical, legal, finance, programming, and other professional terminology
+- Academic and certification exam review
+- Personal reading notes and long-term knowledge management
+- Community-maintained decks that stay accurate as fields update
 
-## 8. Conclusion
+For the full research narrative—including meta-analyses, neural mechanisms, algorithm history, and adoption barriers—see [Read more](/guide/background/read-more).
 
-Retentio is an intelligent memory flashcard app powered by a proprietary algorithm, designed to help users memorize and review knowledge in a more efficient and scientific way.  
-By combining flashcards, intelligent review scheduling, and personalized learning rhythms, the platform provides a stable, sustainable, and accumulative learning experience across different study and growth scenarios.
+## 8. Summary
+
+Retentio is a collaborative spaced-repetition platform: simple to start, grounded in retention science, and built so decks and schedules stay usable over the long term. Flashcards, adaptive scheduling, shared improvement, and AI-assisted quality checks work together so learning is efficient, steady, and cumulative—not a side project in software configuration or a race against forgotten shared content.
