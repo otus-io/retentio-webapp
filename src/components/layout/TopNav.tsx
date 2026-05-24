@@ -16,7 +16,7 @@ interface TopNavProps {
 }
 
 export default function TopNav({ user }: TopNavProps) {
-  const { navMenu } = useAppNavMenu()
+  const { navMenu } = useAppNavMenu({ isLoggedIn: !!user })
   const [mobileOpen, setMobileOpen] = useState(false)
   const toggleMobile = useCallback(() => setMobileOpen((v) => !v), [])
   const closeMobile = useCallback(() => setMobileOpen(false), [])
@@ -53,7 +53,7 @@ export default function TopNav({ user }: TopNavProps) {
           </div>
         </div>
       </header>
-      <MobileNavMenu open={mobileOpen} onClose={closeMobile} />
+      <MobileNavMenu open={mobileOpen} onClose={closeMobile} isLoggedIn={!!user} />
     </>
   )
 }

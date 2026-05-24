@@ -8,24 +8,29 @@ export interface IAppNavMenu {
   isActive?: boolean
 }
 
-export default function useAppNavMenu() {
+export default function useAppNavMenu({ isLoggedIn = false }: { isLoggedIn?: boolean } = {}) {
   const t = useTranslations()
   const pathname = usePathname()
 
   const navMenu = useMemo(() => {
-    return [
+    const items: IAppNavMenu[] = [
       {
         title: t('nav.guide'),
         href: '/guide',
         isActive: pathname.startsWith('/guide'),
       },
-      {
+    ]
+
+    if (isLoggedIn) {
+      items.push({
         title: t('term.decks'),
         href: '/decks',
         isActive: pathname.startsWith('/decks'),
-      },
-    ] satisfies IAppNavMenu[]
-  }, [t, pathname])
+      })
+    }
+
+    return items
+  }, [t, pathname, isLoggedIn])
 
   return {
     navMenu,

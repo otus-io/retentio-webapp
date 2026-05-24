@@ -24,13 +24,13 @@ export default function Footer() {
           </div>
 
           <div className="flex gap-6">
-            <Link href="#" className="text-small text-default-500 no-underline hover:underline">
+            <Link href="/privacy" className="text-small text-default-500 no-underline hover:underline">
               {t('privacy')}
             </Link>
-            <Link href="#" className="text-small text-default-500 no-underline hover:underline">
+            <Link href="/terms" className="text-small text-default-500 no-underline hover:underline">
               {t('terms')}
             </Link>
-            <Link href="#" className="text-small text-default-500 no-underline hover:underline">
+            <Link href="/contact" className="text-small text-default-500 no-underline hover:underline">
               {t('contact')}
             </Link>
           </div>

@@ -19,7 +19,7 @@
     "hero": {
       "title": "记住更多",
       "titleHighlight": "记得更久",
-      "subtitle": "Retentio 使用经过科学验证的间隔重复算法，帮助您高效记忆任何内容——词汇、概念以及更多。",
+      "subtitle": "基于间隔重复科学，以及由资深教育工作者维护并持续完善的优质牌组——让你把时间花在快要忘的内容上，而不是反复刷已经掌握的部分。",
       "cta": "在 App Store 下载",
       "learnMore": "了解更多",
       "appPreview": "应用预览"
@@ -39,7 +39,7 @@
         "description": "间隔重复算法根据您的学习节奏自适应调整，达到最佳记忆效果。"
       },
       "ui": {
-        "title": "精美设计",
+        "title": "直观设计",
         "description": "简洁现代的界面设计，让学习成为一种享受而非负担。"
       },
       "ai": {
@@ -81,6 +81,15 @@
     "privacy": "隐私政策",
     "terms": "服务条款",
     "contact": "联系我们"
+  },
+  "contact": {
+    "title": "联系我们",
+    "description": "如有问题、反馈或研究相关咨询，欢迎与我们联系。",
+    "emailLabel": "邮箱",
+    "emailHint": "我们通常会在几个工作日内回复。"
+  },
+  "legal": {
+    "lastUpdated": "最后更新"
   },
   "content": {
     "previous": "上一个",

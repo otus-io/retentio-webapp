@@ -11,11 +11,24 @@ vi.mock('next/navigation', () => ({
 }))
 
 describe('useAppNavMenu', () => {
-  it('返回 navMenu 数组', async () => {
+  it('未登录时只返回 Guide 菜单项', async () => {
+    const { usePathname } = await import('next/navigation')
+    vi.mocked(usePathname).mockReturnValue('/')
+
+    const { result } = renderHook(() => useAppNavMenu())
+
+    expect(result.current.navMenu).toHaveLength(1)
+    expect(result.current.navMenu[0]).toMatchObject({
+      title: 'nav.guide',
+      href: '/guide',
+    })
+  })
+
+  it('登录后返回 Guide 和 Decks 菜单项', async () => {
     const { usePathname } = await import('next/navigation')
     vi.mocked(usePathname).mockReturnValue('/decks')
 
-    const { result } = renderHook(() => useAppNavMenu())
+    const { result } = renderHook(() => useAppNavMenu({ isLoggedIn: true }))
 
     expect(result.current.navMenu).toHaveLength(2)
     expect(result.current.navMenu[0]).toMatchObject({
@@ -32,7 +45,7 @@ describe('useAppNavMenu', () => {
     const { usePathname } = await import('next/navigation')
     vi.mocked(usePathname).mockReturnValue('/guide/getting-started')
 
-    const { result } = renderHook(() => useAppNavMenu())
+    const { result } = renderHook(() => useAppNavMenu({ isLoggedIn: true }))
 
     expect(result.current.navMenu[0].isActive).toBe(true)
     expect(result.current.navMenu[1].isActive).toBe(false)
@@ -42,7 +55,7 @@ describe('useAppNavMenu', () => {
     const { usePathname } = await import('next/navigation')
     vi.mocked(usePathname).mockReturnValue('/profile')
 
-    const { result } = renderHook(() => useAppNavMenu())
+    const { result } = renderHook(() => useAppNavMenu({ isLoggedIn: true }))
 
     expect(result.current.navMenu[0].isActive).toBe(false)
     expect(result.current.navMenu[1].isActive).toBe(false)
