@@ -7,10 +7,11 @@ import useAppNavMenu from '@/hooks/useAppNavMenu'
 interface MobileNavMenuProps {
   open: boolean
   onClose: () => void
+  isLoggedIn?: boolean
 }
 
-export default function MobileNavMenu({ open, onClose }: MobileNavMenuProps) {
-  const { navMenu } = useAppNavMenu()
+export default function MobileNavMenu({ open, onClose, isLoggedIn = false }: MobileNavMenuProps) {
+  const { navMenu } = useAppNavMenu({ isLoggedIn })
 
   useEffect(() => {
     document.body.style.overflow = open ? 'hidden' : ''

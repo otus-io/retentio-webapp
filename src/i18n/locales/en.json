@@ -19,7 +19,7 @@
     "hero": {
       "title": "Remember More,",
       "titleHighlight": "For Longer",
-      "subtitle": "Retentio uses scientifically proven spaced repetition algorithms to help you efficiently memorize anything — vocabulary, concepts, and beyond.",
+      "subtitle": "Built on spacing science and high-quality decks maintained and improved by experienced educators — designed so you spend time on what’s slipping, not re-drilling what you’ve already got.",
       "cta": "Download on App Store",
       "learnMore": "Learn More",
       "appPreview": "App Preview"
@@ -39,7 +39,7 @@
         "description": "Our spaced repetition algorithm adapts to your learning pace for optimal retention."
       },
       "ui": {
-        "title": "Beautiful Design",
+        "title": "Intuitive Design",
         "description": "A clean, modern interface that makes studying a pleasure, not a chore."
       },
       "ai": {
@@ -81,6 +81,15 @@
     "privacy": "Privacy",
     "terms": "Terms",
     "contact": "Contact"
+  },
+  "contact": {
+    "title": "Contact Us",
+    "description": "Questions, feedback, or research inquiries — we'd love to hear from you.",
+    "emailLabel": "Email",
+    "emailHint": "We typically respond within a few business days."
+  },
+  "legal": {
+    "lastUpdated": "Last updated"
   },
   "content": {
     "previous": "Previous",

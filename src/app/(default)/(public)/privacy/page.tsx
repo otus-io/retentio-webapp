@@ -1,18 +1,35 @@
+import MDXPage from '@/components/MDX/MDXPage'
+import LegalDocLayout from '@/components/legal/LegalDocLayout'
+import { loadLegalDoc } from '@/lib/legal-doc.server'
 import type { Metadata } from 'next'
-import { getTranslations } from 'next-intl/server'
+import { notFound } from 'next/navigation'
 
-export default function Page() {
+export default async function Page() {
+  const resolved = await loadLegalDoc('privacy')
+
+  if (!resolved) {
+    notFound()
+  }
+
+  const Doc = resolved.doc.default
+
   return (
-    <div className="max-w-content mx-auto px-3.5 min-h-screen pt-5">
-      <h1 className="text-3xl font-bold">This is privacy page.</h1>
-    </div>
+    <LegalDocLayout
+      effectiveDate={resolved.doc.frontmatter?.effectiveDate}
+      showFallback={resolved.isFallback}
+    >
+      <MDXPage>
+        <Doc />
+      </MDXPage>
+    </LegalDocLayout>
   )
 }
 
+export async function generateMetadata(): Promise<Metadata> {
+  const resolved = await loadLegalDoc('privacy')
 
-export async function generateMetadata() {
-  const t = await getTranslations()
   return {
-    title: t('footer.privacy'),
+    title: resolved?.doc.frontmatter?.title,
+    description: resolved?.doc.frontmatter?.description,
   } satisfies Metadata
 }
