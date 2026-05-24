@@ -19,6 +19,7 @@ const withMDX = createMDX({
     remarkPlugins: [
       'remark-frontmatter',
       'remark-mdx-frontmatter',
+      'remark-gfm',
     ],
     rehypePlugins: [
       ['rehype-slug'],
