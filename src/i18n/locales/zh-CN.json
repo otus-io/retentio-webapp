@@ -185,7 +185,7 @@
     "key-concepts": "核心概念",
     "decks": "卡组 (Decks)",
     "cards": "卡片 (Cards)",
-    "facts": "事实 (Facts)",
+    "facts": "词条 (Facts)",
     "field-image-and-audio": "字段、图片与音频",
     "login-registration": "登录与注册",
     
@@ -201,8 +201,8 @@
     "frequency-of-introduce-a-new-card": "新卡片引入频率",
     "edit-decks": "编辑卡组",
     "delete-decks": "删除卡组",
-    "add-facts": "添加事实",
-    "edit-facts": "编辑事实",
+    "add-facts": "添加词条",
+    "edit-facts": "编辑词条",
     "hide-cards-delete-cards": "隐藏与删除卡片",
     
     "importing": "导入",
@@ -217,7 +217,7 @@
   },
   "term": {
     "decks": "卡组",
-    "facts": "事实",
+    "facts": "词条",
     "name": "名称",
     "due": "待复习",
     "progress": "进度",
