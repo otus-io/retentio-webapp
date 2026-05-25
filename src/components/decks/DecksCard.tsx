@@ -39,7 +39,7 @@ export default function DecksCard({
           <div className="flex items-center justify-between">
             <Card.Title>
               <AppLink
-                onClick={(e) => e.stopPropagation()}
+                onClick={(e) => { e.stopPropagation(); e.preventDefault(); }}
                 href={`/decks/${deck.id}`}
                 className="text-lg font-semibold tracking-tight text-foreground hover:text-accent hover:underline transition-colors"
               >
