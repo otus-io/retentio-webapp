@@ -7,6 +7,8 @@ import DecksIconLabel from '@/components/decks/DecksLabel'
 import HighlightedText from '@/components/common/HighlightedText'
 import { useTranslations } from 'next-intl'
 import DecksAction from '@/components/decks/DecksAction'
+import { useRouter } from 'next/navigation'
+import { useCallback } from 'react'
 
 interface DecksCardProps {
   deck: Deck,
@@ -18,18 +20,26 @@ export default function DecksCard({
   highlight = '',
 }: DecksCardProps) {
 
+  const router = useRouter()
+
   const t = useTranslations()
   const progress = deck.stats.cards_count > 0
     ? ((deck.stats.reviewed_cards / deck.stats.cards_count) * 100).toFixed(2)
     : '0.00'
 
+
+  const handleClick = useCallback(() => {
+    router.push(`/decks/${deck.id}`)
+  }, [deck.id, router])
+
   return (
     <>
-      <Card variant="default" className="hover:shadow-sm transition-all duration-200">
+      <Card variant="default" className="hover:shadow-sm transition-all hover:cursor-pointer duration-200" onClick={handleClick}>
         <Card.Header>
           <div className="flex items-center justify-between">
             <Card.Title>
               <AppLink
+                onClick={(e) => e.stopPropagation()}
                 href={`/decks/${deck.id}`}
                 className="text-lg font-semibold tracking-tight text-foreground hover:text-accent hover:underline transition-colors"
               >
