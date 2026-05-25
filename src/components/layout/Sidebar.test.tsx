@@ -35,9 +35,9 @@ const createSidebarHook = (overrides: Partial<SidebarContextType> = {}): Sidebar
   items: [
     { titleKey: 'guide-sidebar.guide', href: '/guide' },
     {
-      titleKey: 'guide-sidebar.getting-started',
+      titleKey: 'guide-sidebar.key-concepts',
       items: [
-        { titleKey: 'guide-sidebar.key-concepts', href: '/guide/key-concepts' },
+        { titleKey: 'guide-sidebar.overview', href: '/guide/key-concepts/overview' },
         { titleKey: 'guide-sidebar.decks', href: '/guide/decks' },
       ],
     },
@@ -66,7 +66,7 @@ describe('Sidebar', () => {
 
     render(<Sidebar />)
     expect(screen.getAllByText('guide-sidebar.guide').length).toBeGreaterThan(0)
-    expect(screen.getAllByText('guide-sidebar.getting-started').length).toBeGreaterThan(0)
+    expect(screen.getAllByText('guide-sidebar.key-concepts').length).toBeGreaterThan(0)
   })
 
   it('mobileOpen 为 false 时移动端侧边栏隐藏', async () => {

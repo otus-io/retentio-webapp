@@ -1,0 +1,51 @@
+---
+title: Import an existing deck
+---
+
+# Import an existing deck
+
+Besides [creating your own deck](/guide/get-started/create-your-deck), you can start from material someone else has shared on Retentio. **Deck sharing** lets authors publish a public snapshot; you **import** that snapshot into your library as a personal study deck.
+
+## How sharing works
+
+**Author (source deck)** — The owner builds a deck as usual: name, fields, facts, and cards. When it is ready, they **publish** it as a versioned, **public** snapshot (`v1`, `v2`, …). They can keep editing their working copy; importers only see changes after a new publish.
+
+**You (import deck)** — You import from a published public deck. Retentio creates a **new deck in your account**—your own cards, due dates, and progress. It is not a live link to the author’s private working copy.
+
+```
+Author working deck  →  publish  →  public snapshot v3
+                                        ↓
+                              you import  →  your study copy (pinned to v3)
+```
+
+## What you get when you import
+
+- A full deck with **facts** and **cards** generated from the published snapshot.
+- **Your** spaced-repetition schedule on those cards—starting fresh for you even if others have studied the same source.
+- Fact **entries** (text and media) are **read-only**, matching the snapshot you imported. You cannot add, edit, or delete facts on an import deck.
+- You can still adjust **`rate`** (new cards per day) on your copy. You can add your own **[tags](/guide/key-concepts/tags)** on the deck and facts for filtering, without changing shared content.
+
+See [Facts](/guide/key-concepts/facts) and [Tags](/guide/key-concepts/tags) for how entries and tags behave on imported decks.
+
+## When the author updates the deck
+
+Authors can **republish** when they fix wording, add facts, or remove mistakes. Your import stays on the version you chose until you decide to update.
+
+1. **Check for updates** — Retentio compares your pinned version to the latest publish and shows what was added, removed, or edited.
+2. **Sync (optional)** — You opt in to pull a newer snapshot. There is no automatic sync; you stay on your version until you sync.
+
+After sync, your import reflects the new snapshot; cards tied to removed facts go away; new facts get new cards. Your review history on cards that still exist is kept where the fact unchanged.
+
+## Publishing your own deck
+
+If you created a deck and want others to import it:
+
+1. Finish the working deck (fields, facts, cards).
+2. **Publish** with **public** visibility (required on first publish).
+3. Share the deck so learners can import it. After the first publish, visibility cannot be switched off, and the source deck cannot be deleted while a published version exists.
+
+Republish only when the working copy has real changes; unchanged facts reuse the previous snapshot versions.
+
+## What’s next
+
+Import when you want ready-made material; [create your deck](/guide/get-started/create-your-deck) when you want full control. Either way, once the deck is in your library, [start studying](/guide/get-started/start-studying) the same way.

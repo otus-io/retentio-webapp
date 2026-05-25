@@ -8,9 +8,9 @@ Authenticated features talk to a **remote HTTP API** (see `src/utils/request.ts`
 
 - **Framework**: [Next.js](https://nextjs.org/) 16 (App Router)
 - **UI**: React 19, [HeroUI](https://www.heroui.com/) (`@heroui/react`), [Tailwind CSS](https://tailwindcss.com/) 4 (via `@tailwindcss/postcss` — no `tailwind.config.ts` in this repo)
-- **i18n**: [next-intl](https://next-intl-docs.vercel.app/) with UI strings in `src/i18n/locales/`; locale is chosen with a **`locale` cookie** (`en` or `zh-CN`), not locale-prefixed URLs
+- **i18n**: [next-intl](https://next-intl-docs.vercel.app/) with UI strings in `src/i18n/locales/`; locale is chosen with a **`locale` cookie** (`en` or `zh`), not locale-prefixed URLs
 - **Theming**: [next-themes](https://github.com/pacocoursey/next-themes) (light / dark)
-- **Guide content**: MDX (`@next/mdx`, `@mdx-js/*`) with front matter; per-locale files under `src/content/{en,zh-CN}/`
+- **Guide content**: MDX (`@next/mdx`, `@mdx-js/*`) with front matter; per-locale files under `src/content/{en,zh}/`
 - **Guide search**: [Fuse.js](https://fusejs.io/) over a JSON index generated into `public/search-index/` (gitignored; created by `pnpm generate:md`)
 - **Validation**: Zod
 - **Logging**: Pino (+ `pino-pretty` in dev)
@@ -39,7 +39,7 @@ retentio-webapp/
 │   │   └── ...
 │   ├── components/            # UI by area: app/, auth/, guide/, layout/, home/, MDX/, retentio/
 │   ├── config/                # App constants, guide sidebar (`sidebar.ts`)
-│   ├── content/               # MDX guide sources: en/, zh-CN/
+│   ├── content/               # MDX guide sources: en/, zh/
 │   ├── hooks/
 │   ├── i18n/                  # next-intl request config + locale JSON
 │   ├── lib/                   # logger, locale helpers, token helpers, UI helpers

@@ -1,0 +1,69 @@
+---
+title: Facts
+---
+
+# Facts
+
+## Facts
+
+Facts are the smallest content records used to build cards and decks in Retentio. A fact is one complete learning item—often a word pair, concept, term with definition, or a small set of related information you want to remember.
+
+A fact is **not** the same as a card. Facts hold the underlying material; **cards** are what you see during study and review, each with its own front/back layout and schedule.
+
+A fact does **not** store **fields**. Column names (**fields**) live on the **deck** only. Each fact stores **entries**—the actual text and optional media for each column position.
+
+## Entries
+
+A fact is a list of **entries**, one per column on the deck, in the same order as the deck’s field list. If the deck fields are `English` and `Japanese`:
+
+- Entry `0` → `English` → `hello`
+- Entry `1` → `Japanese` → `こんにちは`
+
+Each entry can hold:
+
+- **Text** — words, meanings, definitions, example sentences, notes
+- **Image** — after you upload a file, referenced in that entry
+- **Audio** — pronunciation, readings, or clips tied to that entry
+- **Video** — optional, same pattern as image and audio
+
+You can attach audio to the same entry as text (e.g. `hello` plus a pronunciation clip). Or use one entry for only an image or sound—the media still lives on the **fact**; the deck field is just the column label.
+
+When you edit or review, Retentio may show deck field names as labels (e.g. `English: hello`), but the fact stores **entries** only—not column names.
+
+Images help with visual vocabulary; audio supports pronunciation and listening; video works the same when you need richer clips. During review, cards show whatever entries the layout places on the front or back—text and media together.
+
+With more deck columns you add more entries. Complete entries help the system build useful cards and make review easier to follow.
+
+## Generating cards
+
+Facts are the basis for cards. **By default**, adding a fact creates **one** card:
+
+- **Front** = the first entry (index `0`)
+- **Back** = all remaining entries (`1`, `2`, …)
+
+For two entries (`hello` / `こんにちは`), that yields:
+
+Front: `hello`  
+Back: `こんにちは`
+
+With three or more entries, the default is still “first entry on the front, everything else on the back”—for example front `school`, back `学校` plus any additional entry content.
+
+### Multiple cards from one fact
+
+One fact can also produce **multiple cards** (sibling cards)—for example both English→Japanese and Japanese→English:
+
+Front: `hello`  
+Back: `こんにちは`
+
+Or:
+
+Front: `こんにちは`  
+Back: `hello`
+
+That lets you practice recall in both directions. You can create several layouts when adding facts, or add an extra card (such as a reversed card) for an existing fact later.
+
+On **imported** decks copied from a published source, fact content is read-only; you still manage your own cards and scheduling on that copy.
+
+## Summary
+
+**Decks** define **fields** (column names). **Facts** store **entries** (content and media) in column order. **Cards** are generated from facts for daily review. Decks organize topics, facts hold the material, and cards carry the study experience—including spacing, due dates, and optional hiding.

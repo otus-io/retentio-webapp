@@ -177,22 +177,19 @@
     
     "background": "Background",
     "what-is-retentio": "What is Retentio",
-    "read-more": "Read more",
+    "read-more": "Our research",
     
-    "platform-notes": "Platform Notes",
-    
-    "getting-started": "Getting Started",
     "key-concepts": "Key Concepts",
+    "overview": "Overview",
     "decks": "Decks",
-    "cards": "Cards",
     "facts": "Facts",
-    "field-image-and-audio": "Field, image, and audio",
+    "cards": "Cards",
+    "tags": "Tags",
     "login-registration": "Login / Registration",
     
-    "studying": "Studying",
-    "how-to-start": "How to start",
-    "show-answer": "Show answer",
-    "hard-or-easy": "Hard or Easy?",
+    "get-started": "Get Started",
+    "create-your-deck": "Create your deck",
+    "start-studying": "Start studying",
     
     "adding-editing": "Adding / Editing",
     "create-decks": "Create Decks",
@@ -206,7 +203,7 @@
     "hide-cards-delete-cards": "Hide Cards / Delete Cards",
     
     "importing": "Importing",
-    "importing-from-the-web": "Importing from the web",
+    "import-an-existing-deck": "Import an existing deck",
     "supported-format": "Supported format",
     
     "profile": "Profile",
