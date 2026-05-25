@@ -39,7 +39,7 @@ vi.mock('next-intl', () => ({
   useTranslations: () => (key: string) => {
     const map: Record<string, string> = {
       'common.tips': '提示',
-      'common.delete-confirm': '确认删除？',
+      'common.delete-confirm-single': '确认删除？',
       'common.cancel': '取消',
       'common.confirm': '确认',
     }

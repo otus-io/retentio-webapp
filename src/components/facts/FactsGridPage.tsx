@@ -480,7 +480,7 @@ function DeleteButton({ factIds, deckId, ...rest } : DeleteButtonProps){
           {...rest}
         />
       </AppTooltip>
-      <DeleteModal isOpen={isOpen} setIsOpen={setIsOpen} action={action} />
+      <DeleteModal type="multiple" deleteCount={factIds.length} isOpen={isOpen} setIsOpen={setIsOpen} action={action} />
     </>
   )
 
