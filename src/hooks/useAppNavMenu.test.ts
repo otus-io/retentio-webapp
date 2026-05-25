@@ -43,7 +43,7 @@ describe('useAppNavMenu', () => {
 
   it('当前路径匹配时 isActive 为 true', async () => {
     const { usePathname } = await import('next/navigation')
-    vi.mocked(usePathname).mockReturnValue('/guide/getting-started')
+    vi.mocked(usePathname).mockReturnValue('/guide/key-concepts/overview')
 
     const { result } = renderHook(() => useAppNavMenu({ isLoggedIn: true }))
 

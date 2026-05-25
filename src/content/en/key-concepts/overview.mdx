@@ -1,0 +1,60 @@
+---
+title: Overview
+---
+
+# Overview
+
+To use Retentio more effectively, we recommend first understanding a few core concepts. Retentio’s content organization, learning flow, and review system are all built around these foundational ideas.
+
+Read this section in order:
+
+1. **Overview** (this page)
+2. [Decks](/guide/key-concepts/decks)
+3. [Facts](/guide/key-concepts/facts)
+4. [Cards](/guide/key-concepts/cards)
+5. [Tags](/guide/key-concepts/tags)
+
+The pages below explain how **decks**, **fields**, **facts**, **cards**, and **tags** work in Retentio.
+
+## How the pieces fit together
+
+A **deck** is the study container for one topic or goal: its name, column layout, daily new-card pace, and the set of facts and cards that belong to it.
+
+**Fields** are the column names you define when you create a deck (for example `English` and `中文`). They describe what each slot in a learning item means. Field labels live on the deck only; when you add facts, you fill in **entries** in the same order—entry `0` is the first column, entry `1` the second, and so on.
+
+A **fact** is the underlying learning content: one complete item (word pair, concept, term + definition, and so on). Facts are **not** the same as cards. A fact holds your material; the system uses it to build the cards you actually study.
+
+A **card** is what you review day to day. Each card belongs to one fact, has a **front** and **back** (which entries appear on each side), and carries spaced-repetition scheduling (when it is due, whether it is hidden, and so on). By default, adding a fact creates **one** card (front = first entry, back = the rest). You can also add **sibling** cards from the same fact—for example English→中文 and 中文→English—so you practice recall in both directions.
+
+Text, images, audio, and video are stored inside fact **entries** (not as separate “card files”). **Fields** on the deck are column names only; see [Decks](/guide/key-concepts/decks) and [Facts](/guide/key-concepts/facts).
+
+## At a glance
+
+| Concept    | Role                                                                                                               |
+| ---------- | ------------------------------------------------------------------------------------------------------------------ |
+| **Deck**   | Groups content for one topic; defines **fields** (columns) and **rate** (how many new cards to introduce per day). |
+| **Fields** | Column names on the deck; facts fill matching **entries** by position.                                             |
+| **Fact**   | The content you create and edit (entries per column, optional media).                                              |
+| **Card**   | One reviewable front/back layout for a fact, with its own schedule.                                                |
+
+## Relationships
+
+- One deck contains many **facts** and many **cards**.
+- One fact usually starts with **one** card; it can have **two or more** cards (siblings) when you want multiple directions or layouts from the same content.
+- Every card points to exactly **one** fact in that deck.
+
+## Typical workflow
+
+1. **Create a deck** — choose fields (columns) and set how many **new cards** to introduce per day (`rate`). Higher values introduce new material faster; lower values keep a steadier pace. New cards are spaced evenly across the day.
+2. **Add facts** — enter content for each column (and optional images or audio). The system creates card(s) for each fact.
+3. **Study** — Retentio picks the most urgent due card in the deck; you see front, then back, and your rating updates the schedule.
+4. **Maintain** — edit fact entries on decks you own (imported copies keep snapshot facts read-only); delete a **fact** to remove it and all of its cards; delete a single **card** to keep the fact and any other cards for that fact.
+
+## What to read next
+
+- **[Decks](/guide/key-concepts/decks)** — containers, fields (columns), and new-cards-per-day settings.
+- **[Facts](/guide/key-concepts/facts)** — entries, media, and generating one or multiple cards.
+- **[Cards](/guide/key-concepts/cards)** — front/back structure and what you see while studying.
+- **[Tags](/guide/key-concepts/tags)** — optional labels on decks and facts for organization and filtered study.
+
+Once these ideas are clear, creating decks, importing or sharing published decks, and reviewing daily becomes much more predictable.

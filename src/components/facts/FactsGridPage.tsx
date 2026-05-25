@@ -303,7 +303,7 @@ export default function FactsGridPage({ facts, meta, deck }: FactsGridPageProps)
             {t('common.all', { name: t('term.facts'), count: total })}
           </span>
           <AppTooltip content={ <p>{t('common.what-is', { name: t('term.facts') })}</p>}>
-            <AppLink className="hover:text-accent" href="/guide/getting-started/facts">
+            <AppLink className="hover:text-accent" href="/guide/key-concepts/facts">
               <CircleQuestionMark className="size-4" />
             </AppLink>
           </AppTooltip>

@@ -40,7 +40,7 @@ vi.mock('@heroui/react', () => ({
 
 const mockEntries = [
   {
-    slug: 'getting-started',
+    slug: 'key-concepts/overview',
     title: '快速开始',
     description: '了解如何快速上手使用平台',
     headings: [
@@ -239,7 +239,7 @@ describe('GuideSearchModal', () => {
       fireEvent.keyDown(screen.getByRole('textbox'), { key: 'Enter' })
 
       await waitFor(() => {
-        expect(pushMock).toHaveBeenCalledWith('/guide/getting-started')
+        expect(pushMock).toHaveBeenCalledWith('/guide/key-concepts/overview')
         expect(defaultProps.onOpenChange).toHaveBeenCalledWith(false)
       })
     })
@@ -280,7 +280,7 @@ describe('GuideSearchModal', () => {
 
       fireEvent.click(screen.getByText('快速开始'))
 
-      expect(pushMock).toHaveBeenCalledWith('/guide/getting-started')
+      expect(pushMock).toHaveBeenCalledWith('/guide/key-concepts/overview')
       expect(defaultProps.onOpenChange).toHaveBeenCalledWith(false)
     })
 

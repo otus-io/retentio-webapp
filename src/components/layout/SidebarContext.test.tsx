@@ -7,9 +7,9 @@ import type { SidebarNavItem } from '@/config/sidebar'
 const mockItems: SidebarNavItem[] = [
   { titleKey: 'guide-sidebar.guide', href: '/guide' },
   {
-    titleKey: 'guide-sidebar.getting-started',
+    titleKey: 'guide-sidebar.key-concepts',
     items: [
-      { titleKey: 'guide-sidebar.key-concepts', href: '/guide/key-concepts' },
+      { titleKey: 'guide-sidebar.overview', href: '/guide/key-concepts/overview' },
       { titleKey: 'guide-sidebar.decks', href: '/guide/decks' },
     ],
   },
@@ -45,7 +45,7 @@ describe('SidebarContext', () => {
         <Consumer />
       </SidebarProvider>,
     )
-    // /guide, /guide/key-concepts, /guide/decks = 3
+    // /guide, /guide/key-concepts/overview, /guide/decks = 3
     expect(screen.getByTestId('flattenCount').textContent).toBe('3')
   })
 
@@ -80,7 +80,7 @@ describe('SidebarContext', () => {
   it('flattenItems 过滤掉没有 href 的叶子节点', () => {
     const itemsWithNoHref: SidebarNavItem[] = [
       { titleKey: 'guide-sidebar.guide' },
-      { titleKey: 'guide-sidebar.getting-started', href: '/guide/start' },
+      { titleKey: 'guide-sidebar.key-concepts', href: '/guide/start' },
     ]
     render(
       <SidebarProvider items={itemsWithNoHref}>

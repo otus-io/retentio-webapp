@@ -44,7 +44,7 @@ export default function DecksList({
               {t('common.all', { name: t('term.decks'), count: data.length })}
             </span>
             <AppTooltip content={ <p>{t('common.what-is', { name: t('term.decks') })}</p>}>
-              <AppLink className="hover:text-accent" href="/guide/getting-started/decks">
+              <AppLink className="hover:text-accent" href="/guide/key-concepts/decks">
                 <CircleQuestionMark className="size-4" />
               </AppLink>
             </AppTooltip>

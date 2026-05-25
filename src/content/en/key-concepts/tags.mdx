@@ -1,0 +1,62 @@
+---
+title: Tags
+---
+
+# Tags
+
+**Tags** are labels you attach to **decks** and **facts** to organize and filter your material. They belong to **your account**, not to a single deck—you create a tag once and can use it on many decks and many facts.
+
+Tags are optional. Decks and facts work fine without them; tags help when you want to group content (for example `verb`, `JLPT N3`, or `hard`) or study a subset of cards in a deck.
+
+## How tags relate to decks and facts
+
+| Where    | What tags do                                                                             |
+| -------- | ---------------------------------------------------------------------------------------- |
+| **Deck** | Mark the whole deck (e.g. `Japanese`, `exam-prep`). Up to **20** tags per deck.          |
+| **Fact** | Mark individual items inside a deck (e.g. `noun`, `food`). A fact can have several tags. |
+
+**Fields** define columns on a deck; **tags** are separate metadata for filtering and organization. Facts still store **entries** only—tags are linked alongside the fact, not inside entry text.
+
+The same tag name can appear on multiple decks and multiple facts. Deleting a tag removes it everywhere it was attached.
+
+## Creating and managing tags
+
+You can add tags in two ways:
+
+1. **By name when you create content** — pass tag **names** (strings) when creating a deck or when adding facts. If a name does not exist yet, Retentio creates the tag for you and links it.
+2. **Manage tags explicitly** — create, rename, or delete tags in your library, then attach them to decks or facts.
+
+Each tag has a **name** and an optional **description**. Names must be unique for your account after normalization (trimmed, spaces collapsed, compared case-insensitively). Allowed characters include letters, numbers, spaces, hyphen (`-`), and apostrophe (`'`).
+
+**Limits:**
+
+- Up to **100** tags per user
+- Up to **20** tags on one deck
+
+## Tagging facts
+
+When you add facts, you can include optional **tags** per fact—for example tag one row as `verb` and another as `food`. Different facts in the same batch can have different tags, or none.
+
+After facts exist, you can add or remove tags on individual facts without changing their entries. Listing tags on a fact is also available without loading the full fact body.
+
+To find every fact that uses a tag across all your decks, use that tag’s fact list (by tag ID in the API).
+
+## Tagging decks
+
+When you create a deck, you can pass optional **tags** (names) in the same way—for example `IELTS` and `vocabulary`. Duplicate names in one request are merged.
+
+You can associate or remove tags on an existing deck later. Deck tags are useful for browsing and organizing your library, not for changing how individual cards are laid out.
+
+## Studying with tags
+
+During review, you can focus on cards whose facts have a given tag **in that deck**. The next-card picker and card stats can filter by `tag_id` so you only see due cards from tagged facts.
+
+Tags do not change a card’s front/back layout—they only narrow **which** cards are eligible for study.
+
+## Imported decks
+
+On decks you **import** from a published source, fact bodies are read-only, but **tags are yours**. You can label imported facts and decks for your own study filters without editing the shared content.
+
+## Summary
+
+Tags are per-user labels on **decks** and **facts** for organization and filtered study. Create them by name when adding content or manage them separately; respect the per-user and per-deck limits. They complement deck **fields** and fact **entries**, which hold the actual learning material.

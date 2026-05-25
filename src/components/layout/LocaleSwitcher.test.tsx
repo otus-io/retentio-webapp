@@ -79,13 +79,13 @@ describe('LocaleSwitcher', () => {
   it('渲染所有语言选项', () => {
     render(<LocaleSwitcher />)
     expect(screen.getByTestId('item-en')).toBeDefined()
-    expect(screen.getByTestId('item-zh-CN')).toBeDefined()
+    expect(screen.getByTestId('item-zh')).toBeDefined()
   })
 
   it('当前语言高亮显示', () => {
     render(<LocaleSwitcher />)
     const enItem = screen.getByTestId('item-en')
-    const zhItem = screen.getByTestId('item-zh-CN')
+    const zhItem = screen.getByTestId('item-zh')
     // 'en' is the current locale, indicator shows check for it
     expect(enItem.querySelector('[data-testid="item-indicator"]')).toBeDefined()
     expect(zhItem.querySelector('[data-testid="item-indicator"]')).toBeDefined()

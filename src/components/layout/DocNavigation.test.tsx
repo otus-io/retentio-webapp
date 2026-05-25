@@ -36,7 +36,7 @@ import type { AppLinkProps } from '@/components/app/AppLink'
 
 const createFlattenItems = (): SidebarNavItem[] => [
   { titleKey: 'guide-sidebar.guide', href: '/guide' },
-  { titleKey: 'guide-sidebar.key-concepts', href: '/guide/key-concepts' },
+  { titleKey: 'guide-sidebar.overview', href: '/guide/key-concepts/overview' },
   { titleKey: 'guide-sidebar.decks', href: '/guide/decks' },
 ]
 
@@ -45,7 +45,7 @@ describe('DocNavigation', () => {
     vi.mocked(useSidebar).mockReturnValue({
       flattenItems: createFlattenItems(),
     } as SidebarContextType)
-    vi.mocked(usePathname).mockReturnValue('/guide/key-concepts')
+    vi.mocked(usePathname).mockReturnValue('/guide/key-concepts/overview')
 
     render(<DocNavigation />)
     expect(screen.getByText('content.previous')).toBeDefined()
@@ -91,10 +91,10 @@ describe('DocNavigation', () => {
     vi.mocked(useSidebar).mockReturnValue({
       flattenItems: createFlattenItems(),
     } as SidebarContextType)
-    vi.mocked(usePathname).mockReturnValue('/guide/key-concepts/index')
+    vi.mocked(usePathname).mockReturnValue('/guide/key-concepts/overview/index')
 
     render(<DocNavigation />)
-    // 匹配到 /guide/key-concepts，上一篇是 /guide
+    // 匹配到 /guide/key-concepts/overview，上一篇是 /guide
     expect(screen.getByText('content.previous')).toBeDefined()
     expect(screen.getByText('guide-sidebar.guide')).toBeDefined()
   })
