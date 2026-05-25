@@ -25,13 +25,13 @@ const nextConfig: NextConfig = {
         permanent: true,
       },
       {
-        source: '/guide/getting-started/:path*',
-        destination: '/guide/key-concepts/:path*',
+        source: '/guide/getting-started/field-image-and-audio',
+        destination: '/guide/key-concepts/facts',
         permanent: true,
       },
       {
-        source: '/guide/getting-started/field-image-and-audio',
-        destination: '/guide/key-concepts/facts',
+        source: '/guide/getting-started/:path*',
+        destination: '/guide/key-concepts/:path*',
         permanent: true,
       },
       {
