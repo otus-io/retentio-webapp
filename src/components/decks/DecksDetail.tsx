@@ -75,7 +75,7 @@ export default function DecksDetail({ deck }: DecksDetailProps) {
                   ))}
                 </div>
                 <div className="ml-auto">
-                  <DecksAction deck={deck} />
+                  <DecksAction deck={deck} actions={['facts']} />
                 </div>
               </Card.Title>
             </div>

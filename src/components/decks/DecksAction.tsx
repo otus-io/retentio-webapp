@@ -9,11 +9,16 @@ import { useTranslations } from 'next-intl'
 import DeleteModal from '@/components/common/DeleteModal'
 import { deleteDeckAction } from '@/modules/decks/decks.action'
 
+type DecksActionItem = 'edit' | 'facts' | 'delete'
+
 interface DecksActionProps {
   deck: Deck,
+  actions: DecksActionItem[]
 }
 
-export default function DecksAction({ deck }: DecksActionProps) {
+
+
+export default function DecksAction({ deck, actions }: DecksActionProps) {
   const t = useTranslations()
   const router = useRouter()
   const [isOpen, setIsOpen] = useState(false)
@@ -42,24 +47,35 @@ export default function DecksAction({ deck }: DecksActionProps) {
         </Dropdown.Trigger>
         <Dropdown.Popover>
           <Dropdown.Menu onAction={handleAction}>
-            <Dropdown.Item id="edit" textValue="edit">
-              <div className="flex items-center gap-1">
-                <Pencil className="size-3.5 text-muted-foreground" />
-                <Label>{t('common.edit')}</Label>
-              </div>
-            </Dropdown.Item>
-            <Dropdown.Item id="facts" textValue="facts" variant="default">
-              <div className="flex items-center gap-1">
-                <BookA className="size-3.5 text-muted-foreground" />
-                <Label>{t('term.facts')}</Label>
-              </div>
-            </Dropdown.Item>
-            <Dropdown.Item id="delete" textValue="delete" variant="danger">
-              <div className="flex items-center gap-1">
-                <Trash2 className="size-3.5 text-danger" />
-                <Label>{t('common.delete')}</Label>
-              </div>
-            </Dropdown.Item>
+            {actions.includes('edit') && (
+              <Dropdown.Item id="edit" textValue="edit">
+                <div className="flex items-center gap-1">
+                  <Pencil className="size-3.5 text-muted-foreground" />
+                  <Label>{t('common.edit')}</Label>
+                </div>
+              </Dropdown.Item>
+            )
+            }
+            {
+              actions.includes('facts') && (
+                <Dropdown.Item id="facts" textValue="facts" variant="default">
+                  <div className="flex items-center gap-1">
+                    <BookA className="size-3.5 text-muted-foreground" />
+                    <Label>{t('term.facts')}</Label>
+                  </div>
+                </Dropdown.Item>
+              )
+            }
+            {
+              actions.includes('delete') && (
+                <Dropdown.Item id="delete" textValue="delete" variant="danger">
+                  <div className="flex items-center gap-1">
+                    <Trash2 className="size-3.5 text-danger" />
+                    <Label>{t('common.delete')}</Label>
+                  </div>
+                </Dropdown.Item>
+              )
+            }
           </Dropdown.Menu>
         </Dropdown.Popover>
       </Dropdown>

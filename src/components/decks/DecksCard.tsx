@@ -49,7 +49,7 @@ export default function DecksCard({
                 />
               </AppLink>
             </Card.Title>
-            <DecksAction deck={deck} />
+            <DecksAction deck={deck} actions={['edit', 'delete']} />
           </div>
         </Card.Header>
 
