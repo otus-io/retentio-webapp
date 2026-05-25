@@ -10,12 +10,16 @@ interface DeleteModalProps {
   action: ActionFunction
   isOpen: boolean,
   setIsOpen: (isOpen: boolean) => void
+  type?: 'single' | 'multiple'
+  deleteCount?: number
 }
 
 export default function DeleteModal({
   action: deleteAction,
   isOpen,
   setIsOpen,
+  type = 'single',
+  deleteCount = 1,
 }: DeleteModalProps) {
   const t = useTranslations()
   const [_state, action, isPending] = useActionState(deleteAction, null)
@@ -35,7 +39,7 @@ export default function DeleteModal({
           </AlertDialog.Header>
           <AlertDialog.Body>
             <p>
-              {t('common.delete-confirm')}
+              {type === 'single' ? t('common.delete-confirm-single') : t('common.delete-confirm-multiple', { count: deleteCount })}
             </p>
           </AlertDialog.Body>
           <AlertDialog.Footer>

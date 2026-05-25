@@ -36,10 +36,11 @@ vi.mock('@/components/app/AppButton', () => ({
 }))
 
 vi.mock('next-intl', () => ({
-  useTranslations: () => (key: string) => {
+  useTranslations: () => (key: string, params?: { count?: number }) => {
     const map: Record<string, string> = {
       'common.tips': '提示',
-      'common.delete-confirm': '确认删除？',
+      'common.delete-confirm-single': '确认删除？',
+      'common.delete-confirm-multiple': `确认删除 ${params?.count ?? 0} 项？`,
       'common.cancel': '取消',
       'common.confirm': '确认',
     }
@@ -67,6 +68,21 @@ describe('DeleteModal', () => {
   })
 
   it('显示确认删除文案', () => {
+    render(<DeleteModal {...defaultProps} />)
+    expect(screen.getByText('确认删除？')).toBeDefined()
+  })
+
+  it('type 为 multiple 时显示多条删除确认文案', () => {
+    render(<DeleteModal {...defaultProps} type="multiple" deleteCount={5} />)
+    expect(screen.getByText(/5/)).toBeDefined()
+  })
+
+  it('type 为 single 时显示单条删除确认文案', () => {
+    render(<DeleteModal {...defaultProps} type="single" />)
+    expect(screen.getByText('确认删除？')).toBeDefined()
+  })
+
+  it('默认使用 single 类型', () => {
     render(<DeleteModal {...defaultProps} />)
     expect(screen.getByText('确认删除？')).toBeDefined()
   })
