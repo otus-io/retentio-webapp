@@ -24,6 +24,12 @@ This guide walks you through using the Retentio API via Swagger UI.
   - [Update a Deck](#update-a-deck)
   - [Delete a Deck](#delete-a-deck)
   - [Reschedule deck](#reschedule-deck)
+  - [Deck sharing (overview)](#deck-sharing-overview)
+  - [Publish a deck](#publish-a-deck)
+  - [Import a published deck](#import-a-published-deck)
+  - [Get import updates (diff)](#get-import-updates-diff)
+  - [Sync an imported deck](#sync-an-imported-deck)
+  - [Sharing: extended deck & fact behavior](#sharing-extended-deck--fact-behavior)
 - [3. Facts](#3-facts)
   - [Add Facts](#add-facts)
   - [Get all facts](#get-all-facts)
@@ -82,49 +88,53 @@ This guide walks you through using the Retentio API via Swagger UI.
 
 ## API Reference
 
-| Endpoint                                      | Method | Description                                                                                                                                                                                     |
-| --------------------------------------------- | ------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `/auth/register`                              | POST   | Register user                                                                                                                                                                                   |
-| `/auth/login`                                 | POST   | Login                                                                                                                                                                                           |
-| `/auth/logout`                                | POST   | Logout (invalidate token)                                                                                                                                                                       |
-| `/auth/forgot-password`                       | POST   | Request password reset token                                                                                                                                                                    |
-| `/auth/reset-password`                        | POST   | Reset password with token                                                                                                                                                                       |
-| `/api/profile`                                | GET    | Get current user profile                                                                                                                                                                        |
-| `/api/decks`                                  | POST   | Create deck                                                                                                                                                                                     |
-| `/api/decks`                                  | GET    | List all decks                                                                                                                                                                                  |
-| `/api/decks/{id}`                             | GET    | Get deck details                                                                                                                                                                                |
-| `/api/decks/{id}`                             | PATCH  | Update deck                                                                                                                                                                                     |
-| `/api/decks/{id}`                             | DELETE | Delete deck                                                                                                                                                                                     |
-| `/api/decks/{id}/facts/{operation}`           | POST   | Add facts (operation: `append`, `prepend`, `shuffle`, `spread`). Body: `facts` (required) and optional `template`. To add a card for an existing fact, use POST `/api/decks/{id}/card` instead. |
-| `/api/decks/{id}/facts`                       | GET    | List facts (paged): default `limit` **50**, `offset` **0**; max `limit` **200**. `meta`: `count`, `has_more`, `limit`, `offset`, `total`.                                                       |
-| `/api/decks/{id}/facts/{factId}`              | GET    | Get a specific fact                                                                                                                                                                             |
-| `/api/decks/{id}/facts/{factId}`              | PATCH  | Update a fact                                                                                                                                                                                   |
-| `/api/decks/{id}/facts/{factId}`              | DELETE | Delete a fact                                                                                                                                                                                   |
-| `/api/decks/{id}/card`                        | GET    | Get most urgent card                                                                                                                                                                            |
-| `/api/decks/{id}/card`                        | POST   | Add one card from an existing fact (e.g. reversed). Body: `fact_id`, `template`, optional `operation`.                                                                                          |
-| `/api/decks/{id}/card`                        | PATCH  | Update card interval or visibility (by card_id)                                                                                                                                                 |
-| `/api/decks/{id}/cards`                       | GET    | Get card stats (total, hidden count, hidden facts)                                                                                                                                              |
-| `/api/decks/{id}/cards/{cardId}`              | DELETE | Delete a single card (fact and other cards unchanged)                                                                                                                                           |
-| `/api/decks/{id}/reschedule`                  | POST   | Reschedule deck cards (shift due dates by N days)                                                                                                                                               |
-| `/api/tags`                                   | POST   | Create a tag (`name`, optional `description`). **201** on success.                                                                                                                              |
-| `/api/tags`                                   | GET    | List all tags for the current user                                                                                                                                                              |
-| `/api/tags/{tagId}`                           | GET    | Get one tag                                                                                                                                                                                     |
-| `/api/tags/{tagId}`                           | PATCH  | Update tag `name` and/or `description` (partial)                                                                                                                                                |
-| `/api/tags/{tagId}`                           | DELETE | Delete tag and all deck/fact associations                                                                                                                                                       |
-| `/api/tags/{tagId}/facts`                     | GET    | List `{deck_id, fact_id}` pairs for facts tagged with this tag (all your decks)                                                                                                                 |
-| `/api/decks/{id}/tags/{tagId}`                | PUT    | Associate an existing tag with a deck (no body)                                                                                                                                                 |
-| `/api/decks/{id}/tags/{tagId}`                | DELETE | Remove tag from deck                                                                                                                                                                            |
-| `/api/decks/{id}/tags`                        | GET    | List tags on a deck                                                                                                                                                                             |
-| `/api/decks/{id}/facts/{factId}/tags/{tagId}` | PUT    | Associate an existing tag with a fact (no body)                                                                                                                                                 |
-| `/api/decks/{id}/facts/{factId}/tags/{tagId}` | DELETE | Remove tag from fact                                                                                                                                                                            |
-| `/api/decks/{id}/facts/{factId}/tags`         | GET    | List tags on one fact only                                                                                                                                                                      |
-| `/api/media`                                  | POST   | Upload media (audio/image)                                                                                                                                                                      |
-| `/api/media`                                  | GET    | List user's media (sync manifest)                                                                                                                                                               |
-| `/api/media/shared`                           | GET    | List or lookup shared media (`?word=...&lang=...`)                                                                                                                                              |
-| `/api/media/shared/{id}`                      | GET    | Download shared media file                                                                                                                                                                      |
-| `/api/media/{id}/meta`                        | GET    | Get media metadata (no file body)                                                                                                                                                               |
-| `/api/media/{id}`                             | GET    | Download media file                                                                                                                                                                             |
-| `/api/media/{id}`                             | DELETE | Delete media                                                                                                                                                                                    |
+| Endpoint                                      | Method | Description                                                                                                                                                                                                                                                                                                                                                                                    |
+| --------------------------------------------- | ------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `/auth/register`                              | POST   | Register user                                                                                                                                                                                                                                                                                                                                                                                  |
+| `/auth/login`                                 | POST   | Login                                                                                                                                                                                                                                                                                                                                                                                          |
+| `/auth/logout`                                | POST   | Logout (invalidate token)                                                                                                                                                                                                                                                                                                                                                                      |
+| `/auth/forgot-password`                       | POST   | Request password reset token                                                                                                                                                                                                                                                                                                                                                                   |
+| `/auth/reset-password`                        | POST   | Reset password with token                                                                                                                                                                                                                                                                                                                                                                      |
+| `/api/profile`                                | GET    | Get current user profile                                                                                                                                                                                                                                                                                                                                                                       |
+| `/api/decks`                                  | POST   | Create deck. Body: `name`, **`fields`** (≥1 column name, required), **`rate`** (required, 1–1000), optional **`tags`**.                                                                                                                                                                                                                                                                        |
+| `/api/decks`                                  | GET    | List all decks                                                                                                                                                                                                                                                                                                                                                                                 |
+| `/api/decks/{id}`                             | GET    | Get deck details. Source decks include `visibility`, `published_version`. Import decks include `source_deck_id`, `source_version`, `imported_at`.                                                                                                                                                                                                                                              |
+| `/api/decks/{id}`                             | PATCH  | Update deck. Source: optional `visibility` before first publish. Import: **`rate` only** (not `name`, `fields`, or `visibility`).                                                                                                                                                                                                                                                              |
+| `/api/decks/{id}`                             | DELETE | Delete deck. **409** if source deck has `published_version > 0`. Import decks revoke media grants on delete.                                                                                                                                                                                                                                                                                   |
+| `/api/decks/import`                           | POST   | **(Sharing)** Create an import study copy from a published public source deck. Body: `source_deck_id`. **201**.                                                                                                                                                                                                                                                                                |
+| `/api/decks/{id}/publish`                     | POST   | **(Sharing)** Author: snapshot working copy into next `published_version`. First publish requires `visibility: "public"`. **200**.                                                                                                                                                                                                                                                             |
+| `/api/decks/{id}/updates`                     | GET    | **(Sharing)** Importer: diff between pinned `source_version` and source’s latest publish. Import deck only.                                                                                                                                                                                                                                                                                    |
+| `/api/decks/{id}/sync`                        | POST   | **(Sharing)** Importer: accept a newer snapshot (optional `target_version`). Import deck only. **200**.                                                                                                                                                                                                                                                                                        |
+| `/api/decks/{id}/facts/{operation}`           | POST   | Add facts (operation: `append`, `prepend`, `shuffle`, `spread`). Body: `facts` (required), optional `template`, and optional **`tags`** per fact item (tag **names**; auto-created if missing). Column labels live on the deck (`PATCH /api/decks/{id}` → `fields`), not on each fact. To add a card for an existing fact, use POST `/api/decks/{id}/card` instead. **403** on imported decks. |
+| `/api/decks/{id}/facts`                       | GET    | List facts (paged): default `limit` **50**, `offset` **0**; max `limit` **200**. `meta`: `count`, `has_more`, `limit`, `offset`, `total`.                                                                                                                                                                                                                                                      |
+| `/api/decks/{id}/facts/{factId}`              | GET    | Get a specific fact                                                                                                                                                                                                                                                                                                                                                                            |
+| `/api/decks/{id}/facts/{factId}`              | PATCH  | Update a fact’s `entries` only (column names are edited on the deck). **403** on imported decks.                                                                                                                                                                                                                                                                                               |
+| `/api/decks/{id}/facts/{factId}`              | DELETE | Delete a fact. **403** on imported decks.                                                                                                                                                                                                                                                                                                                                                      |
+| `/api/decks/{id}/card`                        | GET    | Get most urgent card. Optional query: `tag_id` to restrict selection to cards whose facts have this tag in this deck.                                                                                                                                                                                                                                                                          |
+| `/api/decks/{id}/card`                        | POST   | Add one card from an existing fact (e.g. reversed). Body: `fact_id`, `template`, optional `operation`.                                                                                                                                                                                                                                                                                         |
+| `/api/decks/{id}/card`                        | PATCH  | Update card interval or visibility (by card_id)                                                                                                                                                                                                                                                                                                                                                |
+| `/api/decks/{id}/cards`                       | GET    | Get card stats (total, hidden count, hidden facts). Optional query: `tag_id` to filter cards by fact tag in this deck.                                                                                                                                                                                                                                                                         |
+| `/api/decks/{id}/cards/{cardId}`              | DELETE | Delete a single card (fact and other cards unchanged)                                                                                                                                                                                                                                                                                                                                          |
+| `/api/decks/{id}/reschedule`                  | POST   | Reschedule deck cards (shift due dates by N days)                                                                                                                                                                                                                                                                                                                                              |
+| `/api/tags`                                   | POST   | Create a tag (`name`, optional `description`). **201** on success.                                                                                                                                                                                                                                                                                                                             |
+| `/api/tags`                                   | GET    | List all tags for the current user                                                                                                                                                                                                                                                                                                                                                             |
+| `/api/tags/{tagId}`                           | GET    | Get one tag                                                                                                                                                                                                                                                                                                                                                                                    |
+| `/api/tags/{tagId}`                           | PATCH  | Update tag `name` and/or `description` (partial)                                                                                                                                                                                                                                                                                                                                               |
+| `/api/tags/{tagId}`                           | DELETE | Delete tag and all deck/fact associations                                                                                                                                                                                                                                                                                                                                                      |
+| `/api/tags/{tagId}/facts`                     | GET    | List `{deck_id, fact_id}` pairs for facts tagged with this tag (all your decks)                                                                                                                                                                                                                                                                                                                |
+| `/api/decks/{id}/tags/{tagId}`                | PUT    | Associate an existing tag with a deck (no body)                                                                                                                                                                                                                                                                                                                                                |
+| `/api/decks/{id}/tags/{tagId}`                | DELETE | Remove tag from deck                                                                                                                                                                                                                                                                                                                                                                           |
+| `/api/decks/{id}/tags`                        | GET    | List tags on a deck                                                                                                                                                                                                                                                                                                                                                                            |
+| `/api/decks/{id}/facts/{factId}/tags/{tagId}` | PUT    | Associate an existing tag with a fact (no body)                                                                                                                                                                                                                                                                                                                                                |
+| `/api/decks/{id}/facts/{factId}/tags/{tagId}` | DELETE | Remove tag from fact                                                                                                                                                                                                                                                                                                                                                                           |
+| `/api/decks/{id}/facts/{factId}/tags`         | GET    | List tags on one fact only                                                                                                                                                                                                                                                                                                                                                                     |
+| `/api/media`                                  | POST   | Upload media (audio/image)                                                                                                                                                                                                                                                                                                                                                                     |
+| `/api/media`                                  | GET    | List user's media (sync manifest)                                                                                                                                                                                                                                                                                                                                                              |
+| `/api/media/shared`                           | GET    | List or lookup shared media (`?word=...&lang=...`)                                                                                                                                                                                                                                                                                                                                             |
+| `/api/media/shared/{id}`                      | GET    | Download shared media file                                                                                                                                                                                                                                                                                                                                                                     |
+| `/api/media/{id}/meta`                        | GET    | Get media metadata (no file body)                                                                                                                                                                                                                                                                                                                                                              |
+| `/api/media/{id}`                             | GET    | Download media file                                                                                                                                                                                                                                                                                                                                                                            |
+| `/api/media/{id}`                             | DELETE | Delete media                                                                                                                                                                                                                                                                                                                                                                                   |
 
 ---
 
@@ -244,6 +254,37 @@ Requires the `Authorization: Bearer <token>` header. Invalidates the token so it
 
 ## 2. Decks
 
+### Deck, facts, and cards (relationship)
+
+A **deck** is the study container: metadata (`name`, `fields`, `rate`, owner) plus two membership lists — which **facts** belong to the deck and which **cards** you review. **Facts** hold the vocabulary content (`entries`: text and optional media ids). **Cards** are the schedulable review units: each card points at one fact via `fact_id` and stores a **template** (which entry indices are front vs back) plus spaced-repetition state (`due_date`, `last_review`, `hidden`).
+
+Column labels (`English`, `Japanese`, …) live on the **deck** only (`fields`). Facts do not store column names; entry index `0` is the first column, `1` the second, and so on.
+
+| Concept  | Role                                       | Typical API                                                                             |
+| -------- | ------------------------------------------ | --------------------------------------------------------------------------------------- |
+| **Deck** | Container + column schema + daily `rate`   | `POST/GET/PATCH/DELETE /api/decks/{id}`                                                 |
+| **Fact** | Immutable-ish content you learn (entries)  | `POST …/facts/{operation}`, `GET/PATCH/DELETE …/facts/{factId}`                         |
+| **Card** | One reviewable direction/layout for a fact | Created with facts (default template) or `POST …/card`; reviewed via `GET/PATCH …/card` |
+
+#### Cardinality
+
+- One deck → many facts (set membership).
+- One deck → many cards (set membership).
+- One fact in a deck → **one or more** cards (default: one card; **sibling** cards = same fact, different `template`, e.g. reversed).
+- One card → exactly one `fact_id` (must stay in the deck’s fact set).
+
+#### Lifecycle (source deck)
+
+1. Create deck → empty fact/card sets.
+2. Add facts → new `fact:{id}` rows + new card(s) per fact + `SADD` into deck sets.
+3. Study → `GET …/card` picks the most urgent card in the deck; response joins card + fact + template.
+4. Delete fact → removes that fact and **all** cards in the deck that reference it.
+5. Delete card → removes only that card; fact and other cards for the same fact remain.
+
+**Imported decks ([sharing](#deck-sharing-overview)):** fact **bodies** are read-only (pinned snapshot); deck metadata is mostly snapshot-driven — importers may **`PATCH` only `rate`** on the import deck. The importer still owns a **separate card set** with full card `PATCH` / hide / delete behavior. Tags on import decks are importer-scoped labels — see [§4 Tags](#4-tags).
+
+---
+
 ### Create a Deck
 
 **Endpoint:** `POST /api/decks`
@@ -252,9 +293,24 @@ Requires the `Authorization: Bearer <token>` header. Invalidates the token so it
 {
   "fields": ["English", "Japanese"],
   "name": "English Japanese IELTS Deck",
-  "rate": 20
+  "rate": 20,
+  "tags": ["IELTS", "vocabulary"]
 }
 ```
+
+#### Optional tags (on create)
+
+The request may include optional **`tags`**: an array of tag **names** (strings), not tag IDs. Omit the field or use `[]` for an untagged deck.
+
+| Behavior            | Detail                                                                                                 |
+| ------------------- | ------------------------------------------------------------------------------------------------------ |
+| **Validation**      | Same name rules as [`POST /api/tags`](#create-a-tag). Invalid names → **400**.                         |
+| **Reuse**           | Existing user tags (by normalized name) are reused.                                                    |
+| **Create**          | Missing names are auto-created; counts toward **100 tags per user**.                                   |
+| **Dedup**           | Duplicate names in the same request (e.g. `"Noun"` and `" noun "`) collapse to one association.        |
+| **Limit**           | At most **20** distinct tags on the deck after resolution → **400** `maximum tags per deck reached`.   |
+| **Storage**         | Tags are not stored in deck JSON; use [`GET /api/decks/{id}/tags`](#list-tags-on-a-deck) after create. |
+| **Create response** | Returns only `deck_id` — not tag objects.                                                              |
 
 > **Understanding `rate`:**
 >
@@ -280,6 +336,9 @@ Requires the `Authorization: Bearer <token>` header. Invalidates the token so it
 ```
 
 > 📝 Save the `deck_id` - you'll need it for the next steps.
+> **`fields`:** Required — at least one column name (same order as `entries` indices when studying). Empty array → **400** `fields must contain at least one column name`.
+> **`rate`:** Required — integer 1–1000. Omitted → **400**.
+> To rename columns on a **source** deck later, **`PATCH /api/decks/{id}`** with a non-empty `fields` array that **replaces** the list.
 > **Why no template on deck?** Templates are not stored on the deck. When you add facts, you can pass an optional `template` (see [Add Facts](#add-facts)). By default you get **one card per fact** (front = first entry, back = rest). To get **sibling cards** (multiple cards from the same fact), send a 3D template—see below.
 
 ---
@@ -300,7 +359,7 @@ Requires the `Authorization: Bearer <token>` header. Invalidates the token so it
     "id": "a1b2c3d4e5f6",
     "name": "English Japanese IELTS Deck",
     "owner": "swagger",
-    "field": ["English", "Japanese"],
+    "fields": ["English", "Japanese"],
     "rate": 20,
     "stats": {
       "cards_count": 0,
@@ -313,13 +372,30 @@ Requires the `Authorization: Bearer <token>` header. Invalidates the token so it
       "last_reviewed_at": 0
     },
     "created_at": "2026-02-08T12:00:00Z",
-    "updated_at": "2026-02-08T12:00:00Z"
+    "updated_at": "2026-02-08T12:00:00Z",
+    "visibility": "public",
+    "published_version": 2
   },
   "meta": {
     "msg": "Deck retrieved successfully"
   }
 }
 ```
+
+**Source deck (author)** — optional fields when you own the canonical deck:
+
+| Field               | Description                                                     |
+| ------------------- | --------------------------------------------------------------- |
+| `visibility`        | `private` (default) or `public`. Who may import once published. |
+| `published_version` | Latest published snapshot version. `0` = never published.       |
+
+**Import deck (subscriber)** — optional fields when `source_deck_id` is set:
+
+| Field            | Description                                     |
+| ---------------- | ----------------------------------------------- |
+| `source_deck_id` | Author’s source deck ID (12 characters).        |
+| `source_version` | Pinned snapshot version for fact/media reads.   |
+| `imported_at`    | ISO 8601 timestamp when the import was created. |
 
 ### List All Decks
 
@@ -335,7 +411,7 @@ Requires the `Authorization: Bearer <token>` header. Invalidates the token so it
         "id": "a1b2c3d4e5f6",
         "name": "English Japanese IELTS Deck",
         "owner": "swagger",
-        "field": ["English", "Japanese"],
+        "fields": ["English", "Japanese"],
         "rate": 20,
         "stats": {
           "cards_count": 0,
@@ -389,6 +465,8 @@ Requires the `Authorization: Bearer <token>` header. Invalidates the token so it
 > By default you get **one card per fact** (see [Template: default and sibling cards](#template-default-and-sibling-cards)). To add another card for a fact (e.g. reversed), use `POST /api/decks/{id}/card` with body `{"fact_id": "<factId>", "template": [[1], [0]]}`. The backend returns 400 if that template already exists for the fact.
 >
 > To calculate a progress percentage on the client side: `reviewed_cards / cards_count * 100`.
+>
+> List entries use the same optional sharing fields as [Get a Single Deck](#get-a-single-deck) (`visibility` / `published_version` on source decks; `source_deck_id` / `source_version` / `imported_at` on imports).
 
 ### Update a Deck
 
@@ -404,17 +482,21 @@ Requires the `Authorization: Bearer <token>` header. Invalidates the token so it
 {
   "name": "Updated Deck Name",
   "fields": ["English", "Japanese"],
-  "rate": 30
+  "rate": 30,
+  "visibility": "public"
 }
 ```
 
-> All fields are optional except `name`. If `fields` is provided,
-> the count must match the existing number of fields.
-> `rate` must be between 1 and 1000.
+> **Source decks:** all keys except `name` are optional. **`name`** is required on every request.
+> **`visibility`** (`private` \| `public`) applies to **source decks only**, and only while `published_version == 0`. After the first successful publish, visibility is **immutable** (omit the field or repeat the current value → **400** if you send a different value).
+> If **`fields`** is sent as a **non-empty** array on a source deck, it **replaces** the deck’s column-name list (any length ≥ 1). Omit `fields` or send an empty array to leave column names unchanged.
+> **`rate`** must be between 1 and 1000 when provided.
+>
+> **Imported decks** (`source_deck_id` set): only **`rate`** may change. **`rate`** is **required** on every PATCH (e.g. `{ "rate": 30 }` only). Do **not** send **`name`** or **`fields`** (even unchanged values) → **400** `cannot change name on an imported deck` / `cannot change fields on an imported deck`. Non-empty **`visibility`** → **400**. Deck title and column schema follow the pinned snapshot and are refreshed from the author on [sync](#sync-an-imported-deck).
 
-When **`rate`** is present and **differs** from the stored deck rate, the server applies a **gap-only restagger** to **unseen** cards (`DueDate - LastReview == 1`): the first unseen card in load order keeps its timestamps; each following unseen gets `DueDate` spaced by **`86400 / new_rate`** seconds from the previous unseen’s `DueDate` (same gap definition as new-card introduction). **Seen** cards are unchanged. Deck JSON and card keys are updated in **one** Redis transaction. If `rate` is omitted or unchanged, card timestamps are not rewritten.
+When **`rate`** is present and **differs** from the stored deck rate, the server applies a **gap-only restagger** to **unseen** cards (`DueDate - LastReview == 1`): unseen rows are ordered by **introduction queue** (`DueDate` ascending, then `card_id`); the **first** in that order (earliest due) keeps its timestamps; each following unseen gets `DueDate` spaced by **`86400 / new_rate`** seconds from the previous unseen’s `DueDate` (same gap definition as new-card introduction). **Seen** cards are unchanged. Deck JSON and card keys are updated in **one** Redis transaction. If `rate` is omitted or unchanged, card timestamps are not rewritten.
 
-See backend [rate-change-update.md](../../retentio-backend/docs/design-doc/rate-change-update.md) for the full design.
+See [rate-change-update.md](../design-doc/rate-change-update.md) for the full design.
 
 **Response:**
 
@@ -438,7 +520,13 @@ See backend [rate-change-update.md](../../retentio-backend/docs/design-doc/rate-
 
 - `id`: `a1b2c3d4e5f6` (your deck ID)
 
-> This permanently deletes the deck and all its associated facts and cards.
+> This permanently deletes the deck and all its associated facts and cards (importer-owned keys only for import decks; versioned snapshots and the author’s working copy are not removed).
+
+| Deck kind                                | Delete behavior                                                                                 |
+| ---------------------------------------- | ----------------------------------------------------------------------------------------------- |
+| **Source** with `published_version == 0` | Allowed (**200**).                                                                              |
+| **Source** with `published_version > 0`  | **409** — `published decks cannot be deleted`.                                                  |
+| **Import**                               | Allowed (**200**). Revokes `user:{you}:readable_media_versions` grants created for this import. |
 
 **Response:**
 
@@ -480,31 +568,318 @@ Shifts due dates and last_review of all cards in the deck by N days (1–365). O
 
 ---
 
+## Deck sharing (overview)
+
+User-to-user deck sharing lets an **author** publish versioned snapshots of a deck so other users can **import** a personal study copy. Each import is a **new deck** owned by the importer with its own cards and scheduling; **facts and embedded media** are read-only and resolved through pinned snapshot versions.
+
+See [deck-sharing-feature.md](../design-doc/deck-sharing-feature.md) for the full design.
+
+### Concepts
+
+| Term             | Meaning                                                                               |
+| ---------------- | ------------------------------------------------------------------------------------- |
+| **Source deck**  | Author’s working copy (`source_deck_id` empty). Full fact/media CRUD.                 |
+| **Publish**      | Snapshot working copy → immutable `v1`, `v2`, … (`published_version`).                |
+| **Import deck**  | New deck owned by importer; `source_deck_id` + pinned `source_version`.               |
+| **Working copy** | Live `fact:{id}` / `media:{id}` — visible to author only until published.             |
+| **Snapshot**     | `deck:{src}:snapshot:v{N}` manifest + versioned `fact:{id}:v{N}` / `media:{id}:v{N}`. |
+
+**Rules:**
+
+- First publish must use **`visibility: "public"`** (imports require a public, published source).
+- After first publish, **visibility cannot change** and the **source deck cannot be deleted** (**409**).
+- Author edits to the working copy are **invisible** to importers until the author publishes again.
+- Importers **opt in** to updates via `GET …/updates` + `POST …/sync` (no auto-sync).
+- Republish uses **copy-on-write**: only facts/media whose content changed get a new version in the manifest; unchanged rows reuse prior versions (so update diffs list only real changes).
+
+All sharing routes require **`Authorization: Bearer <token>`** (same as other `/api` routes).
+
+---
+
+### Publish a deck
+
+**Endpoint:** `POST /api/decks/{id}/publish`
+
+**Who:** Owner of a **source** deck (not an import row).
+
+**Request body:**
+
+```json
+{
+  "visibility": "public"
+}
+```
+
+| Case                                         | `visibility` in body                                                                                             |
+| -------------------------------------------- | ---------------------------------------------------------------------------------------------------------------- |
+| **First publish** (`published_version == 0`) | **Required** — must be `"public"`.                                                                               |
+| **Republish** (`published_version > 0`)      | Omit, or send exactly the stored value. A different value → **400** `cannot change visibility after publishing`. |
+
+**Success (200):**
+
+```json
+{
+  "data": {
+    "published_version": 2,
+    "visibility": "public"
+  },
+  "meta": {
+    "msg": "published"
+  }
+}
+```
+
+**Server behavior:** Increments `published_version`, writes `deck:{id}:snapshot:v{N}`, copy-on-write versioned facts/media, updates deck `visibility` on first publish.
+
+**Errors:**
+
+| Status  | Typical `msg`                                                                                                                                    |
+| ------- | ------------------------------------------------------------------------------------------------------------------------------------------------ |
+| **400** | `first publish requires visibility public`, `invalid visibility`, `cannot change visibility after publishing`, `cannot publish an imported deck` |
+| **403** | `Not authorized`                                                                                                                                 |
+| **404** | `Deck not found`                                                                                                                                 |
+| **409** | `no changes to publish` (working copy identical to previous snapshot)                                                                            |
+
+---
+
+### Import a published deck
+
+**Endpoint:** `POST /api/decks/import`
+
+**Who:** Any authenticated user (need not own the source).
+
+**Request body:**
+
+```json
+{
+  "source_deck_id": "a1b2c3d4e5f6"
+}
+```
+
+`source_deck_id` is required (empty → **400** `source_deck_id is required`).
+
+**Success (201):**
+
+```json
+{
+  "data": {
+    "id": "z9y8x7w6v5u4",
+    "source_deck_id": "a1b2c3d4e5f6",
+    "source_version": 3,
+    "imported_at": "2026-05-22T12:00:00.000000000Z"
+  },
+  "meta": {
+    "msg": "imported"
+  }
+}
+```
+
+Use **`data.id`** as the import deck ID for study and for `GET/POST …/updates` and `…/sync`.
+
+**Requirements on source:**
+
+- Deck exists.
+- `published_version > 0`.
+- `visibility` is **`public`** (effective visibility).
+- Source is not itself an import (`cannot import an imported deck`).
+
+**Errors:**
+
+| Status  | Typical `msg`                                                                                           |
+| ------- | ------------------------------------------------------------------------------------------------------- |
+| **404** | `source deck not found`                                                                                 |
+| **403** | `source deck is not importable`, `source deck has not been published`, `cannot import an imported deck` |
+| **400** | Other validation failures                                                                               |
+
+---
+
+### Get import updates (diff)
+
+**Endpoint:** `GET /api/decks/{importId}/updates`
+
+**Who:** Owner of an **import** deck.
+
+**Request:** No body.
+
+**Success (200):** Diff from the import’s pinned `source_version` to the source’s latest `published_version`.
+
+```json
+{
+  "data": {
+    "source_version": 3,
+    "latest_version": 5,
+    "added_facts": [{ "fact_id": "abcd1234" }],
+    "removed_facts": [{ "fact_id": "efgh5678" }],
+    "edited_facts": [
+      {
+        "fact_id": "ijkl9012",
+        "before": {
+          "id": "ijkl9012",
+          "entries": [{ "text": "old" }, { "text": "old2" }]
+        },
+        "after": {
+          "id": "ijkl9012",
+          "entries": [{ "text": "new" }, { "text": "old2" }]
+        }
+      }
+    ],
+    "media_changes": [
+      {
+        "media_id": "pron123456",
+        "before_hash": "sha256:abc…",
+        "after_hash": "sha256:def…",
+        "before_bytes": 12345,
+        "after_bytes": 23456
+      }
+    ],
+    "change_summary": ""
+  },
+  "meta": {
+    "msg": "ok"
+  }
+}
+```
+
+When already up to date: `source_version == latest_version` and diff arrays are empty.
+
+`edited_facts` lists only facts whose **versioned content** differs between snapshots (not every fact in the deck).
+
+**Errors:**
+
+| Status  | Typical `msg`                                                      |
+| ------- | ------------------------------------------------------------------ |
+| **400** | `updates are only available for imported decks`, or source missing |
+| **403** | `Not authorized`                                                   |
+| **404** | `Deck not found`                                                   |
+
+---
+
+### Sync an imported deck
+
+**Endpoint:** `POST /api/decks/{importId}/sync`
+
+**Who:** Owner of the import deck.
+
+**Request body (optional):**
+
+```json
+{
+  "target_version": 5
+}
+```
+
+| Field            | Behavior                                                                    |
+| ---------------- | --------------------------------------------------------------------------- |
+| Omitted or `0`   | Advance to the source’s current `published_version`.                        |
+| `target_version` | Must satisfy `source_version < target_version <= source.published_version`. |
+
+**Success (200):**
+
+```json
+{
+  "data": {
+    "source_version": 5
+  },
+  "meta": {
+    "msg": "synced"
+  }
+}
+```
+
+**Server behavior:** Bumps pinned version; rebuilds import fact set from target manifest; removes importer cards for deleted facts; adds cards for new facts; updates `user:{importer}:readable_media_versions` grants. Also copies **`name`**, **`fields`**, and **`rate`** from the target snapshot manifest into the import deck row (overwriting any prior importer `rate` set via PATCH).
+
+**Errors:**
+
+| Status  | Typical `msg`                                       |
+| ------- | --------------------------------------------------- |
+| **400** | `not an imported deck`, `invalid target version`, … |
+| **403** | `Not authorized`                                    |
+| **404** | `Deck not found`                                    |
+
+---
+
+### Sharing: extended deck & fact behavior
+
+#### PATCH deck on import decks
+
+| Field            | Import deck                                                                                                                                                             |
+| ---------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **`rate`**       | **Required.** Only mutable deck field. Must be 1–1000. Changing rate restaggers **unseen** cards the same way as on source decks (see [Update a Deck](#update-a-deck)). |
+| **`name`**       | Locked to snapshot / sync. Must be **omitted** (non-empty value → **400** `cannot change name on an imported deck`).                                                    |
+| **`fields`**     | Locked. Must be **omitted** (non-empty array → **400** `cannot change fields on an imported deck`).                                                                     |
+| **`visibility`** | Not applicable. Non-empty value → **400** `cannot change visibility on an imported deck`.                                                                               |
+
+Omitting **`rate`** on an import deck PATCH → **400** `Rate is required for imported deck updates`.
+
+#### Facts on import decks
+
+| Method                | Path                                        | Import deck                                                     |
+| --------------------- | ------------------------------------------- | --------------------------------------------------------------- |
+| GET                   | `/api/decks/{id}/facts`, `…/facts/{factId}` | Reads **versioned snapshot** content (not author working copy). |
+| POST / PATCH / DELETE | facts routes                                | **403** `cannot modify facts on an imported deck`               |
+
+#### Cards on import decks
+
+Same as a normal owned deck: `GET/POST/PATCH/DELETE` card routes work; scheduling and templates are importer-specific.
+
+#### Media for importers
+
+- Importers download author media via `GET /api/media/{id}` when `(media_id, version)` is granted in `user:{username}:readable_media_versions` (member format `mediaId@version`).
+- Bytes are served from the **versioned** blob, not the author’s working copy.
+- If multiple grants exist for the same `media_id`, use query **`?v=<version>`** (required when ambiguous).
+- Importers cannot upload or delete another user’s working-copy media.
+
+#### Tags on import decks
+
+Tag associations are keyed by the **importer** (independent from the author). Fact tag mutations that imply editing read-only fact bodies may still be restricted; see tag routes in [§4 Tags](#4-tags).
+
+---
+
 ## 3. Facts
 
 ### Add Facts
 
 **Endpoint:** `POST /api/decks/{id}/facts/{operation}`
 
+> **Imported decks:** **403** `cannot modify facts on an imported deck`. Use [Sync an imported deck](#sync-an-imported-deck) to accept new content from the author.
+
 **Parameters:**
 
 - `id`: `a1b2c3d4e5f6` (your deck ID)
 - `operation`: `append`
 
-**Request Body:** An array of fact items (each with `entries`) and optional `template`. Each **entry** is an object with optional `text`, `audio`, `image`, `video` (at least one required). The server generates a unique fact ID for each fact and creates one or more **cards** per fact depending on `template` (see **Template: default and sibling cards** below).
+**Request Body:** An object with a required **`facts`** array and optional **`template`**. Each fact item has required **`entries`** and optional **`tags`**. Each **entry** is an object with optional `text`, `audio`, `image`, `video`, `json` (at least one content field required across the fact). **`fields` are not sent per fact** — use **`GET /api/decks/{id}`** (or PATCH the deck) for the deck’s `fields` list; that list supplies labels when studying (e.g. next-card `field` on each entry). The server generates a unique fact ID for each fact and creates one or more **cards** per fact depending on `template` (see **Template: default and sibling cards** below).
+
+#### Optional tags (per fact)
+
+Each element of **`facts`** may include **`tags`**: an array of tag **names** (strings), not tag IDs. The field is **optional** — omit it or use `[]` for facts that should have no tags.
+
+| Behavior         | Detail                                                                                                                                                                                                 |
+| ---------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| **Scope**        | Tags apply **per fact** in the batch (fact A can have tags while fact B has none).                                                                                                                     |
+| **Validation**   | Same name rules as [`POST /api/tags`](#create-a-tag) (letters, numbers, spaces, `-`, `'`; max 50 characters). Invalid names → **400**.                                                                 |
+| **Reuse**        | If a name already exists for your user (after normalization), that tag is reused.                                                                                                                      |
+| **Create**       | Missing names are auto-created for your user, then linked to the new fact. Counts toward the **100 tags per user** limit.                                                                              |
+| **Dedup**        | Duplicate names on the **same** fact (e.g. `"Noun"` and `" noun "`) are collapsed to one association.                                                                                                  |
+| **Storage**      | Tags are **not** embedded in the fact JSON in Redis; associations are stored separately and returned on GET.                                                                                           |
+| **Add response** | `POST …/facts/{operation}` returns only `fact_length` — **not** tag objects. Use [`GET /api/decks/{id}/facts`](#get-all-facts) or [Get one fact](#get-one-fact) to read tags after create.             |
+| **Update**       | [`PATCH /api/decks/{id}/facts/{factId}`](#update-a-fact) does **not** accept `tags`; add or remove tags with the [fact tag `PUT`/`DELETE`](#associate-a-tag-with-a-fact) routes or tag at create time. |
 
 ```json
 {
   "facts": [
-    { "entries": [{ "text": "Apple" }, { "text": "りんご" }] },
+    {
+      "entries": [{ "text": "Apple" }, { "text": "りんご" }],
+      "tags": ["food", "noun"]
+    },
     { "entries": [{ "text": "Book" }, { "text": "本" }] },
-    { "entries": [{ "text": "Water" }, { "text": "水" }] },
+    { "entries": [{ "text": "Water" }, { "text": "水" }], "tags": ["noun"] },
     { "entries": [{ "text": "School" }, { "text": "学校" }] }
   ]
 }
 ```
 
-Example with media and multiple example sentences (each with its own audio):
+Example with media and multiple example sentences (each with its own audio). Put this object inside `"facts": [ … ]` in the full request. Ensure the deck’s `fields` (via **`PATCH /api/decks/{id}`**) has **seven** names in the same order as these seven entries so labels match when you study.
 
 ```json
 {
@@ -516,15 +891,6 @@ Example with media and multiple example sentences (each with its own audio):
     { "video": "vid789" },
     { "text": "I go to school every day.", "audio": "ex1aud" },
     { "text": "School starts at nine.", "audio": "ex2aud" }
-  ],
-  "fields": [
-    "Word",
-    "Translation",
-    "Pronunciation",
-    "Picture",
-    "Clip",
-    "Example 1",
-    "Example 2"
   ]
 }
 ```
@@ -570,8 +936,8 @@ Each fact gets one card with front=0/back=1 and one with front=1/back=0. To add 
 
 > **Understanding the request:**
 >
-> - **`entries`**: Array of entry objects. Each entry has optional `text`, `audio`, `image`, `video` (at least one required). Entry `i` corresponds to deck column `i`; use `fields[i]` as its label. Putting text and audio in the same entry (e.g. `{ "text": "I go to school.", "audio": "ex1id" }`) keeps that audio clearly associated with that sentence.
-> - **`fields`** (optional): Column names for this fact; entry `i` is shown under `fields[i]`. If omitted, use the deck's default `fields`. When provided, length must equal `len(entries)`.
+> - **`entries`**: Array of entry objects. Each entry has optional `text`, `audio`, `image`, `video`, `json` (at least one entry in the fact must have content). Entry index `i` lines up with **`deck.fields[i]`** for display labels when studying (see **Get Next Urgent Card**). Putting text and audio in the same entry (e.g. `{ "text": "I go to school.", "audio": "ex1id" }`) keeps that audio clearly associated with that sentence.
+> - **`tags`** (optional, per fact): Array of tag **name** strings. Omit for untagged facts. See [Optional tags (per fact)](#optional-tags-per-fact) above.
 > - **`template`** (optional): When empty or omitted, each fact gets **one card** with default `[[0], [1, 2, ...]]`. When provided, it must be a **3D** array: a list of 2D templates. **Every** fact gets one card per 2D template in that list (sibling cards). Each 2D template must be valid for every fact (same number of entries); indices must be in range, disjoint, and cover all entries.
 
 **Response:**
@@ -586,6 +952,8 @@ Each fact gets one card with front=0/back=1 and one with front=1/back=0. To add 
   }
 }
 ```
+
+The add-facts response does **not** echo created fact IDs or tag assignments. After a successful create, call **GET** facts (or GET one fact) if you need `id` and `tags` on each fact.
 
 ### Get all facts
 
@@ -614,7 +982,6 @@ Authorization: Bearer <token>
       {
         "id": "x9k2m4np",
         "entries": [{ "text": "Apple" }, { "text": "りんご" }],
-        "fields": ["English", "Japanese"],
         "tags": [
           { "id": "a1b2c3d4", "name": "food", "description": "" },
           { "id": "f6e5d4c3", "name": "noun", "description": "Parts of speech" }
@@ -638,7 +1005,7 @@ Authorization: Bearer <token>
 }
 ```
 
-Each fact always includes **`tags`**: an array of `{ "id", "name", "description" }` objects (empty array when none). A fact can have **many** tags; the list is sorted by **tag name** in list/detail responses. Tags are not stored inside the fact record in Redis; the API resolves them from per-user association keys.
+Each fact always includes **`tags`**: an array of `{ "id", "name", "description" }` objects (empty array when none). A fact can have **many** tags; the list is sorted by **tag name** in list/detail responses. Tags are not stored inside the fact record in Redis; the API resolves them from per-user association keys. **Column labels are not returned on each fact** — use the deck’s **`fields`** from **`GET /api/decks/{id}`** (same order as `entries` indices).
 
 ### Get one fact
 
@@ -652,7 +1019,6 @@ Each fact always includes **`tags`**: an array of `{ "id", "name", "description"
     "fact": {
       "id": "x9k2m4np",
       "entries": [{ "text": "Apple" }, { "text": "りんご" }],
-      "fields": ["English", "Japanese"],
       "tags": [
         { "id": "a1b2c3d4", "name": "food", "description": "" },
         { "id": "f6e5d4c3", "name": "noun", "description": "Parts of speech" }
@@ -667,14 +1033,15 @@ Each fact always includes **`tags`**: an array of `{ "id", "name", "description"
 
 **Endpoint:** `PATCH /api/decks/{id}/facts/{factId}`
 
+> **Imported decks:** **403** `cannot modify facts on an imported deck`.
+
 **Parameters:** `id` (deck ID), `factId` (fact ID from GET facts or add-facts).
 
-**Request Body:** Optional `entries` (array of entry objects with optional `text`, `audio`, `image`, `video`) and `fields`. If `entries` is provided it replaces the fact's entries; if `fields` is provided its length must equal `len(entries)`.
+**Request Body:** Optional **`entries`** only — array of entry objects with optional `text`, `audio`, `image`, `video`, `json`. When provided, it replaces the fact’s entries. To rename or reorder **column labels**, use **`PATCH /api/decks/{id}`** with a new `fields` array (not this endpoint).
 
 ```json
 {
-  "entries": [{ "text": "Apple" }, { "text": "りんご" }],
-  "fields": ["English", "Japanese"]
+  "entries": [{ "text": "Apple" }, { "text": "りんご" }]
 }
 ```
 
@@ -690,6 +1057,8 @@ Each fact always includes **`tags`**: an array of `{ "id", "name", "description"
 ### Delete a fact
 
 **Endpoint:** `DELETE /api/decks/{id}/facts/{factId}`
+
+> **Imported decks:** **403** `cannot modify facts on an imported deck`.
 
 **Parameters:** `id` (deck ID), `factId` (fact ID).
 
@@ -708,7 +1077,12 @@ Permanently deletes the fact and all cards derived from it.
 
 ## 4. Tags
 
-Tags are **per user**: you create them with `POST /api/tags`, then attach them to **decks** and/or **facts** with `PUT` routes (no JSON body on those `PUT`s). Same tag can label many decks and many facts. For key layout and naming rules, see **[Tagging system design doc](../design-doc/tagging-system.md)**.
+Tags are **per user**: you create them with `POST /api/tags`, then attach them to **decks** and/or **facts** with `PUT` routes (no JSON body on those `PUT`s). You can also pass optional **`tags`** (name strings) in the same request when:
+
+- **[Creating a deck](#create-a-deck)** (`POST /api/decks`) — see [Optional tags (on create)](#optional-tags-on-create).
+- **[Adding facts](#add-facts)** (`POST /api/decks/{id}/facts/{operation}`) — optional `tags` on each fact item; see [Optional tags (per fact)](#optional-tags-per-fact).
+
+The server creates missing tags and links them in that request. Same tag can label many decks and many facts. For key layout and naming rules, see **[Tagging system design doc](../design-doc/tagging-system.md)**.
 
 **Limits:** up to **100** distinct tags per user; up to **20** tags associated with a single deck. Tag **names** allow Unicode letters and numbers, spaces, hyphen (`-`), and apostrophe (`'`); leading/trailing space is trimmed and internal runs of spaces collapse to one. Uniqueness is enforced on a **normalized** form (trim → collapse spaces → lowercase). **`tag_id`** is 8 lowercase alphanumeric characters.
 
@@ -956,13 +1330,21 @@ By default there is **one card per fact**. To add a second card for a fact (e.g.
 
 **Endpoint:** `GET /api/decks/{id}/card`
 
+**Query (optional):**
+
+| Query    | Description                                                                                                                             |
+| -------- | --------------------------------------------------------------------------------------------------------------------------------------- |
+| `tag_id` | Tag ID. When provided, next-card selection only considers cards whose `fact_id` belongs to facts tagged with this tag in the same deck. |
+
+Example: `GET /api/decks/{id}/card?tag_id=Kt8QmNz2`
+
 **Parameters:**
 
 - `id`: `a1b2c3d4e5f6` (your deck ID)
 
-**Response shape:** `front` and `back` are arrays of **entry objects** in **template order** (one object per fact entry index on that side). Each object matches a fact **entry**: optional **`field`** (label) and optional **`text`**, **`audio`**, **`image`**, **`video`** string keys (omitted when empty). Text and its pronunciation clip are explicit siblings on the same object (e.g. `"text": "Hello"` and `"audio": "https://…/api/media/…"`). For media keys, values are **full media URLs** when the server can determine a base URL. Use each URL with the same `Authorization: Bearer <token>` to download the file.
+**Response shape:** `front` and `back` are arrays of **entry objects** in **template order** (one object per fact entry index on that side). Each object matches a fact **entry**: optional **`field`** (label) and optional **`text`**, **`audio`**, **`image`**, **`video`**, **`json`** string keys (omitted when empty). When present, **`field`** comes from the deck’s **`fields`** list (`fields[i]` for entry index `i`); if the deck has fewer names than entries, some objects may omit `field`. Text and its pronunciation clip are explicit siblings on the same object (e.g. `"text": "Hello"` and `"audio": "https://…/api/media/…"`). For media keys, values are **full media URLs** when the server can determine a base URL. Use each URL with the same `Authorization: Bearer <token>` to download the file.
 
-Each JSON example below has a matching integration test in [`api/tests/integration/card_test.go`](../../api/tests/integration/card_test.go): `TestGetNextCard` (with field names) and `TestNextCardUrgencySelection` (no field names, text+audio+image, multi-front, front-only, split template `[[0,1],[2,3]]`, and full URL host).
+Each JSON example below has a matching integration test in [`api/tests/integration/card_test.go`](../../api/tests/integration/card_test.go): `TestGetNextCard` (with field names from the deck) and `TestNextCardUrgencySelection` (no field names when deck labels are missing/short, text+audio+image, multi-front, front-only, split template `[[0,1],[2,3]]`, and full URL host).
 
 **Response (no field names):**
 
@@ -1295,18 +1677,43 @@ Permanently remove a single card from a deck. The fact and any other cards for t
 
 **Endpoint:** `GET /api/decks/{id}/cards`
 
+**Query (optional):**
+
+| Query    | Description                                                                                                                                    |
+| -------- | ---------------------------------------------------------------------------------------------------------------------------------------------- |
+| `tag_id` | Tag ID. When provided, only cards whose `fact_id` belongs to facts tagged with this tag **in the same deck** are included in all counts/lists. |
+
+Example: `GET /api/decks/{id}/cards?tag_id=Kt8QmNz2`
+
 **Response:**
 
 ```json
 {
   "data": {
     "total_cards": 20,
-    "hidden_count": 3,
-    "hidden_facts": [
+    "hidden_cards_count": 3,
+    "due_cards": 7,
+    "unseen_cards": 5,
+    "hidden_cards_list": [
       {
-        "id": "h1d2e3n4",
-        "entries": ["Hidden word", "隠れた語"],
-        "fields": ["English", "Japanese"]
+        "id": "cd1ef2gh",
+        "fact_id": "h1d2e3n4",
+        "template": [[0], [1]],
+        "last_review": 1710000000,
+        "due_date": 1710500000,
+        "hidden": true,
+        "created_at": 1709000000
+      }
+    ],
+    "cards": [
+      {
+        "id": "cd1ef2gh",
+        "fact_id": "h1d2e3n4",
+        "template": [[0], [1]],
+        "last_review": 1710000000,
+        "due_date": 1710500000,
+        "hidden": true,
+        "created_at": 1709000000
       }
     ],
     "orphaned_hidden_cards": 0
@@ -1319,7 +1726,7 @@ Permanently remove a single card from a deck. The fact and any other cards for t
 
 ## 6. Media (Audio / Images)
 
-You can attach audio, images, and video to facts. Fact fields reference media by ID using markers `[audio:id]`, `[image:id]`, and `[video:id]`.
+You can attach audio, images, and video to facts. Each **entry** object uses string values for media IDs on keys `audio`, `image`, `video`, and `json` (not bracket markers in JSON).
 
 **Size limits:** Images max **5 MB**; audio and video max **200 MB** each. Env overrides: `MEDIA_MAX_SIZE_IMAGE`, `MEDIA_MAX_SIZE_VIDEO`, `MEDIA_MAX_SIZE_AUDIO`.
 
@@ -1392,6 +1799,8 @@ Returns metadata only (id, owner, filename, mime, size, checksum, created_at), n
 
 Returns the media file (binary) for user-owned media by ID. Requires `Authorization: Bearer <token>`. Response headers include `Content-Type`, `Content-Length`, and `ETag` (same as `checksum`). Send `If-None-Match: <ETag>` to get `304 Not Modified` when the file is unchanged. The **Get Next Card** response puts full URLs in the `audio`, `image`, and `video` fields of each front/back entry (e.g. `https://api.retentio.app:8443/api/media/{id}`); use that URL with the same auth header to load the file.
 
+**Deck sharing (importers):** If you imported a deck, you may download the author’s media when your account has a grant `mediaId@version` from that snapshot. The server serves **versioned** bytes. Append **`?v=<version>`** when the API returns multiple possible versions for the same `media_id` (some fact responses include `?v=` on media URLs automatically).
+
 ### Delete media
 
 **Endpoint:** `DELETE /api/media/{id}`
@@ -1422,47 +1831,51 @@ For full design (upload, delete, display, sync), see **[Media Upload design doc]
 
 ## Response examples reference
 
-| Endpoint                                      | Method      | Response shape                                                                                                                                             |
-| --------------------------------------------- | ----------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `/auth/register`                              | POST        | `{ "data": { … }, "meta": { "msg": "..." } }` — see [Create a User](#create-a-user)                                                                        |
-| `/auth/login`                                 | POST        | `{ "data": { "token", "expires" }, "meta": { "expires" } }`                                                                                                |
-| `/auth/logout`                                | POST        | `{ "data": { "msg": "Logged out successfully" }, "meta": null }`                                                                                           |
-| `/auth/forgot-password`                       | POST        | `{ "data": { "reset_token" }, "meta": { "expires_in" } }`                                                                                                  |
-| `/auth/reset-password`                        | POST        | `{ "data": { "msg": "Password reset successfully" }, "meta": null }`                                                                                       |
-| `/api/profile`                                | GET         | `{ "data": { user profile }, "meta": { "msg" } }`                                                                                                          |
-| `/api/decks`                                  | POST        | `{ "data": { "deck_id" }, "meta": { "msg" } }`                                                                                                             |
-| `/api/decks`                                  | GET         | `{ "data": { "decks": [ … ] }, "meta": { "total", "msg" } }`                                                                                               |
-| `/api/decks/{id}`                             | GET         | `{ "data": { deck + stats }, "meta": { "msg" } }`                                                                                                          |
-| `/api/decks/{id}`                             | PATCH       | `{ "data": { "deck_id" }, "meta": { "msg", "updated_at" } }`                                                                                               |
-| `/api/decks/{id}`                             | DELETE      | `{ "data": { "deck_id" }, "meta": { "msg" } }`                                                                                                             |
-| `/api/decks/{id}/facts/{op}`                  | POST        | Add facts: `{ "data": { "fact_length" }, "meta": { "msg" } }`                                                                                              |
-| `/api/decks/{id}/card`                        | POST        | Add card from existing fact: `{ "data": { "card_id" }, "meta": { "msg" } }`                                                                                |
-| `/api/decks/{id}/facts`                       | GET         | `{ "data": { "facts": [ … ] }, "meta": { "msg", "count", "has_more", "limit", "offset", "total" } }` — defaults `limit` 50, `offset` 0                     |
-| `/api/decks/{id}/facts/{factId}`              | GET         | `{ "data": { "fact": { …, "tags": [ … ] } }, "meta": { "msg" } }`                                                                                          |
-| `/api/decks/{id}/facts/{factId}`              | PATCH       | `{ "data": { "fact_id" }, "meta": { "msg" } }`                                                                                                             |
-| `/api/decks/{id}/facts/{factId}`              | DELETE      | `{ "data": { "fact_id" }, "meta": { "msg" } }`                                                                                                             |
-| `/api/decks/{id}/card`                        | GET         | `{ "data": { "card": { id, fact_id, template, …, front[], back[] }, "urgency" }, "meta": { "msg", … } }`                                                   |
-| `/api/decks/{id}/card`                        | PATCH       | Interval: `{ "data": { "last_review", "due_date", "new_interval" }, "meta": { "msg" } }`; visibility: `{ "data": { "hidden_status" }, "meta": { "msg" } }` |
-| `/api/decks/{id}/cards`                       | GET         | `{ "data": { "total_cards", "hidden_count", "hidden_facts", "orphaned_hidden_cards" }, "meta": { "msg" } }`                                                |
-| `/api/decks/{id}/cards/{cardId}`              | DELETE      | `{ "data": { "card_id" }, "meta": { "msg" } }`                                                                                                             |
-| `/api/decks/{id}/reschedule`                  | POST        | `{ "data": { "cards_shifted", "days", "max_days_away" }, "meta": { "msg" } }`                                                                              |
-| `/api/tags`                                   | POST        | `{ "data": { "tag": { id, name, description } }, "meta": { "msg" } }` — **201**                                                                            |
-| `/api/tags`                                   | GET         | `{ "data": { "tags": [ … ] }, "meta": { "msg" } }`                                                                                                         |
-| `/api/tags/{tagId}`                           | GET         | `{ "data": { "tag": { … } }, "meta": { "msg" } }`                                                                                                          |
-| `/api/tags/{tagId}`                           | PATCH       | `{ "data": { "tag": { … } }, "meta": { "msg" } }`                                                                                                          |
-| `/api/tags/{tagId}`                           | DELETE      | `{ "data": { "decks_untagged" }, "meta": { "msg" } }`                                                                                                      |
-| `/api/tags/{tagId}/facts`                     | GET         | `{ "data": { "facts": [ { "deck_id", "fact_id" }, … ] }, "meta": { "msg" } }`                                                                              |
-| `/api/decks/{id}/tags/{tagId}`                | PUT, DELETE | `{ "data": { "tags": [ … ] }, "meta": { "msg" } }`                                                                                                         |
-| `/api/decks/{id}/tags`                        | GET         | `{ "data": { "tags": [ … ] }, "meta": { "msg" } }`                                                                                                         |
-| `/api/decks/{id}/facts/{factId}/tags/{tagId}` | PUT, DELETE | `{ "data": { "tags": [ … ] }, "meta": { "msg" } }`                                                                                                         |
-| `/api/decks/{id}/facts/{factId}/tags`         | GET         | `{ "data": { "tags": [ … ] }, "meta": { "msg" } }`                                                                                                         |
-| `/api/media`                                  | POST        | `{ "data": { id, owner, filename, mime, size, checksum, created_at }, "meta": { "msg" } }`                                                                 |
-| `/api/media`                                  | GET         | `{ "data": [ MediaSwagger, … ], "meta": { "count", "has_more" } }`                                                                                         |
-| `/api/media/shared`                           | GET         | List or lookup shared media (query: `word`, `lang`)                                                                                                        |
-| `/api/media/shared/{id}`                      | GET         | Download shared media (binary)                                                                                                                             |
-| `/api/media/{id}/meta`                        | GET         | `{ "data": { id, owner, filename, mime, size, checksum, created_at }, "meta": { "msg" } }`                                                                 |
-| `/api/media/{id}`                             | GET         | Download media (binary)                                                                                                                                    |
-| `/api/media/{id}`                             | DELETE      | `{ "data": { "msg": "media deleted" } }`                                                                                                                   |
+| Endpoint                                      | Method      | Response shape                                                                                                                                                 |
+| --------------------------------------------- | ----------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `/auth/register`                              | POST        | `{ "data": { … }, "meta": { "msg": "..." } }` — see [Create a User](#create-a-user)                                                                            |
+| `/auth/login`                                 | POST        | `{ "data": { "token", "expires" }, "meta": { "expires" } }`                                                                                                    |
+| `/auth/logout`                                | POST        | `{ "data": { "msg": "Logged out successfully" }, "meta": null }`                                                                                               |
+| `/auth/forgot-password`                       | POST        | `{ "data": { "reset_token" }, "meta": { "expires_in" } }`                                                                                                      |
+| `/auth/reset-password`                        | POST        | `{ "data": { "msg": "Password reset successfully" }, "meta": null }`                                                                                           |
+| `/api/profile`                                | GET         | `{ "data": { user profile }, "meta": { "msg" } }`                                                                                                              |
+| `/api/decks`                                  | POST        | `{ "data": { "deck_id" }, "meta": { "msg" } }`                                                                                                                 |
+| `/api/decks`                                  | GET         | `{ "data": { "decks": [ … ] }, "meta": { "total", "msg" } }`                                                                                                   |
+| `/api/decks/{id}`                             | GET         | `{ "data": { deck + stats }, "meta": { "msg" } }`                                                                                                              |
+| `/api/decks/{id}`                             | PATCH       | `{ "data": { "deck_id" }, "meta": { "msg", "updated_at" } }`                                                                                                   |
+| `/api/decks/{id}`                             | DELETE      | `{ "data": { "deck_id" }, "meta": { "msg" } }`                                                                                                                 |
+| `/api/decks/{id}/facts/{op}`                  | POST        | Add facts: body `facts[]` with optional `tags` (names) per item; `{ "data": { "fact_length" }, "meta": { "msg" } }` (no tags in response)                      |
+| `/api/decks/{id}/card`                        | POST        | Add card from existing fact: `{ "data": { "card_id" }, "meta": { "msg" } }`                                                                                    |
+| `/api/decks/{id}/facts`                       | GET         | `{ "data": { "facts": [ … ] }, "meta": { "msg", "count", "has_more", "limit", "offset", "total" } }` — defaults `limit` 50, `offset` 0                         |
+| `/api/decks/{id}/facts/{factId}`              | GET         | `{ "data": { "fact": { …, "tags": [ … ] } }, "meta": { "msg" } }`                                                                                              |
+| `/api/decks/{id}/facts/{factId}`              | PATCH       | `{ "data": { "fact_id" }, "meta": { "msg" } }`                                                                                                                 |
+| `/api/decks/{id}/facts/{factId}`              | DELETE      | `{ "data": { "fact_id" }, "meta": { "msg" } }`                                                                                                                 |
+| `/api/decks/{id}/card`                        | GET         | Optional query `tag_id`. Response shape unchanged: `{ "data": { "card": { id, fact_id, template, …, front[], back[] }, "urgency" }, "meta": { "msg", … } }`    |
+| `/api/decks/{id}/card`                        | PATCH       | Interval: `{ "data": { "last_review", "due_date", "new_interval" }, "meta": { "msg" } }`; visibility: `{ "data": { "hidden_status" }, "meta": { "msg" } }`     |
+| `/api/decks/{id}/cards`                       | GET         | Optional query `tag_id`. Response shape unchanged: `{ "data": { "total_cards", "hidden_count", "hidden_facts", "orphaned_hidden_cards" }, "meta": { "msg" } }` |
+| `/api/decks/{id}/cards/{cardId}`              | DELETE      | `{ "data": { "card_id" }, "meta": { "msg" } }`                                                                                                                 |
+| `/api/decks/{id}/reschedule`                  | POST        | `{ "data": { "cards_shifted", "days", "max_days_away" }, "meta": { "msg" } }`                                                                                  |
+| `/api/decks/import`                           | POST        | **201** — `{ "data": { "id", "source_deck_id", "source_version", "imported_at" }, "meta": { "msg" } }`                                                         |
+| `/api/decks/{id}/publish`                     | POST        | `{ "data": { "published_version", "visibility" }, "meta": { "msg": "published" } }`                                                                            |
+| `/api/decks/{id}/updates`                     | GET         | `{ "data": { "source_version", "latest_version", "added_facts", "removed_facts", "edited_facts", "media_changes" }, "meta": { "msg" } }`                       |
+| `/api/decks/{id}/sync`                        | POST        | `{ "data": { "source_version" }, "meta": { "msg": "synced" } }`                                                                                                |
+| `/api/tags`                                   | POST        | `{ "data": { "tag": { id, name, description } }, "meta": { "msg" } }` — **201**                                                                                |
+| `/api/tags`                                   | GET         | `{ "data": { "tags": [ … ] }, "meta": { "msg" } }`                                                                                                             |
+| `/api/tags/{tagId}`                           | GET         | `{ "data": { "tag": { … } }, "meta": { "msg" } }`                                                                                                              |
+| `/api/tags/{tagId}`                           | PATCH       | `{ "data": { "tag": { … } }, "meta": { "msg" } }`                                                                                                              |
+| `/api/tags/{tagId}`                           | DELETE      | `{ "data": { "decks_untagged" }, "meta": { "msg" } }`                                                                                                          |
+| `/api/tags/{tagId}/facts`                     | GET         | `{ "data": { "facts": [ { "deck_id", "fact_id" }, … ] }, "meta": { "msg" } }`                                                                                  |
+| `/api/decks/{id}/tags/{tagId}`                | PUT, DELETE | `{ "data": { "tags": [ … ] }, "meta": { "msg" } }`                                                                                                             |
+| `/api/decks/{id}/tags`                        | GET         | `{ "data": { "tags": [ … ] }, "meta": { "msg" } }`                                                                                                             |
+| `/api/decks/{id}/facts/{factId}/tags/{tagId}` | PUT, DELETE | `{ "data": { "tags": [ … ] }, "meta": { "msg" } }`                                                                                                             |
+| `/api/decks/{id}/facts/{factId}/tags`         | GET         | `{ "data": { "tags": [ … ] }, "meta": { "msg" } }`                                                                                                             |
+| `/api/media`                                  | POST        | `{ "data": { id, owner, filename, mime, size, checksum, created_at }, "meta": { "msg" } }`                                                                     |
+| `/api/media`                                  | GET         | `{ "data": [ MediaSwagger, … ], "meta": { "count", "has_more" } }`                                                                                             |
+| `/api/media/shared`                           | GET         | List or lookup shared media (query: `word`, `lang`)                                                                                                            |
+| `/api/media/shared/{id}`                      | GET         | Download shared media (binary)                                                                                                                                 |
+| `/api/media/{id}/meta`                        | GET         | `{ "data": { id, owner, filename, mime, size, checksum, created_at }, "meta": { "msg" } }`                                                                     |
+| `/api/media/{id}`                             | GET         | Download media (binary)                                                                                                                                        |
+| `/api/media/{id}`                             | DELETE      | `{ "data": { "msg": "media deleted" } }`                                                                                                                       |
 
 Full JSON examples for each are in the sections above.
 
@@ -1470,6 +1883,7 @@ Full JSON examples for each are in the sections above.
 
 ## Next Steps
 
+- Share decks with **[Deck sharing](#deck-sharing-overview)** (publish → import → review updates → sync)
 - Organize content with **[Tags](#4-tags)** (deck- and fact-level associations)
 - Keep reviewing cards by repeating the **Get Next Urgent Card** and **Review a Card** steps in [Cards](#5-cards)
 - **Offline sync** — sync data when back online (planned)
