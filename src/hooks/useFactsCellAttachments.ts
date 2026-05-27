@@ -1,10 +1,8 @@
-import { getMedia } from '@/api/media'
+import { getMedia, uploadMedia } from '@/api/media'
 import type { FactsMediaPreviewModalProps } from '@/components/facts/FactsMediaPreviewModal'
 import { useMediaUpload } from '@/hooks/useMediaUpload'
 import { createBlobCache } from '@/lib/idb-cache'
 import type { Entry } from '@/modules/facts/facts.schema'
-import type { UploadMediaResult } from '@/modules/media/media.schema'
-import { requestClient } from '@/utils/request.client'
 import type { LucideIcon } from 'lucide-react'
 import { ImageIcon, MicIcon, VideoIcon } from 'lucide-react'
 import { useTranslations } from 'next-intl'
@@ -84,10 +82,7 @@ export function useFactsCellAttachments(entry?: Entry, onUpload?: (fileId: strin
     setLoading(true)
     const formData = new FormData()
     formData.append('file', files[0])
-    const { data } = await requestClient<UploadMediaResult>('/api/media', {
-      method: 'POST',
-      body: formData,
-    })
+    const { data } = await uploadMedia(formData)
     const mediaType = mimeToMediaType(data.mime)
     dispatch({
       type: 'SET_VALUE',
@@ -111,13 +106,10 @@ export function useFactsCellAttachments(entry?: Entry, onUpload?: (fileId: strin
       }else{
         dispatch({ type: 'SET_LOADING', key: item.key, loading: true })
         dispatch({ type: 'SET_PROGRESS', key: item.key, progress: '0' })
-        const { data, success } = await getMedia(media, ({ progress: p }) => {
+        const data = await getMedia(media, ({ progress: p }) => {
           dispatch({ type: 'SET_PROGRESS', key: item.key, progress: `${Number((p ?? 0) * 100).toFixed(0)}` })
         })
-        if(!success){
-          return
-        }
-        setFile(data?.url)
+        setFile(data.url)
         setFileType(item.key)
         await mediaCache.set(media, data.blob)
       }

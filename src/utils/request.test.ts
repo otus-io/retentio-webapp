@@ -1,5 +1,6 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
-import { createRequest } from './createRequest'
+import { API_BASE_URL } from '@/config'
+import { createRequest } from './request'
 
 describe('createRequest', () => {
   afterEach(() => {
@@ -19,7 +20,7 @@ describe('createRequest', () => {
 
     expect(data).toEqual({ id: 1, name: 'test' })
     expect(fetch).toHaveBeenCalledWith(
-      'https://api.retentio.app:8443/api/users',
+      `${API_BASE_URL}/api/users`,
       expect.objectContaining({
         headers: {
           'Content-Type': 'application/json;charset=UTF-8',
