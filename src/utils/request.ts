@@ -33,6 +33,19 @@ async function readBodyWithProgress(res: Response, onProgress: OnProgress): Prom
   return new Blob(chunks as BlobPart[], { type: res.headers.get('content-type') ?? '' })
 }
 
+function normalizeHeaders(input?: HeadersInit): Record<string, string> {
+  if (!input) return {}
+  if (input instanceof Headers) {
+    const out: Record<string, string> = {}
+    input.forEach((v, k) => { out[k] = v })
+    return out
+  }
+  if (Array.isArray(input)) {
+    return Object.fromEntries(input) as Record<string, string>
+  }
+  return { ...(input as Record<string, string>) }
+}
+
 export function createRequest(getToken: GetTokenFn) {
   return async function request<T>(
     endpoint: string,
@@ -41,9 +54,7 @@ export function createRequest(getToken: GetTokenFn) {
     const { onDownloadProgress, ...fetchOptions } = options
     const token = await getToken()
 
-    const headers: Record<string, string> = {
-      ...((fetchOptions.headers as Record<string, string>) || {}),
-    }
+    const headers: Record<string, string> = normalizeHeaders(fetchOptions.headers)
 
     if (!(fetchOptions.body instanceof FormData)) {
       headers['Content-Type'] = 'application/json;charset=UTF-8'
@@ -54,21 +65,21 @@ export function createRequest(getToken: GetTokenFn) {
     }
 
     const url = `${API_BASE_URL}${endpoint}`
+
     const init = {
       ...fetchOptions,
       headers,
     }
 
-    logger.info(
-      {
-        url,
-        method: init.method ?? 'GET',
-        hasAuth: Boolean(token),
-        hasBody: Boolean(fetchOptions.body),
+    const initForLog = {
+      ...init,
+      headers: {
+        ...(init.headers as Record<string, string>),
+        ...(headers.Authorization ? { Authorization: '[REDACTED]' } : {}),
       },
-      '[request]',
-    )
+    }
 
+    logger.info({ url, init: initForLog }, '[request]')
 
     const res = await fetch(url, init)
 
@@ -85,8 +96,12 @@ export function createRequest(getToken: GetTokenFn) {
     const text = await blob.text()
 
     let json: any = null
-    if (blob.type === 'application/json') {
-      json = JSON.parse(text)
+    if (blob.type.includes('application/json')) {
+      try {
+        json = JSON.parse(text)
+      } catch {
+        // blob.type claimed JSON but body wasn't parseable; fall back to text
+      }
     }
 
     if (!res.ok) {
