@@ -1,30 +1,15 @@
-import { request } from '@/utils/request'
-
+import * as factsApi from '@/api/facts'
 import { ServiceResponse } from '@/lib/response'
-import type {
-  CreateFactsDTO,
-  CreateFactsResponseDTO,
-  FactResponseDTO,
-  FactsListResponseDTO,
-  UpdateFactDTO,
-  UpdateFactResponseDTO,
-  DeleteFactResponseDTO,
-} from '@/modules/facts/facts.schema'
+import type { CreateFactsDTO, UpdateFactDTO } from '@/modules/facts/facts.schema'
 
 /**
  * 获取词条列表
  */
 export async function getFactsPageService(deckId: string, params?: { limit?: number; offset?: number }) {
   try {
-    const query = new URLSearchParams()
-    if (params?.limit) query.set('limit', String(params.limit))
-    if (params?.offset) query.set('offset', String(params.offset))
-    const qs = query.toString()
-    const endpoint = `/api/decks/${deckId}/facts${qs ? `?${qs}` : ''}`
-    const res = await request<FactsListResponseDTO>(endpoint)
-    return ServiceResponse.success(res)
+    return ServiceResponse.success(await factsApi.getFactsPage(deckId, params))
   } catch (e) {
-    return ServiceResponse.error('getAllFactsService failed', e)
+    return ServiceResponse.error('getFactsPageService failed', e)
   }
 }
 
@@ -33,8 +18,7 @@ export async function getFactsPageService(deckId: string, params?: { limit?: num
  */
 export async function getFactService(deckId: string, factId: string) {
   try {
-    const res = await request<FactResponseDTO>(`/api/decks/${deckId}/facts/${factId}`)
-    return ServiceResponse.success(res)
+    return ServiceResponse.success(await factsApi.getFact(deckId, factId))
   } catch (e) {
     return ServiceResponse.error('getFactService failed', e)
   }
@@ -45,11 +29,7 @@ export async function getFactService(deckId: string, factId: string) {
  */
 export async function createFactsService(deckId: string, data: CreateFactsDTO) {
   try {
-    const res = await request<CreateFactsResponseDTO>(`/api/decks/${deckId}/facts/${data.operation}`, {
-      method: 'POST',
-      body: JSON.stringify(data),
-    })
-    return ServiceResponse.success(res)
+    return ServiceResponse.success(await factsApi.createFacts(deckId, data))
   } catch (e) {
     return ServiceResponse.error('createFactsService failed', e)
   }
@@ -60,11 +40,7 @@ export async function createFactsService(deckId: string, data: CreateFactsDTO) {
  */
 export async function updateFactService(deckId: string, factId: string, data: UpdateFactDTO) {
   try {
-    const res = await request<UpdateFactResponseDTO>(`/api/decks/${deckId}/facts/${factId}`, {
-      method: 'PATCH',
-      body: JSON.stringify(data),
-    })
-    return ServiceResponse.success(res)
+    return ServiceResponse.success(await factsApi.updateFact(deckId, factId, data))
   } catch (e) {
     return ServiceResponse.error('updateFactService failed', e)
   }
@@ -75,10 +51,7 @@ export async function updateFactService(deckId: string, factId: string, data: Up
  */
 export async function deleteFactService(deckId: string, factId: string) {
   try {
-    const res = await request<DeleteFactResponseDTO>(`/api/decks/${deckId}/facts/${factId}`, {
-      method: 'DELETE',
-    })
-    return ServiceResponse.success(res)
+    return ServiceResponse.success(await factsApi.deleteFact(deckId, factId))
   } catch (e) {
     return ServiceResponse.error('deleteFactService failed', e)
   }
@@ -89,13 +62,9 @@ export async function deleteFactService(deckId: string, factId: string) {
  */
 export async function deleteFactsService(deckId: string, factIds: string[]) {
   try {
-    await Promise.allSettled(factIds.map((factId) => request<DeleteFactResponseDTO>(
-      `/api/decks/${deckId}/facts/${factId}`,
-      { method: 'DELETE' },
-    )))
+    await Promise.allSettled(factIds.map((factId) => factsApi.deleteFact(deckId, factId)))
     return ServiceResponse.success({ data: {}, meta: { msg: 'deleteFactsService success' } })
   } catch (e) {
-    return ServiceResponse.error('deleteFactService failed', e)
+    return ServiceResponse.error('deleteFactsService failed', e)
   }
 }
-
