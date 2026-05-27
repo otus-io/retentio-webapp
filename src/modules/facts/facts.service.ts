@@ -62,7 +62,14 @@ export async function deleteFactService(deckId: string, factId: string) {
  */
 export async function deleteFactsService(deckId: string, factIds: string[]) {
   try {
-    await Promise.allSettled(factIds.map((factId) => factsApi.deleteFact(deckId, factId)))
+    const results = await Promise.allSettled(factIds.map((factId) => factsApi.deleteFact(deckId, factId)))
+    const failed = results.filter((r) => r.status === 'rejected')
+    if (failed.length > 0) {
+      return ServiceResponse.error(
+        `deleteFactsService failed: ${failed.length}/${factIds.length} deletions failed`,
+        failed[0].reason,
+      )
+    }
     return ServiceResponse.success({ data: {}, meta: { msg: 'deleteFactsService success' } })
   } catch (e) {
     return ServiceResponse.error('deleteFactsService failed', e)
