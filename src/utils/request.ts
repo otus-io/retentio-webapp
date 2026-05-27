@@ -1,4 +1,5 @@
 import { API_BASE_URL } from '@/config'
+import { logger } from '@/lib/logger'
 import { formatErrorMessage } from '@/utils/format'
 
 export type GetTokenFn = () => Promise<string | null>
@@ -52,10 +53,15 @@ export function createRequest(getToken: GetTokenFn) {
       headers['Authorization'] = `Bearer ${token}`
     }
 
-    const res = await fetch(`${API_BASE_URL}${endpoint}`, {
+    const url = `${API_BASE_URL}${endpoint}`
+    const init = {
       ...fetchOptions,
       headers,
-    })
+    }
+
+    logger.info({ url, init }, '[request]')
+
+    const res = await fetch(url, init)
 
     const blob = onDownloadProgress && res.body
       ? await readBodyWithProgress(res, onDownloadProgress)
@@ -76,7 +82,7 @@ export function createRequest(getToken: GetTokenFn) {
 
     if (!res.ok) {
       const errorMessage = formatErrorMessage(json ?? text)
-      console.log([errorMessage])
+      logger.error({ url, status: res.status, error: errorMessage }, '[request:error]')
       throw new Error(errorMessage)
     }
 
