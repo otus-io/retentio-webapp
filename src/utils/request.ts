@@ -59,7 +59,16 @@ export function createRequest(getToken: GetTokenFn) {
       headers,
     }
 
-    logger.info({ url, init }, '[request]')
+    logger.info(
+      {
+        url,
+        method: init.method ?? 'GET',
+        hasAuth: Boolean(token),
+        hasBody: Boolean(fetchOptions.body),
+      },
+      '[request]',
+    )
+
 
     const res = await fetch(url, init)
 
