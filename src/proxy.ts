@@ -2,7 +2,6 @@ import type { NextRequest } from 'next/server'
 import { NextResponse } from 'next/server'
 import { JWT_COOKIE_NAME, LOGIN_PATH, REGISTER_PATH } from '@/config'
 import { logger } from '@/lib/logger'
-import { getToken } from '@/lib/token'
 
 const blacklist = [
   '/dashboard',
@@ -14,7 +13,7 @@ export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl
   const token = request.cookies.get(JWT_COOKIE_NAME)?.value
 
-  logger.info({ v: await getToken() }, `[proxy] ${pathname}, token: ${token}`)
+  logger.info(`[proxy] ${pathname}, token: ${token?.slice(-10)}`)
 
   // 检查是否是受保护的路径
   const isProtectedPath = blacklist.some((path) => pathname.startsWith(path))
