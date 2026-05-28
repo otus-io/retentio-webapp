@@ -1,3 +1,4 @@
+'use server'
 import { JWT_COOKIE_NAME } from '@/config'
 import { cookies } from 'next/headers'
 

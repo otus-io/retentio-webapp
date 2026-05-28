@@ -1,39 +1,23 @@
-import { ServiceResponse } from '@/lib/response'
-import type { OnProgress } from '@/utils/createRequest'
-import { requestClient } from '@/utils/request.client'
+import { request, type OnProgress } from '@/utils/request'
+import type { UploadMediaResult } from '@/modules/media/media.schema'
 
 /**
- * 获取
+ * 下载媒体文件，返回 object URL 与原始 blob
  */
 export async function getMedia(id: string, onDownloadProgress?: OnProgress) {
-  try {
-    const blob = await requestClient<Blob>(`/api/media/${id}`, { onDownloadProgress })
-    const url = URL.createObjectURL(blob)
-    return ServiceResponse.success({
-      data: {
-        url,
-        blob,
-      },
-      meta: {
-        msg: 'Media fetched successfully',
-      },
-    })
-  } catch (e) {
-    return ServiceResponse.error('getMedia failed', e)
+  const blob = await request<Blob>(`/api/media/${id}`, { onDownloadProgress })
+  return {
+    url: URL.createObjectURL(blob),
+    blob,
   }
 }
 
 /**
- * 上传
+ * 上传媒体文件
  */
-export async function uploadMedia(formData: FormData) {
-  try {
-    const res = await requestClient('/api/media', {
-      method: 'POST',
-      body: formData,
-    })
-    return res
-  } catch (e) {
-    return ServiceResponse.error('uploadMedia failed', e)
-  }
+export function uploadMedia(formData: FormData) {
+  return request<UploadMediaResult>('/api/media', {
+    method: 'POST',
+    body: formData,
+  })
 }

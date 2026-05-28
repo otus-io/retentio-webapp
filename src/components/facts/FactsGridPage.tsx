@@ -15,11 +15,11 @@ import { themeQuartz, colorSchemeDark, colorSchemeLight } from 'ag-grid-communit
 import { useTheme } from 'next-themes'
 import TablePagination from '@/components/common/TablePagination'
 import { useDebouncedCallback } from 'use-debounce'
-import { updateDecksFields } from '@/api/decks'
+import { updateDeck } from '@/api/decks'
 import type { AppButtonProps } from '@/components/app/AppButton'
 import AppButton from '@/components/app/AppButton'
 import { CircleQuestionMark, Columns4Icon, RefreshCwIcon, Rows4Icon, Trash2Icon } from 'lucide-react'
-import { updateFactsFields } from '@/api/facts'
+import { updateFact } from '@/api/facts'
 import FactsMediaModal from '@/components/facts/FactsMediaModal'
 import type { MediaType } from '@/hooks/useFactsCellAttachments'
 import { actionSymbol, rawSymbol } from '@/components/facts/token'
@@ -97,7 +97,7 @@ export default function FactsGridPage({ facts, meta, deck }: FactsGridPageProps)
     if(force || JSON.stringify(currentDefs) !== JSON.stringify(lastDecksFields.current)){
       setLoading(true)
       lastDecksFields.current = currentDefs
-      await updateDecksFields(deck.id, {
+      await updateDeck(deck.id, {
         ...deck,
         fields: currentDefs,
       })
@@ -141,7 +141,7 @@ export default function FactsGridPage({ facts, meta, deck }: FactsGridPageProps)
 
     try {
       setLoading(true)
-      await Promise.all(changedNodes.map(({ node, entries }) => updateFactsFields(deck.id, node.data.id, { entries })))
+      await Promise.all(changedNodes.map(({ node, entries }) => updateFact(deck.id, node.data.id, { entries })))
       changedNodes.forEach(({ node, entries }) => {
         node.data[rawSymbol].entries = entries
       })

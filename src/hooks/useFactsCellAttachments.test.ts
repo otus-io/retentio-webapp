@@ -9,6 +9,7 @@ vi.mock('next-intl', () => ({
 
 vi.mock('@/api/media', () => ({
   getMedia: vi.fn(),
+  uploadMedia: vi.fn(),
 }))
 
 vi.mock('@/lib/idb-cache', () => ({
@@ -16,10 +17,6 @@ vi.mock('@/lib/idb-cache', () => ({
     get: vi.fn(),
     set: vi.fn(),
   }),
-}))
-
-vi.mock('@/utils/request.client', () => ({
-  requestClient: vi.fn(),
 }))
 
 vi.mock('./useMediaUpload', () => ({
