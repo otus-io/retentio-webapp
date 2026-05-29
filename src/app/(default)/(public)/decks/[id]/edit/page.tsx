@@ -1,5 +1,7 @@
+import AppError from '@/components/app/AppError'
 import DecksForm from '@/components/decks/DecksForm'
 import { getDeckService } from '@/modules/decks/decks.service'
+import { getAllTagsService } from '@/modules/tags/tags.service'
 import type { Metadata } from 'next'
 import { getTranslations } from 'next-intl/server'
 import { notFound } from 'next/navigation'
@@ -10,7 +12,11 @@ export default async function Page(props: PageProps<'/decks/[id]/edit'>) {
   if(!data.success){
     notFound()
   }
-  return <DecksForm type="update" data={data.data} />
+  const { data: result, success, message } = await getAllTagsService()
+  if (!success) {
+    return <AppError error={message} page />
+  }
+  return <DecksForm tags={result.tags} type="update" data={data.data} />
 }
 
 

@@ -11,21 +11,25 @@ import { createDeckAction, updateDeckAction } from '@/modules/decks/decks.action
 import type { Deck } from '@/modules/decks/decks.schema'
 import { useTranslations } from 'next-intl'
 import AppBreadcrumbs from '@/components/app/AppBreadcrumbs'
+import type { Tag as ITag } from '@/modules/tags/tags.schema'
+import TagSelect from '@/components/tags/TagPicker'
 
 
 type DecksCreateFormProps = {
   type: 'create',
   data: null
+  tags: ITag[]
 } | {
   type: 'update',
   data: Deck
+  tags: ITag[]
 }
 
 export default function DecksForm({
   type,
   data,
+  tags,
 }: DecksCreateFormProps) {
-
   const defaultState = type === 'update'
     ? {
       data: {
@@ -57,6 +61,7 @@ export default function DecksForm({
       action={action}
       isPending={isPending}
       type={type}
+      tags={tags}
     />
   )
 }
@@ -65,13 +70,14 @@ function DecksFormInner({
   type,
   state,
   action,
+  tags,
   isPending,
 }: {
-
   state: ActionState<any> | null,
   action: (payload: FormData) => void,
   isPending: boolean,
   type: DecksCreateFormProps['type']
+  tags: ITag[]
 }) {
 
   const t = useTranslations()
@@ -154,6 +160,9 @@ function DecksFormInner({
               >
                 {t('common.add', { name: t('term.fields') })}
               </AppButton>
+
+              <TagSelect tags={tags} />
+
               <NumberField
                 formatOptions={{
                   useGrouping: false,
