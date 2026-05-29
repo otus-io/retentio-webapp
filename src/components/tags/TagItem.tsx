@@ -1,7 +1,7 @@
 'use client'
 
 import type { Tag } from '@/modules/tags/tags.schema'
-import { Dropdown, Label } from '@heroui/react'
+import { Chip, Dropdown, Label } from '@heroui/react'
 import type { Key } from 'react'
 import { useCallback, useMemo, useState, useTransition } from 'react'
 import { EllipsisVertical, Pencil, Trash2 } from 'lucide-react'
@@ -36,10 +36,14 @@ export default function TagItem({ tag, highlight, onEdit }: TagItemProps) {
   }, [tag, onEdit])
 
   const chip = (
-    <div className="inline-flex items-center gap-1 rounded-full border border-border bg-secondary/40 px-3 py-1.5 text-sm transition-colors hover:bg-secondary/70">
-      <span className="font-medium text-foreground">
+    <Chip
+      style={{
+        '--radius': '.5rem',
+      }}
+    >
+      <Chip.Label className="font-medium text-foreground">
         <HighlightedText text={tag.name} highlight={highlight} />
-      </span>
+      </Chip.Label>
       <Dropdown>
         <Dropdown.Trigger
           className="ml-0.5 rounded-full p-0.5 text-muted hover:text-foreground transition-colors"
@@ -64,7 +68,7 @@ export default function TagItem({ tag, highlight, onEdit }: TagItemProps) {
           </Dropdown.Menu>
         </Dropdown.Popover>
       </Dropdown>
-    </div>
+    </Chip>
   )
 
   return (
