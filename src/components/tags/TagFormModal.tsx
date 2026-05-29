@@ -15,12 +15,18 @@ interface TagFormModalProps {
   isOpen: boolean
   tag: Tag | null
   setIsOpen: (v: boolean) => void
+  /**
+   * 创建/更新成功后的回调。
+   * 提供时不再触发 `router.refresh()`，而是把保存后的标签交给调用方处理（例如回显到选择器）。
+   */
+  onSuccess?: (tag: Tag) => void
 }
 
 export default function TagFormModal({
   isOpen,
   tag,
   setIsOpen,
+  onSuccess,
 }: TagFormModalProps) {
   return (
     <TagFormModalInner
@@ -28,11 +34,12 @@ export default function TagFormModal({
       isOpen={isOpen}
       setIsOpen={setIsOpen}
       tag={tag}
+      onSuccess={onSuccess}
     />
   )
 }
 
-function TagFormModalInner({ isOpen, setIsOpen, tag }: TagFormModalProps) {
+function TagFormModalInner({ isOpen, setIsOpen, tag, onSuccess }: TagFormModalProps) {
   const t = useTranslations()
   const router = useRouter()
   const [isRefreshing, startTransition] = useTransition()
@@ -58,14 +65,18 @@ function TagFormModalInner({ isOpen, setIsOpen, tag }: TagFormModalProps) {
   const loading = isPending || isRefreshing
 
   useEffect(() => {
-    if (state?.success) {
-      pendingClose.current = true
-      startTransition(() => {
-        setIsOpen(false)
-        router.refresh()
-      })
+    if (!state?.success) return
+    if (onSuccess) {
+      onSuccess(state.data as Tag)
+      setIsOpen(false)
+      return
     }
-  }, [state?.success, router, setIsOpen])
+    pendingClose.current = true
+    startTransition(() => {
+      setIsOpen(false)
+      router.refresh()
+    })
+  }, [state?.success, state?.data, onSuccess, router, setIsOpen])
 
 
 
