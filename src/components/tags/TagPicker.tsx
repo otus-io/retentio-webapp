@@ -48,6 +48,12 @@ export default function TagPicker() {
     setModalOpen(true)
   }, [])
 
+  const handleTagCreated = useCallback((tag: ITag) => {
+    // 把新建的标签加入可选项并选中，保留已选项
+    list.append(tag)
+    setSelectedKeys((prev) => (prev.includes(tag.id) ? prev : [...prev, tag.id]))
+  }, [list])
+
   return (
     <>
       <Autocomplete
@@ -135,7 +141,7 @@ export default function TagPicker() {
         </Autocomplete.Popover>
       </Autocomplete>
 
-      <TagFormModal tag={null} isOpen={modalOpen} setIsOpen={setModalOpen} />
+      <TagFormModal tag={null} isOpen={modalOpen} setIsOpen={setModalOpen} onSuccess={handleTagCreated} />
     </>
   )
 }
