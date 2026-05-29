@@ -38,6 +38,10 @@ function TagFormModalInner({ isOpen, setIsOpen, tag }: TagFormModalProps) {
   const [isRefreshing, startTransition] = useTransition()
   const pendingClose = useRef(false)
 
+  const title = tag
+    ? t('common.update', { name: t('term.tags') })
+    : t('common.create', { name: t('term.tags') })
+
   const actionHandler = tag
     ? updateTagAction.bind(null, tag.id)
     : createTagAction
@@ -51,29 +55,20 @@ function TagFormModalInner({ isOpen, setIsOpen, tag }: TagFormModalProps) {
 
   const [state, action, isPending] = useActionState(actionHandler, defaultState)
 
-  // 提交成功后:在 transition 中刷新服务端数据(isRefreshing 会持续到 RSC 重渲染完成)
+  const loading = isPending || isRefreshing
+
   useEffect(() => {
     if (state?.success) {
       pendingClose.current = true
       startTransition(() => {
+        setIsOpen(false)
         router.refresh()
       })
     }
-  }, [state?.success, router])
+  }, [state?.success, router, setIsOpen])
 
-  // 刷新完成(列表已是最新)后再关闭弹窗,避免"死区"
-  useEffect(() => {
-    if (pendingClose.current && !isRefreshing) {
-      pendingClose.current = false
-      setIsOpen(false)
-    }
-  }, [isRefreshing, setIsOpen])
 
-  const loading = isPending || isRefreshing
 
-  const title = tag
-    ? t('common.update', { name: t('term.tags') })
-    : t('common.create', { name: t('term.tags') })
 
   return (
     <Modal.Backdrop
@@ -96,6 +91,7 @@ function TagFormModalInner({ isOpen, setIsOpen, tag }: TagFormModalProps) {
                 isRequired
                 variant="secondary"
                 defaultValue={state?.data?.name}
+                autoFocus
               />
               <AppTextarea
                 name="description"
