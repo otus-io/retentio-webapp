@@ -29,6 +29,7 @@
     "@mdx-js/loader": "^3.1.1",
     "@mdx-js/react": "^3.1.1",
     "@next/mdx": "^16.2.2",
+    "@react-stately/data": "^3.16.0",
     "@types/mdx": "^2.0.13",
     "ag-grid-community": "35.2.1",
     "ag-grid-react": "^35.2.1",
