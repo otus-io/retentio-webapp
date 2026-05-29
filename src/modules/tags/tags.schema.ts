@@ -49,7 +49,7 @@ export type TagResponseDTO = BaseApiResult<{ tag: Tag }>
 /**
  * 标签列表响应 DTO
  */
-export type TagsListResponseDTO = BaseApiResult<{ tags: Tag[] }>
+export type TagsListResponseDTO = BaseApiResult<{ tags: Tag[] | null }>
 
 /**
  * 标签集合响应 DTO（用于卡组/词条上的标签列表）
