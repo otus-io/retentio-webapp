@@ -1,4 +1,5 @@
 'use client'
+import { getAllTags } from '@/api/tag'
 import AppButton from '@/components/app/AppButton'
 import TagFormModal from '@/components/tags/TagFormModal'
 import type { Tag as ITag } from '@/modules/tags/tags.schema'
@@ -11,22 +12,28 @@ import {
   Label,
   ListBox,
   SearchField,
+  Spinner,
   Tag as Tag,
   TagGroup,
   useFilter,
 } from '@heroui/react'
+import { useAsyncList } from '@react-stately/data'
 import { Plus } from 'lucide-react'
+import { useTranslations } from 'next-intl'
 import { useCallback, useState } from 'react'
+import clsx from 'clsx'
 
-
-interface TagPickerProps {
-  tags: ITag[]
-}
-
-export default function TagSelect({
-  tags,
-}:TagPickerProps) {
-  const [items] = useState(tags)
+export default function TagPicker() {
+  const t = useTranslations()
+  const list = useAsyncList<ITag>({
+    async load() {
+      const res = await getAllTags()
+      return {
+        items: res.data.tags ?? [],
+      }
+    },
+  })
+  const items = list.items
   const [selectedKeys, setSelectedKeys] = useState<Key[]>([])
   const { contains } = useFilter({ sensitivity: 'base' })
   const [modalOpen, setModalOpen] = useState(false)
@@ -44,7 +51,8 @@ export default function TagSelect({
   return (
     <>
       <Autocomplete
-        placeholder="Select Tags"
+        allowsEmptyCollection
+        placeholder={t('tags.select-placeholder')}
         selectionMode="multiple"
         value={selectedKeys}
         variant="secondary"
@@ -52,7 +60,7 @@ export default function TagSelect({
         isOpen={isOpen}
         onOpenChange={setIsOpen}
       >
-        <Label>Tags</Label>
+        <Label>{t('term.tags')}</Label>
         <Autocomplete.Trigger>
           <Autocomplete.Value>
             {({ defaultChildren, isPlaceholder, state }) => {
@@ -61,7 +69,6 @@ export default function TagSelect({
               }
 
               const selectedItemsKeys = state.selectedItems.map((item) => item.key)
-
               return (
                 <TagGroup size="sm" onRemove={onRemoveTags} aria-label="selected tag" variant="surface">
                   <TagGroup.List>
@@ -94,8 +101,16 @@ export default function TagSelect({
               <SearchField autoFocus name="search" variant="secondary" aria-label="search" className="flex-1 pr-0">
                 <SearchField.Group>
                   <SearchField.SearchIcon />
-                  <SearchField.Input placeholder="Search users..." />
-                  <SearchField.ClearButton />
+                  <SearchField.Input placeholder={t('tags.search-placeholder')} />
+                  <Spinner
+                    size="sm"
+                    className={clsx('absolute top-1/2 right-2 -translate-y-1/2', {
+                      'pointer-events-none opacity-0': !list.isLoading,
+                    })}
+                  />
+                  <SearchField.ClearButton
+                    className={clsx({ 'pointer-events-none opacity-0': !!list.isLoading })}
+                  />
                 </SearchField.Group>
               </SearchField>
               <AppButton isIconOnly onClick={() => handleCreateTag()}>
@@ -103,7 +118,7 @@ export default function TagSelect({
               </AppButton>
             </div>
             <ListBox
-              renderEmptyState={() => <EmptyState>No results found</EmptyState>}
+              renderEmptyState={() => <EmptyState>{t('tags.empty')}</EmptyState>}
             >
               {items.map((item) => (
                 <ListBox.Item
