@@ -136,6 +136,11 @@
     "termsAnd": "和",
     "privacyPolicy": "隐私政策"
   },
+  "tags": {
+    "select-placeholder": "选择标签",
+    "search-placeholder": "搜索标签...",
+    "empty": "暂无标签，点击右上角 + 新建标签。"
+  },
   "common": {
     "login": "登录",
     "logout": "退出登录",

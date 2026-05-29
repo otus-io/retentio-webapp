@@ -136,6 +136,11 @@
     "termsAnd": "and",
     "privacyPolicy": "Privacy Policy"
   },
+  "tags": {
+    "select-placeholder": "Select tags",
+    "search-placeholder": "Search tags...",
+    "empty": "No tags yet — tap the + in the top-right to create one."
+  },
   "common": {
     "login": "Login",
     "logout": "Logout",
