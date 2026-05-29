@@ -16,7 +16,7 @@ export const createTagAction: ActionFunction = async (_, formData) => {
   if (!res.success) {
     return { error: res.message, data, success: false }
   }
-  return { success: true }
+  return { success: true, data }
 }
 
 export const updateTagAction: ActionFunctionPayload<string> = async (tagId, _, formData) => {
@@ -29,7 +29,7 @@ export const updateTagAction: ActionFunctionPayload<string> = async (tagId, _, f
   if (!res.success) {
     return { error: res.message, data, success: false }
   }
-  return { success: true }
+  return { success: true, data }
 }
 
 export const deleteTagAction: ActionFunctionPayload<string> = async (tagId) => {
