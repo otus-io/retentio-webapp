@@ -1,7 +1,7 @@
 'use client'
 
 import { Modal, Form } from '@heroui/react'
-import { useActionState, useEffect, useRef, useTransition } from 'react'
+import { useActionState, useEffect, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
 import { useTranslations } from 'next-intl'
 import AppInput from '@/components/app/AppInput'
@@ -39,12 +39,15 @@ export default function TagFormModal({
   )
 }
 
-function TagFormModalInner({ isOpen, setIsOpen, tag, onSuccess }: TagFormModalProps) {
+function TagFormModalInner({
+  isOpen,
+  setIsOpen,
+  tag,
+  onSuccess,
+}: TagFormModalProps) {
   const t = useTranslations()
   const router = useRouter()
   const [isRefreshing, startTransition] = useTransition()
-  const pendingClose = useRef(false)
-
   const title = tag
     ? t('common.update', { name: t('term.tags') })
     : t('common.create', { name: t('term.tags') })
@@ -66,17 +69,17 @@ function TagFormModalInner({ isOpen, setIsOpen, tag, onSuccess }: TagFormModalPr
 
   useEffect(() => {
     if (!state?.success) return
-    if (onSuccess) {
+    if (onSuccess && isOpen) {
+      console.log('onSuccess')
       onSuccess(state.data as Tag)
       setIsOpen(false)
       return
     }
-    pendingClose.current = true
     startTransition(() => {
       setIsOpen(false)
       router.refresh()
     })
-  }, [state?.success, state?.data, onSuccess, router, setIsOpen])
+  }, [onSuccess, router, setIsOpen, state?.data, state?.success, isOpen])
 
 
 
