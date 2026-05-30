@@ -20,7 +20,7 @@ import {
 import { useAsyncList } from '@react-stately/data'
 import { Plus } from 'lucide-react'
 import { useTranslations } from 'next-intl'
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useState } from 'react'
 import clsx from 'clsx'
 
 export default function TagPicker() {
@@ -58,9 +58,6 @@ export default function TagPicker() {
     })
   }, [list])
 
-  useEffect(() => {
-    console.log({ list: list.items })
-  }, [list])
 
   return (
     <>
