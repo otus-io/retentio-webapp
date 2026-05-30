@@ -1438,7 +1438,7 @@ Authorization: Bearer <token>
 
 - `id`: `a1b2c3d4e5f6`（您的卡组 ID）
 
-**响应结构：** `front` 与 `back` 为按 **template 顺序**排列的 **entry 对象数组**（正面/背面每一侧每个 fact entry 索引对应一个对象）。每个对象与 fact **entry** 一致：可选 **`field`**（列名标签）及可选 **`text`**、**`audio`**、**`image`**、**`video`**、**`json`** 字符串键（无内容则省略）。存在 **`field`** 时来自卡组 **`fields`**（entry 索引 `i` 对应 `fields[i]`）；卡组列名少于 entry 数时，部分对象可能无 `field`。正文与读音可在同一对象并列（如 `"text": "Hello"` 与 `"audio": "http../api/media/…"`）。媒体键在服务端能确定 base URL 时为**完整 URL**；用相同 `Authorization: Bearer <token>` 下载。
+**响应结构：** `front` 与 `back` 为按 **template 顺序**排列的 **entry 对象数组**（正面/背面每一侧每个 fact entry 索引对应一个对象）。每个对象与 fact **entry** 一致：可选 **`field`**（列名标签）及可选 **`text`**、**`audio`**、**`image`**、**`video`**、**`json`** 字符串键（无内容则省略）。存在 **`field`** 时来自卡组 **`fields`**（entry 索引 `i` 对应 `fields[i]`）；卡组列名少于 entry 数时，部分对象可能无 `field`。正文与读音可在同一对象并列（如 `"text": "Hello"` 与 `"audio": "https://.../api/media/…"`）。媒体键在服务端能确定 base URL 时为**完整 URL**；用相同 `Authorization: Bearer <token>` 下载。
 
 下列 JSON 示例均有对应集成测试：[`api/tests/integration/card_test.go`](../api/tests/integration/card_test.go) 中的 `TestGetNextCard`（含卡组字段名）与 `TestNextCardUrgencySelection`（卡组列名缺失/过短、text+audio+image、多正面、仅正面、分屏 template `[[0,1],[2,3]]`、完整 URL host）。
 

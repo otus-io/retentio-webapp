@@ -302,14 +302,37 @@ Column labels (`English`, `Japanese`, …) live on the **deck** only (`fields`).
 
 #### Optional tags (on create)
 
-The request may include optional **`tags`**: an array of tag **names** (strings), not tag IDs. Omit the field or use `[]` for an untagged deck.
+The request may include optional deck tags in **one** of two forms (not both):
+
+| Field         | Type                              | Use when                                                  |
+| ------------- | --------------------------------- | --------------------------------------------------------- |
+| **`tags`**    | tag **names** (`string[]`)        | Bulk import / scripts — missing names are auto-created    |
+| **`tag_ids`** | existing tag **IDs** (`string[]`) | TagPicker UI — tags must already exist (`POST /api/tags`) |
+
+Omit both fields or use `[]` for an untagged deck. Sending **`tags` and `tag_ids` together** → **400** `provide either tags or tag_ids, not both`.
+
+##### `tags` (names)
+
+| Behavior       | Detail                                                                                          |
+| -------------- | ----------------------------------------------------------------------------------------------- |
+| **Validation** | Same name rules as [`POST /api/tags`](#create-a-tag). Invalid names → **400**.                  |
+| **Reuse**      | Existing user tags (by normalized name) are reused.                                             |
+| **Create**     | Missing names are auto-created; counts toward **100 tags per user**.                            |
+| **Dedup**      | Duplicate names in the same request (e.g. `"Noun"` and `" noun "`) collapse to one association. |
+
+##### `tag_ids` (existing IDs)
+
+| Behavior       | Detail                                                           |
+| -------------- | ---------------------------------------------------------------- |
+| **Validation** | Each id must be non-empty; unknown id → **404** `tag not found`. |
+| **Ownership**  | Tag must belong to the current user.                             |
+| **Create**     | Never auto-creates tags.                                         |
+| **Dedup**      | Duplicate ids in the same request collapse to one association.   |
+
+##### Both forms
 
 | Behavior            | Detail                                                                                                 |
 | ------------------- | ------------------------------------------------------------------------------------------------------ |
-| **Validation**      | Same name rules as [`POST /api/tags`](#create-a-tag). Invalid names → **400**.                         |
-| **Reuse**           | Existing user tags (by normalized name) are reused.                                                    |
-| **Create**          | Missing names are auto-created; counts toward **100 tags per user**.                                   |
-| **Dedup**           | Duplicate names in the same request (e.g. `"Noun"` and `" noun "`) collapse to one association.        |
 | **Limit**           | At most **20** distinct tags on the deck after resolution → **400** `maximum tags per deck reached`.   |
 | **Storage**         | Tags are not stored in deck JSON; use [`GET /api/decks/{id}/tags`](#list-tags-on-a-deck) after create. |
 | **Create response** | Returns only `deck_id` — not tag objects.                                                              |
@@ -1427,7 +1450,7 @@ Example: `GET /api/decks/{id}/card?tag_id=Kt8QmNz2`
 
 - `id`: `a1b2c3d4e5f6` (your deck ID)
 
-**Response shape:** `front` and `back` are arrays of **entry objects** in **template order** (one object per fact entry index on that side). Each object matches a fact **entry**: optional **`field`** (label) and optional **`text`**, **`audio`**, **`image`**, **`video`**, **`json`** string keys (omitted when empty). When present, **`field`** comes from the deck’s **`fields`** list (`fields[i]` for entry index `i`); if the deck has fewer names than entries, some objects may omit `field`. Text and its pronunciation clip are explicit siblings on the same object (e.g. `"text": "Hello"` and `"audio": "http../api/media/…"`). For media keys, values are **full media URLs** when the server can determine a base URL. Use each URL with the same `Authorization: Bearer <token>` to download the file.
+**Response shape:** `front` and `back` are arrays of **entry objects** in **template order** (one object per fact entry index on that side). Each object matches a fact **entry**: optional **`field`** (label) and optional **`text`**, **`audio`**, **`image`**, **`video`**, **`json`** string keys (omitted when empty). When present, **`field`** comes from the deck’s **`fields`** list (`fields[i]` for entry index `i`); if the deck has fewer names than entries, some objects may omit `field`. Text and its pronunciation clip are explicit siblings on the same object (e.g. `"text": "Hello"` and `"audio": "https://.../api/media/…"`). For media keys, values are **full media URLs** when the server can determine a base URL. Use each URL with the same `Authorization: Bearer <token>` to download the file.
 
 Each JSON example below has a matching integration test in [`api/tests/integration/card_test.go`](../api/tests/integration/card_test.go): `TestGetNextCard` (with field names from the deck) and `TestNextCardUrgencySelection` (no field names when deck labels are missing/short, text+audio+image, multi-front, front-only, split template `[[0,1],[2,3]]`, and full URL host).
 
