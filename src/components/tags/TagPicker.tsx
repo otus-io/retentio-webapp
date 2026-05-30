@@ -20,7 +20,7 @@ import {
 import { useAsyncList } from '@react-stately/data'
 import { Plus } from 'lucide-react'
 import { useTranslations } from 'next-intl'
-import { useCallback, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import clsx from 'clsx'
 
 export default function TagPicker() {
@@ -50,8 +50,16 @@ export default function TagPicker() {
 
   const handleTagCreated = useCallback((tag: ITag) => {
     // 把新建的标签加入可选项并选中，保留已选项
+    console.log('handleTagCreated', tag)
     list.append(tag)
-    setSelectedKeys((prev) => (prev.includes(tag.id) ? prev : [...prev, tag.id]))
+    setSelectedKeys((prev) => {
+      const result = (prev.includes(tag.id) ? prev : [...prev, tag.id])
+      return result
+    })
+  }, [list])
+
+  useEffect(() => {
+    console.log({ list: list.items })
   }, [list])
 
   return (
@@ -141,7 +149,12 @@ export default function TagPicker() {
         </Autocomplete.Popover>
       </Autocomplete>
 
-      <TagFormModal tag={null} isOpen={modalOpen} setIsOpen={setModalOpen} onSuccess={handleTagCreated} />
+      <TagFormModal
+        tag={null}
+        isOpen={modalOpen}
+        setIsOpen={setModalOpen}
+        onSuccess={handleTagCreated}
+      />
     </>
   )
 }
