@@ -24,8 +24,8 @@
     "*.{ts,tsx,js,jsx,mjs,cjs,md,mdx,json,jsonc,yml,yaml}": "eslint --fix"
   },
   "dependencies": {
-    "@heroui/react": "^3.0.2",
-    "@heroui/styles": "^3.0.2",
+    "@heroui/react": "^3.1.0",
+    "@heroui/styles": "^3.1.0",
     "@mdx-js/loader": "^3.1.1",
     "@mdx-js/react": "^3.1.1",
     "@next/mdx": "^16.2.2",
@@ -87,5 +87,10 @@
     "vite-tsconfig-paths": "^6.1.1",
     "vitest": "^4.1.7",
     "yaml-eslint-parser": "^2.0.0"
+  },
+  "pnpm": {
+    "onlyBuiltDependencies": [
+      "@swc/core"
+    ]
   }
 }
