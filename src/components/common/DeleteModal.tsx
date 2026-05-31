@@ -37,7 +37,7 @@ export default function DeleteModal({
         <AlertDialog.Dialog className="sm:max-w-100">
           <AlertDialog.CloseTrigger />
           <AlertDialog.Header>
-            <AlertDialog.Icon status="danger" />
+            {/* <AlertDialog.Icon status="danger" /> */}
             <AlertDialog.Heading>{t('common.tips')}</AlertDialog.Heading>
           </AlertDialog.Header>
           <AlertDialog.Body>
