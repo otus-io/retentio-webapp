@@ -3,9 +3,10 @@ import type { Deck } from '@/modules/decks/decks.schema'
 import { Dropdown, Label } from '@heroui/react'
 import type { Key } from 'react'
 import { useCallback, useMemo, useState } from 'react'
-import { EllipsisVertical, Trash2 } from 'lucide-react'
+import { EllipsisVertical, Tag, Trash2 } from 'lucide-react'
 import { useTranslations } from 'next-intl'
 import DeleteModal from '@/components/common/DeleteModal'
+import FactsTagsModal from '@/components/facts/FactsTagsModal'
 import type { Fact } from '@/modules/facts/facts.schema'
 import { deleteFactAction } from '@/modules/facts/facts.action'
 
@@ -19,17 +20,20 @@ export default function FactsAction({ deck, fact }: DecksActionProps) {
   const deleteDeck = useMemo(() => {
     return deleteFactAction.bind(null, { deckId: deck.id, factId: fact.id })
   }, [deck.id, fact.id])
-  const [isOpen, setIsOpen] = useState(false)
-
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false)
+  const [isTagsOpen, setIsTagsOpen] = useState(false)
 
   const handleAction = useCallback((id: Key) => {
     switch (id) {
+      case 'tag':
+        setIsTagsOpen(true)
+        break
       case 'delete':
-        setIsOpen(true)
+        setIsDeleteModalOpen(true)
         break
       default:
     }
-  }, [setIsOpen])
+  }, [])
 
   return (
     <>
@@ -39,6 +43,12 @@ export default function FactsAction({ deck, fact }: DecksActionProps) {
         </Dropdown.Trigger>
         <Dropdown.Popover>
           <Dropdown.Menu onAction={handleAction}>
+            <Dropdown.Item id="tag" textValue="tag">
+              <div className="flex items-center gap-1">
+                <Tag className="size-3.5 text-muted" />
+                <Label>{t('term.tags')}</Label>
+              </div>
+            </Dropdown.Item>
             <Dropdown.Item id="delete" textValue="delete" variant="danger">
               <div className="flex items-center gap-1">
                 <Trash2 className="size-3.5 text-danger" />
@@ -48,7 +58,8 @@ export default function FactsAction({ deck, fact }: DecksActionProps) {
           </Dropdown.Menu>
         </Dropdown.Popover>
       </Dropdown>
-      <DeleteModal isOpen={isOpen} setIsOpen={setIsOpen} action={deleteDeck} />
+      <DeleteModal isOpen={isDeleteModalOpen} setIsOpen={setIsDeleteModalOpen} action={deleteDeck} />
+      <FactsTagsModal deck={deck} fact={fact} isOpen={isTagsOpen} setIsOpen={setIsTagsOpen} />
     </>
   )
 }
