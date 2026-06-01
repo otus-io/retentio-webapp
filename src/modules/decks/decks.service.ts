@@ -1,7 +1,8 @@
 import * as decksApi from '@/api/decks'
 import * as tagApi from '@/api/tag'
 import { ServiceResponse } from '@/lib/response'
-import type { CreateOrUpdateDeckDTO } from '@/modules/decks/decks.schema'
+import type { CreateOrUpdateDeckDTO, Deck, DeckResponseDTO } from '@/modules/decks/decks.schema'
+import type { TagsResponseDTO } from '@/modules/tags/tags.schema'
 
 /**
  * 获取所有卡组的服务函数
@@ -19,7 +20,24 @@ export async function getAllDecksService() {
  */
 export async function getDeckService(deckId: string) {
   try {
-    return ServiceResponse.success(await decksApi.getDeck(deckId))
+    const results = await Promise.allSettled([
+      decksApi.getDeck(deckId),
+      tagApi.getDeckTags(deckId),
+    ])
+    const failed = results.filter((r) => r.status === 'rejected')
+    if (failed.length > 0) {
+      return ServiceResponse.error('updateDeckService error', failed[0].reason)
+    }
+
+    const [a, b] = results as [PromiseFulfilledResult<DeckResponseDTO>, PromiseFulfilledResult<TagsResponseDTO>]
+    const result = {
+      ...a.value,
+      data: {
+        ...a.value.data,
+        tags: b.value.data.tags,
+      } as Deck,
+    }
+    return ServiceResponse.success(result)
   } catch (e) {
     return ServiceResponse.error('getDeckService failed', e)
   }

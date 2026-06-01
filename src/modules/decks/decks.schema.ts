@@ -1,3 +1,4 @@
+import type { Tag } from '@/modules/tags/tags.schema'
 import z from 'zod'
 
 /**
@@ -47,6 +48,10 @@ export interface Deck {
    * 更新时间
    */
   updated_at: string;
+  /**
+   * tags
+   */
+  tags: Tag[];
 }
 
 interface Stats {

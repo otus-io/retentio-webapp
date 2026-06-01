@@ -19,7 +19,7 @@ type DecksCreateFormProps = {
   data: null
 } | {
   type: 'update',
-  data: Deck & { tagIds: string[] }
+  data: Deck
 }
 
 export default function DecksForm({
@@ -32,7 +32,7 @@ export default function DecksForm({
         name: data.name,
         fields: data.fields,
         rate: data.rate,
-        tag_ids: data.tagIds as string[],
+        tag_ids: (data.tags ?? []).map((e) => e.id) as string[],
         submissionId: '',
       },
     }
