@@ -83,25 +83,20 @@ export default function FactsTagsModal({ deck, fact, isOpen, setIsOpen }: FactsT
 
   const handleSelectionChange = useCallback((keys: Selection) => {
     if (keys === 'all') return
-    setSelectedKeys((prev) => {
-      for (const key of keys) {
-        if (!prev.has(key)) associateTag(key)
-      }
-      for (const key of prev) {
-        if (!keys.has(key)) removeTag(key)
-      }
-      return keys
-    })
-  }, [associateTag, removeTag])
+    const next = new Set(keys)
+    const added = [...next].filter((key) => !selectedKeys.has(key))
+    const removed = [...selectedKeys].filter((key) => !next.has(key))
+    setSelectedKeys(next)
+    added.forEach(associateTag)
+    removed.forEach(removeTag)
+  }, [associateTag, removeTag, selectedKeys])
 
   const handleTagCreated = useCallback((tag: ITag) => {
     setTags((prev) => (prev.some((item) => item.id === tag.id) ? prev : [...prev, tag]))
-    setSelectedKeys((prev) => {
-      if (prev.has(tag.id)) return prev
-      associateTag(tag.id)
-      return new Set(prev).add(tag.id)
-    })
-  }, [associateTag])
+    if (selectedKeys.has(tag.id)) return
+    setSelectedKeys((prev) => new Set(prev).add(tag.id))
+    associateTag(tag.id)
+  }, [associateTag, selectedKeys])
 
   return (
     <>
