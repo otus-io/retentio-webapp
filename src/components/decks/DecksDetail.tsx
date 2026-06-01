@@ -116,11 +116,9 @@ export default function DecksDetail({ deck }: DecksDetailProps) {
                 <DecksIconLabel icon={Tag} color="amber" className="md:col-span-2 items-start!">
                   <span className="text-muted-foreground inline-block h-7 mr-2 leading-7">{t('term.tags')}:</span>
                   <div className="inline-flex flex-wrap gap-2 ">
-                  <div className="inline-flex flex-wrap gap-2 ">
                     {tags.map((e) => (
                       <TagItem tag={e} key={e.id} editable ={false} />
                     ))}
-                  </div>
                   </div>
                 </DecksIconLabel>
               )}
