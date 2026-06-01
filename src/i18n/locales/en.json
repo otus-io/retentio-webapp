@@ -241,6 +241,7 @@
     "audio": "Audio",
     "image": "Image",
     "video": "Video",
-    "attachment": "Attachment"
+    "attachment": "Attachment",
+    "never": "never"
   }
 }
