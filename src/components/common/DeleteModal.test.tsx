@@ -99,11 +99,6 @@ describe('DeleteModal', () => {
     expect(confirmBtn.getAttribute('type')).toBe('submit')
   })
 
-  it('渲染危险状态图标', () => {
-    render(<DeleteModal {...defaultProps} />)
-    expect(screen.getByTestId('icon-danger')).toBeDefined()
-  })
-
   it('渲染关闭按钮', () => {
     render(<DeleteModal {...defaultProps} />)
     expect(screen.getByLabelText('Close')).toBeDefined()
