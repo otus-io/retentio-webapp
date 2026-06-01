@@ -53,7 +53,7 @@ export const updateDeckAction: ActionFunctionPayload<string> = async (deckId, _,
     }
   }
   revalidatePath('/decks')
-  redirect(`/decks/${deckId}`)
+  redirect('/decks')
 }
 
 /**

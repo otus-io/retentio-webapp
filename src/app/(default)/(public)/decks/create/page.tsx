@@ -2,7 +2,7 @@ import DecksForm from '@/components/decks/DecksForm'
 import type { Metadata } from 'next'
 import { getTranslations } from 'next-intl/server'
 
-export default function Page() {
+export default async function Page() {
   return <DecksForm type="create" data={null} />
 }
 

@@ -1,3 +1,4 @@
+import type { Tag } from '@/modules/tags/tags.schema'
 import z from 'zod'
 
 /**
@@ -47,6 +48,10 @@ export interface Deck {
    * 更新时间
    */
   updated_at: string;
+  /**
+   * tags
+   */
+  tags: Tag[];
 }
 
 interface Stats {
@@ -102,6 +107,14 @@ export const crateOrUpdateDeckSchema = z.object({
   name: z.string().min(1, 'Name is required').max(100, 'Name must be at most 100 characters'),
   fields: z.array(z.string().min(1, 'Field cannot be empty')).min(2, 'At least 2 fields are required'),
   rate: z.coerce.number().min(1, 'Rate must be at least 1').max(1000, 'Rate must be at most 1000'),
+  tag_ids: z.union([
+    z.string().transform((v) => [v]),
+    z.array(z.string()),
+  ]).optional(),
+  default_tag_ids: z.union([
+    z.string().transform((v) => [v]),
+    z.array(z.string()),
+  ]).optional(),
 })
 
 /**

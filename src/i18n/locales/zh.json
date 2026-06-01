@@ -136,6 +136,11 @@
     "termsAnd": "和",
     "privacyPolicy": "隐私政策"
   },
+  "tags": {
+    "select-placeholder": "选择标签",
+    "search-placeholder": "搜索标签...",
+    "empty": "暂无标签，点击右上角 + 新建标签。"
+  },
   "common": {
     "login": "登录",
     "logout": "退出登录",
@@ -228,6 +233,7 @@
     "new-today": "今日新增",
     "last-review": "上次复习",
     "tags": "标签",
+    "description": "描述",
     "column": "列",
     "row": "行",
     "entry": "条目",
@@ -235,6 +241,7 @@
     "audio": "音频",
     "image": "图片",
     "video": "视频",
-    "attachment": "附件"
+    "attachment": "附件",
+    "never": "没有复习过"
   }
 }

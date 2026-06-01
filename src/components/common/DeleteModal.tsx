@@ -12,6 +12,7 @@ interface DeleteModalProps {
   setIsOpen: (isOpen: boolean) => void
   type?: 'single' | 'multiple'
   deleteCount?: number
+  onSuccess?: () => void
 }
 
 export default function DeleteModal({
@@ -20,21 +21,23 @@ export default function DeleteModal({
   setIsOpen,
   type = 'single',
   deleteCount = 1,
+  onSuccess,
 }: DeleteModalProps) {
   const t = useTranslations()
   const [_state, action, isPending] = useActionState(deleteAction, null)
   useEffect(() => {
     if(_state?.success){
       setIsOpen(false)
+      onSuccess?.()
     }
-  }, [_state?.success, setIsOpen])
+  }, [_state?.success, setIsOpen, onSuccess])
   return (
     <AlertDialog.Backdrop isOpen={isOpen} onOpenChange={setIsOpen}>
       <AlertDialog.Container>
         <AlertDialog.Dialog className="sm:max-w-100">
           <AlertDialog.CloseTrigger />
           <AlertDialog.Header>
-            <AlertDialog.Icon status="danger" />
+            {/* <AlertDialog.Icon status="danger" /> */}
             <AlertDialog.Heading>{t('common.tips')}</AlertDialog.Heading>
           </AlertDialog.Header>
           <AlertDialog.Body>

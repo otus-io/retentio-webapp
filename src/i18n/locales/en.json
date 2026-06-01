@@ -136,6 +136,11 @@
     "termsAnd": "and",
     "privacyPolicy": "Privacy Policy"
   },
+  "tags": {
+    "select-placeholder": "Select tags",
+    "search-placeholder": "Search tags...",
+    "empty": "No tags yet — tap the + in the top-right to create one."
+  },
   "common": {
     "login": "Login",
     "logout": "Logout",
@@ -228,6 +233,7 @@
     "new-today": "Today",
     "last-review": "Last Review",
     "tags": "Tags",
+    "description": "Description",
     "column": "Column",
     "row": "Row",
     "entry": "Entry",
@@ -235,6 +241,7 @@
     "audio": "Audio",
     "image": "Image",
     "video": "Video",
-    "attachment": "Attachment"
+    "attachment": "Attachment",
+    "never": "never"
   }
 }

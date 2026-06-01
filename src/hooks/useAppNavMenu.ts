@@ -22,11 +22,18 @@ export default function useAppNavMenu({ isLoggedIn = false }: { isLoggedIn?: boo
     ]
 
     if (isLoggedIn) {
-      items.push({
-        title: t('term.decks'),
-        href: '/decks',
-        isActive: pathname.startsWith('/decks'),
-      })
+      items.push(
+        {
+          title: t('term.decks'),
+          href: '/decks',
+          isActive: pathname.startsWith('/decks'),
+        },
+        {
+          title: t('term.tags'),
+          href: '/tags',
+          isActive: pathname.startsWith('/tags'),
+        },
+      )
     }
 
     return items
