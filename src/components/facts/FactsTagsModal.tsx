@@ -19,6 +19,7 @@ import Fuse from 'fuse.js'
 import { useCallback, useDeferredValue, useEffect, useMemo, useState } from 'react'
 import AppButton from '@/components/app/AppButton'
 import TagFormModal from '@/components/tags/TagFormModal'
+import { showFailToast } from '@/lib/ui'
 
 interface FactsTagsModalProps {
   deck: Deck
@@ -66,33 +67,41 @@ export default function FactsTagsModal({ deck, fact, isOpen, setIsOpen }: FactsT
     }
   }, [isOpen, deck.id, fact.id])
 
-  const handleSelectionChange = useCallback((keys: Selection) => {
-    if (keys === 'all') return
-    setSelectedKeys((prev) => {
-      // 新增的标签 -> 关联，移除的标签 -> 取消关联
-      for (const key of keys) {
-        if (!prev.has(key)) {
-          associateTagToFact(deck.id, fact.id, String(key))
-        }
-      }
-      for (const key of prev) {
-        if (!keys.has(key)) {
-          removeTagFromFact(deck.id, fact.id, String(key))
-        }
-      }
-      return keys
+  const associateTag = useCallback((key: Key) => {
+    associateTagToFact(deck.id, fact.id, String(key)).catch((err) => {
+      showFailToast(err)
+      setSelectedKeys((s) => { const next = new Set(s); next.delete(key); return next })
     })
   }, [deck.id, fact.id])
 
+  const removeTag = useCallback((key: Key) => {
+    removeTagFromFact(deck.id, fact.id, String(key)).catch((err) => {
+      showFailToast(err)
+      setSelectedKeys((s) => new Set(s).add(key))
+    })
+  }, [deck.id, fact.id])
+
+  const handleSelectionChange = useCallback((keys: Selection) => {
+    if (keys === 'all') return
+    setSelectedKeys((prev) => {
+      for (const key of keys) {
+        if (!prev.has(key)) associateTag(key)
+      }
+      for (const key of prev) {
+        if (!keys.has(key)) removeTag(key)
+      }
+      return keys
+    })
+  }, [associateTag, removeTag])
+
   const handleTagCreated = useCallback((tag: ITag) => {
-    // 把新建的标签加入可选项并选中并关联，不重新请求
     setTags((prev) => (prev.some((item) => item.id === tag.id) ? prev : [...prev, tag]))
     setSelectedKeys((prev) => {
       if (prev.has(tag.id)) return prev
-      associateTagToFact(deck.id, fact.id, tag.id)
+      associateTag(tag.id)
       return new Set(prev).add(tag.id)
     })
-  }, [deck.id, fact.id])
+  }, [associateTag])
 
   return (
     <>
