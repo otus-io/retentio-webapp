@@ -8,13 +8,15 @@ import type { Key, Selection } from '@heroui/react'
 import {
   EmptyState,
   Modal,
+  SearchField,
   Spinner,
   Tag,
   TagGroup,
 } from '@heroui/react'
 import { Plus } from 'lucide-react'
 import { useTranslations } from 'next-intl'
-import { useCallback, useEffect, useState } from 'react'
+import Fuse from 'fuse.js'
+import { useCallback, useDeferredValue, useEffect, useMemo, useState } from 'react'
 import AppButton from '@/components/app/AppButton'
 import TagFormModal from '@/components/tags/TagFormModal'
 
@@ -31,6 +33,14 @@ export default function FactsTagsModal({ deck, fact, isOpen, setIsOpen }: FactsT
   const [selectedKeys, setSelectedKeys] = useState<Set<Key>>(new Set())
   const [isLoading, setIsLoading] = useState(false)
   const [formOpen, setFormOpen] = useState(false)
+  const [keywords, setKeywords] = useState('')
+  const deferredQuery = useDeferredValue(keywords)
+
+  const fuse = useMemo(() => new Fuse(tags, { keys: ['name', 'description'] }), [tags])
+  const results = useMemo(() => {
+    if (!deferredQuery) return tags
+    return fuse.search(deferredQuery).map((r) => r.item)
+  }, [fuse, deferredQuery, tags])
 
   useEffect(() => {
     if (!isOpen) return
@@ -93,7 +103,8 @@ export default function FactsTagsModal({ deck, fact, isOpen, setIsOpen }: FactsT
             <Modal.Header>
               <Modal.Heading>{t('term.tags')}</Modal.Heading>
             </Modal.Header>
-            <Modal.Body className="px-2 py-4">
+            <Modal.Body className="px-2 py-4 space-y-3">
+
               {isLoading
                 ? (
                   <div className="flex justify-center py-6">
@@ -104,31 +115,61 @@ export default function FactsTagsModal({ deck, fact, isOpen, setIsOpen }: FactsT
                   ? (
                     <EmptyState>{t('tags.empty')}</EmptyState>
                   )
-                  : (
-                    <TagGroup
-                      selectionMode="multiple"
-                      selectedKeys={selectedKeys}
-                      onSelectionChange={handleSelectionChange}
-                      aria-label={t('term.tags')}
-                    >
-                      <TagGroup.List>
-                        {tags.map((tag) => (
-                          <Tag key={tag.id} id={tag.id} textValue={tag.name}>
-                            {tag.name}
-                          </Tag>
-                        ))}
-                      </TagGroup.List>
-                    </TagGroup>
-                  )}
+                  : results.length === 0
+                    ? (
+                      <EmptyState>{t('common.no-data')}</EmptyState>
+                    )
+                    : (
+                      <>
+                        <div className="flex items-center gap-1 ">
+                          <SearchField
+                            value={keywords}
+                            onChange={setKeywords}
+                            name="search"
+                            variant="secondary"
+                            aria-label={t('common.search')}
+                            className="flex-1 pr-0"
+                          >
+                            <SearchField.Group>
+                              <SearchField.SearchIcon />
+                              <SearchField.Input
+                                aria-label={t('common.search')}
+                                placeholder={t('common.search')}
+                              />
+                              <SearchField.ClearButton />
+                            </SearchField.Group>
+                          </SearchField>
+
+                          <AppButton onClick={() => setFormOpen(true)} isIconOnly>
+                            <Plus />
+                          </AppButton>
+                        </div>
+                        <TagGroup
+                          selectionMode="multiple"
+                          selectedKeys={selectedKeys}
+                          onSelectionChange={handleSelectionChange}
+                          aria-label={t('term.tags')}
+                          style={{
+                            '--radius': '.5rem',
+                          }}
+                        >
+                          <TagGroup.List>
+                            {results.map((tag) => (
+                              <Tag key={tag.id} id={tag.id} textValue={tag.name}>
+                                {tag.name}
+                              </Tag>
+                            ))}
+                          </TagGroup.List>
+                        </TagGroup>
+                      </>
+                    )
+              }
             </Modal.Body>
             <Modal.Footer>
               <AppButton slot="close" variant="secondary">
                 {t('common.close')}
               </AppButton>
-              <AppButton onClick={() => setFormOpen(true)}>
-                <Plus />
-                {t('common.create', { name: t('term.tags') })}
-              </AppButton>
+
             </Modal.Footer>
           </Modal.Dialog>
         </Modal.Container>
