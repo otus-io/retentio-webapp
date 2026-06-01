@@ -19,7 +19,7 @@ type DecksCreateFormProps = {
   data: null
 } | {
   type: 'update',
-  data: Deck
+  data: Deck & { tagIds: string[] }
 }
 
 export default function DecksForm({
@@ -32,6 +32,7 @@ export default function DecksForm({
         name: data.name,
         fields: data.fields,
         rate: data.rate,
+        tag_ids: data.tagIds as string[],
         submissionId: '',
       },
     }
@@ -40,6 +41,7 @@ export default function DecksForm({
         name: '',
         fields: ['', ''],
         rate: '20',
+        tag_ids: [] as string[],
         submissionId: '',
       },
     }
@@ -72,6 +74,12 @@ function DecksFormInner({
   isPending: boolean,
   type: DecksCreateFormProps['type']
 }) {
+
+  const defaultTagIds =
+    (state?.data?.tag_ids == null
+      ? []
+      : Array.isArray(state.data.tag_ids) ? state.data.tag_ids : [state.data.tag_ids]) as string[]
+
 
   const t = useTranslations()
 
@@ -154,8 +162,14 @@ function DecksFormInner({
                 {t('common.add', { name: t('term.fields') })}
               </AppButton>
 
-              <TagPicker />
-
+              <TagPicker
+                defaultValue={defaultTagIds}
+              />
+              {
+                defaultTagIds.map((e) => {
+                  return <input key={e} defaultValue={e} hidden name="default_tag_ids"></input>
+                })
+              }
               <NumberField
                 formatOptions={{
                   useGrouping: false,

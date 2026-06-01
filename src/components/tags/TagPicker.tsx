@@ -23,7 +23,7 @@ import { useTranslations } from 'next-intl'
 import { useCallback, useState } from 'react'
 import clsx from 'clsx'
 
-export default function TagPicker() {
+export default function TagPicker({ defaultValue }: { defaultValue?: string[] }) {
   const t = useTranslations()
   const list = useAsyncList<ITag>({
     async load() {
@@ -34,7 +34,7 @@ export default function TagPicker() {
     },
   })
   const items = list.items
-  const [selectedKeys, setSelectedKeys] = useState<Key[]>([])
+  const [selectedKeys, setSelectedKeys] = useState<Key[]>(defaultValue ?? [])
   const { contains } = useFilter({ sensitivity: 'base' })
   const [modalOpen, setModalOpen] = useState(false)
   const [isOpen, setIsOpen] = useState(false)
@@ -69,6 +69,7 @@ export default function TagPicker() {
         variant="secondary"
         onChange={(keys) => setSelectedKeys(keys as Key[])}
         isOpen={isOpen}
+        name="tag_ids"
         onOpenChange={setIsOpen}
       >
         <Label>{t('term.tags')}</Label>
@@ -103,7 +104,7 @@ export default function TagPicker() {
               )
             }}
           </Autocomplete.Value>
-          <Autocomplete.ClearButton />
+          <Autocomplete.ClearButton type="button" />
           <Autocomplete.Indicator />
         </Autocomplete.Trigger>
         <Autocomplete.Popover>
