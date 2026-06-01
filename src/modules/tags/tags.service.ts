@@ -41,12 +41,12 @@ export async function deleteTagsService(tagIds: string[]) {
     const failed = results.filter((r) => r.status === 'rejected')
     if (failed.length > 0) {
       return ServiceResponse.error(
-        `deleteFactsService failed: ${failed.length}/${tagIds.length} deletions failed`,
+        `deleteTagsService failed: ${failed.length}/${tagIds.length} deletions failed`,
         failed[0].reason,
       )
     }
-    return ServiceResponse.success({ data: {}, meta: { msg: 'deleteFactsService success' } })
+    return ServiceResponse.success({ data: {}, meta: { msg: 'deleteTagsService success' } })
   } catch (e) {
-    return ServiceResponse.error('deleteFactsService failed', e)
+    return ServiceResponse.error('deleteTagsService failed', e)
   }
 }
