@@ -30,8 +30,8 @@ export default function DecksCard({
     if (deck.stats.last_reviewed_at) {
       return new Date(deck.stats.last_reviewed_at * 1000).toLocaleDateString()
     }
-    return 'never'
-  }, [deck.stats.last_reviewed_at])
+    return t('term.never')
+  }, [deck.stats.last_reviewed_at, t])
 
   const handleClick = useCallback(() => {
     router.push(`/decks/${deck.id}`)
