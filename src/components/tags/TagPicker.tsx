@@ -33,7 +33,9 @@ export default function TagPicker({ defaultValue }: { defaultValue?: string[] })
       }
     },
   })
+
   const items = list.items
+  const isLoading = list.isLoading
   const [selectedKeys, setSelectedKeys] = useState<Key[]>(defaultValue ?? [])
   const { contains } = useFilter({ sensitivity: 'base' })
   const [modalOpen, setModalOpen] = useState(false)
@@ -71,6 +73,7 @@ export default function TagPicker({ defaultValue }: { defaultValue?: string[] })
         isOpen={isOpen}
         name="tag_ids"
         onOpenChange={setIsOpen}
+        isDisabled={isLoading}
       >
         <Label>{t('term.tags')}</Label>
         <Autocomplete.Trigger>
@@ -82,7 +85,15 @@ export default function TagPicker({ defaultValue }: { defaultValue?: string[] })
 
               const selectedItemsKeys = state.selectedItems.map((item) => item.key)
               return (
-                <TagGroup size="sm" onRemove={onRemoveTags} aria-label="selected tag" variant="surface">
+                <TagGroup
+                  size="sm"
+                  onRemove={onRemoveTags}
+                  aria-label="selected tag"
+                  variant="surface"
+                  style={{
+                    '--radius': '.5rem',
+                  }}
+                >
                   <TagGroup.List>
                     {selectedItemsKeys.map((selectedItemKey) => {
                       const selectedItem = items.find((item) => item.id === selectedItemKey)
@@ -104,8 +115,20 @@ export default function TagPicker({ defaultValue }: { defaultValue?: string[] })
               )
             }}
           </Autocomplete.Value>
-          <Autocomplete.ClearButton type="button" />
-          <Autocomplete.Indicator />
+          {
+            isLoading
+              ? (
+                <div className=" flex items-center justify-center  h-5 w-4">
+                  <Spinner size="sm" />
+                </div>
+              )
+              : (
+                <>
+                  <Autocomplete.ClearButton type="button" />
+                  <Autocomplete.Indicator />
+                </>
+              )
+          }
         </Autocomplete.Trigger>
         <Autocomplete.Popover>
           <Autocomplete.Filter filter={contains}>
