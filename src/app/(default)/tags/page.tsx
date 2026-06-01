@@ -9,7 +9,7 @@ export default async function Page() {
   if (!success) {
     return <AppError error={message} page />
   }
-  return <TagsList data={data?.tags || []} />
+  return <TagsList data={data.tags} />
 }
 
 export async function generateMetadata() {
