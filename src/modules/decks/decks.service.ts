@@ -26,7 +26,7 @@ export async function getDeckService(deckId: string) {
     ])
     const failed = results.filter((r) => r.status === 'rejected')
     if (failed.length > 0) {
-      return ServiceResponse.error('updateDeckService error', failed[0].reason)
+      return ServiceResponse.error('getDeckService error', failed[0].reason)
     }
 
     const [a, b] = results as [PromiseFulfilledResult<DeckResponseDTO>, PromiseFulfilledResult<TagsResponseDTO>]
