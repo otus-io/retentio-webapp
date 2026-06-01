@@ -33,3 +33,20 @@ export async function deleteTagService(tagId: string) {
     return ServiceResponse.error('deleteTagService failed', e)
   }
 }
+
+
+export async function deleteTagsService(tagIds: string[]) {
+  try {
+    const results = await Promise.allSettled(tagIds.map((tagsId) => tagApi.deleteTag(tagsId)))
+    const failed = results.filter((r) => r.status === 'rejected')
+    if (failed.length > 0) {
+      return ServiceResponse.error(
+        `deleteFactsService failed: ${failed.length}/${tagIds.length} deletions failed`,
+        failed[0].reason,
+      )
+    }
+    return ServiceResponse.success({ data: {}, meta: { msg: 'deleteFactsService success' } })
+  } catch (e) {
+    return ServiceResponse.error('deleteFactsService failed', e)
+  }
+}
