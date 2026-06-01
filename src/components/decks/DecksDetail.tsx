@@ -6,7 +6,6 @@ import { motion } from 'framer-motion'
 import DecksIconLabel from '@/components/decks/DecksLabel'
 import {
   ListTodo,
-  ChartPie,
   History,
   Layers,
   Inbox,
@@ -15,10 +14,12 @@ import {
   Sparkles,
   Clock,
   ListIcon,
+  Tag,
 } from 'lucide-react'
 import { useTranslations } from 'next-intl'
 import DecksAction from '@/components/decks/DecksAction'
 import LayoutPage from '@/components/layout/LayoutPage'
+import TagItem from '@/components/tags/TagItem'
 
 interface DecksDetailProps {
   deck: Deck
@@ -35,10 +36,9 @@ const containerVariants = {
 export default function DecksDetail({ deck }: DecksDetailProps) {
   const t = useTranslations()
 
-  const progress =
-    deck.stats.cards_count > 0
-      ? ((deck.stats.reviewed_cards / deck.stats.cards_count) * 100).toFixed(2)
-      : '0.00'
+  const progressPct = deck.stats.cards_count > 0
+    ? (deck.stats.reviewed_cards / deck.stats.cards_count) * 100
+    : 0
 
   const last_reviewed_at = useMemo(() => {
     if (deck.stats.last_reviewed_at) {
@@ -48,7 +48,7 @@ export default function DecksDetail({ deck }: DecksDetailProps) {
     return 'never'
   }, [deck.stats.last_reviewed_at])
 
-
+  const tags = deck.tags ?? []
 
   return (
     <LayoutPage
@@ -62,32 +62,69 @@ export default function DecksDetail({ deck }: DecksDetailProps) {
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.35, ease: 'easeOut' }}
       >
-        <Card variant="default" className="hover:shadow-md transition-all duration-300 border-border/50 min-h-0">
+        <Card variant="default" className="border-border/50 border-l-2 border-l-accent/50 overflow-hidden">
+
           <Card.Header>
-            <div className="flex items-center justify-between">
-              <Card.Title className="text-lg flex-wrap w-full flex  items-center font-semibold tracking-tight text-foreground hover:text-primary transition-colors gap-2 md:gap-4">
-                <div className="w-full md:w-auto">{deck.name}</div>
-                <div className="flex-wrap items-center gap-1.5 inline-flex">
-                  {deck.fields.map((e, index) => (
-                    <Chip className="font-medium bg-secondary/50" key={index} size="sm">
-                      {e}
-                    </Chip>
-                  ))}
-                </div>
-                <div className="ml-auto">
-                  <DecksAction deck={deck} actions={['facts']} />
-                </div>
-              </Card.Title>
+            <div className="flex items-center justify-between gap-4">
+              <div className="flex-1 min-w-0">
+                <Card.Title className="text-xl font-bold tracking-tight text-foreground mb-2">
+                  {deck.name}
+                </Card.Title>
+                {deck.fields.length > 0 && (
+                  <div className="flex flex-wrap gap-1.5">
+                    {deck.fields.map((e, index) => (
+                      <Chip className="font-medium bg-secondary/60" key={index} size="sm">
+                        {e}
+                      </Chip>
+                    ))}
+                  </div>
+                )}
+              </div>
+              <DecksAction deck={deck} actions={['facts']} />
             </div>
           </Card.Header>
 
-          <Card.Content>
+          <Card.Content className="pt-0 space-y-4">
+            {/* Progress block */}
+            <div>
+              <div className="h-1.5 w-full bg-border/50 rounded-full overflow-hidden">
+                <motion.div
+                  className="h-full bg-accent rounded-full"
+                  initial={{ width: 0 }}
+                  animate={{ width: `${progressPct}%` }}
+                  transition={{ duration: 0.55, ease: 'easeOut' }}
+                />
+              </div>
+              <div className="flex justify-between mt-1 text-xs text-muted-foreground tabular-nums">
+                <span>{progressPct.toFixed(1)}%</span>
+                <span>{deck.stats.reviewed_cards} / {deck.stats.cards_count}</span>
+              </div>
+            </div>
+
+
+
+            {/* Stats grid */}
             <motion.div
               variants={containerVariants}
               initial="hidden"
               animate="visible"
               className="grid gap-2 md:grid-cols-2"
             >
+
+              {/* Tags */}
+              {tags.length > 0 && (
+                <DecksIconLabel icon={Tag} color="amber" className="md:col-span-2 items-start!">
+                  <span className="text-muted-foreground inline-block h-7 mr-2 leading-7">{t('term.tags')}:</span>
+                  <div className="inline-flex flex-wrap gap-2 ">
+                    {tags.map((e) => (
+                      <TagItem tag={e} key={e.id} editable ={false} />
+                    ))}
+                    {tags.map((e) => (
+                      <TagItem tag={e} key={e.id} editable ={false} />
+                    ))}
+                  </div>
+                </DecksIconLabel>
+              )}
 
               <DecksIconLabel icon={History} color="amber">
                 <span className="text-muted-foreground">{t('term.rate')}:</span>
@@ -98,12 +135,6 @@ export default function DecksDetail({ deck }: DecksDetailProps) {
                 <span className="text-muted-foreground">{t('term.due')}:</span>
                 <span className="font-medium text-foreground ml-1">{deck.stats.due_cards}</span>
               </DecksIconLabel>
-
-              <DecksIconLabel icon={ChartPie} color="emerald">
-                <span className="text-muted-foreground">{t('term.progress')}:</span>
-                <span className="font-medium text-foreground ml-1">{progress}%</span>
-              </DecksIconLabel>
-
 
               <DecksIconLabel icon={ListIcon} color="violet">
                 <span className="text-muted-foreground">{t('term.facts')}:</span>
@@ -135,7 +166,7 @@ export default function DecksDetail({ deck }: DecksDetailProps) {
                 <span className="font-medium text-foreground ml-1">{deck.stats.new_cards_today}</span>
               </DecksIconLabel>
 
-              <DecksIconLabel icon={Clock} color="slate">
+              <DecksIconLabel icon={Clock} color="slate" className="md:col-span-2">
                 <span className="text-muted-foreground">{t('term.last-review')}:</span>
                 <span className="font-medium text-foreground ml-1">{last_reviewed_at}</span>
               </DecksIconLabel>
