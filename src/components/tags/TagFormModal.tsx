@@ -30,7 +30,7 @@ export default function TagFormModal({
 }: TagFormModalProps) {
   return (
     <TagFormModalInner
-      key={tag?.id ?? 'create'}
+      key={tag?.id ?? `create:${Number(isOpen)}`}
       isOpen={isOpen}
       setIsOpen={setIsOpen}
       tag={tag}
@@ -69,8 +69,7 @@ function TagFormModalInner({
 
   useEffect(() => {
     if (!state?.success) return
-    if (onSuccess && isOpen) {
-      console.log('onSuccess')
+    if (onSuccess) {
       onSuccess(state.data as Tag)
       setIsOpen(false)
       return
@@ -79,7 +78,7 @@ function TagFormModalInner({
       setIsOpen(false)
       router.refresh()
     })
-  }, [onSuccess, router, setIsOpen, state?.data, state?.success, isOpen])
+  }, [onSuccess, router, setIsOpen, state?.data, state?.success])
 
 
 
