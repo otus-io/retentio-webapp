@@ -1,0 +1,13 @@
+---
+description: Reduce token usage by keeping output concise and minimizing unnecessary tool calls
+alwaysApply: true
+---
+
+# Cost Optimization
+
+- Keep internal reasoning minimal for straightforward tasks.
+- Be concise in generated code — no boilerplate comments or filler docstrings.
+- Batch independent tool calls; prefer Grep/Glob when you know the symbol or path.
+- Do not re-read files already in context.
+- For tests, follow `.cursor/rules/testing.mdc` patterns instead of inventing new structure each time.
+- After edits, confirm in one short sentence.

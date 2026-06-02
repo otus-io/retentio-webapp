@@ -1,0 +1,33 @@
+---
+description: Retentio Web App project conventions for commits, PRs, docs, and code style
+alwaysApply: true
+---
+
+# Retentio Web App Conventions
+
+## Project Overview
+
+Production Next.js web app: marketing, auth, dashboard/library, MDX user guide. Talks to remote Retentio HTTP API via `src/utils/request.ts`. JWT in HTTP-only cookie `retentio_token`.
+
+## Commit & PR Conventions
+
+- Commit/PR title: `<type>(<scope>): <subject>` in imperative mood, under 50 chars
+- Types: feat, fix, docs, style, refactor, perf, test, chore
+- Scopes: auth, deck, fact, guide, ui, api, ci
+- Keep PRs focused; squash and merge for feature branches
+
+## Code Style
+
+- **TypeScript/React**: ESLint (`pnpm lint:ci`), Prettier via lint-staged
+- Prefer clear naming; comments only for non-obvious logic
+- User-visible strings in `src/i18n/locales/` (en + zh) — no hardcoded copy in components
+
+## Documentation
+
+- User-facing docs: English + Chinese where the repo already pairs them (e.g. `docs/api.md` + `docs/api_zh.md`)
+- Guide content: `src/content/en/` and `src/content/zh/` MDX
+
+## Key Principles
+
+- Never modify production code solely to make tests pass — fix real bugs first
+- CI must pass: `pnpm lint:ci`, `pnpm test`, `pnpm build`, `pnpm test:e2e` (on PRs)
