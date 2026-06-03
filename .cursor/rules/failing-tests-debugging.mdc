@@ -1,0 +1,14 @@
+---
+description: When tests fail, debug production code first; never change tests just to make them pass
+alwaysApply: true
+---
+
+# Debugging Failing Tests
+
+When a test fails:
+
+1. **Investigate the implementation first.** Reproduce the failure, read the code under test, and determine whether the bug is in production/source logic.
+2. **Fix the real issue** in production code when you find one.
+3. **Only then** consider changing the test — wrong expectations or a legitimately changed API/contract.
+
+**Do not** change or relax the test solely to make it pass without understanding the underlying cause.

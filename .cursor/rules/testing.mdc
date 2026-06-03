@@ -1,0 +1,32 @@
+---
+description: Vitest and Playwright test conventions
+globs: "{src/**/*.test.{ts,tsx},e2e/**/*.ts}"
+alwaysApply: false
+---
+
+# Testing Conventions
+
+## Unit / component (Vitest)
+
+- Colocate: `*.test.ts` / `*.test.tsx` next to source
+- Use `@testing-library/react` for components; mock modules with `vi.mock`
+- See `src/utils/request.test.ts`, `src/components/app/AppButton.test.tsx` for patterns
+
+```bash
+pnpm test                    # all unit tests
+pnpm test src/utils/request.test.ts  # one file
+```
+
+## E2E (Playwright)
+
+- Specs in `e2e/` (e.g. `e2e/auth.spec.ts`)
+- CI runs Chromium with secrets `E2E_USERNAME`, `E2E_PASSWORD`
+
+```bash
+pnpm test:e2e
+pnpm test:e2e:ui             # debug UI
+```
+
+## Blackbox principle
+
+Fix production bugs first. Do not weaken tests to hide failures. See `failing-tests-debugging.mdc`.

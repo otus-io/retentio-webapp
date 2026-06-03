@@ -1,0 +1,27 @@
+---
+description: Git branching and push workflow rules
+alwaysApply: true
+---
+
+# Git Workflow
+
+## Branch Protection
+
+- **Never push directly to `main`** — use pull requests
+- Create a feature branch for every change
+
+## Branch Naming
+
+- Descriptive, lowercase, hyphenated: `feat-catalog-detail`, `fix-auth-cookie`
+
+## Workflow
+
+1. Branch from `main`: `git checkout -b <branch-name>`
+2. Commit on the feature branch (husky + lint-staged run on commit)
+3. Push: `git push -u origin <branch-name>`
+4. Open PR; wait for CI (`build-test-webapp.yml`)
+5. Squash and merge after review
+
+## Package manager
+
+Use **pnpm** (`pnpm install`, not npm).

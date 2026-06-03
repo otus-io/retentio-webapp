@@ -1,0 +1,50 @@
+---
+description: Next.js App Router conventions for retentio-webapp
+globs: src/**/*.{ts,tsx}
+alwaysApply: false
+---
+
+# Next.js Web App Conventions
+
+## Stack
+
+- **Framework**: Next.js 16 App Router, React 19
+- **UI**: HeroUI (`@heroui/react`), Tailwind CSS 4 (`@tailwindcss/postcss`)
+- **i18n**: next-intl — strings in `src/i18n/locales/{en,zh}.json`; locale via `locale` cookie (not URL prefix)
+- **Guide**: MDX in `src/content/{en,zh}/`; search index via `pnpm generate:md`
+- **API**: `src/utils/request.ts` + thin clients in `src/api/`; domain logic in `src/modules/`
+- **Auth**: JWT in HTTP-only cookie `retentio_token`
+- **Validation**: Zod schemas in `src/modules/*/`
+
+## File organization
+
+```
+src/
+├── app/              # App Router layouts and pages
+├── components/       # UI by area (app/, auth/, decks/, facts/, layout/, guide/)
+├── modules/          # Domain: actions, services, schemas
+├── api/              # HTTP client wrappers
+├── hooks/
+├── lib/              # logger, locale, token helpers
+├── i18n/
+├── content/          # MDX guide sources
+└── utils/            # request.ts, shared helpers
+```
+
+## Patterns
+
+- Prefer **Server Components** by default; add `"use client"` only when needed (hooks, browser APIs, interactivity).
+- Server actions and services live under `src/modules/<domain>/`.
+- Use shared `AppButton`, `AppInput`, etc. from `src/components/app/` — match existing HeroUI usage.
+- All user-visible strings through next-intl — update **both** `en.json` and `zh.json`.
+- Do not edit generated `public/search-index/` — run `pnpm generate:md` after MDX changes.
+
+## Checks before commit
+
+```bash
+pnpm lint:ci
+pnpm test
+pnpm build
+```
+
+E2E (when auth flows change): `pnpm test:e2e`

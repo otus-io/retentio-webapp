@@ -1,0 +1,26 @@
+---
+description: CI/CD workflow conventions for GitHub Actions
+globs: .github/workflows/**
+alwaysApply: false
+---
+
+# CI/CD Workflow Conventions
+
+## Workflows
+
+| File | Trigger | Purpose |
+|------|---------|---------|
+| `build-test-webapp.yml` | Push/PR to `main` | `pnpm lint:ci`, `pnpm test`, `pnpm build`, Playwright e2e |
+| `deploy-webapp.yml` | Deploy pipeline | Production deploy |
+| `pr-review.yml` | PR events | Automated PR review |
+
+## CI requirements
+
+- Node version from `.nvmrc`; pnpm 9; frozen lockfile
+- Must pass lint, unit tests, production build, and e2e (Chromium)
+- E2E needs `E2E_USERNAME` / `E2E_PASSWORD` secrets in CI
+
+## Rules
+
+- Do not skip CI without team agreement
+- New features should include unit tests; auth/navigation changes should consider e2e coverage
