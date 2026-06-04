@@ -2,6 +2,9 @@
 cd "$(dirname "$0")/.." || exit 1
 
 if command -v pnpm >/dev/null 2>&1 && [ -f pnpm-lock.yaml ]; then
-  exec pnpm exec lint-staged
+  pnpm exec lint-staged || exit 1
+  pnpm run test
+else
+  npx --no -- lint-staged || exit 1
+  npm run test
 fi
-exec npx --no -- lint-staged
