@@ -28,14 +28,14 @@ export default function FactsGridCellRenderer(props: FactsGridCellRendererProps)
 
   if (props.colDef?.context?.isActionColumn) {
     return (
-      <div className="flex items-center w-full justify-center">
+      <div className="flex items-center w-full justify-center facts-grid-cell-renderer">
         <FactsAction deck={props.deck} fact={props.data} />
       </div>
     )
   }
 
   return (
-    <div className="flex items-center  h-full">
+    <div className="flex items-center h-full facts-grid-cell-renderer">
       <span className="truncate">{props.getValue?.()}</span>
       <AppTooltip
         trigger={false}
@@ -44,7 +44,7 @@ export default function FactsGridCellRenderer(props: FactsGridCellRendererProps)
         <button
           type="button"
           tabIndex={0}
-          className=" ml-auto"
+          className="facts-grid-cell-media ml-auto"
           style={{
             display: 'var(--cell-display, none)',
           }}

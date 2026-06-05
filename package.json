@@ -28,6 +28,7 @@
     "@heroui/styles": "^3.1.0",
     "@mdx-js/loader": "^3.1.1",
     "@mdx-js/react": "^3.1.1",
+    "@next/env": "^16.2.7",
     "@next/mdx": "^16.2.2",
     "@react-stately/data": "^3.16.0",
     "@types/mdx": "^2.0.13",

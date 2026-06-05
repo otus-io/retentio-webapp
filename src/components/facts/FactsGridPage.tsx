@@ -101,6 +101,26 @@ export default function FactsGridPage({ facts, meta, deck }: FactsGridPageProps)
         ...deck,
         fields: currentDefs,
       })
+      const lastField = lastDecksFields.current.at(-1)
+      gridRef.current?.api.forEachNode((node) => {
+        if(lastField){
+          // 同步 ag-grid-react 的数据 和 原始数据源 (rawSymbol)
+          const data = node.data
+          const entry = { text: '', audio: '', image: '', video: '' }
+          const rawData = data[rawSymbol]
+          node.setData({
+            ...data,
+            [`${lastField}`]: { ...entry },
+            [rawSymbol]: {
+              ...rawData,
+              entries: [
+                ...rawData.entries,
+                { ...entry },
+              ],
+            },
+          })
+        }
+      })
       setLoading(false)
     }
   }, [deck, getCurrentColDefs])
@@ -347,7 +367,7 @@ export default function FactsGridPage({ facts, meta, deck }: FactsGridPageProps)
             rowData={rowData}
             columnDefs={columnDefs}
             getRowId={(p) => p.data.id}
-            onCellValueChanged={() => handleDebouncedCellChange()}
+            onCellValueChanged={handleDebouncedCellChange}
             onSelectionChanged={handleSelectionChanged}
             rowSelection={{
               mode: 'multiRow',
@@ -405,9 +425,10 @@ function CrateRowButton({
           size="sm"
           variant="outline"
           type="submit"
+          id="facts-grid-create-row"
           isPending={isPending || isLoading}
           isIconOnly
-          icon={<Rows4Icon className="size-4" />}
+          icon={<Rows4Icon className="size-4 facts-grid-create-row-icon" />}
         />
       </AppTooltip>
     </form>
@@ -426,7 +447,8 @@ function CreateColButton({ ...rest }: AppButtonProps){
         size="sm"
         variant="outline"
         isIconOnly
-        icon={<Columns4Icon className="size-4" />}
+        id="facts-grid-create-col-button"
+        icon={<Columns4Icon className="size-4 facts-grid-create-col-icon" />}
         {...rest}
       />
     </AppTooltip>
@@ -445,6 +467,7 @@ function SyncButton({ ...rest }: AppButtonProps){
         size="sm"
         variant="outline"
         isIconOnly
+        id="facts-grid-sync-button"
         {...rest}
       >
         {
@@ -474,6 +497,7 @@ function DeleteButton({ factIds, deckId, ...rest } : DeleteButtonProps){
           className="ml-auto"
           size="sm"
           variant="outline"
+          id="facts-grid-delete-button"
           isIconOnly
           icon={<Trash2Icon className="size-4" />}
           onClick={() => setIsOpen(true)}

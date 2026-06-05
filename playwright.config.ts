@@ -1,4 +1,7 @@
+import { loadEnvConfig } from '@next/env'
 import { defineConfig, devices } from '@playwright/test'
+
+loadEnvConfig(process.cwd())
 
 const isCI = !!process.env.CI
 const baseURL = process.env.PLAYWRIGHT_TEST_BASE_URL || 'http://localhost:3000'
@@ -11,6 +14,7 @@ const allBrowserProjects = [
 
 export default defineConfig({
   testDir: './e2e',
+  globalSetup: './e2e/global-setup.ts',
   fullyParallel: true,
   forbidOnly: isCI,
   retries: isCI ? 2 : 0,
@@ -19,6 +23,7 @@ export default defineConfig({
   use: {
     baseURL,
     trace: 'on-first-retry',
+    storageState: 'e2e/.auth-state.json',
   },
 
   projects: isCI ? [allBrowserProjects[0]] : [...allBrowserProjects],

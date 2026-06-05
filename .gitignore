@@ -43,3 +43,6 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 .heroui-docs
+
+# playwright auth state
+e2e/.auth-state.json
