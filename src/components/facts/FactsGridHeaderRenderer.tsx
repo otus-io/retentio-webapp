@@ -52,7 +52,7 @@ export default function FactsGridHeaderRenderer(props: FactsGridHeaderRendererPr
 
   if (props.column.getColDef().context?.isActionColumn) {
     return (
-      <div className="flex items-center justify-center w-full  h-full">
+      <div className="flex items-center justify-center w-full  h-full ">
         {props.displayName}
       </div>
     )
@@ -61,7 +61,7 @@ export default function FactsGridHeaderRenderer(props: FactsGridHeaderRendererPr
   return (
     <div
       onDoubleClick={startEdit}
-      className="flex-1 h-full py-2 items-center flex group w-full"
+      className="flex-1 h-full py-2 items-center flex group w-full facts-grid-header-renderer"
     >
       {editing
         ? (
