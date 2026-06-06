@@ -26,8 +26,16 @@ if [ -f "$HOME/.profile" ]; then
 fi
 export PATH="$HOME/.local/share/pnpm:$HOME/.npm-global/bin:/usr/local/bin:$PATH"
 
+REQUIRED_NODE_VERSION="20.9.0"
+
 if ! command -v node >/dev/null 2>&1; then
   echo "node not found on PATH" >&2
+  exit 1
+fi
+
+NODE_VERSION="$(node -v | sed 's/^v//')"
+if [ "$(printf '%s\n' "$REQUIRED_NODE_VERSION" "$NODE_VERSION" | sort -V | head -n1)" != "$REQUIRED_NODE_VERSION" ]; then
+  echo "node $NODE_VERSION found; require >=$REQUIRED_NODE_VERSION" >&2
   exit 1
 fi
 

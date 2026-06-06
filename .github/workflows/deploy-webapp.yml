@@ -3,6 +3,9 @@
 #
 # Production app directory: ~/otusio/retentio-webapp (same layout as backend deploy)
 #
+# Triggers after "Build & test webapp" succeeds on main (lint, unit tests, build, Chromium e2e).
+# Manual runs (workflow_dispatch) run the same checks in the quality-gate job first.
+#
 # Repository secrets (Settings → Secrets and variables → Actions):
 #   SERVER_HOST       — hostname or IP
 #   SERVER_USERNAME   — SSH user (e.g. otus)
@@ -12,15 +15,17 @@
 #
 # Server prerequisites:
 #   — Git, Node.js >=20.9 on PATH (Next.js). Non-interactive SSH: install via nvm and ensure the script
-#     below can run `nvm use 20` (nvm.sh + Node 20 installed), or use system Node 20+ (e.g. NodeSource).
-#   — pnpm on PATH (~/.profile / ~/.bashrc)
+#     below can run `nvm use` against repo .nvmrc (nvm.sh + matching Node installed), or use system Node 20+.
+#   — pnpm v9 on PATH (~/.profile / ~/.bashrc) or corepack/npm global install
 #   — Passwordless sudo for cp/enable/restart of retentio-webapp.service (see retentio-backend/docs/server-side-config.md pattern)
 #   — Repo cloned at ~/otusio/retentio-webapp with origin able to fetch this repository
 
 name: Deploy Webapp
 
 on:
-  push:
+  workflow_run:
+    workflows: ["Build & test webapp"]
+    types: [completed]
     branches: [main]
   workflow_dispatch: {}
 
@@ -29,7 +34,54 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  quality-gate:
+    if: github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 9
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+        env:
+          HUSKY: 0
+
+      - name: Lint
+        run: pnpm run lint:ci
+
+      - name: Test
+        run: pnpm run test
+
+      - name: Build
+        run: pnpm run build
+
+      - name: Install Playwright browsers
+        run: pnpm exec playwright install --with-deps chromium
+
+      - name: E2E tests
+        run: pnpm run test:e2e
+        env:
+          CI: true
+          E2E_USERNAME: ${{ secrets.E2E_USERNAME }}
+          E2E_PASSWORD: ${{ secrets.E2E_PASSWORD }}
+
   deploy:
+    needs: quality-gate
+    if: |
+      (github.event_name == 'workflow_run' && github.event.workflow_run.conclusion == 'success') ||
+      (github.event_name == 'workflow_dispatch' && needs.quality-gate.result == 'success')
     runs-on: ubuntu-latest
     environment: production
 
@@ -47,21 +99,25 @@ jobs:
             cd ~/otusio/retentio-webapp
             source ~/.profile 2>/dev/null || true
             source ~/.bashrc 2>/dev/null || true
-            export NVM_DIR="${NVM_DIR:-$HOME/.nvm}"
-            if [ -s "$NVM_DIR/nvm.sh" ]; then
-              . "$NVM_DIR/nvm.sh"
-              nvm use 20 2>/dev/null || nvm use default 2>/dev/null || true
-            fi
-            NODE_MAJOR="$(node -v 2>/dev/null | sed 's/^v//' | cut -d. -f1 || echo 0)"
-            if [ "${NODE_MAJOR:-0}" -lt 20 ]; then
-              echo "Node.js >= 20.9 is required (see package.json engines). Got: $(node -v 2>/dev/null || echo 'not found')"
-              echo "Fix on server: nvm install 20 && nvm alias default 20  (or install Node 20+ system-wide)"
-              exit 1
-            fi
-            node -v
             git fetch origin main
             git checkout main
             git reset --hard origin/main
+            export NVM_DIR="${NVM_DIR:-$HOME/.nvm}"
+            if [ -s "$NVM_DIR/nvm.sh" ]; then
+              . "$NVM_DIR/nvm.sh"
+              nvm use 2>/dev/null || nvm use default 2>/dev/null || true
+            fi
+            REQUIRED_NODE_VERSION="20.9.0"
+            NODE_VERSION="$(node -v 2>/dev/null | sed 's/^v//' || echo 0)"
+            if [ "$(printf '%s\n' "$REQUIRED_NODE_VERSION" "$NODE_VERSION" | sort -V | head -n1)" != "$REQUIRED_NODE_VERSION" ]; then
+              echo "node $NODE_VERSION found; require >=$REQUIRED_NODE_VERSION (see package.json engines)"
+              exit 1
+            fi
+            node -v
+            corepack enable 2>/dev/null || true
+            if ! pnpm --version 2>/dev/null | grep -q '^9\.'; then
+              corepack prepare pnpm@9 --activate 2>/dev/null || npm install -g pnpm@9
+            fi
             export HUSKY=0
             pnpm install --frozen-lockfile
             pnpm run build
