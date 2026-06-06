@@ -18,7 +18,7 @@ export NVM_DIR="${NVM_DIR:-$HOME/.nvm}"
 if [ -s "$NVM_DIR/nvm.sh" ]; then
   # shellcheck source=/dev/null
   . "$NVM_DIR/nvm.sh"
-  nvm use 20 2>/dev/null || nvm use default 2>/dev/null || true
+  nvm use 2>/dev/null || nvm use default 2>/dev/null || true
 fi
 if [ -f "$HOME/.profile" ]; then
   # shellcheck source=/dev/null

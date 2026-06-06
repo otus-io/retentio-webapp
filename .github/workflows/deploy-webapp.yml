@@ -80,8 +80,9 @@ jobs:
   deploy:
     needs: quality-gate
     if: |
-      (github.event_name == 'workflow_run' && github.event.workflow_run.conclusion == 'success') ||
-      (github.event_name == 'workflow_dispatch' && needs.quality-gate.result == 'success')
+      always() &&
+      ((github.event_name == 'workflow_run' && github.event.workflow_run.conclusion == 'success') ||
+       (github.event_name == 'workflow_dispatch' && needs.quality-gate.result == 'success'))
     runs-on: ubuntu-latest
     environment: production
 
