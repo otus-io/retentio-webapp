@@ -6,8 +6,6 @@ StartLimitBurst=5
 
 [Service]
 Type=simple
-User=otus
-Group=otus
 WorkingDirectory=/home/otus/otusio/retentio-webapp
 
 Environment=NODE_ENV=production
@@ -23,4 +21,4 @@ StandardError=journal
 SyslogIdentifier=retentio-webapp
 
 [Install]
-WantedBy=multi-user.target
+WantedBy=default.target
