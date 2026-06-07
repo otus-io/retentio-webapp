@@ -42,6 +42,7 @@ vi.mock('lucide-react', () => ({
   Book: () => <span data-testid="icon-book" />,
 }))
 
+import { TESTFLIGHT_JOIN_URL } from '@/config'
 import HomePage from './HomePage'
 
 describe('HomePage', () => {
@@ -98,12 +99,13 @@ describe('HomePage', () => {
     expect(screen.getByText('home.cta.title')).toBeDefined()
     expect(screen.getByText('home.cta.subtitle')).toBeDefined()
     expect(screen.getByText('home.cta.button')).toBeDefined()
+    expect(screen.getByText('home.cta.note')).toBeDefined()
   })
 
-  it('下载链接指向 App Store', () => {
+  it('下载链接指向 TestFlight', () => {
     render(<HomePage />)
     const link = screen.getByText('home.cta.button').closest('a')
-    expect(link?.getAttribute('href')).toBe('https://apps.apple.com')
+    expect(link?.getAttribute('href')).toBe(TESTFLIGHT_JOIN_URL)
     expect(link?.getAttribute('target')).toBe('_blank')
   })
 

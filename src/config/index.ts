@@ -7,4 +7,6 @@ export const LOGIN_PATH = '/login'
 export const REGISTER_PATH = '/register'
 export const JWT_COOKIE_NAME = 'retentio_token'
 export const CONTACT_EMAIL = 'research@retentio.app'
+/** Public TestFlight invite while the iOS app is in beta. */
+export const TESTFLIGHT_JOIN_URL = 'https://testflight.apple.com/join/Ch1VpN6u'
 

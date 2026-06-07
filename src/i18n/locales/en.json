@@ -20,7 +20,7 @@
       "title": "Remember More,",
       "titleHighlight": "For Longer",
       "subtitle": "Built on spacing science and high-quality decks maintained and improved by experienced educators — designed so you spend time on what’s slipping, not re-drilling what you’ve already got.",
-      "cta": "Download on App Store",
+      "cta": "Join on TestFlight",
       "learnMore": "Learn More",
       "appPreview": "App Preview"
     },
@@ -66,7 +66,8 @@
     "cta": {
       "title": "Start Learning Today",
       "subtitle": "Join thousands of learners who are already using Retentio to remember more, for longer.",
-      "button": "Download on App Store"
+      "button": "Join on TestFlight",
+      "note": "The iOS app is currently available through TestFlight beta."
     }
   },
   "error": {

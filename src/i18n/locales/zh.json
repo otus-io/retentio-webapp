@@ -20,7 +20,7 @@
       "title": "记住更多",
       "titleHighlight": "记得更久",
       "subtitle": "基于间隔重复科学，以及由资深教育工作者维护并持续完善的优质牌组——让你把时间花在快要忘的内容上，而不是反复刷已经掌握的部分。",
-      "cta": "在 App Store 下载",
+      "cta": "加入 TestFlight 测试",
       "learnMore": "了解更多",
       "appPreview": "应用预览"
     },
@@ -66,7 +66,8 @@
     "cta": {
       "title": "今天就开始学习",
       "subtitle": "加入数千名正在使用 Retentio 的学习者，记住更多，记得更久。",
-      "button": "在 App Store 下载"
+      "button": "加入 TestFlight 测试",
+      "note": "iOS 应用目前仍在 TestFlight 公测中。"
     }
   },
   "error": {

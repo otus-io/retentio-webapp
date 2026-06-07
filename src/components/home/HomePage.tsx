@@ -7,6 +7,7 @@ import clsx from 'clsx'
 import AppLink from '@/components/app/AppLink'
 import AppButton from '@/components/app/AppButton'
 import { AppButtonLink } from '@/components/app/AppButtonLink'
+import { TESTFLIGHT_JOIN_URL } from '@/config'
 
 function AnimatedSection({ children, className, delay = 0 }: {
   children: React.ReactNode
@@ -176,7 +177,7 @@ export default function HomePage() {
             {t('home.cta.subtitle')}
           </p>
           <a
-            href="https://apps.apple.com"
+            href={TESTFLIGHT_JOIN_URL}
             target="_blank"
             rel="noopener noreferrer"
             className="inline-flex items-center gap-2 px-8 py-3.5 rounded-xl bg-accent text-white font-medium text-lg hover:opacity-90 transition-opacity"
@@ -184,6 +185,9 @@ export default function HomePage() {
             <Download className="size-5" />
             {t('home.cta.button')}
           </a>
+          <p className="text-sm text-gray-500 dark:text-gray-400 mt-3">
+            {t('home.cta.note')}
+          </p>
         </AnimatedSection>
       </section>
     </div>
