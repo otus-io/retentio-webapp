@@ -60,7 +60,7 @@ export default function TagsList({ data }: { data: Tag[] }) {
               <SearchField.ClearButton />
             </SearchField.Group>
           </SearchField>
-          <AppButton variant="outline" size="sm" isIconOnly onPress={openCreate}>
+          <AppButton variant="outline" size="sm" isIconOnly onPress={openCreate} data-testid="create-button">
             <Plus className="text-muted" />
           </AppButton>
         </div>

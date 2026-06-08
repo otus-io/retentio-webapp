@@ -14,13 +14,17 @@ export function uniqueName(prefix: string) {
 /**
  * 创建一个 deck，成功后会 redirect 回 /decks
  */
-export async function createDeck(page: Page, name = 'TestDeck') {
+export async function createDeck(page: Page, name = 'TestDeck', tags?: string[]) {
   await page.goto('/decks/create')
   await page.locator('input[name="name"]').fill(name)
 
   const fieldInputs = page.locator('input[name="fields"]')
   await fieldInputs.nth(0).fill('field1')
   await fieldInputs.nth(1).fill('field2')
+
+  if (tags?.length) {
+    await selectTagsInDeckForm(page, tags)
+  }
 
   await page.locator('button[type="submit"]').click()
   await page.waitForURL('/decks', { timeout: 10000 })
@@ -216,4 +220,310 @@ export async function deleteFirstFactViaRowMenu(page: Page) {
     const rowsAfter = await page.locator('.ag-center-cols-container [role="row"]').count()
     expect(rowsAfter).toBeLessThan(rowsBefore)
   }).toPass({ timeout: 10000 })
+}
+
+/**
+ * 打开 /tags 页面
+ */
+export async function gotoTagsPage(page: Page) {
+  await page.goto('/tags')
+  await page.waitForLoadState('networkidle')
+}
+
+/**
+ * Tags 列表页上的 tag chip（TagItem）
+ */
+export function tagChipOnLibrary(page: Page, tagName: string) {
+  return page.locator('[data-slot="chip"]').filter({ hasText: tagName }).first()
+}
+
+/**
+ * 打开 tag 创建/编辑 modal 的 + 按钮（Tags 列表页）
+ */
+export async function openTagLibraryCreateModal(page: Page) {
+  await page.locator('[data-testid="create-button"]').click()
+  await expect(tagFormModal(page)).toBeVisible()
+}
+
+function tagFormModal(page: Page) {
+  return page.getByRole('dialog').filter({ has: page.locator('input[name="name"]') })
+}
+
+/**
+ * 填写并提交 tag 表单 modal
+ */
+export async function fillAndSubmitTagForm(
+  page: Page,
+  options: { name: string, description?: string },
+): Promise<'created' | 'at-limit'> {
+  const modal = tagFormModal(page)
+  await expect(modal).toBeVisible()
+  await modal.locator('input[name="name"]').fill(options.name)
+  if (options.description) {
+    await modal.locator('textarea[name="description"]').fill(options.description)
+  }
+
+  // Tag library/picker forms submit via Next.js server actions, not browser /api/tags calls.
+  await modal.getByRole('button', { name: 'Save' }).click()
+
+  let outcome: 'created' | 'at-limit' = 'created'
+  await expect.poll(async () => {
+    if (await page.getByText('maximum number of tags reached').count() > 0) {
+      outcome = 'at-limit'
+      return true
+    }
+    if (!(await modal.isVisible())) {
+      outcome = 'created'
+      return true
+    }
+    return false
+  }, { timeout: 15000 }).toBe(true)
+
+  return outcome
+}
+
+/**
+ * Ensure a tag exists for deck/fact tests. Creates when possible; reuses an existing tag when at user limit.
+ */
+export async function ensureTagViaLibrary(
+  page: Page,
+  options: { name: string, description?: string },
+): Promise<string> {
+  await gotoTagsPage(page)
+  await openTagLibraryCreateModal(page)
+  const outcome = await fillAndSubmitTagForm(page, options)
+  if (outcome === 'created') {
+    await expect(tagChipOnLibrary(page, options.name)).toBeVisible()
+    return options.name
+  }
+
+  const modal = tagFormModal(page)
+  await modal.getByRole('button', { name: 'Cancel' }).click()
+  await expect(modal).toBeHidden()
+
+  const firstChip = page.locator('[data-slot="chip"]').first()
+  await expect(firstChip).toBeVisible()
+  const tagName = await firstChip.evaluate((el) => el.getAttribute('data-tag-name')?.trim() ?? '')
+  if (!tagName) {
+    throw new Error('E2E setup failed: at tag limit and no existing tags on /tags')
+  }
+  return tagName
+}
+
+/**
+ * Ensure a tag exists on /tags for deck/fact tests. Creates when possible;
+ * reuses an existing tag when the user tag limit is reached. Always verifies
+ * the returned tag chip is visible on the library page.
+ */
+export async function ensureAndVerifyTagViaLibrary(
+  page: Page,
+  options: { name: string, description?: string },
+): Promise<string> {
+  const tagName = await ensureTagViaLibrary(page, options)
+  await expect(tagChipOnLibrary(page, tagName)).toBeVisible()
+  return tagName
+}
+
+/**
+ * 在 /tags 页面打开 tag 的 action 菜单
+ */
+export async function openTagLibraryMenu(page: Page, tagName: string) {
+  const chip = tagChipOnLibrary(page, tagName)
+  await chip.locator('[data-slot="dropdown-trigger"]').click()
+}
+
+/**
+ * 在 /tags 页面编辑 tag
+ */
+export async function editTagViaLibrary(page: Page, tagName: string, newName: string) {
+  await gotoTagsPage(page)
+  await openTagLibraryMenu(page, tagName)
+  await page.locator('[data-slot="dropdown-popover"] [data-slot="menu-item"][data-key="edit"]').click()
+  await fillAndSubmitTagForm(page, { name: newName })
+  await expect(tagChipOnLibrary(page, newName)).toBeVisible()
+}
+
+/**
+ * 在 /tags 页面删除 tag
+ */
+export async function deleteTagViaLibrary(page: Page, tagName: string) {
+  await gotoTagsPage(page)
+  await openTagLibraryMenu(page, tagName)
+  await page.locator('[data-slot="dropdown-popover"] [data-slot="menu-item"][data-key="delete"]').click()
+  await page.getByRole('button', { name: 'Confirm' }).click()
+  await expect(tagChipOnLibrary(page, tagName)).toHaveCount(0, { timeout: 10000 })
+}
+
+/**
+ * 从 decks 列表进入 deck 详情页
+ */
+export async function openDeckDetailFromList(page: Page, deckName: string) {
+  await page.goto('/decks')
+  await page.waitForLoadState('networkidle')
+  const card = page.locator('[data-slot="card"]').filter({ hasText: deckName }).first()
+  await expect(card).toBeVisible()
+  await card.click()
+  await page.waitForURL(/\/decks\/[^/]+$/)
+}
+
+/**
+ * 打开 deck 表单中的 TagPicker
+ */
+export async function openDeckTagPicker(page: Page) {
+  const picker = page.getByRole('group').filter({ hasText: 'Select tags' })
+  await picker.scrollIntoViewIfNeeded()
+  await picker.click()
+  await expect(page.getByPlaceholder('Search tags...')).toBeVisible()
+}
+
+/**
+ * 在 deck 表单 TagPicker 中选择已有 tag
+ */
+export async function selectTagsInDeckForm(page: Page, tagNames: string[]) {
+  for (const tagName of tagNames) {
+    await openDeckTagPicker(page)
+    await page.getByRole('option', { name: tagName }).click()
+    await page.keyboard.press('Escape')
+    await expect(page.locator('[aria-label="selected tag"]').getByText(tagName)).toBeVisible()
+  }
+}
+
+/**
+ * 在 deck 表单 TagPicker 内联创建 tag
+ */
+export async function createTagInDeckPicker(page: Page, tagName: string) {
+  await openDeckTagPicker(page)
+  const popover = page.locator('[data-slot="popover"]').last()
+  await popover.locator('button').last().click()
+  await fillAndSubmitTagForm(page, { name: tagName })
+  await expect(page.locator('[aria-label="selected tag"]').getByText(tagName)).toBeVisible()
+}
+
+/**
+ * 从 deck 表单 TagPicker 移除已选 tag chip
+ */
+export async function removeTagChipInDeckForm(page: Page, tagName: string) {
+  const chip = page.locator('[aria-label="selected tag"]').locator('[data-slot="tag"]').filter({ hasText: tagName })
+  await chip.getByRole('button').click()
+  await expect(page.locator('[aria-label="selected tag"]').getByText(tagName, { exact: true })).toHaveCount(0)
+}
+
+/**
+ * deck 详情页上的 tag chip（只读 TagItem）
+ */
+export function tagChipOnDeckDetail(page: Page, tagName: string) {
+  return page.locator('[data-slot="chip"]').filter({ hasText: tagName }).first()
+}
+
+/**
+ * 打开第一行 fact 的 tags modal
+ */
+export async function openFirstFactTagsModal(page: Page) {
+  const actionCell = page.locator('.ag-pinned-right-cols-container [role="row"]').first()
+  await actionCell.locator('[data-slot="dropdown-trigger"]').click()
+  await page
+    .locator('[data-slot="dropdown-popover"] [data-slot="menu-item"][data-key="tag"]')
+    .click()
+  const modal = factTagsModal(page)
+  await expect(modal).toBeVisible()
+  await expect(modal.locator('[data-slot="spinner"]')).toHaveCount(0, { timeout: 10000 })
+}
+
+export function factTagsModal(page: Page) {
+  return page.getByRole('dialog').filter({ has: page.getByRole('heading', { name: 'Tags' }) })
+}
+
+/**
+ * 关闭 fact tags modal
+ */
+export async function closeFactTagsModal(page: Page) {
+  await factTagsModal(page).locator('[data-slot="button"].button--secondary').filter({ hasText: 'Close' }).click()
+  await expect(factTagsModal(page)).toBeHidden()
+}
+
+/**
+ * fact tags modal 中的 tag 元素
+ */
+export function factModalTag(page: Page, tagName: string) {
+  return factTagsModal(page).getByRole('gridcell', { name: tagName })
+}
+
+/**
+ * 在 fact tags modal 中切换 tag 选中状态
+ */
+export async function toggleTagInFactModal(page: Page, tagName: string) {
+  const modal = factTagsModal(page)
+  const tag = modal.locator('[data-slot="tag"]').filter({ hasText: tagName }).first()
+  const wasSelected = await isTagSelectedInFactModal(page, tagName)
+
+  const responsePromise = page.waitForResponse(
+    (r) => {
+      const method = wasSelected ? 'DELETE' : 'PUT'
+      return r.request().method() === method
+        && /\/api\/decks\/[^/]+\/facts\/[^/]+\/tags\/[^/]+$/.test(r.url())
+        && r.ok()
+    },
+  )
+  await tag.scrollIntoViewIfNeeded()
+  await tag.click()
+  await responsePromise
+}
+
+/**
+ * fact tags modal 内的 + 创建按钮
+ */
+export function factModalCreateButton(page: Page) {
+  return factTagsModal(page).locator('button[data-slot="button"].button--icon-only.button--primary')
+}
+
+/**
+ * 在 fact tags modal 内联创建 tag
+ */
+export async function createTagInFactModal(page: Page, tagName: string) {
+  await factModalCreateButton(page).click()
+  const associatePromise = page.waitForResponse(
+    (r) => r.request().method() === 'PUT' && /\/api\/decks\/[^/]+\/facts\/[^/]+\/tags\/[^/]+$/.test(r.url()) && r.ok(),
+  )
+  await fillAndSubmitTagForm(page, { name: tagName })
+  await associatePromise
+}
+
+/**
+ * 检查 fact tags modal 中 tag 是否选中
+ */
+export async function isTagSelectedInFactModal(page: Page, tagName: string): Promise<boolean> {
+  const modal = factTagsModal(page)
+  const tag = modal.locator('[data-slot="tag"]').filter({ hasText: tagName }).first()
+  if (await tag.getAttribute('data-selected') === 'true') return true
+  if (await tag.getAttribute('aria-pressed') === 'true') return true
+  const selectedClass = await tag.getAttribute('class')
+  return selectedClass?.includes('selected') ?? false
+}
+
+/**
+ * Mock tag APIs to return empty lists (forces FactsTagsModal empty branch).
+ */
+export async function mockEmptyTagLists(page: Page) {
+  await page.route('**/api/tags', async (route) => {
+    if (route.request().method() === 'GET') {
+      await route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({ data: { tags: [] } }),
+      })
+      return
+    }
+    await route.continue()
+  })
+  await page.route('**/api/decks/*/facts/*/tags', async (route) => {
+    if (route.request().method() === 'GET') {
+      await route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({ data: { tags: [] } }),
+      })
+      return
+    }
+    await route.continue()
+  })
 }
