@@ -3,8 +3,7 @@ import z from 'zod'
 // 登录
 export const loginSchema = z.object({
   username: z.string()
-    .min(2)
-    .max(8),
+    .min(4),
   password: z.string().min(6),
   redirect: z.string().optional(),
 })
@@ -14,8 +13,7 @@ export type LoginDTO = z.infer<typeof loginSchema>
 // 注册
 export const registerSchema = z.object({
   username: z.string()
-    .min(2)
-    .max(8)
+    .min(4)
     .regex(/^[a-z][a-z0-9]*$/, '用户名只能包含小写字母和数字，且必须以字母开头'),
   email: z.email(),
   password: z.string().min(8).max(20),
