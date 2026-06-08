@@ -367,6 +367,15 @@ export default function FactsGridPage({ facts, meta, deck }: FactsGridPageProps)
             rowData={rowData}
             columnDefs={columnDefs}
             getRowId={(p) => p.data.id}
+            onCellDoubleClicked={(e) => {
+              if (e.colDef.context?.isActionColumn) return
+              if (!e.column.isCellEditable(e.node)) return
+              if (e.rowIndex == null) return
+              e.api.startEditingCell({
+                rowIndex: e.rowIndex,
+                colKey: e.column.getColId(),
+              })
+            }}
             onCellValueChanged={handleDebouncedCellChange}
             onSelectionChanged={handleSelectionChanged}
             rowSelection={{

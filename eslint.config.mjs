@@ -36,6 +36,9 @@ export default defineConfig([
     '.claude',
     '.heroui-docs',
     'runtime',
+    'test-results/**',
+    'playwright-report/**',
+    'blob-report/**',
   ]),
 
 

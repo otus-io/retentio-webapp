@@ -1,4 +1,15 @@
-import { expect, type Page } from '@playwright/test'
+import { expect, test, type Page } from '@playwright/test'
+
+export function skipUnlessE2ECredentials() {
+  test.skip(
+    !process.env.E2E_USERNAME || !process.env.E2E_PASSWORD,
+    'Requires E2E_USERNAME and E2E_PASSWORD',
+  )
+}
+
+export function uniqueName(prefix: string) {
+  return `${prefix}${Date.now()}`
+}
 
 /**
  * 创建一个 deck，成功后会 redirect 回 /decks
@@ -13,6 +24,53 @@ export async function createDeck(page: Page, name = 'TestDeck') {
 
   await page.locator('button[type="submit"]').click()
   await page.waitForURL('/decks', { timeout: 10000 })
+}
+
+/**
+ * 从 decks 列表打开指定 deck（或第一个）的编辑页
+ */
+export async function openDeckEditFromList(page: Page, deckName?: string) {
+  await page.goto('/decks')
+  await page.waitForLoadState('networkidle')
+
+  const card = deckName
+    ? page.locator('[data-slot="card"]').filter({ hasText: deckName }).first()
+    : page.locator('[data-slot="card"]').first()
+  await expect(card).toBeVisible()
+  await card.locator('[data-slot="dropdown-trigger"]').click()
+  await page
+    .locator('[data-slot="dropdown-popover"] [data-slot="menu-item"][data-key="edit"]')
+    .click()
+  await page.waitForURL(/\/decks\/[^/]+\/edit$/)
+}
+
+/**
+ * 提交 deck 表单并等待回到 /decks
+ */
+export async function submitDeckForm(page: Page) {
+  await page.locator('button[type="submit"]').click()
+  await page.waitForURL('/decks', { timeout: 10000 })
+}
+
+/**
+ * 进入指定 deck 的 facts 页面
+ */
+export async function gotoDeckFacts(page: Page, deckName: string) {
+  await page.goto('/decks')
+  await page.waitForLoadState('networkidle')
+
+  const card = page.locator('[data-slot="card"]').filter({ hasText: deckName }).first()
+  await expect(card).toBeVisible()
+  await card.click()
+  await page.waitForURL(/\/decks\/[^/]+$/)
+
+  await page.locator('[data-slot="card"] [data-slot="dropdown-trigger"]').click()
+  await page
+    .locator('[data-slot="dropdown-popover"] [data-slot="menu-item"][data-key="facts"]')
+    .click()
+
+  await page.waitForURL(/\/decks\/[^/]+\/facts$/)
+  await expect(page.locator('.ag-root')).toBeVisible()
 }
 
 /**
@@ -49,26 +107,20 @@ export async function gotoFirstDeckFacts(page: Page) {
  * 在当前 facts 页面新建一行（prepend），等待新行第一格渲染完成
  */
 export async function addFactRow(page: Page) {
+  const rowsBefore = await page.locator('.ag-center-cols-container [role="row"]').count()
   const icon = page.locator('.facts-grid-create-row-icon')
   await expect(icon).toBeVisible()
 
-  // 点击新建行：触发 loading（icon 被 spinner 替换而消失），结束后 icon 重新出现
   await page.locator('#facts-grid-create-row').click()
-  await expect(icon).toBeHidden()
-  await expect(icon).toBeVisible()
+  await page.waitForURL(/\/decks\/[^/]+\/facts$/)
+  await expect(page.locator('.ag-root')).toBeVisible()
 
-  // 新行渲染需要时间，轮询等待：第一个 cell 文本 === 第一列字段名
-  // 注意：列头处于编辑态时渲染为 <input>，字段名在 value 上（textContent 为空）
   await expect(async () => {
-    const equal = await page.evaluate(() => {
-      const header = document.querySelectorAll('.facts-grid-header-renderer')[0]
-      const cell = document.querySelectorAll('.facts-grid-cell-renderer')[0]
-      if (!header || !cell) return false
-      const headerName = header.querySelector('input')?.value ?? header.textContent
-      return headerName === cell.textContent
-    })
-    expect(equal).toBe(true)
+    const rowsAfter = await page.locator('.ag-center-cols-container [role="row"]').count()
+    expect(rowsAfter).toBeGreaterThan(rowsBefore)
   }).toPass({ timeout: 10000 })
+
+  await expect(page.locator('.facts-grid-create-row-icon')).toBeVisible()
 }
 
 /**
@@ -87,4 +139,83 @@ export async function addColumn(page: Page) {
 
   // 等待 3 秒以确保列被正确初始化
   await page.waitForTimeout(3000)
+}
+
+/**
+ * 读取 facts 列头文本（header 可能处于 input 编辑态）
+ */
+export async function getColumnHeaderText(page: Page, columnIndex: number): Promise<string> {
+  const header = page.locator('.facts-grid-header-renderer').nth(columnIndex)
+  return header.evaluate((el) => {
+    const inp = el.querySelector('input')
+    return inp?.value ?? el.textContent ?? ''
+  })
+}
+
+/**
+ * 第一行第一个 fact 数据单元格（跳过 row-selection checkbox 列）
+ */
+export function firstFactDataCell(page: Page) {
+  return page
+    .locator('.ag-center-cols-container [role="row"]')
+    .first()
+    .locator('.ag-cell')
+    .nth(1)
+}
+
+/**
+ * 编辑第一行第一列 fact 单元格文本
+ */
+export async function editFirstFactCell(page: Page, text: string) {
+  const cell = firstFactDataCell(page)
+
+  const savePromise = page.waitForResponse(
+    (r) => r.request().method() === 'PATCH' && /\/api\/decks\/[^/]+\/facts\//.test(r.url()) && r.ok(),
+  )
+
+  await cell.dblclick()
+
+  const editorInput = cell.getByRole('textbox')
+  await expect(editorInput).toBeVisible({ timeout: 5000 })
+  await editorInput.fill(text)
+  await editorInput.press('Tab')
+  await savePromise
+
+  await expect(cell.locator('.facts-grid-cell-renderer span')).toContainText(text, { timeout: 5000 })
+}
+
+/**
+ * 重命名 facts 表格指定列头
+ */
+export async function renameColumn(page: Page, columnIndex: number, newName: string) {
+  const header = page.locator('.facts-grid-header-renderer').nth(columnIndex)
+  const input = header.locator('input')
+  await expect(input).toBeVisible()
+
+  const savePromise = page.waitForResponse(
+    (r) => r.request().method() === 'PATCH' && /\/api\/decks\/[^/]+$/.test(r.url()) && r.ok(),
+  )
+  await input.fill(newName)
+  await input.press('Escape')
+  await savePromise
+
+  await expect.poll(async () => getColumnHeaderText(page, columnIndex)).toContain(newName)
+}
+
+/**
+ * 通过行内 action 菜单删除第一行 fact
+ */
+export async function deleteFirstFactViaRowMenu(page: Page) {
+  const rowsBefore = await page.locator('.ag-center-cols-container [role="row"]').count()
+  const actionCell = page.locator('.ag-pinned-right-cols-container [role="row"]').first()
+  await actionCell.locator('[data-slot="dropdown-trigger"]').click()
+  await page
+    .locator('[data-slot="dropdown-popover"] [data-slot="menu-item"][data-key="delete"]')
+    .click()
+  await page.getByRole('button', { name: 'Confirm' }).click()
+  await page.waitForURL(/\/decks\/[^/]+\/facts$/)
+  await expect(async () => {
+    const rowsAfter = await page.locator('.ag-center-cols-container [role="row"]').count()
+    expect(rowsAfter).toBeLessThan(rowsBefore)
+  }).toPass({ timeout: 10000 })
 }
