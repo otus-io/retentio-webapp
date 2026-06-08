@@ -6,20 +6,32 @@ import { API_BASE_URL, JWT_COOKIE_NAME } from '../src/config/index'
 const authStatePath = path.join('e2e', '.auth-state.json')
 
 async function fetchAuthToken(username: string, password: string): Promise<string> {
-  const res = await fetch(`${API_BASE_URL}/auth/login`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ username, password }),
-  })
-  if (!res.ok) {
-    throw new Error(`E2E login failed (${res.status}): ${await res.text()}`)
+  const controller = new AbortController()
+  const timeoutId = setTimeout(() => controller.abort(), 10_000)
+  try {
+    const res = await fetch(`${API_BASE_URL}/auth/login`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ username, password }),
+      signal: controller.signal,
+    })
+    if (!res.ok) {
+      throw new Error(`E2E login failed (${res.status}): ${await res.text()}`)
+    }
+    const body = await res.json() as { data?: { token?: string } }
+    const token = body.data?.token
+    if (!token) {
+      throw new Error('E2E login response missing token')
+    }
+    return token
+  } catch (err) {
+    if (err instanceof Error && err.name === 'AbortError') {
+      throw new Error(`E2E login timed out after 10s (${API_BASE_URL}/auth/login)`)
+    }
+    throw err
+  } finally {
+    clearTimeout(timeoutId)
   }
-  const body = await res.json() as { data?: { token?: string } }
-  const token = body.data?.token
-  if (!token) {
-    throw new Error('E2E login response missing token')
-  }
-  return token
 }
 
 export default async function globalSetup(config: FullConfig) {
@@ -39,7 +51,7 @@ export default async function globalSetup(config: FullConfig) {
     'http://localhost:3000'
 
   const token = await fetchAuthToken(username, password)
-  const { hostname, protocol } = new URL(baseURL)
+  const { hostname } = new URL(baseURL)
 
   fs.mkdirSync(path.dirname(authStatePath), { recursive: true })
   fs.writeFileSync(
@@ -52,10 +64,6 @@ export default async function globalSetup(config: FullConfig) {
             value: token,
             domain: hostname,
             path: '/',
-            expires: -1,
-            httpOnly: false,
-            secure: protocol === 'https:',
-            sameSite: 'Lax',
           },
         ],
         origins: [],

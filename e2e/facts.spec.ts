@@ -25,12 +25,16 @@ test.describe('Facts', () => {
   })
 
   test('should create a fact row', async ({ page }) => {
-    await gotoFirstDeckFacts(page)
+    const deckName = uniqueName('FactRow')
+    await createDeck(page, deckName)
+    await gotoDeckFacts(page, deckName)
     await addFactRow(page)
   })
 
   test('should create a column', async ({ page }) => {
-    await gotoFirstDeckFacts(page)
+    const deckName = uniqueName('AddCol')
+    await createDeck(page, deckName)
+    await gotoDeckFacts(page, deckName)
     const headers = page.locator('.facts-grid-header-renderer')
     const before = await headers.count()
     await addColumn(page)
@@ -52,7 +56,9 @@ test.describe('Facts', () => {
   })
 
   test('should rename a column header', async ({ page }) => {
-    await gotoFirstDeckFacts(page)
+    const deckName = uniqueName('RenameCol')
+    await createDeck(page, deckName)
+    await gotoDeckFacts(page, deckName)
 
     const newName = uniqueName('Col')
     await renameColumn(page, 0, newName)
@@ -63,13 +69,17 @@ test.describe('Facts', () => {
   })
 
   test('should delete a fact row via action menu', async ({ page }) => {
-    await gotoFirstDeckFacts(page)
+    const deckName = uniqueName('DeleteFact')
+    await createDeck(page, deckName)
+    await gotoDeckFacts(page, deckName)
     await addFactRow(page)
     await deleteFirstFactViaRowMenu(page)
   })
 
   test('should show attachment button after focusing a cell', async ({ page }) => {
-    await gotoFirstDeckFacts(page)
+    const deckName = uniqueName('Attach')
+    await createDeck(page, deckName)
+    await gotoDeckFacts(page, deckName)
     await addFactRow(page)
     await addColumn(page)
 
