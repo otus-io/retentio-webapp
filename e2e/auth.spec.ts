@@ -1,6 +1,8 @@
 import { test, expect } from '@playwright/test'
+import { skipUnlessE2ECredentials } from './helpers'
 
 test('should be logged in via global setup', async ({ page }) => {
+  skipUnlessE2ECredentials()
   await page.goto('/')
   await expect(page).not.toHaveURL(/\/login/)
 })

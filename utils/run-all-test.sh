@@ -32,6 +32,10 @@ echo '==> playwright install chromium (with system deps if needed)'
 pnpm exec playwright install --with-deps chromium
 
 echo '==> pnpm run test:e2e'
-CI=true pnpm run test:e2e
+if node -e "require('@next/env').loadEnvConfig(process.cwd()); process.exit(process.env.E2E_USERNAME && process.env.E2E_PASSWORD ? 0 : 1)"; then
+  CI=true pnpm run test:e2e
+else
+  echo 'warning: E2E_USERNAME/E2E_PASSWORD not set — skipping e2e (add to .env.local or export to mirror CI)' >&2
+fi
 
 echo '==> OK — same steps as CI (build-test-webapp) passed.'
