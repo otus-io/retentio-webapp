@@ -17,7 +17,8 @@
 #   — Git, Node.js >=20.9 on PATH (Next.js). Non-interactive SSH: install via nvm and ensure the script
 #     below can run `nvm use` against repo .nvmrc (nvm.sh + matching Node installed), or use system Node 20+.
 #   — pnpm v9 on PATH (~/.profile / ~/.bashrc) or corepack/npm global install
-#   — One-time: loginctl enable-linger $USER so the user service survives logout/reboot
+#   — Passwordless sudo for cp of utils/retentio-webapp.service → /etc/systemd/system/,
+#     plus systemctl daemon-reload, enable, restart (see retentio-backend/docs/server-side-config.md)
 #   — Repo cloned at ~/otusio/retentio-webapp with origin able to fetch this repository
 
 name: Deploy Webapp
@@ -123,8 +124,7 @@ jobs:
             export CI=true
             pnpm install --frozen-lockfile
             pnpm run build
-            mkdir -p ~/.config/systemd/user
-            cp ~/otusio/retentio-webapp/utils/retentio-webapp.service ~/.config/systemd/user/retentio-webapp.service
-            systemctl --user daemon-reload
-            systemctl --user enable retentio-webapp
-            systemctl --user restart retentio-webapp || exit 1
+            sudo cp ~/otusio/retentio-webapp/utils/retentio-webapp.service /etc/systemd/system/retentio-webapp.service
+            sudo systemctl daemon-reload
+            sudo systemctl enable retentio-webapp
+            sudo systemctl restart retentio-webapp || exit 1

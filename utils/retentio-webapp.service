@@ -1,11 +1,11 @@
 [Unit]
 Description=Retentio Webapp (Next.js)
 After=network.target
-StartLimitIntervalSec=300
-StartLimitBurst=5
 
 [Service]
 Type=simple
+User=otus
+Group=otus
 WorkingDirectory=/home/otus/otusio/retentio-webapp
 
 Environment=NODE_ENV=production
@@ -15,10 +15,12 @@ ExecStart=/bin/bash /home/otus/otusio/retentio-webapp/utils/run-prod.sh
 
 Restart=always
 RestartSec=10
+StartLimitIntervalSec=300
+StartLimitBurst=5
 
 StandardOutput=journal
 StandardError=journal
 SyslogIdentifier=retentio-webapp
 
 [Install]
-WantedBy=default.target
+WantedBy=multi-user.target
