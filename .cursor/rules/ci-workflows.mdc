@@ -12,7 +12,7 @@ alwaysApply: false
 |------|---------|---------|
 | `build-test-webapp.yml` | Push/PR to `main` | `pnpm lint:ci`, `pnpm test`, `pnpm build`, Playwright e2e |
 | `deploy-webapp.yml` | Deploy pipeline | Production deploy |
-| `pr-review.yml` | PR events | Automated PR review |
+| `pr-review.yml` | PR opened/sync | Claude Code auto-review (claude-code-action) |
 
 ## CI requirements
 
