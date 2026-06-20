@@ -108,65 +108,66 @@ export default function FactsTagsModal({ deck, fact, isOpen, setIsOpen }: FactsT
               <Modal.Heading>{t('term.tags')}</Modal.Heading>
             </Modal.Header>
             <Modal.Body className="px-2 py-4 space-y-3">
-
               {isLoading
                 ? (
                   <div className="flex justify-center py-6">
                     <Spinner size="sm" />
                   </div>
                 )
-                : tags.length === 0
-                  ? (
-                    <EmptyState>{t('tags.empty')}</EmptyState>
-                  )
-                  : results.length === 0
-                    ? (
-                      <EmptyState>{t('common.no-data')}</EmptyState>
-                    )
-                    : (
-                      <>
-                        <div className="flex items-center gap-1 ">
-                          <SearchField
-                            value={keywords}
-                            onChange={setKeywords}
-                            name="search"
-                            variant="secondary"
+                :
+                (
+                  <>
+                    <div className="flex items-center gap-1 ">
+                      <SearchField
+                        value={keywords}
+                        onChange={setKeywords}
+                        name="search"
+                        variant="secondary"
+                        aria-label={t('common.search')}
+                        className="flex-1 pr-0"
+                      >
+                        <SearchField.Group>
+                          <SearchField.SearchIcon />
+                          <SearchField.Input
                             aria-label={t('common.search')}
-                            className="flex-1 pr-0"
-                          >
-                            <SearchField.Group>
-                              <SearchField.SearchIcon />
-                              <SearchField.Input
-                                aria-label={t('common.search')}
-                                placeholder={t('common.search')}
-                              />
-                              <SearchField.ClearButton />
-                            </SearchField.Group>
-                          </SearchField>
-
-                          <AppButton onClick={() => setFormOpen(true)} isIconOnly>
-                            <Plus />
-                          </AppButton>
-                        </div>
-                        <TagGroup
-                          selectionMode="multiple"
-                          selectedKeys={selectedKeys}
-                          onSelectionChange={handleSelectionChange}
-                          aria-label={t('term.tags')}
-                          style={{
-                            '--radius': '.5rem',
-                          }}
-                        >
-                          <TagGroup.List>
-                            {results.map((tag) => (
-                              <Tag key={tag.id} id={tag.id} textValue={tag.name}>
-                                {tag.name}
-                              </Tag>
-                            ))}
-                          </TagGroup.List>
-                        </TagGroup>
-                      </>
-                    )
+                            placeholder={t('common.search')}
+                          />
+                          <SearchField.ClearButton />
+                        </SearchField.Group>
+                      </SearchField>
+                      <AppButton onClick={() => setFormOpen(true)} isIconOnly>
+                        <Plus />
+                      </AppButton>
+                    </div>
+                    {
+                      tags.length === 0
+                        ? (<EmptyState>{t('tags.empty')}</EmptyState>)
+                        : results.length === 0
+                          ? (<EmptyState>{t('common.no-data')}</EmptyState>)
+                          : (
+                            <>
+                              <TagGroup
+                                selectionMode="multiple"
+                                selectedKeys={selectedKeys}
+                                onSelectionChange={handleSelectionChange}
+                                aria-label={t('term.tags')}
+                                style={{
+                                  '--radius': '.5rem',
+                                }}
+                              >
+                                <TagGroup.List>
+                                  {results.map((tag) => (
+                                    <Tag key={tag.id} id={tag.id} textValue={tag.name}>
+                                      {tag.name}
+                                    </Tag>
+                                  ))}
+                                </TagGroup.List>
+                              </TagGroup>
+                            </>
+                          )
+                    }
+                  </>
+                )
               }
             </Modal.Body>
             <Modal.Footer>
