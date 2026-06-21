@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Run the same checks as .github/workflows/build-test-webapp.yml before committing.
+# Run the same checks as .github/workflows/build-test-deploy-webapp.yml before committing.
 # Usage: from repo root: ./utils/run-all-test.sh
 #        or: bash /path/to/retentio-webapp/utils/run-all-test.sh
 
@@ -44,4 +44,4 @@ else
   echo 'warning: E2E_USERNAME/E2E_PASSWORD not set — skipping e2e (add to .env.local or export to mirror CI)' >&2
 fi
 
-echo '==> OK — same steps as CI (build-test-webapp) passed.'
+echo '==> OK — same steps as CI (build-test-deploy-webapp) passed.'

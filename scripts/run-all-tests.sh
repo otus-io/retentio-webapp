@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Run the same checks as .github/workflows/build-test-webapp.yml (lint, unit tests, build, e2e).
+# Run the same checks as .github/workflows/build-test-deploy-webapp.yml (lint, unit tests, build, e2e).
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
@@ -28,4 +28,4 @@ pnpm exec playwright install --with-deps chromium
 echo '==> pnpm run test:e2e'
 CI=true pnpm run test:e2e
 
-echo '==> OK — same steps as CI (build-test-webapp) passed.'
+echo '==> OK — same steps as CI (build-test-deploy-webapp) passed.'

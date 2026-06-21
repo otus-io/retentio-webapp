@@ -1,42 +1,30 @@
 ---
-# Deploy to production over SSH: pull main, install, build, run via systemd.
+# CI on push/PR to main; deploy to production after CI passes on push to main or manual run.
 #
-# Production app directory: ~/otusio/retentio-webapp (same layout as backend deploy)
-#
-# Triggers after "Build & test webapp" succeeds on main (lint, unit tests, build, Chromium e2e).
-# Manual runs (workflow_dispatch) run the same checks in the quality-gate job first.
-#
-# Repository secrets (Settings → Secrets and variables → Actions):
-#   SERVER_HOST       — hostname or IP
-#   SERVER_USERNAME   — SSH user (e.g. otus)
-#   SERVER_SSH_KEY    — private key for that user; matching public key in ~/.ssh/authorized_keys on the server
-#
-# Non-default SSH port: add `port: YOUR_PORT` under `with:` in the ssh-action step (default is 22).
+# Deploy secrets: SERVER_HOST, SERVER_USERNAME, SERVER_SSH_KEY
+# E2E secrets: E2E_USERNAME, E2E_PASSWORD
 #
 # Server prerequisites:
-#   — Git, Node.js >=20.9 on PATH (Next.js). Non-interactive SSH: install via nvm and ensure the script
-#     below can run `nvm use` against repo .nvmrc (nvm.sh + matching Node installed), or use system Node 20+.
-#   — pnpm v9 on PATH (~/.profile / ~/.bashrc) or corepack/npm global install
-#   — Passwordless sudo for cp of utils/retentio-webapp.service → /etc/systemd/system/,
-#     plus systemctl daemon-reload, enable, restart (see retentio-backend/docs/server-side-config.md)
-#   — Repo cloned at ~/otusio/retentio-webapp with origin able to fetch this repository
+#   — Git, Node.js >=20.9, pnpm v9 at ~/otusio/retentio-webapp
+#   — Passwordless sudo for cp utils/retentio-webapp.service and systemctl enable/restart
 
-name: Deploy Webapp
+name: Build, test & deploy webapp
 
 on:
-  workflow_run:
-    workflows: ["Build & test webapp"]
-    types: [completed]
+  push:
     branches: [main]
-  workflow_dispatch: {}
-
-concurrency:
-  group: deploy-webapp-${{ github.ref }}
-  cancel-in-progress: true
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+    inputs:
+      deploy:
+        description: Deploy to production after CI passes
+        type: boolean
+        default: true
 
 jobs:
-  quality-gate:
-    if: github.event_name == 'workflow_dispatch'
+  lint-and-build:
+    if: github.event_name != 'pull_request' || github.event.pull_request.draft == false
     runs-on: ubuntu-latest
 
     steps:
@@ -79,13 +67,15 @@ jobs:
           E2E_PASSWORD: ${{ secrets.E2E_PASSWORD }}
 
   deploy:
-    needs: quality-gate
+    needs: lint-and-build
     if: |
-      always() &&
-      ((github.event_name == 'workflow_run' && github.event.workflow_run.conclusion == 'success') ||
-       (github.event_name == 'workflow_dispatch' && needs.quality-gate.result == 'success'))
+      (github.event_name == 'push' && github.ref == 'refs/heads/main') ||
+      (github.event_name == 'workflow_dispatch' && inputs.deploy)
     runs-on: ubuntu-latest
     environment: production
+    concurrency:
+      group: deploy-webapp
+      cancel-in-progress: true
 
     steps:
       - name: Deploy over SSH
