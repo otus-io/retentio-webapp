@@ -32,11 +32,12 @@ echo '==> playwright install chromium (with system deps if needed)'
 pnpm exec playwright install --with-deps chromium
 
 echo '==> pnpm run test:e2e'
-eval "$(node -e "
+{ read -r E2E_USERNAME; read -r E2E_PASSWORD; } < <(node -e "
   require('@next/env').loadEnvConfig(process.cwd());
-  if (process.env.E2E_USERNAME) console.log('export E2E_USERNAME=' + JSON.stringify(process.env.E2E_USERNAME));
-  if (process.env.E2E_PASSWORD) console.log('export E2E_PASSWORD=' + JSON.stringify(process.env.E2E_PASSWORD));
-")"
+  console.log(process.env.E2E_USERNAME || '');
+  console.log(process.env.E2E_PASSWORD || '');
+")
+export E2E_USERNAME E2E_PASSWORD
 if [[ -n "${E2E_USERNAME:-}" && -n "${E2E_PASSWORD:-}" ]]; then
   CI=true pnpm run test:e2e
 else

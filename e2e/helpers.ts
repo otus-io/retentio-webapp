@@ -8,7 +8,7 @@ export function skipUnlessE2ECredentials() {
 }
 
 export function uniqueName(prefix: string) {
-  return `${prefix}${Date.now()}`
+  return `${prefix}${Date.now()}-${Math.random().toString(36).slice(2, 9)}`
 }
 
 /**
@@ -31,7 +31,6 @@ export async function createDeck(page: Page, name = 'TestDeck') {
  */
 export async function openDeckEditFromList(page: Page, deckName?: string) {
   await page.goto('/decks')
-  await page.waitForLoadState('networkidle')
 
   const card = deckName
     ? page.locator('[data-slot="card"]').filter({ hasText: deckName }).first()
@@ -57,7 +56,6 @@ export async function submitDeckForm(page: Page) {
  */
 export async function gotoDeckFacts(page: Page, deckName: string) {
   await page.goto('/decks')
-  await page.waitForLoadState('networkidle')
 
   const card = page.locator('[data-slot="card"]').filter({ hasText: deckName }).first()
   await expect(card).toBeVisible()
