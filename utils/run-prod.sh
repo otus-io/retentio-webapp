@@ -13,7 +13,7 @@ cd "$REPO_ROOT"
 export HUSKY=0
 export NODE_ENV=production
 
-# systemd does not load login shells; mirror deploy-webapp.yml Node/pnpm setup.
+# systemd does not load login shells; mirror build-test-deploy-webapp.yml deploy Node/pnpm setup.
 export NVM_DIR="${NVM_DIR:-$HOME/.nvm}"
 if [ -s "$NVM_DIR/nvm.sh" ]; then
   # shellcheck source=/dev/null

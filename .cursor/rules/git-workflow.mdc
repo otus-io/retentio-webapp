@@ -19,7 +19,7 @@ alwaysApply: true
 1. Branch from `main`: `git checkout -b <branch-name>`
 2. Commit on the feature branch (husky runs lint-staged, then `pnpm test`)
 3. Push: `git push -u origin <branch-name>`
-4. Open PR; wait for CI (`build-test-webapp.yml`)
+4. Open PR; wait for CI (`build-test-deploy-webapp.yml`)
 5. Squash and merge after review
 
 ## Package manager

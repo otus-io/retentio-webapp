@@ -10,7 +10,7 @@ Rules live in `.cursor/rules/`. Project skill: `.cursor/skills/validate-minimal-
 | Next.js webapp             | `next-webapp.mdc`                                | `src/**/*.{ts,tsx}`         | App Router, HeroUI, next-intl, modules/                 |
 | Testing                    | `testing.mdc`                                    | `src/**/*.test.*`, `e2e/**` | Vitest + Playwright                                     |
 | Git workflow               | `git-workflow.mdc`                               | Always                      | Feature branches, pnpm                                  |
-| CI workflows               | `ci-workflows.mdc`                               | `.github/workflows/**`      | build-test-webapp, deploy, pr-review                    |
+| CI workflows               | `ci-workflows.mdc`                               | `.github/workflows/**`      | build-test-deploy-webapp, pr-review                     |
 | Cost / concise             | `cost-optimization.mdc`, `concise-responses.mdc` | Always                      | Token efficiency, brief replies                         |
 
 See `README.md` for stack and folder layout. API reference: `docs/api.md` (+ `docs/api_zh.md`).

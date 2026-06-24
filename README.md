@@ -89,9 +89,8 @@ Open [http://localhost:3000](http://localhost:3000).
 
 ## CI and pre-commit
 
-- **GitHub Actions** (`.github/workflows/build-test-webapp.yml`): on pushes and pull requests to `main`, runs `pnpm install --frozen-lockfile`, `pnpm lint:ci`, and `pnpm build`.
+- **GitHub Actions** (`.github/workflows/build-test-deploy-webapp.yml`): on pushes and pull requests to `main`, runs lint, unit tests, build, and e2e; deploys to production after CI passes on push to `main` (or manual **Run workflow**). Deploy secrets: `SERVER_HOST`, `SERVER_USERNAME`, `SERVER_SSH_KEY`. See workflow file comments for server prerequisites.
 - **PR assistant** (`.github/workflows/pr-review.yml`): on non-draft PR **opened**, auto-fills the PR description; on **opened** / **synchronize**, runs Claude Code review via `anthropics/claude-code-action`. Set repository secret **`ANTHROPIC_API_KEY`** and install the [Claude GitHub App](https://github.com/apps/claude).
-- **Deploy** (`.github/workflows/deploy-webapp.yml`): on pushes to `main` (and manual **Run workflow**), SSHs to your server, updates `~/otusio/retentio-webapp` to `origin/main`, runs `pnpm install --frozen-lockfile`, `pnpm build`, then copies [`utils/retentio-webapp.service`](utils/retentio-webapp.service), **`systemctl enable retentio-webapp`**, and **`systemctl restart retentio-webapp`**. Secrets: `SERVER_HOST`, `SERVER_USERNAME`, `SERVER_SSH_KEY`. Server needs Git, Node 20+, pnpm, and passwordless sudo for those systemctl/cp commands. See comments in the workflow file. Use a GitHub **production** environment if you add protection rules.
 - **Pre-commit**: Husky runs [lint-staged](https://github.com/lint-staged/lint-staged) on staged `*.{ts,tsx,js,jsx,mjs,cjs,md,mdx,json,jsonc,yml,yaml}` files (`eslint --fix`), then `pnpm test` (Vitest). E2E tests run in CI only. Hooks are installed when you run `pnpm install` (`prepare` script). If `.husky/pre-commit` does not run after cloning, run `pnpm install` again from the repo root.
 
 ## Configuration highlights
