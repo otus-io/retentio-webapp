@@ -39,7 +39,7 @@ export default function Footer() {
         <Separator className="my-6" />
 
         <p className="text-xs text-default-400 text-center">
-          &copy; {year} Retentio. All rights reserved.
+          &copy; {year} {APP_NAME}. All rights reserved.
         </p>
       </div>
     </footer>

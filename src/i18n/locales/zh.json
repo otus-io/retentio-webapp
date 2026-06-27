@@ -25,11 +25,11 @@
       "appPreview": "应用预览"
     },
     "about": {
-      "title": "关于 Retentio",
-      "description": "Retentio 是一款基于间隔重复科学的智能闪卡应用。它优化您的复习计划，让您花更少的时间学习却记住更多。无论是学习语言、备考还是掌握新技能，Retentio 都能适应您的记忆模式以实现最高效率。"
+      "title": "关于 Rete",
+      "description": "Rete 是一款基于间隔重复科学的智能闪卡应用。它优化您的复习计划，让您花更少的时间学习却记住更多。无论是学习语言、备考还是掌握新技能，Rete 都能适应您的记忆模式以实现最高效率。"
     },
     "features": {
-      "sectionTitle": "为什么选择 Retentio",
+      "sectionTitle": "为什么选择 Rete",
       "verified": {
         "title": "多语言支持",
         "description": "支持多种语言，完整的国际化体验，让您用最舒适的语言学习。"
@@ -65,7 +65,7 @@
     },
     "cta": {
       "title": "今天就开始学习",
-      "subtitle": "加入数千名正在使用 Retentio 的学习者，记住更多，记得更久。",
+      "subtitle": "加入数千名正在使用 Rete 的学习者，记住更多，记得更久。",
       "button": "加入 TestFlight 测试",
       "note": "iOS 应用目前仍在 TestFlight 公测中。"
     }
@@ -182,7 +182,7 @@
     "guide": "指南",
 
     "background": "背景",
-    "what-is-retentio": "什么是 Retentio",
+    "what-is-retentio": "什么是 Rete",
     "read-more": "我们的研究",
     
     "key-concepts": "核心概念",

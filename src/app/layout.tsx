@@ -22,11 +22,11 @@ export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
   title: {
     default: `${APP_NAME} - ${APP_DESC}`,
-    template: `%s | ${APP_NAME}`, // 子页面用：页面名 | Retentio
+    template: `%s | ${APP_NAME}`, // 子页面用：页面名 | Rete
   },
-  description: 'Retentio helps you remember more for longer using spaced repetition and smart review systems.',
+  description: 'Rete helps you remember more for longer using spaced repetition and smart review systems.',
   keywords: ['spaced repetition', 'memory', 'learning', 'flashcards', 'retention'],
-  authors: [{ name: 'Retentio Team' }],
+  authors: [{ name: 'Rete Team' }],
 
   // Open Graph（社交媒体分享预览）
   openGraph: {

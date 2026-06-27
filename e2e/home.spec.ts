@@ -10,7 +10,7 @@ test('should load the homepage', async ({ page }) => {
   console.log('📍 当前 URL:', page.url())
   console.log('📰 页面标题:', await page.title())
 
-  await expect(page).toHaveTitle(/Retentio/)
+  await expect(page).toHaveTitle(/Rete/)
 })
 
 // test('should navigate between pages', async ({ page }) => {

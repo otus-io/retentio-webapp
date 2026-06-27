@@ -25,11 +25,11 @@
       "appPreview": "App Preview"
     },
     "about": {
-      "title": "About Retentio",
-      "description": "Retentio is a smart flashcard app powered by spaced repetition science. It optimizes your review schedule so you spend less time studying while retaining more. Whether you're learning languages, preparing for exams, or mastering new skills, Retentio adapts to your memory patterns for maximum efficiency."
+      "title": "About Rete",
+      "description": "Rete is a smart flashcard app powered by spaced repetition science. It optimizes your review schedule so you spend less time studying while retaining more. Whether you're learning languages, preparing for exams, or mastering new skills, Rete adapts to your memory patterns for maximum efficiency."
     },
     "features": {
-      "sectionTitle": "Why Choose Retentio",
+      "sectionTitle": "Why Choose Rete",
       "verified": {
         "title": "Multi-language Support",
         "description": "Learn in your preferred language with full internationalization support."
@@ -65,7 +65,7 @@
     },
     "cta": {
       "title": "Start Learning Today",
-      "subtitle": "Join thousands of learners who are already using Retentio to remember more, for longer.",
+      "subtitle": "Join thousands of learners who are already using Rete to remember more, for longer.",
       "button": "Join on TestFlight",
       "note": "The iOS app is currently available through TestFlight beta."
     }
@@ -182,7 +182,7 @@
     "guide": "Guide",
     
     "background": "Background",
-    "what-is-retentio": "What is Retentio",
+    "what-is-retentio": "What is Rete",
     "read-more": "Our research",
     
     "key-concepts": "Key Concepts",

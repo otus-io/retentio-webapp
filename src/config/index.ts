@@ -1,5 +1,5 @@
-export const APP_NAME = 'Retentio'
-export const APP_DESC = 'Remember More, For Longer'
+export const APP_NAME = 'Rete'
+export const APP_DESC = 'Spaced Repetition System Powered by AI, Remember More, For Longer'
 /** Canonical origin for metadata, sitemap, and robots (no trailing slash). */
 export const SITE_URL = 'https://web.retentio.app'
 export const API_BASE_URL = 'https://api.retentio.app:8443'

@@ -1,6 +1,6 @@
-# Retentio Web App
+# Rete Web App
 
-Web front end for **Retentio** — a spaced repetition (SRS) product for long-term retention. This Next.js app ships the marketing home page, account flows (login / register / profile), in-app areas such as dashboard and library, and an MDX-based **user guide** with full-text search.
+Web front end for **Rete** — a spaced repetition (SRS) product for long-term retention. This Next.js app ships the marketing home page, account flows (login / register / profile), in-app areas such as dashboard and library, and an MDX-based **user guide** with full-text search.
 
 Authenticated features talk to a **remote HTTP API** (see `src/utils/request.ts` for the base URL). JWT auth is stored in an HTTP-only cookie (`retentio_token`) and attached to API requests from server code.
 
