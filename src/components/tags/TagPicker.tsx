@@ -1,5 +1,5 @@
 'use client'
-import { getAllTags } from '@/api/tag'
+import { getAllDictTags } from '@/api/tag'
 import AppButton from '@/components/app/AppButton'
 import TagFormModal from '@/components/tags/TagFormModal'
 import type { Tag as ITag } from '@/modules/tags/tags.schema'
@@ -27,7 +27,7 @@ export default function TagPicker({ defaultValue }: { defaultValue?: string[] })
   const t = useTranslations()
   const list = useAsyncList<ITag>({
     async load() {
-      const res = await getAllTags()
+      const res = await getAllDictTags()
       return {
         items: res.data.tags ?? [],
       }

@@ -27,6 +27,21 @@ export function getAllTags() {
 }
 
 /**
+ * 列出当前用户的 fact 全部标签
+ */
+export function getAllFactTags(deck_id: string) {
+  return request<TagsListResponseDTO>(`/api/tags?used_on=fact&deck_id=${deck_id}`)
+}
+
+/**
+ * 列出当前用户的 deck 全部标签
+ */
+export function getAllDictTags() {
+  return request<TagsListResponseDTO>('/api/tags?used_on=deck')
+}
+
+
+/**
  * 获取单个标签
  */
 export function getTag(tagId: string) {
