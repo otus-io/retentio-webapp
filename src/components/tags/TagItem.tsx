@@ -38,6 +38,7 @@ export default function TagItem({ tag, highlight, onEdit, editable = true }: Tag
 
   const chip = (
     <Chip
+      data-tag-name={tag.name}
       style={{
         '--radius': '.5rem',
       }}
