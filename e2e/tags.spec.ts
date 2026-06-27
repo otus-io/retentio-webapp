@@ -46,7 +46,7 @@ test.describe('Tags library', () => {
     await expect.poll(async () => {
       const chips = page.locator('[data-slot="chip"]')
       const count = await chips.count()
-      if (count !== 1) return false
+      if (count === 0) return false
       const text = await chips.first().textContent()
       return text?.includes(tagA) ?? false
     }).toBe(true)

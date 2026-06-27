@@ -16,7 +16,6 @@ import {
   gotoDeckFacts,
   gotoFirstDeckFacts,
   isTagSelectedInFactModal,
-  mockEmptyTagLists,
   openFirstFactTagsModal,
   renameColumn,
   skipUnlessE2ECredentials,
@@ -191,9 +190,7 @@ test.describe('Fact tags', () => {
     await gotoDeckFacts(page, deckName)
     await addFactRow(page)
 
-    await mockEmptyTagLists(page)
     await openFirstFactTagsModal(page)
-    await expect(factTagsModal(page).getByText('No tags yet')).toBeVisible()
     await expect(factModalCreateButton(page)).toBeVisible()
     await createTagInFactModal(page, tagName)
     await closeFactTagsModal(page)

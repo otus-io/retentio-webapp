@@ -148,7 +148,7 @@ export default function TagPicker({ defaultValue }: { defaultValue?: string[] })
                   />
                 </SearchField.Group>
               </SearchField>
-              <AppButton isIconOnly onClick={() => handleCreateTag()}>
+              <AppButton isIconOnly onClick={() => handleCreateTag()} id="tag-picker-add-button">
                 <Plus />
               </AppButton>
             </div>

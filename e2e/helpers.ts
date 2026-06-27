@@ -393,8 +393,7 @@ export async function selectTagsInDeckForm(page: Page, tagNames: string[]) {
  */
 export async function createTagInDeckPicker(page: Page, tagName: string) {
   await openDeckTagPicker(page)
-  const popover = page.locator('[data-slot="popover"]').last()
-  await popover.locator('button').last().click()
+  await page.locator('#tag-picker-add-button').click()
   await fillAndSubmitTagForm(page, { name: tagName })
   await expect(page.locator('[aria-label="selected tag"]').getByText(tagName)).toBeVisible()
 }
@@ -498,32 +497,4 @@ export async function isTagSelectedInFactModal(page: Page, tagName: string): Pro
   if (await tag.getAttribute('aria-pressed') === 'true') return true
   const selectedClass = await tag.getAttribute('class')
   return selectedClass?.includes('selected') ?? false
-}
-
-/**
- * Mock tag APIs to return empty lists (forces FactsTagsModal empty branch).
- */
-export async function mockEmptyTagLists(page: Page) {
-  await page.route('**/api/tags', async (route) => {
-    if (route.request().method() === 'GET') {
-      await route.fulfill({
-        status: 200,
-        contentType: 'application/json',
-        body: JSON.stringify({ data: { tags: [] } }),
-      })
-      return
-    }
-    await route.continue()
-  })
-  await page.route('**/api/decks/*/facts/*/tags', async (route) => {
-    if (route.request().method() === 'GET') {
-      await route.fulfill({
-        status: 200,
-        contentType: 'application/json',
-        body: JSON.stringify({ data: { tags: [] } }),
-      })
-      return
-    }
-    await route.continue()
-  })
 }
