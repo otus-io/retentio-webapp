@@ -182,7 +182,7 @@ test.describe('Fact tags', () => {
     expect(await isTagSelectedInFactModal(page, newTag)).toBe(true)
   })
 
-  test('should allow creating first tag from empty fact modal', async ({ page }) => {
+  test('should create tag in fact modal', async ({ page }) => {
     const deckName = uniqueName('FactZeroTags')
     const tagName = uniqueName('FirstFactTag')
 
