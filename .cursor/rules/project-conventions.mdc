@@ -1,13 +1,13 @@
 ---
-description: Retentio Web App project conventions for commits, PRs, docs, and code style
+description: Rete Web App project conventions for commits, PRs, docs, and code style
 alwaysApply: true
 ---
 
-# Retentio Web App Conventions
+# Rete Web App Conventions
 
 ## Project Overview
 
-Production Next.js web app: marketing, auth, dashboard/library, MDX user guide. Talks to remote Retentio HTTP API via `src/utils/request.ts`. JWT in HTTP-only cookie `retentio_token`.
+Production Next.js web app: marketing, auth, dashboard/library, MDX user guide. Talks to remote Rete HTTP API via `src/utils/request.ts`. JWT in HTTP-only cookie `retentio_token`.
 
 ## Commit & PR Conventions
 

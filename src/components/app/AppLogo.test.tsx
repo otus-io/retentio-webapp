@@ -4,7 +4,7 @@ import type { ComponentProps, ReactNode } from 'react'
 import AppLogo from './AppLogo'
 
 vi.mock('@/config', () => ({
-  APP_NAME: 'Retentio',
+  APP_NAME: 'Rete',
 }))
 
 vi.mock('@/components/app/AppLink', () => ({
@@ -22,11 +22,11 @@ describe('AppLogo', () => {
 
   it('默认显示 APP_NAME', () => {
     render(<AppLogo />)
-    expect(screen.getByText('Retentio')).toBeDefined()
+    expect(screen.getByText('Rete')).toBeDefined()
   })
 
   it('hideName 为 true 时隐藏名称', () => {
     render(<AppLogo hideName />)
-    expect(screen.queryByText('Retentio')).toBeNull()
+    expect(screen.queryByText('Rete')).toBeNull()
   })
 })

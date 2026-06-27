@@ -1,5 +1,5 @@
 [Unit]
-Description=Retentio Webapp (Next.js)
+Description=Rete Webapp (Next.js)
 After=network.target
 
 [Service]

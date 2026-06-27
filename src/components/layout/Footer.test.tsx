@@ -31,7 +31,7 @@ import Footer from './Footer'
 describe('Footer', () => {
   it('渲染 APP_NAME', () => {
     render(<Footer />)
-    expect(screen.getByText('Retentio')).toBeDefined()
+    expect(screen.getByText('Rete')).toBeDefined()
   })
 
   it('渲染标语', () => {
