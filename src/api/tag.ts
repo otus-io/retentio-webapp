@@ -30,7 +30,7 @@ export function getAllTags() {
  * 列出当前用户的 fact 全部标签
  */
 export function getAllFactTags(deck_id: string) {
-  return request<TagsListResponseDTO>(`/api/tags?used_on=fact&deck_id=${deck_id}`)
+  return request<TagsListResponseDTO>(`/api/tags?${new URLSearchParams({ used_on: 'fact', deck_id })}`)
 }
 
 /**
