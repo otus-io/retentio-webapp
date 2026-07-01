@@ -1,6 +1,6 @@
 'use client'
 
-import { associateTagToFact, getAllTags, getFactTags, removeTagFromFact } from '@/api/tag'
+import { associateTagToFact, getAllFactTags, getFactTags, removeTagFromFact } from '@/api/tag'
 import type { Deck } from '@/modules/decks/decks.schema'
 import type { Fact } from '@/modules/facts/facts.schema'
 import type { Tag as ITag } from '@/modules/tags/tags.schema'
@@ -50,7 +50,7 @@ export default function FactsTagsModal({ deck, fact, isOpen, setIsOpen }: FactsT
       setIsLoading(true)
       try {
         const [allRes, factRes] = await Promise.all([
-          getAllTags(),
+          getAllFactTags(deck.id),
           getFactTags(deck.id, fact.id),
         ])
         if (cancelled) return
