@@ -19,14 +19,14 @@
     "hero": {
       "title": "记住更多",
       "titleHighlight": "记得更久",
-      "subtitle": "基于间隔重复科学，以及由资深教育工作者维护并持续完善的优质牌组——让你把时间花在快要忘的内容上，而不是反复刷已经掌握的部分。",
+      "subtitle": "基于 spaced repetition 科学，以及由资深教育工作者维护并持续完善的优质牌组——让你把时间花在快要忘的内容上，而不是反复刷已经掌握的部分。",
       "cta": "加入 TestFlight 测试",
       "learnMore": "了解更多",
       "appPreview": "应用预览"
     },
     "about": {
       "title": "关于 Rete",
-      "description": "Rete 是一款基于间隔重复科学的智能闪卡应用。它优化您的复习计划，让您花更少的时间学习却记住更多。无论是学习语言、备考还是掌握新技能，Rete 都能适应您的记忆模式以实现最高效率。"
+      "description": "Rete 是一款基于 spaced repetition 科学的智能闪卡应用。它优化您的复习计划，让您花更少的时间学习却记住更多。无论是学习语言、备考还是掌握新技能，Rete 都能适应您的记忆模式以实现最高效率。"
     },
     "features": {
       "sectionTitle": "为什么选择 Rete",
@@ -36,7 +36,7 @@
       },
       "algorithm": {
         "title": "智能算法",
-        "description": "间隔重复算法根据您的学习节奏自适应调整，达到最佳记忆效果。"
+        "description": "spaced repetition 算法根据您的学习节奏自适应调整，达到最佳记忆效果。"
       },
       "ui": {
         "title": "直观设计",
