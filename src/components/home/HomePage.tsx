@@ -2,7 +2,7 @@
 
 import { useRef, useState, useEffect } from 'react'
 import { useTranslations } from 'next-intl'
-import { Languages, Brain, Palette, Bot, ArrowDown, ArrowRight, Clock, BookOpen, TrendingUp, Download, Book } from 'lucide-react'
+import { Users, Brain, Palette, Bot, ArrowDown, ArrowRight, Clock, BookOpen, TrendingUp, Download, Book } from 'lucide-react'
 import clsx from 'clsx'
 import AppLink from '@/components/app/AppLink'
 import AppButton from '@/components/app/AppButton'
@@ -49,7 +49,7 @@ function AnimatedSection({ children, className, delay = 0 }: {
 }
 
 const features = [
-  { icon: Languages, key: 'verified' },
+  { icon: Users, key: 'community' },
   { icon: Brain, key: 'algorithm' },
   { icon: Palette, key: 'ui' },
   { icon: Bot, key: 'ai' },
@@ -125,10 +125,10 @@ export default function HomePage() {
                   <feature.icon className="size-7" />
                 </div>
                 <h3 className="text-lg font-semibold mb-2">
-                  {t(`home.features.${feature.key}.title` as 'home.features.verified.title')}
+                  {t(`home.features.${feature.key}.title` as 'home.features.community.title')}
                 </h3>
                 <p className="text-sm text-gray-600 dark:text-gray-400 leading-relaxed">
-                  {t(`home.features.${feature.key}.description` as 'home.features.verified.description')}
+                  {t(`home.features.${feature.key}.description` as 'home.features.community.description')}
                 </p>
               </div>
             </AnimatedSection>

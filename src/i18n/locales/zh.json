@@ -19,43 +19,43 @@
     "hero": {
       "title": "记住更多",
       "titleHighlight": "记得更久",
-      "subtitle": "基于 spaced repetition 科学，以及由资深教育工作者维护并持续完善的优质牌组——让你把时间花在快要忘的内容上，而不是反复刷已经掌握的部分。",
+      "subtitle": "协作式Spaced Repetition，AI 辅助卡组质量与自适应复习——高效、稳定、可累积的学习。",
       "cta": "加入 TestFlight 测试",
       "learnMore": "了解更多",
       "appPreview": "应用预览"
     },
     "about": {
       "title": "关于 Rete",
-      "description": "Rete 是一款基于 spaced repetition 科学的智能闪卡应用。它优化您的复习计划，让您花更少的时间学习却记住更多。无论是学习语言、备考还是掌握新技能，Rete 都能适应您的记忆模式以实现最高效率。"
+      "description": "Rete 是一款基于 spaced repetition 科学的智能flash card应用。它优化您的复习计划，让您花更少的时间学习却记住更多。无论是学习语言、备考还是掌握新技能，Rete 都能适应您的记忆模式以实现最高效率。"
     },
     "features": {
       "sectionTitle": "为什么选择 Rete",
-      "verified": {
-        "title": "多语言支持",
-        "description": "支持多种语言，完整的国际化体验，让您用最舒适的语言学习。"
+      "community": {
+        "title": "协作卡组",
+        "description": "共同创建、分享与改进卡组——质量随时间累积，而不是逐渐陈旧。"
       },
       "algorithm": {
-        "title": "智能算法",
-        "description": "spaced repetition 算法根据您的学习节奏自适应调整，达到最佳记忆效果。"
+        "title": "创新算法",
+        "description": "针对传统 SRS 工具的上手门槛高、复习队列膨胀、复习负担不可持续等痛点而设计。"
       },
       "ui": {
         "title": "直观设计",
         "description": "简洁现代的界面设计，让学习成为一种享受而非负担。"
       },
       "ai": {
-        "title": "AI 驱动",
-        "description": "利用人工智能自动生成闪卡，优化您的学习计划。"
+        "title": "AI 辅助审校",
+        "description": "AI 审查卡组的质量与准确性，所有建议修改均经人工审核后才会生效。"
       }
     },
     "howItWorks": {
       "sectionTitle": "如何使用",
       "step1": {
-        "title": "创建卡片",
-        "description": "手动添加闪卡或从多种来源导入，将它们整理到不同的卡组中便于管理。"
+        "title": "创建或导入卡组",
+        "description": "从零创建自己的卡组，或从社区导入他人已发布的卡组。"
       },
       "step2": {
-        "title": "智能学习",
-        "description": "算法会在您即将遗忘之前安排复习，在最佳时间点巩固记忆。"
+        "title": "养成学习习惯",
+        "description": "每日复习量可控，保持稳定节奏——可持续的学习习惯，而非临时抱佛脚。"
       },
       "step3": {
         "title": "跟踪进度",
