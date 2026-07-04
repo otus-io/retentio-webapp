@@ -19,7 +19,7 @@
     "hero": {
       "title": "Remember More,",
       "titleHighlight": "For Longer",
-      "subtitle": "Collaborative spaced repetition with AI-assisted deck quality and adaptive review — efficient, steady, cumulative learning",
+      "subtitle": "A collaborative platform for building and improving decks — powered by a novel SRS scheduling algorithm, AI-assisted quality checks, and adaptive review.",
       "cta": "Join on TestFlight",
       "learnMore": "Learn More",
       "appPreview": "App Preview"
@@ -36,11 +36,11 @@
       },
       "algorithm": {
         "title": "Novel Algorithm",
-        "description": "A scheduling algorithm built to address legacy SRS pain points — steep setup, snowballing queues, and unsustainable review loads."
+        "description": "A scheduling algorithm built to address legacy SRS pain points — steep setup, review backlogs that snowball, and a single forgetting-curve model applied to every card."
       },
       "ui": {
         "title": "Intuitive Design",
-        "description": "A clean, modern interface that makes studying a pleasure, not a chore."
+        "description": "An intuitive, clean, modern interface that makes studying a pleasure, not a chore."
       },
       "ai": {
         "title": "AI-Assisted Quality",

@@ -19,7 +19,7 @@
     "hero": {
       "title": "记住更多",
       "titleHighlight": "记得更久",
-      "subtitle": "协作式Spaced Repetition，AI 辅助卡组质量与自适应复习——高效、稳定、可累积的学习。",
+      "subtitle": "面向卡组共建与改进的协作平台——依托创新 SRS 调度算法、AI 辅助质量审校与自适应复习。",
       "cta": "加入 TestFlight 测试",
       "learnMore": "了解更多",
       "appPreview": "应用预览"
@@ -36,11 +36,11 @@
       },
       "algorithm": {
         "title": "创新算法",
-        "description": "针对传统 SRS 工具的上手门槛高、复习队列膨胀、复习负担不可持续等痛点而设计。"
+        "description": "针对传统 SRS 的上手门槛高、复习积压滚雪球、以及所有卡片共用单一遗忘曲线模型等痛点而设计。"
       },
       "ui": {
         "title": "直观设计",
-        "description": "简洁现代的界面设计，让学习成为一种享受而非负担。"
+        "description": "直观、简洁现代的界面设计，让学习成为一种享受而非负担。"
       },
       "ai": {
         "title": "AI 辅助审校",
