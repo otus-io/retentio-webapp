@@ -19,7 +19,7 @@
     "hero": {
       "title": "Remember More,",
       "titleHighlight": "For Longer",
-      "subtitle": "Built on spacing science and high-quality decks maintained and improved by experienced educators — designed so you spend time on what’s slipping, not re-drilling what you’ve already got.",
+      "subtitle": "Collaborative spaced repetition with AI-assisted deck quality and adaptive review — efficient, steady, cumulative learning",
       "cta": "Join on TestFlight",
       "learnMore": "Learn More",
       "appPreview": "App Preview"
@@ -30,32 +30,32 @@
     },
     "features": {
       "sectionTitle": "Why Choose Rete",
-      "verified": {
-        "title": "Multi-language Support",
-        "description": "Learn in your preferred language with full internationalization support."
+      "community": {
+        "title": "Community Decks",
+        "description": "Create, share, and improve decks together — quality compounds over time instead of drifting stale."
       },
       "algorithm": {
-        "title": "Smart Algorithm",
-        "description": "Our spaced repetition algorithm adapts to your learning pace for optimal retention."
+        "title": "Novel Algorithm",
+        "description": "A scheduling algorithm built to address legacy SRS pain points — steep setup, snowballing queues, and unsustainable review loads."
       },
       "ui": {
         "title": "Intuitive Design",
         "description": "A clean, modern interface that makes studying a pleasure, not a chore."
       },
       "ai": {
-        "title": "AI Powered",
-        "description": "Leverage artificial intelligence to generate flashcards and optimize your study sessions."
+        "title": "AI-Assisted Quality",
+        "description": "AI reviews decks for accuracy and clarity — with human verification before any change goes live."
       }
     },
     "howItWorks": {
       "sectionTitle": "How It Works",
       "step1": {
-        "title": "Create Your Cards",
-        "description": "Add flashcards manually or import them from various sources. Organize them into decks for easy management."
+        "title": "Create or Import a Deck",
+        "description": "Build your own deck from scratch or import an existing one from the community."
       },
       "step2": {
-        "title": "Study Smart",
-        "description": "Our algorithm schedules reviews at the optimal time, right before you're about to forget."
+        "title": "Build a Learning Habit",
+        "description": "Review a manageable daily queue and keep a steady rhythm — sustainable learning, not last-minute cramming."
       },
       "step3": {
         "title": "Track Progress",

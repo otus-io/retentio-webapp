@@ -29,7 +29,7 @@ vi.mock('@heroui/react', () => ({
 }))
 
 vi.mock('lucide-react', () => ({
-  Languages: () => <span data-testid="icon-languages" />,
+  Users: () => <span data-testid="icon-users" />,
   Brain: () => <span data-testid="icon-brain" />,
   Palette: () => <span data-testid="icon-palette" />,
   Bot: () => <span data-testid="icon-bot" />,
@@ -73,7 +73,7 @@ describe('HomePage', () => {
   it('渲染特性区域', () => {
     render(<HomePage />)
     expect(screen.getByText('home.features.sectionTitle')).toBeDefined()
-    expect(screen.getByText('home.features.verified.title')).toBeDefined()
+    expect(screen.getByText('home.features.community.title')).toBeDefined()
     expect(screen.getByText('home.features.algorithm.title')).toBeDefined()
     expect(screen.getByText('home.features.ui.title')).toBeDefined()
     expect(screen.getByText('home.features.ai.title')).toBeDefined()
