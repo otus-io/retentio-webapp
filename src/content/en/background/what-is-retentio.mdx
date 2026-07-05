@@ -81,13 +81,17 @@ The spacing effect is one of the most replicated findings in cognitive psycholog
 
 Why does spacing work? One leading explanation is that each time you successfully recall something after a delay, you strengthen the long-term trace. Forgetting a little (but not completely) before reviewing seems to make the memory more durable. Cramming, by contrast, produces strong short-term memory that fades quickly.
 
-### The Forgetting Curve
+### The Forgetting Curve and Spaced Repetition
 
-Ebbinghaus also described the forgetting curve: after learning, retention drops quickly at first and then levels off. Without review, most of what we "learn" in a single session is lost within days.
+Ebbinghaus also described the forgetting curve: after learning, retention drops quickly at first and then levels off. Without review, most of what we "learn" in a single session is lost within days — retention follows that curve steadily downward.
 
-![Ebbinghaus forgetting curve: retention percentage declines over time since learning, from 100% immediately to about 21% after 31 days](/images/guide/ebbinghaus-forgetting-curve.jpeg)
+**Spaced repetition** changes this pattern. Each time you review at the right moment, retention resets and memory becomes more stable — the curve flattens instead of sliding toward ~20%.
 
-Spaced repetition uses this curve. By reviewing at or just before the point where you would forget, you extend the interval each time. Easy items move to longer intervals (days, weeks, months); hard items stay on shorter intervals until they stabilize. The result is that you spend most of your time on items that actually need review, not on ones you already know well.
+![Spaced repetition vs. natural forgetting: the dashed line shows retention declining without review; the solid line shows retention staying high when reviews happen at increasing intervals (days 1, 3, 7, 14, and 30)](/images/guide/spaced_repetition_retention.svg)
+
+The chart compares two paths over 45 days. The dashed line shows **no review** — a steady slide down the forgetting curve. The solid line shows **spaced repetition**: brief drops before each scheduled review, then retention bounces back to ~100% while intervals grow longer (1, 3, 7, 14, 30 days). Each successful review strengthens the memory trace, so forgetting slows over time.
+
+Spaced repetition uses this pattern. By reviewing at or just before the point where you would forget, you extend the interval each time. Easy items move to longer intervals (days, weeks, months); hard items stay on shorter intervals until they stabilize. The result is that you spend most of your time on items that actually need review, not on ones you already know well.
 
 ## How Rete's Algorithm Works
 
