@@ -39,7 +39,6 @@ vi.mock('lucide-react', () => ({
   BookOpen: () => <span data-testid="icon-book-open" />,
   TrendingUp: () => <span data-testid="icon-trending-up" />,
   Download: () => <span data-testid="icon-download" />,
-  Book: () => <span data-testid="icon-book" />,
 }))
 
 import { TESTFLIGHT_JOIN_URL } from '@/config'
@@ -66,7 +65,6 @@ describe('HomePage', () => {
 
   it('渲染英雄区域 CTA 按钮', () => {
     render(<HomePage />)
-    expect(screen.getByText('nav.guide')).toBeDefined()
     expect(screen.getByText('home.hero.learnMore')).toBeDefined()
   })
 
@@ -109,10 +107,10 @@ describe('HomePage', () => {
     expect(link?.getAttribute('target')).toBe('_blank')
   })
 
-  it('渲染导航按钮指向 /guide', () => {
+  it('Learn More 链接指向背景介绍', () => {
     render(<HomePage />)
-    const guideLink = screen.getByText('nav.guide').closest('a')
-    expect(guideLink?.getAttribute('href')).toBe('/guide')
+    const learnMoreLink = screen.getByText('home.hero.learnMore').closest('a')
+    expect(learnMoreLink?.getAttribute('href')).toBe('/guide/background/what-is-retentio')
   })
 
   it('AnimatedSection 初始状态为不可见', () => {

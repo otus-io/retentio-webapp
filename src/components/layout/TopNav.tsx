@@ -1,5 +1,6 @@
 'use client'
 import { useCallback, useState } from 'react'
+import { Book } from 'lucide-react'
 import LocaleSwitcher from '@/components/layout/LocaleSwitcher'
 import ThemeButton from '@/components/layout/ThemeButton'
 import MobileMenuButton from '@/components/layout/MobileMenuButton'
@@ -38,7 +39,14 @@ export default function TopNav({ user }: TopNavProps) {
                     style={{ '--radius': '0.1em' }}
                     variant={item.isActive ? 'primary' : 'ghost'}
                   >
-                    {item.title}
+                    {item.href === '/guide'
+                      ? (
+                        <>
+                          <Book className="size-5" />
+                          {item.title}
+                        </>
+                      )
+                      : item.title}
                   </AppButtonLink>
                 </li>
               ))}

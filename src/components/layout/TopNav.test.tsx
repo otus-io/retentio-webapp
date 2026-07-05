@@ -54,8 +54,8 @@ vi.mock('@/components/app/AppLogo', () => ({
 }))
 
 vi.mock('@/components/app/AppButtonLink', () => ({
-  AppButtonLink: ({ children, href, variant, style }: ComponentProps<'a'> & { variant?: string }) => (
-    <a data-testid={`nav-link-${href}`} href={href} data-variant={variant} style={style}>
+  AppButtonLink: ({ children, href, variant, style, ...rest }: ComponentProps<'a'> & { variant?: string }) => (
+    <a data-testid={`nav-link-${href}`} href={href} data-variant={variant} style={style} {...rest}>
       {children}
     </a>
   ),

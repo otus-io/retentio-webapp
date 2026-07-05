@@ -2,10 +2,9 @@
 
 import { useRef, useState, useEffect } from 'react'
 import { useTranslations } from 'next-intl'
-import { Users, Brain, Palette, Bot, ArrowDown, ArrowRight, Clock, BookOpen, TrendingUp, Download, Book } from 'lucide-react'
+import { Users, Brain, Palette, Bot, ArrowRight, Clock, BookOpen, TrendingUp, Download } from 'lucide-react'
 import clsx from 'clsx'
 import AppLink from '@/components/app/AppLink'
-import AppButton from '@/components/app/AppButton'
 import { AppButtonLink } from '@/components/app/AppButtonLink'
 import { TESTFLIGHT_JOIN_URL } from '@/config'
 
@@ -81,22 +80,13 @@ export default function HomePage() {
             </p>
             <div className="flex gap-2 flex-wrap animate-[fade-in-up_0.5s_0.5s_ease-out_both] items-center justify-center">
               <AppButtonLink
-                href="/guide"
-                rel="noopener noreferrer"
-                size="lg"
-              >
-                <Book className="size-5" />
-                {t('nav.guide')}
-              </AppButtonLink>
-
-              <AppButton
+                href="/guide/background/what-is-retentio"
                 variant="outline"
                 size="lg"
-                onClick={() => document.getElementById('features')?.scrollIntoView({ behavior: 'smooth' })}
               >
                 {t('home.hero.learnMore')}
-                <ArrowDown className="size-4" />
-              </AppButton>
+                <ArrowRight className="size-4" />
+              </AppButtonLink>
             </div>
           </div>
         </div>
