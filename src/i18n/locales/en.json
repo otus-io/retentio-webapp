@@ -266,5 +266,16 @@
     "video": "Video",
     "attachment": "Attachment",
     "never": "never"
+  },
+  "deck-sharing": {
+    "title": "Shared Decks",
+    "description": "Browse and import public decks published by the community to jump-start your learning.",
+    "heading": "Shared deck catalog",
+    "subtitle": "Browse published decks from the community. Open a deck for details and import.",
+    "search-placeholder": "Search by deck name, creator or tag",
+    "creator": "Creator",
+    "published-at": "Published",
+    "facts-count": "{count} facts",
+    "empty": "No shared decks yet"
   }
 }

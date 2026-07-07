@@ -266,5 +266,16 @@
     "video": "视频",
     "attachment": "附件",
     "never": "没有复习过"
+  },
+  "deck-sharing": {
+    "title": "共享卡组",
+    "description": "浏览并导入社区发布的公开卡组，快速开始你的学习。",
+    "heading": "共享卡组目录",
+    "subtitle": "浏览社区发布的卡组，打开卡组查看详情并导入。",
+    "search-placeholder": "搜索卡组名称、创建者或标签",
+    "creator": "创建者",
+    "published-at": "发布日期",
+    "facts-count": "{count} 词条",
+    "empty": "暂无共享卡组"
   }
 }
