@@ -24,11 +24,12 @@ export default async function Page(props:PageProps<'/decks/shared'>) {
       />
     )
   }
+  const totalPages = deckCatalog.meta.total ? Math.ceil(deckCatalog.meta.total / deckCatalog.meta.limit) : 0
 
   return (
     <SharedDecksList
       data={deckCatalog.data.decks}
-      totalPages={deckCatalog.meta.limit % deckCatalog.meta.total}
+      totalPages={totalPages}
     />
   )
 }
