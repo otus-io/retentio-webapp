@@ -87,7 +87,7 @@ const steps = [
   { icon: TrendingUp, key: 'step3', gradient: 'from-pink-100 to-pink-200 dark:from-pink-950 dark:to-pink-900' },
 ] as const
 
-export default function HomePage({ children }:{ children: ReactNode }) {
+export default function HomePage({ children }:{ children?: ReactNode }) {
   const t = useTranslations()
   const titleHighlight = t('home.hero.titleHighlight')
 
