@@ -3,6 +3,7 @@
 import type { DeckCatalogItem } from '@/modules/deck-sharing/deck-sharing.schema'
 import { useTranslations } from 'next-intl'
 import { SearchField } from '@heroui/react'
+import type { KeyboardEvent } from 'react'
 import { useCallback, useState } from 'react'
 import SharedDecksCard from '@/components/decks/SharedDecksCard'
 import AppButton from '@/components/app/AppButton'
@@ -17,9 +18,15 @@ export default function SharedDecksHome({
   const [keywords, setKeywords] = useState('')
   const router = useRouter()
 
-  const toSharedPage = useCallback(() => {
+  const handleSharedPage = useCallback(() => {
     router.push(`/decks/shared?query=${keywords}`)
   }, [router, keywords])
+
+  const handleEnterToSharedPage = useCallback((e:KeyboardEvent<HTMLInputElement>) => {
+    if(e.code === 'Enter'){
+      handleSharedPage()
+    }
+  }, [handleSharedPage])
 
   return (
     <div className=" p-6 rounded-2xl border border-gray-200 dark:border-gray-700  transition-all duration-300 mt-4">
@@ -46,11 +53,12 @@ export default function SharedDecksHome({
             <SearchField.Input
               aria-label={t('common.search')}
               placeholder={t('deck-sharing.search-placeholder')}
+              onKeyDown={handleEnterToSharedPage}
             />
             <SearchField.ClearButton />
           </SearchField.Group>
         </SearchField>
-        <AppButton onClick={toSharedPage}>{t('common.search')}</AppButton>
+        <AppButton onClick={handleSharedPage}>{t('common.search')}</AppButton>
       </div>
 
       <div className="grid gap-2 md:grid-cols-2 lg:grid-cols-3">
