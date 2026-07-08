@@ -41,10 +41,10 @@ export default function TopNav({ user }: TopNavProps) {
                   >
                     {item.href === '/guide'
                       ? (
-                        <>
-                          <Book className="size-5" />
+                        <span className="inline-flex items-center gap-1.5">
+                          <Book className="size-5 shrink-0" />
                           {item.title}
-                        </>
+                        </span>
                       )
                       : item.title}
                   </AppButtonLink>
@@ -52,7 +52,7 @@ export default function TopNav({ user }: TopNavProps) {
               ))}
             </ul>
           </div>
-          <div className="flex-1 flex justify-end gap-2">
+          <div className="flex-1 flex justify-end items-center gap-2">
             <GuideSearchButton />
             <LocaleSwitcher />
             <ThemeButton />
