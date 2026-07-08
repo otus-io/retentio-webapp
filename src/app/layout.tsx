@@ -34,7 +34,7 @@ export const metadata: Metadata = {
     description: 'Remember more, for longer.',
     url: SITE_URL,
     siteName: APP_NAME,
-    images: [{ url: '/logo.svg', width: 1200, height: 630 }],
+    images: [{ url: '/logo.svg', width: 1024, height: 559 }],
     locale: 'en_US',
     type: 'website',
   },

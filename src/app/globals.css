@@ -13,7 +13,7 @@
 
 
 @theme inline {
-  --accent: #2563eb;
+  --accent: #0f766e;
   --container-content: 75rem;
 
    /* Border Radius */
@@ -60,7 +60,7 @@ body {
   opacity: 0;
   margin-left: 0.5em; /* 距离标题文字一点距离 */
   text-decoration: none !important;
-  color: #3b82f6; /* Tailwind 的 blue-500，你可以换成你的主题色 */
+  color: var(--accent);
   transition: opacity 0.2s ease-in-out;
 }
 

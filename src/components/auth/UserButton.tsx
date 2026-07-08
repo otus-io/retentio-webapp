@@ -27,6 +27,8 @@ export default function UserButton({ user }: UserButtonProps) {
   return (
     <AppButtonLink
       href={LOGIN_PATH}
+      variant="ghost"
+      className="text-white"
       style={{ '--radius': '0.1em' }}
     >
       {t('login')}

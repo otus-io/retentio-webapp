@@ -20,13 +20,20 @@ describe('AppLogo', () => {
     expect(link.getAttribute('href')).toBe('/')
   })
 
-  it('默认显示 APP_NAME', () => {
+  it('logo 作为首字母，仅显示其余字母', () => {
     render(<AppLogo />)
-    expect(screen.getByText('Rete')).toBeDefined()
+    expect(screen.getByText('ete')).toBeDefined()
+    expect(screen.queryByText('Rete')).toBeNull()
   })
 
-  it('hideName 为 true 时隐藏名称', () => {
-    render(<AppLogo hideName />)
-    expect(screen.queryByText('Rete')).toBeNull()
+  it('链接的无障碍名称为完整 APP_NAME', () => {
+    render(<AppLogo />)
+    expect(screen.getByRole('link').getAttribute('aria-label')).toBe('Rete')
+  })
+
+  it('渲染 logo 图片', () => {
+    const { container } = render(<AppLogo />)
+    const img = container.querySelector('img')
+    expect(img?.getAttribute('src')).toBe('/logo.svg')
   })
 })

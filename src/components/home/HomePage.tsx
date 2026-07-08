@@ -55,9 +55,9 @@ const features = [
 ] as const
 
 const steps = [
-  { icon: Clock, key: 'step1', gradient: 'from-indigo-100 to-indigo-200 dark:from-indigo-950 dark:to-indigo-900' },
+  { icon: Clock, key: 'step1', gradient: 'from-teal-100 to-teal-200 dark:from-teal-950 dark:to-teal-900' },
   { icon: BookOpen, key: 'step2', gradient: 'from-emerald-100 to-emerald-200 dark:from-emerald-950 dark:to-emerald-900' },
-  { icon: TrendingUp, key: 'step3', gradient: 'from-pink-100 to-pink-200 dark:from-pink-950 dark:to-pink-900' },
+  { icon: TrendingUp, key: 'step3', gradient: 'from-cyan-100 to-cyan-200 dark:from-cyan-950 dark:to-cyan-900' },
 ] as const
 
 export default function HomePage() {
@@ -66,14 +66,12 @@ export default function HomePage() {
   return (
     <div>
       {/* Hero Section */}
-      <section className="flex items-center relative overflow-hidden  bg-linear-to-br from-blue-50 via-indigo-50 to-blue-100 dark:from-slate-900 dark:via-slate-800 dark:to-slate-900  px-6 md:px-12">
-        <div className="absolute -top-48 -right-48  rounded-full bg-blue-500/10 dark:bg-blue-400/5 blur-3xl" />
-        <div className="absolute -bottom-36 -left-36 w-96 h-96 rounded-full bg-purple-500/8 dark:bg-purple-400/5 blur-3xl" />
+      <section className="flex items-center relative overflow-hidden px-6 md:px-12">
         <div className="relative max-w-content mx-auto z-10 w-full grid grid-cols-1 gap-10 items-center py-16">
           <div className="animate-[fade-in-left_0.8s_ease-out_both]">
             <h1 className="text-4xl sm:text-5xl md:text-6xl font-bold leading-tight mb-6 text-center">
               {t('home.hero.title')}
-              <span className="text-accent block">{t('home.hero.titleHighlight')}</span>
+              <span className="block">{t('home.hero.titleHighlight')}</span>
             </h1>
             <p className="text-lg text-gray-600 dark:text-gray-400 mb-8 max-w-3xl mx-auto leading-relaxed animate-[fade-in_0.6s_0.3s_ease-out_both] text-center">
               {t('home.hero.subtitle')}
