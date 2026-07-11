@@ -40,10 +40,8 @@ export default function DecksCard({
   return (
     <Card
       variant="default"
-      className="hover:shadow-sm transition-all hover:cursor-pointer duration-200 border-border/60 hover:border-accent/30 border-l-2 border-l-accent/50 hover:border-l-accent overflow-hidden"
       onClick={handleClick}
     >
-
       <Card.Header>
         <div className="flex items-center justify-between gap-2">
           <Card.Title className="flex-1 min-w-0">
