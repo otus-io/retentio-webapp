@@ -35,7 +35,6 @@ export default function SharedDecksCard({
   return (
     <Card
       variant={variant}
-      className="hover:shadow-sm transition-all hover:cursor-pointer duration-200 border-border/60 hover:border-accent/30 border-l-2 border-l-accent/50 hover:border-l-accent overflow-hidden"
       onClick={handleClick}
     >
       <Card.Header>

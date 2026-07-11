@@ -23,7 +23,7 @@ export default function SharedDecksList({
     <LayoutPage
       breadcrumbs={[
         { href: '/decks', title: t('term.decks') },
-        { href: '/decks/shared', title: t('deck-sharing.title') },
+        { href: '/decks/shared', title: t('term.deck-sharing') },
       ]}
     >
       <div className={clsx(isPending && 'opacity-50')}>
