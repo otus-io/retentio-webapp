@@ -35,9 +35,9 @@ export default async function Page(props:PageProps<'/decks/shared'>) {
 }
 
 export async function generateMetadata() {
-  const t = await getTranslations('deck-sharing')
+  const t = await getTranslations()
   return {
-    title: t('title'),
-    description: t('description'),
+    title: t('term.deck-sharing'),
+    description: t('deck-sharing.description'),
   } satisfies Metadata
 }

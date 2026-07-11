@@ -265,10 +265,10 @@
     "image": "Image",
     "video": "Video",
     "attachment": "Attachment",
-    "never": "never"
+    "never": "never",
+    "deck-sharing": "Shared Decks"
   },
   "deck-sharing": {
-    "title": "Shared Decks",
     "description": "Browse and import public decks published by the community to jump-start your learning.",
     "heading": "Shared deck catalog",
     "subtitle": "Browse published decks from the community. Open a deck for details and import.",
@@ -276,6 +276,7 @@
     "creator": "Creator",
     "published-at": "Published",
     "facts-count": "{count} facts",
-    "empty": "No shared decks yet"
+    "empty": "No shared decks yet",
+    "import": "import"
   }
 }
