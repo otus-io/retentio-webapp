@@ -21,6 +21,8 @@ export default function TopNav({ user }: TopNavProps) {
   const [mobileOpen, setMobileOpen] = useState(false)
   const toggleMobile = useCallback(() => setMobileOpen((v) => !v), [])
   const closeMobile = useCallback(() => setMobileOpen(false), [])
+  const guideItem = navMenu.find((item) => item.href === '/guide')
+  const mainNav = navMenu.filter((item) => item.href !== '/guide')
 
   return (
     <>
@@ -31,28 +33,36 @@ export default function TopNav({ user }: TopNavProps) {
           <div className="flex-1 flex justify-start gap-4 items-center">
             <AppLogo />
             {/* Desktop nav menu */}
-            <ul className="hidden md:flex gap-2 items-center">
-              {navMenu.map((item) => (
-                <li key={item.href}>
-                  <AppButtonLink
-                    href={item.href}
-                    style={{ '--radius': '0.1em' }}
-                    variant={item.isActive ? 'primary' : 'ghost'}
-                  >
-                    {item.href === '/guide'
-                      ? (
-                        <span className="inline-flex items-center gap-1.5">
-                          <Book className="size-5 shrink-0" />
-                          {item.title}
-                        </span>
-                      )
-                      : item.title}
-                  </AppButtonLink>
-                </li>
-              ))}
-            </ul>
+            {mainNav.length > 0 && (
+              <ul className="hidden md:flex gap-2 items-center">
+                {mainNav.map((item) => (
+                  <li key={item.href}>
+                    <AppButtonLink
+                      href={item.href}
+                      style={{ '--radius': '0.1em' }}
+                      variant={item.isActive ? 'primary' : 'ghost'}
+                    >
+                      {item.title}
+                    </AppButtonLink>
+                  </li>
+                ))}
+              </ul>
+            )}
           </div>
           <div className="flex-1 flex justify-end items-center gap-2">
+            {guideItem && (
+              <AppButtonLink
+                href={guideItem.href}
+                className="hidden md:inline-flex"
+                style={{ '--radius': '0.1em' }}
+                variant={guideItem.isActive ? 'primary' : 'ghost'}
+              >
+                <span className="inline-flex items-center gap-1.5">
+                  <Book className="size-5 shrink-0" />
+                  {guideItem.title}
+                </span>
+              </AppButtonLink>
+            )}
             <GuideSearchButton />
             <LocaleSwitcher />
             <ThemeButton />

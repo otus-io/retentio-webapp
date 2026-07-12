@@ -20,13 +20,16 @@ describe('AppLogo', () => {
     expect(link.getAttribute('href')).toBe('/')
   })
 
-  it('默认显示 APP_NAME', () => {
+  it('默认显示 logo 图片与名称', () => {
     render(<AppLogo />)
+    const link = screen.getByRole('link')
+    expect(link.querySelector('img[src="/logo.svg"]')).toBeTruthy()
     expect(screen.getByText('Rete')).toBeDefined()
   })
 
-  it('hideName 为 true 时隐藏名称', () => {
+  it('hideName 为 true 时仅显示 logo 图片', () => {
     render(<AppLogo hideName />)
+    expect(screen.getByRole('img', { name: 'Rete' })).toBeDefined()
     expect(screen.queryByText('Rete')).toBeNull()
   })
 })
