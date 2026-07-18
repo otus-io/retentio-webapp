@@ -52,7 +52,7 @@ export default function SharedDecksHome({
             <SearchField.SearchIcon />
             <SearchField.Input
               aria-label={t('common.search')}
-              placeholder="大家的日语"
+              placeholder={t('deck-sharing.search-placeholder')}
               onKeyDown={handleEnterToSharedPage}
             />
             <SearchField.ClearButton />
