@@ -52,6 +52,26 @@ export interface Deck {
    * tags
    */
   tags: Tag[];
+  /**
+   * private（默认）或 public。发布后决定谁可导入
+   */
+  visibility?: 'public' | 'private';
+  /**
+   * 最新已发布快照版本。0 = 从未发布。
+   */
+  published_version: number
+  /**
+   * 作者源卡组 ID（12 位）。
+   */
+  source_deck_id: string
+  /**
+   * 钉住的快照版本，用于读取词条/媒体。
+   */
+  source_version: string
+  /**
+   * 创建导入时的 ISO 8601 时间戳。
+   */
+  imported_at: number
 }
 
 interface Stats {
