@@ -1,4 +1,24 @@
 import type { Entry } from '@/modules/facts/facts.schema'
+import z from 'zod'
+
+/**
+ * 再次发布时用于确认目标版本的表单校验。
+ */
+export function createPublishDeckVersionSchema(currentVersion: number, errorMessage: string) {
+  return z.object({
+    version: z.coerce.number().int(errorMessage).min(currentVersion + 1, errorMessage),
+  })
+}
+
+export interface PublishDeckActionPayload {
+  deckId: string
+  currentVersion: number
+}
+
+export interface PublishDeckActionData {
+  version?: number
+  publishedVersion?: number
+}
 
 /**
  * 卡组目录条目（可导入的已发布公开卡组）
@@ -50,8 +70,10 @@ export type DeckCatalogItemResponseDTO = BaseApiResult<DeckCatalogItem>
  * 发布卡组请求 DTO
  */
 export interface PublishDeckDTO {
-  /** 首次发布必填，须为 "public"；再次发布可省略或传与存储值相同的值 */
+  /** 首次发布必填，须为 "public" */
   visibility?: 'public'
+  /** 再次发布的版本号，必须大于当前版本 */
+  published_version?: number
 }
 
 /**
