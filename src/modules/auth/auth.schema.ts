@@ -19,7 +19,7 @@ export type LoginDTO = z.infer<typeof loginSchema>
 export const registerSchema = z.object({
   username: z.string()
     .min(4)
-    .regex(/^[a-z][a-z0-9]*$/, USERNAME_INVALID),
+    .regex(/^[a-z][a-z0-9_-]*$/, USERNAME_INVALID),
   email: z.email(),
   password: z.string().min(8).max(20),
   confirmPassword: z.string().min(8).max(20),
