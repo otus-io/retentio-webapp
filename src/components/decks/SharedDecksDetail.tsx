@@ -21,7 +21,7 @@ export default function SharedDecksDetail({
   deck,
 }: SharedDecksDetailProps) {
   const t = useTranslations()
-  const { accessAction, isLogin } = useUserContext()
+  const { isLogin } = useUserContext()
   const format = useFormatter()
   const [state, action, isPending] = useActionState(
     importDeckAction.bind(null, deck.id),
@@ -35,8 +35,7 @@ export default function SharedDecksDetail({
   const handleImport = useCallback<FormEventHandler<HTMLFormElement>>((event) => {
     if (isLogin) return
     event.preventDefault()
-    accessAction(() => undefined)
-  }, [accessAction, isLogin])
+  }, [isLogin])
 
   useEffect(() => {
     if (state?.error) showFailToast(state.error)
