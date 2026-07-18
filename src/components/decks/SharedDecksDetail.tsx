@@ -4,11 +4,14 @@ import type { DeckCatalogItem } from '@/modules/deck-sharing/deck-sharing.schema
 import { Card } from '@heroui/react'
 import { User, Layers, CalendarDays } from 'lucide-react'
 import { useTranslations } from 'next-intl'
-import { useCallback, useMemo } from 'react'
+import { useActionState, useCallback, useEffect, useMemo } from 'react'
+import type { FormEventHandler } from 'react'
 import { useFormatter } from 'next-intl'
 import LayoutPage from '@/components/layout/LayoutPage'
 import AppButton from '@/components/app/AppButton'
 import { useUserContext } from '@/context/UserContext'
+import { showFailToast } from '@/lib/ui'
+import { importDeckAction } from '@/modules/deck-sharing/deck-sharing.action'
 
 interface SharedDecksDetailProps {
   deck: DeckCatalogItem
@@ -18,18 +21,26 @@ export default function SharedDecksDetail({
   deck,
 }: SharedDecksDetailProps) {
   const t = useTranslations()
-  const { accessAction } = useUserContext()
+  const { accessAction, isLogin } = useUserContext()
   const format = useFormatter()
+  const [state, action, isPending] = useActionState(
+    importDeckAction.bind(null, deck.id),
+    null,
+  )
 
   const publishedAt = useMemo(
     () => format.dateTime(new Date(deck.published_at), { dateStyle: 'medium' }),
     [deck.published_at, format],
   )
-  const handleImport = useCallback(() => {
-    accessAction(() => {
-      console.log('导入')
-    })
-  }, [accessAction])
+  const handleImport = useCallback<FormEventHandler<HTMLFormElement>>((event) => {
+    if (isLogin) return
+    event.preventDefault()
+    accessAction(() => undefined)
+  }, [accessAction, isLogin])
+
+  useEffect(() => {
+    if (state?.error) showFailToast(state.error)
+  }, [state])
 
   return (
     <LayoutPage
@@ -76,7 +87,11 @@ export default function SharedDecksDetail({
               <CalendarDays className="size-3 shrink-0" />
               <span>{publishedAt}</span>
             </div>
-            <AppButton onClick={handleImport} className="ml-auto">{t('deck-sharing.import')}</AppButton>
+            <form action={action} onSubmit={handleImport} className="ml-auto">
+              <AppButton type="submit" isPending={isPending}>
+                {t('deck-sharing.import')}
+              </AppButton>
+            </form>
           </div>
         </Card.Content>
       </Card>
