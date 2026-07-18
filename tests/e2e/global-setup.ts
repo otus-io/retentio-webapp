@@ -66,9 +66,13 @@ async function apiRequest(token: string, path: string, init: RequestInit = {}): 
 
 async function deleteAllDecks(token: string) {
   const res = await apiRequest(token, '/api/decks')
-  const body = await res.json() as { data?: { decks?: { id: string }[] | null } }
+  const body = await res.json() as {
+    data?: { decks?: { id: string, visibility?: 'public' | 'private' }[] | null }
+  }
   const decks = body.data?.decks ?? []
   for (const deck of decks) {
+    // Published source decks are intentionally immutable and cannot be deleted.
+    if (deck.visibility === 'public') continue
     await apiRequest(token, `/api/decks/${deck.id}`, { method: 'DELETE' })
   }
 }

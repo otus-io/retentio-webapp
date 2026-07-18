@@ -278,6 +278,24 @@
     "published-at": "发布日期",
     "facts-count": "{count} 词条",
     "empty": "暂无共享卡组",
-    "import": "导入"
+    "import": "导入",
+    "publish": "发布卡组",
+    "republish": "再次发布",
+    "publish-title": "发布到共享卡组",
+    "publish-description": "发布后，其他用户可以在共享卡组目录中浏览并导入这个卡组。",
+    "public-title": "当前卡组已公开",
+    "public-description": "公开状态不可更改，且卡组不可删除。工作副本的内容修改需再次发布后才会对导入者可见。",
+    "current-version-label": "当前版本",
+    "updated-at": "卡组更新时间",
+    "publish-confirm-title": "确认公开发布",
+    "irreversible-title": "发布后无法撤回",
+    "irreversible-description": "发布后，此卡组将保持公开且无法删除，也不能改回私有状态。请确认内容适合公开分享后再继续。",
+    "republish-title": "发布新版本",
+    "republish-description": "当前公开版本为 v{version}。再次发布会为工作副本创建一个新的不可变快照。",
+    "version-label": "确认版本号",
+    "version-description": "请输入大于当前版本 v{version} 的整数。",
+    "version-error": "版本号必须是大于等于 {version} 的整数",
+    "publish-success": "卡组发布成功",
+    "cancel": "取消"
   }
 }

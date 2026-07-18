@@ -278,6 +278,24 @@
     "published-at": "Published",
     "facts-count": "{count} facts",
     "empty": "No shared decks yet",
-    "import": "import"
+    "import": "import",
+    "publish": "Publish deck",
+    "republish": "Publish again",
+    "publish-title": "Publish to shared decks",
+    "publish-description": "Once published, other users can browse and import this deck from the shared deck catalog.",
+    "public-title": "This deck is public",
+    "public-description": "Its public status cannot be changed and the deck cannot be deleted. Changes to the working copy become visible to importers only after another publish.",
+    "current-version-label": "Current version",
+    "updated-at": "Deck updated",
+    "publish-confirm-title": "Confirm public publishing",
+    "irreversible-title": "Publishing cannot be undone",
+    "irreversible-description": "After publishing, this deck will remain public and cannot be deleted or made private again. Make sure its content is ready to share before continuing.",
+    "republish-title": "Publish a new version",
+    "republish-description": "The current public version is v{version}. Publishing again creates a new immutable snapshot of the working copy.",
+    "version-label": "Confirm version number",
+    "version-description": "Enter an integer greater than the current version v{version}.",
+    "version-error": "Version must be an integer greater than or equal to {version}",
+    "publish-success": "Deck published successfully",
+    "cancel": "Cancel"
   }
 }
