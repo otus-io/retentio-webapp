@@ -1,9 +1,10 @@
 import { expect, test, type Page } from '@playwright/test'
 
-export function skipUnlessE2ECredentials() {
+export function skipUnlessE2ECredentials(user: 1 | 2 = 1) {
+  const suffix = user === 1 ? '' : `_${user}`
   test.skip(
-    !process.env.E2E_USERNAME || !process.env.E2E_PASSWORD,
-    'Requires E2E_USERNAME and E2E_PASSWORD',
+    !process.env[`E2E_USERNAME${suffix}`] || !process.env[`E2E_PASSWORD${suffix}`],
+    `Requires E2E_USERNAME${suffix} and E2E_PASSWORD${suffix}`,
   )
 }
 
