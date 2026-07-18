@@ -2,6 +2,7 @@
 
 import { revalidatePath } from 'next/cache'
 import { getTranslations } from 'next-intl/server'
+import { redirect } from 'next/navigation'
 import z from 'zod'
 import type { PublishDeckDTO } from '@/modules/deck-sharing/deck-sharing.schema'
 import {
@@ -9,7 +10,21 @@ import {
   type PublishDeckActionData,
   type PublishDeckActionPayload,
 } from '@/modules/deck-sharing/deck-sharing.schema'
-import { publishDeckService } from '@/modules/deck-sharing/deck-sharing.service'
+import { importDeckService, publishDeckService } from '@/modules/deck-sharing/deck-sharing.service'
+
+export const importDeckAction: ActionFunctionPayload<string, never> = async (sourceDeckId) => {
+  const response = await importDeckService({ source_deck_id: sourceDeckId })
+
+  if (!response.success) {
+    return {
+      success: false,
+      error: response.message,
+    }
+  }
+
+  revalidatePath('/decks')
+  redirect(`/decks/${response.data.id}`)
+}
 
 export const publishDeckAction: ActionFunctionPayload<PublishDeckActionPayload, PublishDeckActionData> = async (
   { deckId, currentVersion },
