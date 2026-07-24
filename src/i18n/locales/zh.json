@@ -26,7 +26,7 @@
     },
     "about": {
       "title": "关于 Rete",
-      "description": "Rete 是一款基于 spaced repetition 科学的智能flash card应用。它优化您的复习计划，让您花更少的时间学习却记住更多。无论是学习语言、备考还是掌握新技能，Rete 都能适应您的记忆模式以实现最高效率。"
+      "description": "Rete 是一款基于间隔重复科学的智能闪卡应用。它优化您的复习计划，让您花更少的时间学习却记住更多。无论是学习语言、备考还是掌握新技能，Rete 都能适应您的记忆模式以实现最高效率。"
     },
     "features": {
       "sectionTitle": "为什么选择 Rete",
@@ -48,7 +48,7 @@
       }
     },
     "howItWorks": {
-      "sectionTitle": "如何使用",
+      "sectionTitle": "工作原理",
       "step1": {
         "title": "创建或导入卡组",
         "description": "从零创建自己的卡组，或从社区导入他人已发布的卡组。"
@@ -108,7 +108,7 @@
     "totalDecks": "卡组总数",
     "totalCards": "卡片总数",
     "dueToday": "今日待复习",
-    "streak": "连续天数",
+    "streak": "连续学习天数",
     "recentDecks": "最近卡组",
     "cards": "{count} 张卡片",
     "due": "{count} 待复习"
@@ -128,7 +128,7 @@
     "confirmPasswordPlaceholder": "请再次输入密码",
     "loginButton": "登录",
     "registerButton": "注册",
-    "noAccount": "暂无账号？",
+    "noAccount": "还没有账号？",
     "goRegister": "去注册",
     "goLogin": "去登录",
     "termsWarning": "请同意服务条款和隐私政策",
@@ -146,7 +146,7 @@
     "login": "登录",
     "logout": "退出登录",
     "logout-confirm": "确定退出登录吗?",
-    "no-data": "没有更多数据了",
+    "no-data": "暂无数据",
     "search": "搜索",
     "delete": "删除",
     "edit": "编辑",
@@ -187,10 +187,10 @@
     
     "key-concepts": "核心概念",
     "overview": "概览",
-    "decks": "卡组 (Decks)",
-    "facts": "词条 (Facts)",
-    "cards": "卡片 (Cards)",
-    "tags": "标签 (Tags)",
+    "decks": "卡组",
+    "facts": "词条",
+    "cards": "卡片",
+    "tags": "标签",
     "login-registration": "登录与注册",
     
     "get-started": "快速开始",
