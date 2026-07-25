@@ -30,7 +30,6 @@ export default function AuthForm({ type }: { type: 'login' | 'register' }) {
   const [state, action, isPending] = useActionState(authAction, {
     data: {
       username: '',
-      password: '',
       terms: 'false',
     },
   })
@@ -91,7 +90,6 @@ export default function AuthForm({ type }: { type: 'login' | 'register' }) {
                   name="password"
                   variant="secondary"
                   placeholder={t('passwordPlaceholder')}
-                  defaultValue={state?.data?.password}
                   minLength={isLogin ? 6 : 8}
                 />
 
@@ -113,7 +111,6 @@ export default function AuthForm({ type }: { type: 'login' | 'register' }) {
                       name="confirmPassword"
                       variant="secondary"
                       placeholder={t('confirmPasswordPlaceholder')}
-                      defaultValue={state?.data?.confirmPassword}
                       minLength={8}
                     />
                   )

@@ -45,20 +45,27 @@ function resetPasswordSafeData(data: Record<string, unknown>) {
   }
 }
 
+/** Keep non-secret fields for form repopulation; never echo passwords. */
+function authFormSafeData(data: Record<string, unknown>) {
+  const { password: _password, confirmPassword: _confirmPassword, ...safe } = data
+  return safe
+}
+
 export const loginAction: ActionFunction = async (_, formData) => {
   const data = formDataToObject(formData)
+  const safeData = authFormSafeData(data)
   const result = loginSchema.safeParse(data)
   if (!result.success) {
     return {
       validationErrors: await localizeAuthFieldErrors(z.flattenError(result.error).fieldErrors),
-      data,
+      data: safeData,
     }
   }
   const res = await loginService(result.data)
   if (!res.success) {
     return {
       error: res.message,
-      data,
+      data: safeData,
       success: false,
     }
   }
@@ -68,18 +75,19 @@ export const loginAction: ActionFunction = async (_, formData) => {
 
 export const registerAction: ActionFunction = async (_, formData) => {
   const data = formDataToObject(formData)
+  const safeData = authFormSafeData(data)
   const result = registerSchema.safeParse(data)
   if (!result.success) {
     return {
       validationErrors: await localizeAuthFieldErrors(z.flattenError(result.error).fieldErrors),
-      data,
+      data: safeData,
     }
   }
   const res = await registerService(result.data)
   if (!res.success) {
     return {
       error: res.message,
-      data,
+      data: safeData,
       success: false,
     }
   }
