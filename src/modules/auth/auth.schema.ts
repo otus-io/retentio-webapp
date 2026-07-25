@@ -1,5 +1,8 @@
 import z from 'zod'
 
+/** Sentinel for refine() messages; mapped to i18n in auth actions. */
+export const PASSWORDS_MISMATCH = 'passwords_mismatch'
+
 // 登录
 export const loginSchema = z.object({
   username: z.string()
@@ -20,7 +23,7 @@ export const registerSchema = z.object({
   confirmPassword: z.string().min(8).max(20),
   redirect: z.string().optional(),
 }).refine((data) => data.password === data.confirmPassword, {
-  message: '两次输入的密码不一致',
+  message: PASSWORDS_MISMATCH,
   path: ['confirmPassword'],
 })
 
@@ -39,7 +42,7 @@ export const resetPasswordSchema = z.object({
   password: z.string().min(8).max(20),
   confirmPassword: z.string().min(8).max(20),
 }).refine((data) => data.password === data.confirmPassword, {
-  message: '两次输入的密码不一致',
+  message: PASSWORDS_MISMATCH,
   path: ['confirmPassword'],
 })
 

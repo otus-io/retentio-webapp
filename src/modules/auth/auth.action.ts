@@ -1,10 +1,12 @@
 'use server'
 import { revalidatePath } from 'next/cache'
 import { redirect } from 'next/navigation'
+import { getTranslations } from 'next-intl/server'
 import z from 'zod'
 import { LOGIN_PATH } from '@/config'
 import { formDataToObject } from '@/utils/format'
 import {
+  PASSWORDS_MISMATCH,
   forgotPasswordSchema,
   loginSchema,
   registerSchema,
@@ -20,12 +22,25 @@ import {
   verifyEmailService,
 } from './auth.service'
 
+async function localizeAuthFieldErrors(
+  fieldErrors: Record<string, string[] | undefined>,
+): Promise<Record<string, string[] | undefined>> {
+  const t = await getTranslations('auth')
+  const out: Record<string, string[] | undefined> = { ...fieldErrors }
+  for (const [key, messages] of Object.entries(out)) {
+    if (!messages) continue
+    out[key] = messages.map((msg) =>
+      msg === PASSWORDS_MISMATCH ? t('passwordsMismatch') : msg)
+  }
+  return out
+}
+
 export const loginAction: ActionFunction = async (_, formData) => {
   const data = formDataToObject(formData)
   const result = loginSchema.safeParse(data)
   if (!result.success) {
     return {
-      validationErrors: z.flattenError(result.error).fieldErrors,
+      validationErrors: await localizeAuthFieldErrors(z.flattenError(result.error).fieldErrors),
       data,
     }
   }
@@ -46,7 +61,7 @@ export const registerAction: ActionFunction = async (_, formData) => {
   const result = registerSchema.safeParse(data)
   if (!result.success) {
     return {
-      validationErrors: z.flattenError(result.error).fieldErrors,
+      validationErrors: await localizeAuthFieldErrors(z.flattenError(result.error).fieldErrors),
       data,
     }
   }
@@ -90,7 +105,7 @@ export const resetPasswordAction: ActionFunction = async (_, formData) => {
   const result = resetPasswordSchema.safeParse(data)
   if (!result.success) {
     return {
-      validationErrors: z.flattenError(result.error).fieldErrors,
+      validationErrors: await localizeAuthFieldErrors(z.flattenError(result.error).fieldErrors),
       data,
     }
   }
@@ -106,10 +121,11 @@ export const resetPasswordAction: ActionFunction = async (_, formData) => {
 }
 
 export async function verifyEmailAction(token: string) {
+  const t = await getTranslations('auth')
   const result = verifyEmailSchema.safeParse({ token })
   if (!result.success) {
     return {
-      error: 'Invalid verification token',
+      error: t('verifyEmailMissingToken'),
       success: false as const,
     }
   }

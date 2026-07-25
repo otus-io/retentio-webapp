@@ -1,13 +1,23 @@
 'use server'
 import type { Metadata } from 'next'
 import VerifyEmailPanel from '@/components/auth/VerifyEmailPanel'
-import { verifyEmailService } from '@/modules/auth/auth.service'
 import { getTranslations } from 'next-intl/server'
 
 export default async function Page(props: PageProps<'/verify-email'>) {
   const t = await getTranslations('auth')
   const searchParams = await props.searchParams
   const token = typeof searchParams.token === 'string' ? searchParams.token.trim() : ''
+  const verified = searchParams.verified === '1' || searchParams.verified === 'true'
+
+  if (verified) {
+    return (
+      <VerifyEmailPanel
+        token=""
+        initialStatus="success"
+        initialError={null}
+      />
+    )
+  }
 
   if (!token) {
     return (
@@ -19,21 +29,10 @@ export default async function Page(props: PageProps<'/verify-email'>) {
     )
   }
 
-  const res = await verifyEmailService({ token })
-  if (!res.success) {
-    return (
-      <VerifyEmailPanel
-        token={token}
-        initialStatus="error"
-        initialError={res.message}
-      />
-    )
-  }
-
   return (
     <VerifyEmailPanel
       token={token}
-      initialStatus="success"
+      initialStatus="pending"
       initialError={null}
     />
   )
