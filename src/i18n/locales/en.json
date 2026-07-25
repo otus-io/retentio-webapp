@@ -135,7 +135,17 @@
     "termsAgree": "I agree to the",
     "termsOfService": "Terms of Service",
     "termsAnd": "and",
-    "privacyPolicy": "Privacy Policy"
+    "privacyPolicy": "Privacy Policy",
+    "resetPasswordTitle": "Set a new password",
+    "resetPasswordDescription": "Choose a new password for your account.",
+    "resetPasswordButton": "Reset password",
+    "resetPasswordMissingToken": "Reset link is missing or invalid.",
+    "verifyEmailTitle": "Verify email",
+    "verifyEmailDescription": "Confirm your email address for this account.",
+    "verifyEmailSuccess": "Email verified successfully.",
+    "verifyEmailMissingToken": "Verification link is missing or invalid.",
+    "verifyEmailFailed": "Could not verify email. Please try again.",
+    "verifyEmailRetry": "Retry"
   },
   "tags": {
     "select-placeholder": "Select tags",

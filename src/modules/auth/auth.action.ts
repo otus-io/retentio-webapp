@@ -2,9 +2,16 @@
 import { revalidatePath } from 'next/cache'
 import { redirect } from 'next/navigation'
 import z from 'zod'
+import { LOGIN_PATH } from '@/config'
 import { formDataToObject } from '@/utils/format'
-import { loginSchema, registerSchema } from './auth.schema'
-import { loginService, registerService, logoutService } from './auth.service'
+import { loginSchema, registerSchema, resetPasswordSchema, verifyEmailSchema } from './auth.schema'
+import {
+  loginService,
+  registerService,
+  logoutService,
+  resetPasswordService,
+  verifyEmailService,
+} from './auth.service'
 
 export const loginAction: ActionFunction = async (_, formData) => {
   const data = formDataToObject(formData)
@@ -46,6 +53,44 @@ export const registerAction: ActionFunction = async (_, formData) => {
   }
   revalidatePath('/')
   redirect(result.data.redirect || '/')
+}
+
+export const resetPasswordAction: ActionFunction = async (_, formData) => {
+  const data = formDataToObject(formData)
+  const result = resetPasswordSchema.safeParse(data)
+  if (!result.success) {
+    return {
+      validationErrors: z.flattenError(result.error).fieldErrors,
+      data,
+    }
+  }
+  const res = await resetPasswordService(result.data)
+  if (!res.success) {
+    return {
+      error: res.message,
+      data,
+      success: false,
+    }
+  }
+  redirect(LOGIN_PATH)
+}
+
+export async function verifyEmailAction(token: string) {
+  const result = verifyEmailSchema.safeParse({ token })
+  if (!result.success) {
+    return {
+      error: 'Invalid verification token',
+      success: false as const,
+    }
+  }
+  const res = await verifyEmailService(result.data)
+  if (!res.success) {
+    return {
+      error: res.message,
+      success: false as const,
+    }
+  }
+  return { success: true as const }
 }
 
 export async function logoutAction() {

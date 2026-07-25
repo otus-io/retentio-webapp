@@ -26,6 +26,25 @@ export const registerSchema = z.object({
 
 export type RegisterDTO = z.infer<typeof registerSchema>
 
+// 重置密码（邮件链接 ?token=）
+export const resetPasswordSchema = z.object({
+  token: z.string().min(1),
+  password: z.string().min(8).max(20),
+  confirmPassword: z.string().min(8).max(20),
+}).refine((data) => data.password === data.confirmPassword, {
+  message: '两次输入的密码不一致',
+  path: ['confirmPassword'],
+})
+
+export type ResetPasswordDTO = z.infer<typeof resetPasswordSchema>
+
+// 验证邮箱（邮件链接 ?token=）
+export const verifyEmailSchema = z.object({
+  token: z.string().min(1),
+})
+
+export type VerifyEmailDTO = z.infer<typeof verifyEmailSchema>
+
 export type LoginResponseDTO = BaseApiResult<
   { token: string },
   { expires: string }

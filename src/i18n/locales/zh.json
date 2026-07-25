@@ -135,7 +135,17 @@
     "termsAgree": "我同意",
     "termsOfService": "服务条款",
     "termsAnd": "和",
-    "privacyPolicy": "隐私政策"
+    "privacyPolicy": "隐私政策",
+    "resetPasswordTitle": "设置新密码",
+    "resetPasswordDescription": "为你的账户选择一个新密码。",
+    "resetPasswordButton": "重置密码",
+    "resetPasswordMissingToken": "重置链接缺失或无效。",
+    "verifyEmailTitle": "验证邮箱",
+    "verifyEmailDescription": "确认此账户的邮箱地址。",
+    "verifyEmailSuccess": "邮箱验证成功。",
+    "verifyEmailMissingToken": "验证链接缺失或无效。",
+    "verifyEmailFailed": "无法验证邮箱，请重试。",
+    "verifyEmailRetry": "重试"
   },
   "tags": {
     "select-placeholder": "选择标签",
