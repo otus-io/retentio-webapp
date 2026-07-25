@@ -1,7 +1,6 @@
 'use client'
 
 import { Card } from '@heroui/react'
-import { useRouter } from 'next/navigation'
 import { useTranslations } from 'next-intl'
 import { useEffect, useRef, useState, useTransition } from 'react'
 import { LOGIN_PATH, VERIFY_EMAIL_PATH } from '@/config'
@@ -11,6 +10,10 @@ import AppError from '@/components/app/AppError'
 import AppLink from '@/components/app/AppLink'
 
 type Status = 'pending' | 'success' | 'error'
+
+function clearTokenFromUrl() {
+  window.history.replaceState(null, '', VERIFY_EMAIL_PATH)
+}
 
 export default function VerifyEmailPanel({
   token,
@@ -22,7 +25,6 @@ export default function VerifyEmailPanel({
   initialError: string | null
 }) {
   const t = useTranslations('auth')
-  const router = useRouter()
   const [status, setStatus] = useState<Status>(initialStatus)
   const [error, setError] = useState<string | null>(initialError)
   const [isPending, startTransition] = useTransition()
@@ -38,7 +40,7 @@ export default function VerifyEmailPanel({
       if (cancelled) return
       if (res.success) {
         setStatus('success')
-        router.replace(`${VERIFY_EMAIL_PATH}?verified=1`)
+        clearTokenFromUrl()
         return
       }
       setStatus('error')
@@ -47,7 +49,7 @@ export default function VerifyEmailPanel({
     return () => {
       cancelled = true
     }
-  }, [hasToken, initialStatus, router, t, token])
+  }, [hasToken, initialStatus, t, token])
 
   function handleRetry() {
     if (!hasToken) return
@@ -57,7 +59,7 @@ export default function VerifyEmailPanel({
       const res = await verifyEmailAction(token)
       if (res.success) {
         setStatus('success')
-        router.replace(`${VERIFY_EMAIL_PATH}?verified=1`)
+        clearTokenFromUrl()
         return
       }
       setStatus('error')

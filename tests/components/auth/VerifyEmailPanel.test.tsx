@@ -2,12 +2,8 @@ import { describe, expect, it, vi, beforeEach } from 'vitest'
 import { render, screen, waitFor } from '@testing-library/react'
 import type { ReactNode } from 'react'
 
-const replaceMock = vi.fn()
 const verifyEmailActionMock = vi.fn()
-
-vi.mock('next/navigation', () => ({
-  useRouter: () => ({ replace: replaceMock }),
-}))
+const replaceStateMock = vi.fn()
 
 vi.mock('next-intl', () => ({
   useTranslations: () => (key: string) => key,
@@ -58,20 +54,9 @@ import VerifyEmailPanel from '@/components/auth/VerifyEmailPanel'
 
 describe('VerifyEmailPanel', () => {
   beforeEach(() => {
-    replaceMock.mockReset()
     verifyEmailActionMock.mockReset()
-  })
-
-  it('shows success without calling the API when already verified', () => {
-    render(
-      <VerifyEmailPanel
-        token=""
-        initialStatus="success"
-        initialError={null}
-      />,
-    )
-    expect(screen.getByText('verifyEmailSuccess')).toBeDefined()
-    expect(verifyEmailActionMock).not.toHaveBeenCalled()
+    replaceStateMock.mockReset()
+    vi.spyOn(window.history, 'replaceState').mockImplementation(replaceStateMock)
   })
 
   it('shows a localized missing-token error without calling the API', () => {
@@ -87,7 +72,7 @@ describe('VerifyEmailPanel', () => {
     expect(screen.queryByRole('button', { name: 'verifyEmailRetry' })).toBeNull()
   })
 
-  it('verifies once on pending + token and replaces URL on success', async () => {
+  it('verifies once on pending + token, keeps success in state, and clears the token from the URL', async () => {
     verifyEmailActionMock.mockResolvedValue({ success: true })
     render(
       <VerifyEmailPanel
@@ -99,7 +84,34 @@ describe('VerifyEmailPanel', () => {
     expect(screen.getByText('verifyEmailPending')).toBeDefined()
     await waitFor(() => {
       expect(verifyEmailActionMock).toHaveBeenCalledWith('tok-1')
-      expect(replaceMock).toHaveBeenCalledWith('/verify-email?verified=1')
+      expect(screen.getByText('verifyEmailSuccess')).toBeDefined()
+      expect(replaceStateMock).toHaveBeenCalledWith(null, '', '/verify-email')
+    })
+    // Success is client state only — not driven by a URL marker.
+    expect(replaceStateMock.mock.calls.some((call) => String(call[2]).includes('verified='))).toBe(false)
+  })
+
+  it('clears the token from the URL after a successful retry', async () => {
+    verifyEmailActionMock
+      .mockResolvedValueOnce({ success: false, error: 'temp fail' })
+      .mockResolvedValueOnce({ success: true })
+
+    render(
+      <VerifyEmailPanel
+        token="tok-retry"
+        initialStatus="pending"
+        initialError={null}
+      />,
+    )
+
+    await waitFor(() => {
+      expect(screen.getByRole('button', { name: 'verifyEmailRetry' })).toBeDefined()
+    })
+    replaceStateMock.mockClear()
+    screen.getByRole('button', { name: 'verifyEmailRetry' }).click()
+    await waitFor(() => {
+      expect(screen.getByText('verifyEmailSuccess')).toBeDefined()
+      expect(replaceStateMock).toHaveBeenCalledWith(null, '', '/verify-email')
     })
   })
 
@@ -121,6 +133,6 @@ describe('VerifyEmailPanel', () => {
       )
     })
     expect(screen.getByRole('button', { name: 'verifyEmailRetry' })).toBeDefined()
-    expect(replaceMock).not.toHaveBeenCalled()
+    expect(replaceStateMock).not.toHaveBeenCalled()
   })
 })

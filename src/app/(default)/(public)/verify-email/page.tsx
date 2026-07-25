@@ -7,17 +7,6 @@ export default async function Page(props: PageProps<'/verify-email'>) {
   const t = await getTranslations('auth')
   const searchParams = await props.searchParams
   const token = typeof searchParams.token === 'string' ? searchParams.token.trim() : ''
-  const verified = searchParams.verified === '1' || searchParams.verified === 'true'
-
-  if (verified) {
-    return (
-      <VerifyEmailPanel
-        token=""
-        initialStatus="success"
-        initialError={null}
-      />
-    )
-  }
 
   if (!token) {
     return (
