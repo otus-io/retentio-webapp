@@ -2,6 +2,8 @@ import z from 'zod'
 
 /** Sentinel for refine() messages; mapped to i18n in auth actions. */
 export const PASSWORDS_MISMATCH = 'passwords_mismatch'
+/** Sentinel for username regex; mapped to i18n in auth actions. */
+export const USERNAME_INVALID = 'username_invalid'
 
 // 登录
 export const loginSchema = z.object({
@@ -17,7 +19,7 @@ export type LoginDTO = z.infer<typeof loginSchema>
 export const registerSchema = z.object({
   username: z.string()
     .min(4)
-    .regex(/^[a-z][a-z0-9]*$/, '用户名只能包含小写字母和数字，且必须以字母开头'),
+    .regex(/^[a-z][a-z0-9]*$/, USERNAME_INVALID),
   email: z.email(),
   password: z.string().min(8).max(20),
   confirmPassword: z.string().min(8).max(20),

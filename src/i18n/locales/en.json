@@ -127,6 +127,7 @@
     "confirmPasswordLabel": "Confirm Password",
     "confirmPasswordPlaceholder": "Enter your password again",
     "passwordsMismatch": "Passwords do not match",
+    "usernameInvalid": "Username may only contain lowercase letters and numbers, and must start with a letter",
     "loginButton": "Login",
     "registerButton": "Register",
     "noAccount": "Don't have an account?",

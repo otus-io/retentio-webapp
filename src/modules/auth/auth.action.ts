@@ -7,6 +7,7 @@ import { LOGIN_PATH } from '@/config'
 import { formDataToObject } from '@/utils/format'
 import {
   PASSWORDS_MISMATCH,
+  USERNAME_INVALID,
   forgotPasswordSchema,
   loginSchema,
   registerSchema,
@@ -29,10 +30,19 @@ async function localizeAuthFieldErrors(
   const out: Record<string, string[] | undefined> = { ...fieldErrors }
   for (const [key, messages] of Object.entries(out)) {
     if (!messages) continue
-    out[key] = messages.map((msg) =>
-      msg === PASSWORDS_MISMATCH ? t('passwordsMismatch') : msg)
+    out[key] = messages.map((msg) => {
+      if (msg === PASSWORDS_MISMATCH) return t('passwordsMismatch')
+      if (msg === USERNAME_INVALID) return t('usernameInvalid')
+      return msg
+    })
   }
   return out
+}
+
+function resetPasswordSafeData(data: Record<string, unknown>) {
+  return {
+    token: typeof data.token === 'string' ? data.token : '',
+  }
 }
 
 export const loginAction: ActionFunction = async (_, formData) => {
@@ -102,18 +112,19 @@ export const forgotPasswordAction: ActionFunction = async (_, formData) => {
 
 export const resetPasswordAction: ActionFunction = async (_, formData) => {
   const data = formDataToObject(formData)
+  const safeData = resetPasswordSafeData(data)
   const result = resetPasswordSchema.safeParse(data)
   if (!result.success) {
     return {
       validationErrors: await localizeAuthFieldErrors(z.flattenError(result.error).fieldErrors),
-      data,
+      data: safeData,
     }
   }
   const res = await resetPasswordService(result.data)
   if (!res.success) {
     return {
       error: res.message,
-      data,
+      data: safeData,
       success: false,
     }
   }

@@ -127,6 +127,7 @@
     "confirmPasswordLabel": "确认密码",
     "confirmPasswordPlaceholder": "请再次输入密码",
     "passwordsMismatch": "两次输入的密码不一致",
+    "usernameInvalid": "用户名只能包含小写字母和数字，且必须以字母开头",
     "loginButton": "登录",
     "registerButton": "注册",
     "noAccount": "还没有账号？",

@@ -18,8 +18,6 @@ export default function ResetPasswordForm({ token }: { token: string }) {
   const [state, action, isPending] = useActionState(resetPasswordAction, {
     data: {
       token,
-      password: '',
-      confirmPassword: '',
     },
   })
 
@@ -67,7 +65,6 @@ export default function ResetPasswordForm({ token }: { token: string }) {
                       name="password"
                       variant="secondary"
                       placeholder={t('passwordPlaceholder')}
-                      defaultValue={state?.data?.password}
                       minLength={8}
                     />
                     <AppPasswordInput
@@ -76,7 +73,6 @@ export default function ResetPasswordForm({ token }: { token: string }) {
                       name="confirmPassword"
                       variant="secondary"
                       placeholder={t('confirmPasswordPlaceholder')}
-                      defaultValue={state?.data?.confirmPassword}
                       minLength={8}
                     />
                   </div>

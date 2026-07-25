@@ -1,7 +1,9 @@
 import { describe, expect, it } from 'vitest'
 import {
   PASSWORDS_MISMATCH,
+  USERNAME_INVALID,
   forgotPasswordSchema,
+  registerSchema,
   resetPasswordSchema,
   verifyEmailSchema,
 } from '@/modules/auth/auth.schema'
@@ -15,6 +17,27 @@ describe('forgotPasswordSchema', () => {
   it('rejects an invalid email', () => {
     const result = forgotPasswordSchema.safeParse({ email: 'not-an-email' })
     expect(result.success).toBe(false)
+  })
+})
+
+describe('registerSchema', () => {
+  const valid = {
+    username: 'alice',
+    email: 'a@b.com',
+    password: 'password1',
+    confirmPassword: 'password1',
+  }
+
+  it('accepts a valid registration payload', () => {
+    expect(registerSchema.safeParse(valid).success).toBe(true)
+  })
+
+  it('rejects invalid usernames with the locale-neutral sentinel', () => {
+    const result = registerSchema.safeParse({ ...valid, username: 'Alice' })
+    expect(result.success).toBe(false)
+    if (!result.success) {
+      expect(result.error.flatten().fieldErrors.username).toContain(USERNAME_INVALID)
+    }
   })
 })
 
