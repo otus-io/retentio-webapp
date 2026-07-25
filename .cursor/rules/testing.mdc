@@ -1,6 +1,6 @@
 ---
 description: Vitest and Playwright test conventions
-globs: "{src/**/*.test.{ts,tsx},e2e/**/*.ts}"
+globs: "{tests/**/*.test.{ts,tsx},tests/e2e/**/*.ts}"
 alwaysApply: false
 ---
 
@@ -8,18 +8,19 @@ alwaysApply: false
 
 ## Unit / component (Vitest)
 
-- Colocate: `*.test.ts` / `*.test.tsx` next to source
+- Live under `tests/`, mirroring `src/` (e.g. `tests/proxy.test.ts`, `tests/components/app/AppButton.test.tsx`)
 - Use `@testing-library/react` for components; mock modules with `vi.mock`
-- See `src/utils/request.test.ts`, `src/components/app/AppButton.test.tsx` for patterns
+- Import app code via `@/` (e.g. `@/proxy`, `@/components/app/AppButton`)
 
 ```bash
 pnpm test                    # all unit tests
-pnpm test src/utils/request.test.ts  # one file
+pnpm test tests/proxy.test.ts
+pnpm test tests/components/app/
 ```
 
 ## E2E (Playwright)
 
-- Specs in `e2e/` (e.g. `e2e/auth.spec.ts`)
+- Specs in `tests/e2e/` (e.g. `tests/e2e/auth.spec.ts`)
 - CI runs Chromium with secrets `E2E_USERNAME`, `E2E_PASSWORD`
 
 ```bash
