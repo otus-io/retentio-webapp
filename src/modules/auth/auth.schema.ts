@@ -26,6 +26,13 @@ export const registerSchema = z.object({
 
 export type RegisterDTO = z.infer<typeof registerSchema>
 
+// 忘记密码（发送重置邮件）
+export const forgotPasswordSchema = z.object({
+  email: z.email(),
+})
+
+export type ForgotPasswordDTO = z.infer<typeof forgotPasswordSchema>
+
 // 重置密码（邮件链接 ?token=）
 export const resetPasswordSchema = z.object({
   token: z.string().min(1),

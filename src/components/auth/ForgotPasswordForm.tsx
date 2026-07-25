@@ -4,22 +4,19 @@ import type { FormEvent } from 'react'
 import { Card, Form } from '@heroui/react'
 import { useTranslations } from 'next-intl'
 import { startTransition, useActionState, useCallback } from 'react'
-import { FORGOT_PASSWORD_PATH, LOGIN_PATH } from '@/config'
-import { resetPasswordAction } from '@/modules/auth/auth.action'
+import { LOGIN_PATH } from '@/config'
+import { forgotPasswordAction } from '@/modules/auth/auth.action'
 import AppButton from '@/components/app/AppButton'
 import AppError from '@/components/app/AppError'
+import AppInput from '@/components/app/AppInput'
 import AppLink from '@/components/app/AppLink'
-import AppPasswordInput from '@/components/app/AppPasswordInput'
 
-export default function ResetPasswordForm({ token }: { token: string }) {
+export default function ForgotPasswordForm() {
   const t = useTranslations('auth')
-  const hasToken = token.length > 0
 
-  const [state, action, isPending] = useActionState(resetPasswordAction, {
+  const [state, action, isPending] = useActionState(forgotPasswordAction, {
     data: {
-      token,
-      password: '',
-      confirmPassword: '',
+      email: '',
     },
   })
 
@@ -34,18 +31,14 @@ export default function ResetPasswordForm({ token }: { token: string }) {
       <div className="max-w-lg mx-auto space-y-4 py-8 px-2 sm:p-0">
         <Card>
           <Card.Header>
-            <Card.Title>{t('resetPasswordTitle')}</Card.Title>
-            <Card.Description>{t('resetPasswordDescription')}</Card.Description>
+            <Card.Title>{t('forgotPasswordTitle')}</Card.Title>
+            <Card.Description>{t('forgotPasswordDescription')}</Card.Description>
           </Card.Header>
-          {!hasToken
+          {state?.success
             ? (
               <Card.Content>
-                <p className="text-sm text-danger">{t('resetPasswordMissingToken')}</p>
-                <p className="text-sm text-center text-default-500 mt-4 space-x-2">
-                  <AppLink className="text-sm" isActive href={FORGOT_PASSWORD_PATH}>
-                    {t('requestNewResetLink')}
-                  </AppLink>
-                  <span>·</span>
+                <p className="text-sm text-default-500">{t('forgotPasswordSent')}</p>
+                <p className="text-sm text-center text-default-500 mt-4">
                   <AppLink className="text-sm" isActive href={LOGIN_PATH}>
                     {t('goLogin')}
                   </AppLink>
@@ -60,24 +53,14 @@ export default function ResetPasswordForm({ token }: { token: string }) {
               >
                 <Card.Content>
                   <div className="w-full justify-center items-center space-y-4">
-                    <input name="token" type="hidden" value={token} />
-                    <AppPasswordInput
+                    <AppInput
+                      label={t('emailLabel')}
+                      name="email"
+                      type="email"
                       isRequired
-                      label={t('passwordLabel')}
-                      name="password"
+                      placeholder={t('emailPlaceholder')}
                       variant="secondary"
-                      placeholder={t('passwordPlaceholder')}
-                      defaultValue={state?.data?.password}
-                      minLength={8}
-                    />
-                    <AppPasswordInput
-                      isRequired
-                      label={t('confirmPasswordLabel')}
-                      name="confirmPassword"
-                      variant="secondary"
-                      placeholder={t('confirmPasswordPlaceholder')}
-                      defaultValue={state?.data?.confirmPassword}
-                      minLength={8}
+                      defaultValue={state?.data?.email}
                     />
                   </div>
                 </Card.Content>
@@ -89,7 +72,7 @@ export default function ResetPasswordForm({ token }: { token: string }) {
                       type="submit"
                       size="lg"
                     >
-                      {t('resetPasswordButton')}
+                      {t('forgotPasswordButton')}
                     </AppButton>
                     <p className="text-sm text-center text-default-500">
                       <AppLink className="text-sm" isActive href={LOGIN_PATH}>

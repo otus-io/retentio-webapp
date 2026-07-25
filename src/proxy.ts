@@ -1,6 +1,6 @@
 import type { NextRequest } from 'next/server'
 import { NextResponse } from 'next/server'
-import { JWT_COOKIE_NAME, LOGIN_PATH, REGISTER_PATH } from '@/config'
+import { FORGOT_PASSWORD_PATH, JWT_COOKIE_NAME, LOGIN_PATH, REGISTER_PATH } from '@/config'
 import { logger } from '@/lib/logger'
 
 const blacklist = [
@@ -8,6 +8,8 @@ const blacklist = [
   '/library',
   '/profile',
 ]
+
+const authGuestPaths = new Set([LOGIN_PATH, REGISTER_PATH, FORGOT_PASSWORD_PATH])
 
 export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl
@@ -20,7 +22,7 @@ export async function proxy(request: NextRequest) {
 
   logger.info({ token, isProtectedPath }, `[proxy] => ${pathname}`)
   // 如果是受保护路径但没有 token，重定向到登录页
-  if(!token){
+  if (!token) {
     if (isProtectedPath) {
       const url = new URL(LOGIN_PATH, request.url)
       url.searchParams.set('redirect', pathname)
@@ -30,7 +32,7 @@ export async function proxy(request: NextRequest) {
     return NextResponse.next()
   }
   else {
-    if(pathname === LOGIN_PATH || pathname === REGISTER_PATH) {
+    if (authGuestPaths.has(pathname)) {
       const url = new URL('/', request.url)
       logger.fatal('[proxy] has token => redirect(/dashboard)')
       return NextResponse.redirect(url)

@@ -1,5 +1,6 @@
 import { request } from '@/utils/request'
 import type {
+  ForgotPasswordDTO,
   LoginDTO,
   LoginResponseDTO,
   ProfileResponseDTO,
@@ -26,6 +27,16 @@ export function register(params: Pick<RegisterDTO, 'username' | 'password' | 'em
   return request<RegisterResponseDTO>('/auth/register', {
     method: 'POST',
     body: JSON.stringify(params),
+  })
+}
+
+/**
+ * 请求密码重置邮件
+ */
+export function forgotPassword(params: ForgotPasswordDTO) {
+  return request<BaseApiResult<{ msg: string }>>('/auth/forgot-password', {
+    method: 'POST',
+    body: JSON.stringify({ email: params.email }),
   })
 }
 

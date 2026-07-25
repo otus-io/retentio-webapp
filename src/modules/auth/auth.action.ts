@@ -4,8 +4,15 @@ import { redirect } from 'next/navigation'
 import z from 'zod'
 import { LOGIN_PATH } from '@/config'
 import { formDataToObject } from '@/utils/format'
-import { loginSchema, registerSchema, resetPasswordSchema, verifyEmailSchema } from './auth.schema'
 import {
+  forgotPasswordSchema,
+  loginSchema,
+  registerSchema,
+  resetPasswordSchema,
+  verifyEmailSchema,
+} from './auth.schema'
+import {
+  forgotPasswordService,
   loginService,
   registerService,
   logoutService,
@@ -53,6 +60,29 @@ export const registerAction: ActionFunction = async (_, formData) => {
   }
   revalidatePath('/')
   redirect(result.data.redirect || '/')
+}
+
+export const forgotPasswordAction: ActionFunction = async (_, formData) => {
+  const data = formDataToObject(formData)
+  const result = forgotPasswordSchema.safeParse(data)
+  if (!result.success) {
+    return {
+      validationErrors: z.flattenError(result.error).fieldErrors,
+      data,
+    }
+  }
+  const res = await forgotPasswordService(result.data)
+  if (!res.success) {
+    return {
+      error: res.message,
+      data,
+      success: false,
+    }
+  }
+  return {
+    data,
+    success: true,
+  }
 }
 
 export const resetPasswordAction: ActionFunction = async (_, formData) => {
