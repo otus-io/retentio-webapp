@@ -1,25 +1,71 @@
 'use server'
 import { revalidatePath } from 'next/cache'
 import { redirect } from 'next/navigation'
+import { getTranslations } from 'next-intl/server'
 import z from 'zod'
+import { LOGIN_PATH } from '@/config'
 import { formDataToObject } from '@/utils/format'
-import { loginSchema, registerSchema } from './auth.schema'
-import { loginService, registerService, logoutService } from './auth.service'
+import {
+  PASSWORDS_MISMATCH,
+  USERNAME_INVALID,
+  forgotPasswordSchema,
+  loginSchema,
+  registerSchema,
+  resetPasswordSchema,
+  verifyEmailSchema,
+} from './auth.schema'
+import {
+  forgotPasswordService,
+  loginService,
+  registerService,
+  logoutService,
+  resetPasswordService,
+  verifyEmailService,
+} from './auth.service'
+
+async function localizeAuthFieldErrors(
+  fieldErrors: Record<string, string[] | undefined>,
+): Promise<Record<string, string[] | undefined>> {
+  const t = await getTranslations('auth')
+  const out: Record<string, string[] | undefined> = { ...fieldErrors }
+  for (const [key, messages] of Object.entries(out)) {
+    if (!messages) continue
+    out[key] = messages.map((msg) => {
+      if (msg === PASSWORDS_MISMATCH) return t('passwordsMismatch')
+      if (msg === USERNAME_INVALID) return t('usernameInvalid')
+      return msg
+    })
+  }
+  return out
+}
+
+function resetPasswordSafeData(data: Record<string, unknown>) {
+  return {
+    token: typeof data.token === 'string' ? data.token : '',
+  }
+}
+
+/** Keep non-secret fields for form repopulation; never echo passwords. */
+function authFormSafeData(data: Record<string, unknown>) {
+  const { password: _password, confirmPassword: _confirmPassword, ...safe } = data
+  return safe
+}
 
 export const loginAction: ActionFunction = async (_, formData) => {
   const data = formDataToObject(formData)
+  const safeData = authFormSafeData(data)
   const result = loginSchema.safeParse(data)
   if (!result.success) {
     return {
-      validationErrors: z.flattenError(result.error).fieldErrors,
-      data,
+      validationErrors: await localizeAuthFieldErrors(z.flattenError(result.error).fieldErrors),
+      data: safeData,
     }
   }
   const res = await loginService(result.data)
   if (!res.success) {
     return {
       error: res.message,
-      data,
+      data: safeData,
       success: false,
     }
   }
@@ -29,14 +75,36 @@ export const loginAction: ActionFunction = async (_, formData) => {
 
 export const registerAction: ActionFunction = async (_, formData) => {
   const data = formDataToObject(formData)
+  const safeData = authFormSafeData(data)
   const result = registerSchema.safeParse(data)
+  if (!result.success) {
+    return {
+      validationErrors: await localizeAuthFieldErrors(z.flattenError(result.error).fieldErrors),
+      data: safeData,
+    }
+  }
+  const res = await registerService(result.data)
+  if (!res.success) {
+    return {
+      error: res.message,
+      data: safeData,
+      success: false,
+    }
+  }
+  revalidatePath('/')
+  redirect(result.data.redirect || '/')
+}
+
+export const forgotPasswordAction: ActionFunction = async (_, formData) => {
+  const data = formDataToObject(formData)
+  const result = forgotPasswordSchema.safeParse(data)
   if (!result.success) {
     return {
       validationErrors: z.flattenError(result.error).fieldErrors,
       data,
     }
   }
-  const res = await registerService(result.data)
+  const res = await forgotPasswordService(result.data)
   if (!res.success) {
     return {
       error: res.message,
@@ -44,8 +112,50 @@ export const registerAction: ActionFunction = async (_, formData) => {
       success: false,
     }
   }
-  revalidatePath('/')
-  redirect(result.data.redirect || '/')
+  return {
+    data,
+    success: true,
+  }
+}
+
+export const resetPasswordAction: ActionFunction = async (_, formData) => {
+  const data = formDataToObject(formData)
+  const safeData = resetPasswordSafeData(data)
+  const result = resetPasswordSchema.safeParse(data)
+  if (!result.success) {
+    return {
+      validationErrors: await localizeAuthFieldErrors(z.flattenError(result.error).fieldErrors),
+      data: safeData,
+    }
+  }
+  const res = await resetPasswordService(result.data)
+  if (!res.success) {
+    return {
+      error: res.message,
+      data: safeData,
+      success: false,
+    }
+  }
+  redirect(LOGIN_PATH)
+}
+
+export async function verifyEmailAction(token: string) {
+  const t = await getTranslations('auth')
+  const result = verifyEmailSchema.safeParse({ token })
+  if (!result.success) {
+    return {
+      error: t('verifyEmailMissingToken'),
+      success: false as const,
+    }
+  }
+  const res = await verifyEmailService(result.data)
+  if (!res.success) {
+    return {
+      error: res.message,
+      success: false as const,
+    }
+  }
+  return { success: true as const }
 }
 
 export async function logoutAction() {

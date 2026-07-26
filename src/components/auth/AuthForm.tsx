@@ -5,7 +5,7 @@ import { Card, Form } from '@heroui/react'
 import { useSearchParams } from 'next/navigation'
 import { useTranslations } from 'next-intl'
 import { startTransition, useActionState, useCallback, useMemo, useState } from 'react'
-import { LOGIN_PATH, REGISTER_PATH } from '@/config'
+import { FORGOT_PASSWORD_PATH, LOGIN_PATH, REGISTER_PATH } from '@/config'
 import { loginAction, registerAction } from '@/modules/auth/auth.action'
 import AppButton from '@/components/app/AppButton'
 import AppError from '@/components/app/AppError'
@@ -30,7 +30,6 @@ export default function AuthForm({ type }: { type: 'login' | 'register' }) {
   const [state, action, isPending] = useActionState(authAction, {
     data: {
       username: '',
-      password: '',
       terms: 'false',
     },
   })
@@ -91,9 +90,18 @@ export default function AuthForm({ type }: { type: 'login' | 'register' }) {
                   name="password"
                   variant="secondary"
                   placeholder={t('passwordPlaceholder')}
-                  defaultValue={state?.data?.password}
                   minLength={isLogin ? 6 : 8}
                 />
+
+                {
+                  isLogin && (
+                    <p className="text-sm text-end">
+                      <AppLink className="text-sm" isActive href={FORGOT_PASSWORD_PATH}>
+                        {t('forgotPassword')}
+                      </AppLink>
+                    </p>
+                  )
+                }
 
                 {
                   !isLogin && (
@@ -103,7 +111,6 @@ export default function AuthForm({ type }: { type: 'login' | 'register' }) {
                       name="confirmPassword"
                       variant="secondary"
                       placeholder={t('confirmPasswordPlaceholder')}
-                      defaultValue={state?.data?.confirmPassword}
                       minLength={8}
                     />
                   )

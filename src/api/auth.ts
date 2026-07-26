@@ -1,10 +1,13 @@
 import { request } from '@/utils/request'
 import type {
+  ForgotPasswordDTO,
   LoginDTO,
   LoginResponseDTO,
   ProfileResponseDTO,
   RegisterDTO,
   RegisterResponseDTO,
+  ResetPasswordDTO,
+  VerifyEmailDTO,
 } from '@/modules/auth/auth.schema'
 
 /**
@@ -24,6 +27,39 @@ export function register(params: Pick<RegisterDTO, 'username' | 'password' | 'em
   return request<RegisterResponseDTO>('/auth/register', {
     method: 'POST',
     body: JSON.stringify(params),
+  })
+}
+
+/**
+ * 请求密码重置邮件
+ */
+export function forgotPassword(params: ForgotPasswordDTO) {
+  return request<BaseApiResult<{ msg: string }>>('/auth/forgot-password', {
+    method: 'POST',
+    body: JSON.stringify({ email: params.email }),
+  })
+}
+
+/**
+ * 使用令牌重置密码
+ */
+export function resetPassword(params: ResetPasswordDTO) {
+  return request<BaseApiResult<{ msg: string }>>('/auth/reset-password', {
+    method: 'POST',
+    body: JSON.stringify({
+      token: params.token,
+      new_password: params.password,
+    }),
+  })
+}
+
+/**
+ * 使用令牌验证邮箱
+ */
+export function verifyEmail(params: VerifyEmailDTO) {
+  return request<BaseApiResult<{ msg: string }>>('/auth/verify-email', {
+    method: 'POST',
+    body: JSON.stringify({ token: params.token }),
   })
 }
 

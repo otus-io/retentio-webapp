@@ -1,5 +1,11 @@
 import * as authApi from '@/api/auth'
-import type { LoginDTO, RegisterDTO } from './auth.schema'
+import type {
+  ForgotPasswordDTO,
+  LoginDTO,
+  RegisterDTO,
+  ResetPasswordDTO,
+  VerifyEmailDTO,
+} from './auth.schema'
 import { getToken, setToken, removeToken } from '@/lib/token'
 import { ServiceResponse } from '@/lib/response'
 
@@ -33,6 +39,30 @@ export async function registerService(params: RegisterDTO) {
   } catch (e) {
     await removeToken()
     return ServiceResponse.error('registerFailed failed', e)
+  }
+}
+
+export async function forgotPasswordService(params: ForgotPasswordDTO) {
+  try {
+    return ServiceResponse.success(await authApi.forgotPassword(params))
+  } catch (e) {
+    return ServiceResponse.error('forgotPassword failed', e)
+  }
+}
+
+export async function resetPasswordService(params: ResetPasswordDTO) {
+  try {
+    return ServiceResponse.success(await authApi.resetPassword(params))
+  } catch (e) {
+    return ServiceResponse.error('resetPassword failed', e)
+  }
+}
+
+export async function verifyEmailService(params: VerifyEmailDTO) {
+  try {
+    return ServiceResponse.success(await authApi.verifyEmail(params))
+  } catch (e) {
+    return ServiceResponse.error('verifyEmail failed', e)
   }
 }
 
