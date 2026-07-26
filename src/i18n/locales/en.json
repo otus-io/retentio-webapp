@@ -66,8 +66,9 @@
     "cta": {
       "title": "Start Learning Today",
       "subtitle": "Join thousands of learners who are already using Rete to remember more, for longer.",
-      "button": "Join on TestFlight",
-      "note": "The iOS app is currently available through TestFlight beta."
+      "button": "Apple iOS",
+      "androidButton": "Google Android",
+      "note": "iOS is available through TestFlight beta. Android is on Google Play for Internal Testing."
     }
   },
   "error": {

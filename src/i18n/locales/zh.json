@@ -66,8 +66,9 @@
     "cta": {
       "title": "今天就开始学习",
       "subtitle": "加入数千名正在使用 Rete 的学习者，记住更多，记得更久。",
-      "button": "加入 TestFlight 测试",
-      "note": "iOS 应用目前仍在 TestFlight 公测中。"
+      "button": "Apple iOS",
+      "androidButton": "Google Android",
+      "note": "iOS 应用目前仍在 TestFlight 公测中。Android 应用目前在 Google Play 内部测试中。"
     }
   },
   "error": {

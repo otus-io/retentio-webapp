@@ -38,10 +38,9 @@ vi.mock('lucide-react', () => ({
   Clock: () => <span data-testid="icon-clock" />,
   BookOpen: () => <span data-testid="icon-book-open" />,
   TrendingUp: () => <span data-testid="icon-trending-up" />,
-  Download: () => <span data-testid="icon-download" />,
 }))
 
-import { TESTFLIGHT_JOIN_URL } from '@/config'
+import { PLAY_STORE_URL, TESTFLIGHT_JOIN_URL } from '@/config'
 import HomePage from '@/components/home/HomePage'
 
 describe('HomePage', () => {
@@ -68,6 +67,15 @@ describe('HomePage', () => {
     expect(screen.getByText('home.hero.learnMore')).toBeDefined()
   })
 
+  it('渲染下载区域', () => {
+    render(<HomePage />)
+    expect(screen.getByText('home.cta.title')).toBeDefined()
+    expect(screen.getByText('home.cta.subtitle')).toBeDefined()
+    expect(screen.getByText('home.cta.button')).toBeDefined()
+    expect(screen.getByText('home.cta.androidButton')).toBeDefined()
+    expect(screen.getByText('home.cta.note')).toBeDefined()
+  })
+
   it('渲染特性区域', () => {
     render(<HomePage />)
     expect(screen.getByText('home.features.sectionTitle')).toBeDefined()
@@ -92,19 +100,14 @@ describe('HomePage', () => {
     expect(screen.getByText('home.about.description')).toBeDefined()
   })
 
-  it('渲染 CTA 下载区域', () => {
+  it('下载链接指向 TestFlight 与 Google Play', () => {
     render(<HomePage />)
-    expect(screen.getByText('home.cta.title')).toBeDefined()
-    expect(screen.getByText('home.cta.subtitle')).toBeDefined()
-    expect(screen.getByText('home.cta.button')).toBeDefined()
-    expect(screen.getByText('home.cta.note')).toBeDefined()
-  })
-
-  it('下载链接指向 TestFlight', () => {
-    render(<HomePage />)
-    const link = screen.getByText('home.cta.button').closest('a')
-    expect(link?.getAttribute('href')).toBe(TESTFLIGHT_JOIN_URL)
-    expect(link?.getAttribute('target')).toBe('_blank')
+    const iosLink = screen.getByText('home.cta.button').closest('a')
+    expect(iosLink?.getAttribute('href')).toBe(TESTFLIGHT_JOIN_URL)
+    expect(iosLink?.getAttribute('target')).toBe('_blank')
+    const androidLink = screen.getByText('home.cta.androidButton').closest('a')
+    expect(androidLink?.getAttribute('href')).toBe(PLAY_STORE_URL)
+    expect(androidLink?.getAttribute('target')).toBe('_blank')
   })
 
   it('Learn More 链接指向背景介绍', () => {

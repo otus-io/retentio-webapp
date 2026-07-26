@@ -11,5 +11,7 @@ export const VERIFY_EMAIL_PATH = '/verify-email'
 export const JWT_COOKIE_NAME = 'retentio_token'
 export const CONTACT_EMAIL = 'research@retentio.app'
 /** Public TestFlight invite while the iOS app is in beta. */
-export const TESTFLIGHT_JOIN_URL = 'https://testflight.apple.com/join/Ch1VpN6u'
+export const TESTFLIGHT_JOIN_URL = 'https://testflight.apple.com/join/46KgYyth'
+/** Google Play Store listing for the Android app. */
+export const PLAY_STORE_URL = 'https://play.google.com/store/apps/details?id=srs.app.retentio'
 

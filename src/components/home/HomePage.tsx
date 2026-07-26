@@ -2,11 +2,37 @@
 
 import { useRef, useState, useEffect } from 'react'
 import { useTranslations } from 'next-intl'
-import { Users, Brain, Palette, Bot, ArrowRight, Clock, BookOpen, TrendingUp, Download } from 'lucide-react'
+import { Users, Brain, Palette, Bot, ArrowRight, Clock, BookOpen, TrendingUp } from 'lucide-react'
 import clsx from 'clsx'
 import AppLink from '@/components/app/AppLink'
 import { AppButtonLink } from '@/components/app/AppButtonLink'
-import { TESTFLIGHT_JOIN_URL } from '@/config'
+import { PLAY_STORE_URL, TESTFLIGHT_JOIN_URL } from '@/config'
+
+function AppleIcon({ className }: { className?: string }) {
+  return (
+    <svg
+      className={className}
+      viewBox="0 0 24 24"
+      fill="currentColor"
+      aria-hidden="true"
+    >
+      <path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.81-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M13 3.5c.73-.83 1.94-1.46 2.94-1.5.13 1.17-.34 2.35-1.04 3.19-.69.85-1.83 1.51-2.95 1.42-.15-1.15.41-2.35 1.05-3.11z" />
+    </svg>
+  )
+}
+
+function GooglePlayIcon({ className }: { className?: string }) {
+  return (
+    <svg
+      className={className}
+      viewBox="0 0 24 24"
+      fill="currentColor"
+      aria-hidden="true"
+    >
+      <path d="M3.609 1.814 13.792 12 3.61 22.186a1.985 1.985 0 0 1-.638-1.47V3.284c0-.565.24-1.083.637-1.47zm1.858-.75 11.286 6.447-3.944 3.944L3.61 2.922l1.857-1.858zm12.143 6.94 2.71 1.547c.85.486.85 1.702 0 2.188l-2.71 1.547-4.145-4.141 4.145-4.141zM4.61 21.078l8.096-8.096 3.944 3.944L5.467 23.373 4.61 21.078z" />
+    </svg>
+  )
+}
 
 function AnimatedSection({ children, className, delay = 0 }: {
   children: React.ReactNode
@@ -92,6 +118,39 @@ export default function HomePage() {
         </div>
       </section>
 
+      {/* Download Section */}
+      <section className="py-10 md:py-12">
+        <div className="text-center max-w-2xl mx-auto px-4 md:px-2">
+          <h2 className="text-3xl md:text-4xl font-bold mb-4">{t('home.cta.title')}</h2>
+          <p className="text-gray-600 dark:text-gray-400 leading-relaxed mb-8">
+            {t('home.cta.subtitle')}
+          </p>
+          <div className="flex flex-row flex-nowrap items-center justify-center gap-3">
+            <a
+              href={TESTFLIGHT_JOIN_URL}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-2 px-5 sm:px-8 py-3.5 rounded-xl bg-accent text-white font-medium text-base sm:text-lg hover:opacity-90 transition-opacity whitespace-nowrap"
+            >
+              <AppleIcon className="size-5 shrink-0" />
+              {t('home.cta.button')}
+            </a>
+            <a
+              href={PLAY_STORE_URL}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-2 px-5 sm:px-8 py-3.5 rounded-xl bg-accent text-white font-medium text-base sm:text-lg hover:opacity-90 transition-opacity whitespace-nowrap"
+            >
+              <GooglePlayIcon className="size-5 shrink-0" />
+              {t('home.cta.androidButton')}
+            </a>
+          </div>
+          <p className="text-sm text-gray-500 dark:text-gray-400 mt-3">
+            {t('home.cta.note')}
+          </p>
+        </div>
+      </section>
+
       {/* About Section */}
       <section className="py-16 md:py-24 max-w-content px-4 md:px-2 mx-auto">
         <AnimatedSection className="text-center max-w-3xl mx-auto">
@@ -156,28 +215,6 @@ export default function HomePage() {
             {t('home.howItWorks.readMore')}
             <ArrowRight className="size-4" />
           </AppLink>
-        </AnimatedSection>
-      </section>
-
-      {/* CTA Section */}
-      <section className="py-16 md:py-24">
-        <AnimatedSection className="text-center max-w-lg mx-auto px-4 md:px-2">
-          <h2 className="text-3xl md:text-4xl font-bold mb-4">{t('home.cta.title')}</h2>
-          <p className="text-gray-600 dark:text-gray-400 leading-relaxed mb-8">
-            {t('home.cta.subtitle')}
-          </p>
-          <a
-            href={TESTFLIGHT_JOIN_URL}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="inline-flex items-center gap-2 px-8 py-3.5 rounded-xl bg-accent text-white font-medium text-lg hover:opacity-90 transition-opacity"
-          >
-            <Download className="size-5" />
-            {t('home.cta.button')}
-          </a>
-          <p className="text-sm text-gray-500 dark:text-gray-400 mt-3">
-            {t('home.cta.note')}
-          </p>
         </AnimatedSection>
       </section>
     </div>
