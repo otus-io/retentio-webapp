@@ -1,44 +1,53 @@
 ---
 title: Login/Registration
+description: Sign in, create an account, verify email, and recover your password in Rete.
 ---
 
 # Login and Register
 
-## Login and Register
+Login and Register are the entry points to your Rete account. **Login** restores access to your decks, facts, cards, and review progress. **Register** creates a new account so you can import shared decks, build your own material, and study.
 
-Login and Register are the entry points to your Rete account. **Login** lets existing users reach their decks, facts, cards, and review progress. **Register** creates a new account so you can start building and studying content.
-
-Because learning data and schedules are tied to your account, signing in keeps your work available across sessions and devices.
+Learning data and schedules are tied to your account, so signing in keeps your work available across sessions and devices.
 
 ## Login
 
-Login verifies an existing account with **username** and **password**. When they match, you can open your decks, study due cards, and continue where you left off.
+Login uses **username** and **password**. When they match, you reach the main app — **Decks**, **Discover**, and **Profile**.
 
-If credentials are wrong, the app asks you to check username and password and try again.
+If credentials are wrong, check the username and password and try again.
+
+From the login screen you can open **Register** or **Forgot Password?**.
 
 ## Register
 
-Register creates a new account. You provide:
+Register creates a new account. Provide:
 
-- **Email** — used for account identification and related account flows
+- **Email** — account contact and email verification
 - **Username** — how you sign in
-- **Password** and **confirm password** — must match; registration requires at least **8** characters
-- **Terms of Service and Privacy Policy** — you must accept these before completing registration
+- **Password** and **Confirm Password** — must match; password must be at least **8** characters
 
-After registration you can create decks, define fields, add facts, and study the cards generated from them.
+On the **website**, you must also accept the Terms of Service and Privacy Policy before registering.
 
-## Password confirmation
+After a successful registration, the app asks you to **check your email** to verify the address, then returns you to login. Sign in with your new username and password to continue.
 
-The confirm-password field ensures you typed the intended password twice. If the two values differ, registration fails until you correct them—a simple guard against typos that would block future logins.
+## Email verification
+
+Verification is **recommended but not required** to use Rete. You can study while unverified. If your email is not verified yet, **Profile** shows a reminder and a **Resend verification email** action. Opening the link in the email (or the in-app verify screen) confirms the address.
 
 ## Password recovery
 
-The backend supports **forgot-password** and **reset-password** flows (request a reset token, then set a new password). When your client exposes those screens, use them if you cannot sign in; your decks and progress remain on the account once you recover access.
+If you cannot sign in:
+
+1. On login, tap **Forgot Password?**
+2. Enter the **email** on the account
+3. If an account exists, a reset link is sent
+4. Open the link, set a **new password** (and confirm it), then sign in again
+
+Your decks and progress stay on the account after you reset the password.
 
 ## Switching between login and register
 
-The auth screens link to each other: from login you can go to register, and from register back to login, so new and returning users can reach the right flow quickly.
+Login links to Register, and Register links back to Login, so new and returning users can reach the right flow quickly.
 
 ## Summary
 
-Login and Register connect you to your personal learning data. Login restores access for existing users; Register sets up a new account with email, username, password confirmation, and terms acceptance. Together they are the secure gateway to decks, facts, cards, and long-term review in Rete.
+Login restores an existing account; Register creates one with email, username, and password. Verify email when you can, use Forgot Password if you get locked out, then move on to [import a shared deck](/guide/get-started/import-an-existing-deck) or [create your own](/guide/get-started/create-your-deck).
