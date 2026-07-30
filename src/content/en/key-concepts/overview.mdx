@@ -1,10 +1,11 @@
 ---
 title: Overview
+description: How decks, fields, facts, cards, and tags fit together in Rete.
 ---
 
 # Overview
 
-To use Rete more effectively, we recommend first understanding a few core concepts. Rete’s content organization, learning flow, and review system are all built around these foundational ideas.
+To use Rete more effectively, start with a few core concepts. Content organization, learning flow, and review are all built around these ideas.
 
 Read this section in order:
 
@@ -14,47 +15,51 @@ Read this section in order:
 4. [Cards](/guide/key-concepts/cards)
 5. [Tags](/guide/key-concepts/tags)
 
-The pages below explain how **decks**, **fields**, **facts**, **cards**, and **tags** work in Rete.
-
 ## How the pieces fit together
 
-A **deck** is the study container for one topic or goal: its name, column layout, daily new-card pace, and the set of facts and cards that belong to it.
+A **deck** is the study container for one topic or goal: its name, column layout, daily new-card pace, and the facts and cards that belong to it.
 
-**Fields** are the column names you define when you create a deck (for example `English` and `中文`). They describe what each slot in a learning item means. Field labels live on the deck only; when you add facts, you fill in **entries** in the same order—entry `0` is the first column, entry `1` the second, and so on.
+**Fields** are the column names you define when you create a deck (for example `English` and `中文`). They describe what each slot in a learning item means. Field labels live on the deck only; when you add facts, you fill in **entries** in the same order — entry `0` is the first column, entry `1` the second, and so on.
 
-A **fact** is the underlying learning content: one complete item (word pair, concept, term + definition, and so on). Facts are **not** the same as cards. A fact holds your material; the system uses it to build the cards you actually study.
+A **fact** is the underlying learning content: one complete item (word pair, concept, term + definition, and so on). Facts are **not** the same as cards. A fact holds your material; the system uses it to build the cards you study.
 
-A **card** is what you review day to day. Each card belongs to one fact, has a **front** and **back** (which entries appear on each side), and carries spaced-repetition scheduling (when it is due, whether it is hidden, and so on). By default, adding a fact creates **one** card (front = first entry, back = the rest). You can also add **sibling** cards from the same fact—for example English→中文 and 中文→English—so you practice recall in both directions.
+A **card** is what you review day to day. Each card belongs to one fact, has a **front** and **back** (which entries appear on each side), and carries spaced-repetition scheduling (when it is due, whether it is hidden, and so on). By default, adding a fact creates **one** card (front = first entry, back = the rest). The same fact can also have **sibling** cards with different layouts — for example both translation directions — when the system supports multiple templates for that content.
 
-Text, images, audio, and video are stored inside fact **entries** (not as separate “card files”). **Fields** on the deck are column names only; see [Decks](/guide/key-concepts/decks) and [Facts](/guide/key-concepts/facts).
+Text, images, audio, and video live inside fact **entries** (not as separate “card files”). **Fields** on the deck are column names only; see [Decks](/guide/key-concepts/decks) and [Facts](/guide/key-concepts/facts).
 
 ## At a glance
 
-| Concept    | Role                                                                                                               |
-| ---------- | ------------------------------------------------------------------------------------------------------------------ |
-| **Deck**   | Groups content for one topic; defines **fields** (columns) and **rate** (how many new cards to introduce per day). |
-| **Fields** | Column names on the deck; facts fill matching **entries** by position.                                             |
-| **Fact**   | The content you create and edit (entries per column, optional media).                                              |
-| **Card**   | One reviewable front/back layout for a fact, with its own schedule.                                                |
+| Concept    | Role                                                                                                                            |
+| ---------- | ------------------------------------------------------------------------------------------------------------------------------- |
+| **Deck**   | Groups content for one topic; defines **fields** (columns) and how many **new cards per day** to introduce (`rate` internally). |
+| **Fields** | Column names on the deck; facts fill matching **entries** by position.                                                          |
+| **Fact**   | The content you create and edit (entries per column, optional media).                                                           |
+| **Card**   | One reviewable front/back layout for a fact, with its own schedule.                                                             |
+| **Tags**   | Optional labels on decks and facts for organization and filtered study.                                                         |
 
 ## Relationships
 
 - One deck contains many **facts** and many **cards**.
-- One fact usually starts with **one** card; it can have **two or more** cards (siblings) when you want multiple directions or layouts from the same content.
+- One fact usually starts with **one** card; it can have **two or more** sibling cards when multiple layouts exist for the same content.
 - Every card points to exactly **one** fact in that deck.
 
 ## Typical workflow
 
-1. **Create a deck** — choose fields (columns) and set how many **new cards** to introduce per day (`rate`). Higher values introduce new material faster; lower values keep a steadier pace. New cards are spaced evenly across the day.
-2. **Add facts** — enter content for each column (and optional images or audio). The system creates card(s) for each fact.
-3. **Study** — Rete picks the most urgent due card in the deck; you see front, then back, and your rating updates the schedule.
-4. **Maintain** — edit fact entries on decks you own (imported copies keep snapshot facts read-only); delete a **fact** to remove it and all of its cards; delete a single **card** to keep the fact and any other cards for that fact.
+1. **Get a deck** — [import a shared deck from Discover](/guide/get-started/import-an-existing-deck), or [create your own](/guide/get-started/create-your-deck) with fields and a daily new-card pace.
+2. **Add or keep facts** — on decks you own, enter content for each column (and optional media). The system creates card(s) for each fact.
+3. **Study** — Rete picks the most urgent due card; you see front, show answer, rate **Hard** ↔ **Easy**, then continue. Optionally filter by [tag](/guide/key-concepts/tags).
+4. **Maintain** — edit facts on decks you own; on **imported** decks you can still tag, adjust new-card pace, hide or delete individual cards, and suggest edits as contributions. **Hide** a card to take it out of the queue without deleting the fact.
+
+## Source decks and imports
+
+A deck you **create** is yours to edit freely. When you **publish** it, others can find it in **Discover** and **import** a personal study copy pinned to that published version. Your import has its own cards and schedule — it is not a live link to the author’s working copy. See [Import an existing deck](/guide/get-started/import-an-existing-deck).
 
 ## What to read next
 
-- **[Decks](/guide/key-concepts/decks)** — containers, fields (columns), and new-cards-per-day settings.
-- **[Facts](/guide/key-concepts/facts)** — entries, media, and generating one or multiple cards.
-- **[Cards](/guide/key-concepts/cards)** — front/back structure and what you see while studying.
-- **[Tags](/guide/key-concepts/tags)** — optional labels on decks and facts for organization and filtered study.
+- **[Decks](/guide/key-concepts/decks)** — containers, fields, and new-cards-per-day settings.
+- **[Facts](/guide/key-concepts/facts)** — entries, media, and how cards are generated.
+- **[Cards](/guide/key-concepts/cards)** — front/back structure, scheduling, and hide.
+- **[Tags](/guide/key-concepts/tags)** — optional labels for organization and filtered study.
+- **[Menus and actions](/guide/get-started/menus-and-actions)** — deck ⋯, card ⋯, Edit Fact, publish, sync, and more.
 
 Once these ideas are clear, creating decks, importing or sharing published decks, and reviewing daily becomes much more predictable.

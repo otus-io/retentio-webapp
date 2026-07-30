@@ -47,6 +47,7 @@ export const guideSidebarConfig: SidebarNavItem[] = [
       { titleKey: 'guide-sidebar.import-an-existing-deck', href: '/guide/get-started/import-an-existing-deck' },
       { titleKey: 'guide-sidebar.create-your-deck', href: '/guide/get-started/create-your-deck' },
       { titleKey: 'guide-sidebar.start-studying', href: '/guide/get-started/start-studying' },
+      { titleKey: 'guide-sidebar.menus-and-actions', href: '/guide/get-started/menus-and-actions' },
     ],
   },
 ]
