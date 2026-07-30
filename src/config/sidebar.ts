@@ -20,6 +20,10 @@ export const guideSidebarConfig: SidebarNavItem[] = [
     href: '/guide',
   },
   {
+    titleKey: 'guide-sidebar.early-access',
+    href: '/guide/early-access',
+  },
+  {
     titleKey: 'guide-sidebar.background',
     items: [
       { titleKey: 'guide-sidebar.what-is-retentio', href: '/guide/background/what-is-retentio' },
@@ -40,9 +44,10 @@ export const guideSidebarConfig: SidebarNavItem[] = [
     titleKey: 'guide-sidebar.get-started',
     items: [
       { titleKey: 'guide-sidebar.login-registration', href: '/guide/get-started/login-registration' },
-      { titleKey: 'guide-sidebar.create-your-deck', href: '/guide/get-started/create-your-deck' },
       { titleKey: 'guide-sidebar.import-an-existing-deck', href: '/guide/get-started/import-an-existing-deck' },
+      { titleKey: 'guide-sidebar.create-your-deck', href: '/guide/get-started/create-your-deck' },
       { titleKey: 'guide-sidebar.start-studying', href: '/guide/get-started/start-studying' },
+      { titleKey: 'guide-sidebar.menus-and-actions', href: '/guide/get-started/menus-and-actions' },
     ],
   },
 ]

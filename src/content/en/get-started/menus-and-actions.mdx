@@ -1,0 +1,107 @@
+---
+title: Menus and actions
+description: What each main menu and action does in Rete — deck options, card options, edit fact, publish, sync, and more.
+---
+
+# Menus and actions
+
+This page explains the main **menus and buttons** in the app. For concepts, see [Key concepts](/guide/key-concepts/overview). For first-time setup, see [Get started](/guide/get-started/login-registration).
+
+**Owned** decks are ones you created. **Imported** decks come from Discover. Some actions differ between the two.
+
+## Bottom tabs
+
+| Tab          | What it is                                                     |
+| ------------ | -------------------------------------------------------------- |
+| **Decks**    | Your library — open a deck to study, create decks, manage tags |
+| **Discover** | Public catalog — search, favorite, import shared decks         |
+| **Profile**  | Account settings (language, theme, logout, email verification) |
+
+## Decks list
+
+On **Decks**:
+
+- **Create Deck** (floating button) — opens the create sheet (name, fields, tags, new cards per day)
+- **Tags** (app bar) — opens your tag library (**Manage tags**)
+- Tap a **deck card** — opens study for that deck
+- **Publish Deck** / **Publish updates** (share icon on owned decks) — publish or republish to Discover
+- **Check updates** (refresh icon on imported decks) — see and sync author updates
+
+## Deck options (⋯ while studying)
+
+Open a deck, then use the deck **⋯** menu (**Deck options**):
+
+| Action                   | What it does                                                                    | Owned                   | Imported                                            |
+| ------------------------ | ------------------------------------------------------------------------------- | ----------------------- | --------------------------------------------------- |
+| **Font**                 | Adjust front/back text and ruby size for this deck                              | Yes                     | Yes                                                 |
+| **Add fact**             | Open **Add fact** to create a new learning item (entries + optional media/tags) | Saves to the deck       | Saves locally and stages an **Unsent contribution** |
+| **Edit Deck**            | Change rate, tags; on owned decks also name and fields                          | Full edit               | Name/fields locked; rate and tags only              |
+| **Publish Deck**         | Publish the deck to Discover                                                    | Yes                     | Hidden                                              |
+| **Contributions**        | Review suggested edits and reports from importers                               | Yes (published sources) | Hidden                                              |
+| **Unsent contributions** | Review local changes ready to send to the author                                | Hidden                  | Yes                                                 |
+| **Check updates**        | Compare your import to the latest publish                                       | Hidden                  | Yes                                                 |
+| **Delete Deck**          | Permanently delete the deck and all of its cards and facts                      | Yes                     | Yes                                                 |
+
+## Card options (⋯ on a card)
+
+While studying, open the card **⋯** menu:
+
+| Action           | What it does                                                        | Owned             | Imported                                            |
+| ---------------- | ------------------------------------------------------------------- | ----------------- | --------------------------------------------------- |
+| **Hide Card**    | Skip this card in the queue without deleting the fact               | Yes               | Yes                                                 |
+| **Edit Fact**    | Open **Edit Fact** to change entries, media, and tags               | Saves to the deck | Saves locally and stages an **Unsent contribution** |
+| **Report issue** | Flag a problem (audio, content, or other) to the author             | Hidden            | Sent immediately                                    |
+| **Delete Card**  | Remove **only this card**; the fact and any other cards for it stay | Yes               | Yes                                                 |
+
+### Edit Fact
+
+**Edit Fact** opens a full sheet for the current card’s fact:
+
+- Edit each **entry** (text and media: image, video, audio)
+- **Add tag** / remove tags on the fact
+- **Save fact** — on owned decks this updates the source; on imported decks it updates your local copy and adds a pending contribution you can send later
+
+**Add fact** (from the deck menu) uses the same kind of sheet for a **new** row.
+
+## Studying controls
+
+During review (see also [Start studying](/guide/get-started/start-studying)):
+
+- Tag chips / **Study by tag** — narrow which cards are due
+- **Show Answer** — reveal the back
+- **Hard** ↔ **Easy** slider — choose the next interval
+- **Next** — save the rating and load the next card
+- **Review Again** — restart after **All Caught Up!**
+
+## Publishing, sync, and contributions
+
+| Flow                                   | Where                  | Purpose                                                                            |
+| -------------------------------------- | ---------------------- | ---------------------------------------------------------------------------------- |
+| **Publish Deck** / **Publish updates** | Deck list or deck ⋯    | Make your deck available in Discover (or push new versions)                        |
+| **Check updates** / **Sync now**       | Imported deck          | Pull author changes; you can accept or reject per-fact edits                       |
+| **Contributions**                      | Owned published deck ⋯ | Accept, dismiss, or resolve importer suggestions and reports                       |
+| **Unsent contributions**               | Imported deck ⋯        | Send staged fact edits, new facts, and tag changes to the author — or dismiss them |
+
+Details: [Import an existing deck](/guide/get-started/import-an-existing-deck).
+
+## Tags
+
+- **Manage tags** (Decks app bar) — create, edit, delete tags; browse facts under a tag
+- **Add tag** on create/edit deck or add/edit fact — pick or create tags for that deck or fact
+- Study filters use fact tags **in the current deck** only
+
+See [Tags](/guide/key-concepts/tags).
+
+## Discover
+
+On **Discover**:
+
+- Search and filters (**Latest**, **Favorites**)
+- Heart — favorite/unfavorite a catalog deck
+- Open a deck → **Import**, then **Go study**
+
+See [Import an existing deck](/guide/get-started/import-an-existing-deck).
+
+## Summary
+
+Use the **deck ⋯** menu for add/edit deck, publish, sync, and contributions; use the **card ⋯** menu for **Edit Fact**, hide, delete, and report. Owned decks save changes directly; imported decks stage most content edits as contributions to the author.

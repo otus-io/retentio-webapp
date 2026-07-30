@@ -200,6 +200,7 @@
   "guide-sidebar": {
     "menu": "Menu",
     "guide": "Guide",
+    "early-access": "Early access",
     
     "background": "Background",
     "what-is-retentio": "What is Rete",
@@ -216,6 +217,7 @@
     "get-started": "Get Started",
     "create-your-deck": "Create your deck",
     "start-studying": "Start studying",
+    "menus-and-actions": "Menus and actions",
     
     "adding-editing": "Adding / Editing",
     "create-decks": "Create Decks",

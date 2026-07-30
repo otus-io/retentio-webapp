@@ -1,32 +1,37 @@
 ---
 title: Decks
+description: Decks as study containers — fields (columns), new cards per day, and how imports differ from decks you own.
 ---
 
 # Decks
 
-## Decks
+Decks are one of the fundamental units used to organize learning content in Rete. A deck is a learning container for a specific topic, domain, or goal. It holds your **facts** (the content) and **cards** (what you review), together with settings that control structure and pace.
 
-Decks are one of the fundamental units used to organize learning content in Rete. You can think of a deck as a learning container for a specific topic, domain, or learning goal. It holds your **facts** (the content you enter) and the **cards** (what you review), together with settings that control how that deck is structured and paced.
-
-In most cases, each deck should focus on a single area of knowledge. For example, it may be used to organize vocabulary for a language, key concepts from a subject, or a set of professional terms. By grouping related content into the same deck, you can manage study materials more clearly and build a structured knowledge system over time.
+In most cases, each deck should focus on a single area of knowledge — vocabulary for a language, key concepts from a subject, or a set of professional terms. Grouping related content makes materials easier to manage and builds a clearer knowledge system over time.
 
 ## Fields
 
 When you create or edit a deck, you define **fields**: the column names for that deck (for example `English`, `中文`, `Example Sentence`, or `Note`). Fields describe what each column means and how labels appear when you edit facts and review cards.
 
-Fields do **not** hold study material—only names and order. Renaming or reordering fields changes the deck’s schema; fact **entries** still line up by position (entry `0` is always the first column, entry `1` the second, and so on).
+Fields do **not** hold study material — only names and order. Renaming or reordering fields changes the deck’s schema; fact **entries** still line up by position (entry `0` is always the first column, entry `1` the second, and so on).
 
-A deck can have one column or many. Choose names that match how you think about the topic so facts and cards stay easy to manage later.
+In the app, a deck starts with **two** columns and keeps at least two. Choose names that match how you think about the topic so facts and cards stay easy to manage later.
 
 ## New cards per day
 
-When you create a deck, you also set how many **new cards** to introduce each day (called **rate** in the API). This controls how quickly brand-new cards enter your study queue—not how many total reviews you do per day.
+When you create a deck, you also set how many **new cards** to introduce each day (shown as **cards per day** in the app; stored as **rate**). This controls how quickly brand-new cards enter your study queue — not how many total reviews you do per day. Allowed values are **1–1000** (the app often defaults around **30**).
 
-- A **higher** rate introduces new material faster.
-- A **lower** rate keeps a steadier, gentler pace.
+- A **higher** value introduces new material faster.
+- A **lower** value keeps a steadier, gentler pace.
 
-Rete spaces new cards evenly across the day. For example, a rate of 20 means roughly one new card every 72 minutes; a rate of 10 means about one every 144 minutes.
+Rete spaces new cards evenly across the day. For example, 20 new cards per day means roughly one new card every 72 minutes; 10 means about one every 144 minutes.
+
+## Decks you own vs imports
+
+On a deck you **created**, you can change name, fields, rate, tags, and facts freely, and you can **publish** it so others find it in Discover.
+
+On a deck you **imported**, the published **name** and **fields** follow the snapshot. You can still change **new cards per day**, add your own **tags**, study, hide or delete cards, and sync when the author publishes updates. See [Import an existing deck](/guide/get-started/import-an-existing-deck) and [Menus and actions](/guide/get-started/menus-and-actions).
 
 ## Summary
 
-A deck groups one topic’s facts and cards, defines column **fields**, and sets your daily **new-card** pace. Clear decks and field layouts make the rest of Rete—adding facts, generating cards, and reviewing—more predictable and efficient.
+A deck groups one topic’s facts and cards, defines column **fields**, and sets your daily **new-card** pace. Clear decks and field layouts make adding facts, generating cards, and reviewing more predictable.
