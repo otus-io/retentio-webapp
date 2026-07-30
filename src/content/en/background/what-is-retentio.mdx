@@ -6,11 +6,23 @@ title: What is Rete
 
 AI is reshaping how we learn — how material is created, explained, and practiced. The goal is not speed for its own sake, but more efficient learning: long-term retention, genuine understanding, and study time spent on what actually needs review. Richer context per card, less time on manual authoring, and review that connects what you learn to how it is used — Rete is built for that shift.
 
-Rete — from the Latin <em>retentio</em>, meaning retention or the act of holding what you have learned in memory — is a collaborative learning platform built on **spaced repetition**. It follows how the brain works: well-timed review moves knowledge from short-term into long-term memory. Anyone can create a deck, share it, and invite others to contribute — adding cards, fixing errors, refining wording, and keeping content current as a subject evolves.
+Rete (/ˈriːti/) — from the Latin <em>retentio</em>, meaning retention or the act of holding what you have learned in memory — is a collaborative learning platform built on **spaced repetition**. It follows how the brain works: well-timed review moves knowledge from short-term into long-term memory. Anyone can create a deck, share it, and invite others to contribute — adding cards, fixing errors, refining wording, and keeping content current as a subject evolves.
 
 Three goals shape the platform: a **community** where learners share study materials and improve them together; a **living library** of high-quality decks that stays sharp because the people who know each subject keep contributing; and **knowledge unlocked from experienced learners** — educators, practitioners, and advanced students turning years of expertise into decks anyone can study.
 
 Rete is built for learners who need durable long-term retention — language vocabulary, medical and professional terminology, exam preparation, and ongoing knowledge building — without the friction that often comes with legacy spaced-repetition tools. At its core, you review each item when it is due; intervals grow longer when you remember easily and shorten when you struggle. You focus on answering; Rete handles the scheduling.
+
+## What is spaced repetition
+
+Spaced repetition works through four ideas:
+
+**Priority.** Put study time where it helps most. Imagine a deck of 2,000 vocabulary words: each review shows the word on the front and the translation on the back; you rate how hard it felt on a scale from 1 to 10. Easy cards are pushed toward the back of the queue — you see them less often — while hard cards stay near the front and return sooner.
+
+**Scheduling.** The system — not you — decides what is due today. You focus on answering; intervals and queues stay sustainable as the deck grows, instead of becoming an ever-growing backlog you have to plan by hand.
+
+**Timing.** Recall each card after longer and longer gaps, just as the memory would otherwise fade. Review too soon and you waste effort on what you already know; wait too long and you forget and start over. Well-spaced recall builds durable retention with the least total review time.
+
+**Tracking.** Every rating becomes history: which cards you know, which ones keep slipping, and how your recall changes over weeks and months. Without that record, priority and timing have nothing to adapt to.
 
 ## Why We Built Rete
 
@@ -22,7 +34,7 @@ After trying several popular SRS apps, a familiar pattern kept appearing.
 
 **Many products had drifted toward engagement over learning.** As apps commercialized, streaks, hearts, notifications, and gamification often mattered more than whether you actually remembered what you studied. Metrics that keep people opening the app are not the same as metrics that build durable memory — yet product design increasingly favored the former.
 
-**Shared decks were often poor quality.** Material found online was full of typos, outdated facts, and cards that tested the wrong thing. Good intentions did not make up for sloppy content — and bad cards waste review time just as surely as a bad algorithm.
+**Shared decks were often poor quality.** Material found online was full of typos, outdated facts, cards that tested the wrong thing, weak or missing audio (wrong pronunciation, muffled or robotic speech), and bare word pairs with no example sentences to build context. Good intentions did not make up for sloppy content — and bad cards waste review time just as surely as a bad algorithm.
 
 **The problem with rote learning.** Rote learning — memorizing through repetition without understanding — is common in education, yet memorizing facts is not the same as learning. When learners recall isolated answers (dates, formulas, vocabulary lists) without grasping causes, usage, or connections, retention stays shallow and fades soon after exams; critical thinking and the ability to apply knowledge in new situations suffer. A familiar example is memorizing foreign vocabulary without being able to form meaningful sentences. ([The Human Project Foundation](https://www.thehumanprojectfoundation.org/blog/the-problem-with-rote-learning-are-we-memorizing-instead-of-understanding))
 
@@ -32,7 +44,7 @@ Rete was built in response: **intuitive design** so you can start reviewing with
 
 ### Decks and flashcard learning
 
-Users create and organize decks of flashcards — questions and answers, definitions, terms, example sentences, and other structured formats — and study through spaced review sessions. See [Key concepts](/guide/key-concepts/overview) for how decks, facts, fields, and cards fit together.
+Users create and organize decks of flashcards — questions and answers, definitions, terms, example sentences, and other structured formats — and study through spaced review sessions. The point of each card is **active recall**: the front asks you to retrieve the answer, not reread it. Strong decks keep cards atomic — one clear idea per card — and favor context and production (usage, sentences) over bare recognition. See [Key concepts](/guide/key-concepts/overview) for how decks, facts, fields, and cards fit together.
 
 ### Collaborative deck building
 
@@ -45,13 +57,14 @@ Scheduling is grounded in the spacing effect and the forgetting curve: retention
 - **Sustainable review load** — intervals stay manageable as decks grow, without snowballing daily queues.
 - **Simple from day one** — no add-on ecosystem or configuration rabbit holes.
 - **Adaptive to how you recall** — each card’s next due date reflects your actual performance on that item.
+- **Desirable difficulty** — a bit of struggle before you succeed is useful; intervals aim for that window, not effortless rereads or endless failures.
 - **Adjustable daily rate** — set how many new cards you introduce each day to control your learning pace.
 
-After each review: if you remembered easily, the interval increases; if you struggled or failed, it shortens or resets.
+After each review: if you remembered easily, the interval increases; if you struggled or failed, it shortens or resets. Cards that keep failing (leeches) can be surfaced early so you rewrite, split, or suspend them instead of looping forever.
 
 ### Learning progress tracking
 
-The platform records study sessions, review completion, and mastery status so learners can see progress over time and keep a steady daily rhythm instead of last-minute cramming.
+The platform records study sessions, review completion, and mastery status so learners can see progress over time and keep a steady daily rhythm — small consistent reviews beat weekend cram sessions of hundreds of cards.
 
 ### AI integration
 
@@ -61,8 +74,8 @@ AI plugs into spaced repetition at several points — not only to generate cards
 - **Richer context per card** — AI can auto-generate examples, mnemonics, or alternate phrasings so a single fact is reinforced from multiple angles.
 - **Better source material, less manual curation** — auto-summarization and card generation from dense material means higher-quality decks with less authoring effort.
 - **Quality and imports** — flag vague, ambiguous, or duplicate cards; normalize messy imported decks into a clean, consistent structure.
+- **Periodic LLM quality checks** — the most advanced large language models periodically audit deck content for translation accuracy and audio quality, so shared decks stay reliable as they grow.
 - **Adaptive review** — personalize scheduling from your review history, surface likely leeches early, and accept semantically correct free-text answers — not just exact string matches.
-- **Help on a miss** — generate a short explanation, example sentence, or follow-up in context when you get something wrong, instead of showing only a static back-of-card answer.
 
 See [AI-Assisted Deck Quality](#ai-assisted-deck-quality) for how Rete uses AI to audit published decks today.
 
