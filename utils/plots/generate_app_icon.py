@@ -1,6 +1,6 @@
-"""Generate the Rete app icon: blue graduation-cap outline on a soft squircle.
+"""Generate the Rete app icon: blue graduation-cap outline on a soft circle.
 
-Recreates the reference mark (pastel diagonal gradient rounded square + centered
+Recreates the reference mark (pastel diagonal gradient circle + centered
 line-art mortarboard). Writes SVG by default; also PNG when Pillow is available
 (or via rsvg-convert if installed).
 
@@ -20,15 +20,15 @@ DEFAULT_PNG = os.path.join(HERE, "rete_app_icon.png")
 
 # Canvas (iOS / Play Store master size)
 SIZE = 1024
-# Squircle corner radius ~22% of side (app-icon feel)
-RADIUS = 224
+# Cap diamond half-width as a fraction of canvas (tighter = larger).
+CAP_SCALE = 0.36
 
 # Soft diagonal fill (top-left lavender -> bottom-right mint), sampled from ref
 GRAD_TL = (230, 233, 247)  # #E6E9F7
 GRAD_BR = (220, 240, 236)  # #DCF0EC
 # Cap stroke
 STROKE = (37, 99, 235)  # #2563EB
-STROKE_W = 42  # px at SIZE=1024
+STROKE_W = 58  # px at SIZE=1024
 
 
 def _hex(rgb: tuple[int, int, int]) -> str:
@@ -58,7 +58,8 @@ def _cap_geometry(cx: float, cy: float, scale: float):
     base_bottom = (cx, base_top + base_depth)
 
     # Tassel from the right tip: drop + short outward tick
-    drop = scale * 0.78
+    # Slightly shorter drop keeps the mark inside a tight circular crop.
+    drop = scale * 0.62
     tick = scale * 0.14
     tassel = [right, (right[0], right[1] + drop), (right[0] + tick, right[1] + drop)]
 
@@ -101,13 +102,12 @@ def _tassel_d(pts) -> str:
 
 def compose_svg(size: int = SIZE) -> str:
     cx = cy = size / 2
-    # Cap half-width ~19% of canvas -> full width ~38%
-    scale = size * 0.19
-    cy -= size * 0.015  # optical vertical center
+    scale = size * CAP_SCALE
+    cy -= size * 0.01  # optical vertical center
     diamond, bl, br, bb, tassel = _cap_geometry(cx, cy, scale)
     stroke = _hex(STROKE)
     sw = STROKE_W * (size / SIZE)
-    r = RADIUS * (size / SIZE)
+    r = size / 2
 
     return f'''<?xml version="1.0" encoding="utf-8"?>
 <svg xmlns="http://www.w3.org/2000/svg" width="{size}" height="{size}" viewBox="0 0 {size} {size}">
@@ -117,7 +117,7 @@ def compose_svg(size: int = SIZE) -> str:
       <stop offset="1" stop-color="{_hex(GRAD_BR)}"/>
     </linearGradient>
   </defs>
-  <rect width="{size}" height="{size}" rx="{r:.0f}" ry="{r:.0f}" fill="url(#bg)"/>
+  <circle cx="{r:.0f}" cy="{r:.0f}" r="{r:.0f}" fill="url(#bg)"/>
   <g fill="none" stroke="{stroke}" stroke-width="{sw:.1f}"
      stroke-linecap="round" stroke-linejoin="round">
     <path d="{_diamond_d(diamond)}"/>
@@ -166,11 +166,8 @@ def write_png(path: str, size: int = SIZE) -> None:
         pass
 
     img = Image.new("RGBA", (size, size), (0, 0, 0, 0))
-    r = int(RADIUS * (size / SIZE))
     mask = Image.new("L", (size, size), 0)
-    ImageDraw.Draw(mask).rounded_rectangle(
-        [0, 0, size - 1, size - 1], radius=r, fill=255
-    )
+    ImageDraw.Draw(mask).ellipse([0, 0, size - 1, size - 1], fill=255)
     denom = max(size * 2 - 2, 1)
     px = img.load()
     for y in range(size):
@@ -187,8 +184,8 @@ def write_png(path: str, size: int = SIZE) -> None:
     antialias = 4
     render_size = size * antialias
     cx = cy = render_size / 2
-    scale = render_size * 0.19
-    cy -= render_size * 0.015
+    scale = render_size * CAP_SCALE
+    cy -= render_size * 0.01
     diamond, bl, br, bb, tassel = _cap_geometry(cx, cy, scale)
     sw = max(1, round(STROKE_W * (render_size / SIZE)))
     overlay = Image.new("RGBA", (render_size, render_size), (0, 0, 0, 0))
