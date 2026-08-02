@@ -162,12 +162,20 @@ def write_png(path: str, size: int = SIZE) -> None:
         cairosvg.svg2png(bytestring=compose_svg(size).encode("utf-8"),
                          write_to=path, output_width=size, output_height=size)
         return
-    except Exception:
+    except ImportError:
         pass
 
+    # Pillow does not antialias ImageDraw paths. Draw the circle mask and line
+    # art at 4x and downsample so edges stay smooth.
+    antialias = 4
+    render_size = size * antialias
+
     img = Image.new("RGBA", (size, size), (0, 0, 0, 0))
-    mask = Image.new("L", (size, size), 0)
-    ImageDraw.Draw(mask).ellipse([0, 0, size - 1, size - 1], fill=255)
+    mask_hires = Image.new("L", (render_size, render_size), 0)
+    ImageDraw.Draw(mask_hires).ellipse(
+        [0, 0, render_size - 1, render_size - 1], fill=255
+    )
+    mask = mask_hires.resize((size, size), Image.Resampling.LANCZOS)
     denom = max(size * 2 - 2, 1)
     px = img.load()
     for y in range(size):
@@ -179,10 +187,6 @@ def write_png(path: str, size: int = SIZE) -> None:
             px[x, y] = (*rgb, 255)
     img.putalpha(mask)
 
-    # Pillow does not antialias ImageDraw paths. Draw the line art at 4x and
-    # downsample it so curved strokes (especially the cap base) stay smooth.
-    antialias = 4
-    render_size = size * antialias
     cx = cy = render_size / 2
     scale = render_size * CAP_SCALE
     cy -= render_size * 0.01
