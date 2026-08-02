@@ -34,7 +34,7 @@ export default function TopNav({ user }: TopNavProps) {
             <AppLogo />
             {/* Desktop nav menu */}
             {mainNav.length > 0 && (
-              <ul className="hidden md:flex gap-2 items-center">
+              <ul className="hidden md:flex gap-2 items-center translate-y-2">
                 {mainNav.map((item) => (
                   <li key={item.href}>
                     <AppButtonLink
@@ -49,7 +49,7 @@ export default function TopNav({ user }: TopNavProps) {
               </ul>
             )}
           </div>
-          <div className="flex-1 flex justify-end items-center gap-2">
+          <div className="flex-1 flex justify-end items-center gap-2 translate-y-2">
             {guideItem && (
               <AppButtonLink
                 href={guideItem.href}

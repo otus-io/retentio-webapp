@@ -47,3 +47,4 @@ next-env.d.ts
 # playwright auth state
 e2e/.auth-state.json
 tests/e2e/.auth-state.json
+.venv/
