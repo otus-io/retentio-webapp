@@ -49,7 +49,7 @@ export default function TopNav({ user }: TopNavProps) {
               </ul>
             )}
           </div>
-          <div className="flex-1 flex justify-end items-center gap-2">
+          <div className="flex-1 flex justify-end items-center gap-2 translate-y-2">
             {guideItem && (
               <AppButtonLink
                 href={guideItem.href}
