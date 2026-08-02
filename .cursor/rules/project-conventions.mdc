@@ -20,7 +20,7 @@ Production Next.js web app: marketing, auth, dashboard/library, MDX user guide. 
 
 - **TypeScript/React**: ESLint (`pnpm lint:ci`), Prettier via lint-staged
 - Prefer clear naming; comments only for non-obvious logic
-- User-visible strings in `src/i18n/locales/` (en + zh) — no hardcoded copy in components
+- User-visible strings in `src/i18n/locales/` (en + zh + ja) — no hardcoded copy in components
 
 ## Documentation
 

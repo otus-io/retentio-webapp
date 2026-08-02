@@ -1,0 +1,264 @@
+{
+  "nav": {
+    "home": "ホーム",
+    "dashboard": "ダッシュボード",
+    "guide": "ガイド"
+  },
+  "profile": {
+    "title": "プロフィール",
+    "username": "ユーザー名",
+    "email": "メールアドレス",
+    "memberSince": "登録日"
+  },
+  "theme": {
+    "light": "ライト",
+    "dark": "ダーク",
+    "system": "システム"
+  },
+  "home": {
+    "hero": {
+      "title": "千里の道も一歩から",
+      "titleHighlight": "",
+      "subtitle": "デッキの作成と改善のための協働プラットフォーム——新しい SRS スケジューリングアルゴリズム、AI による品質チェック、適応的な復習を搭載。",
+      "cta": "TestFlight に参加",
+      "learnMore": "詳しく見る",
+      "appPreview": "アプリのプレビュー"
+    },
+    "about": {
+      "title": "Rete について",
+      "description": "Rete は間隔反復の科学に基づくスマートなフラッシュカードアプリです。復習スケジュールを最適化し、より短い時間でより多く覚えられるようにします。語学学習、試験対策、新しいスキルの習得など、あなたの記憶パターンに合わせて最大の効率を引き出します。"
+    },
+    "features": {
+      "sectionTitle": "Rete を選ぶ理由",
+      "community": {
+        "title": "コミュニティデッキ",
+        "description": "デッキを一緒に作成・共有・改善——品質は古くなるのではなく、時間とともに積み上がります。"
+      },
+      "algorithm": {
+        "title": "新しいアルゴリズム",
+        "description": "従来の SRS の課題——高い導入ハードル、雪だるま式に増える復習の滞留、すべてのカードに同じ忘却曲線を当てはめる点——に取り組むスケジューリングです。"
+      },
+      "ui": {
+        "title": "直感的なデザイン",
+        "description": "直感的でクリーンなモダン UI で、学習を負担にせず、楽しみに。"
+      },
+      "ai": {
+        "title": "AI による品質チェック",
+        "description": "AI がデッキの正確さと明瞭さをレビュー——変更が公開される前に人の確認が入ります。"
+      }
+    },
+    "howItWorks": {
+      "sectionTitle": "仕組み",
+      "step1": {
+        "title": "デッキを作成またはインポート",
+        "description": "ゼロからデッキを作るか、コミュニティから既存のデッキをインポートします。"
+      },
+      "step2": {
+        "title": "学習習慣を築く",
+        "description": "無理のない1日分の復習をこなし、安定したリズムを保つ——詰め込みではなく、続けられる学習を。"
+      },
+      "step3": {
+        "title": "進捗を追跡",
+        "description": "詳細な統計と進捗トラッキングで、知識の積み上がりを確認できます。"
+      },
+      "readMore": "科学的な背景をもっと知る"
+    },
+    "cta": {
+      "title": "今日から学習を始めよう",
+      "subtitle": "すでに Rete を使っている何千人もの学習者に加わり、より多く、より長く覚えましょう。",
+      "button": "Apple iOS",
+      "androidButton": "Google Android",
+      "note": "iOS は TestFlight ベータで利用できます。Android は Google Play の内部テストで提供しています。"
+    }
+  },
+  "error": {
+    "not-find": "リソースが見つかりません",
+    "not-find-desc": "お探しのページは存在しません。<br></br><back>前のページに戻る</back>、または<home>ホーム</home>に戻ってください。",
+    "unauthorized": "未認可のアクセス",
+    "forbidden": "アクセスが拒否されました",
+    "title": "問題が発生しました"
+  },
+  "footer": {
+    "tagline": "より多く、より長く覚える。",
+    "privacy": "プライバシー",
+    "terms": "利用規約",
+    "contact": "お問い合わせ"
+  },
+  "contact": {
+    "title": "お問い合わせ",
+    "description": "ご質問、フィードバック、研究に関するお問い合わせも歓迎します。",
+    "emailLabel": "メールアドレス",
+    "emailHint": "通常、数営業日以内にご返信します。"
+  },
+  "legal": {
+    "lastUpdated": "最終更新"
+  },
+  "content": {
+    "previous": "前へ",
+    "next": "次へ",
+    "fallback-notice": "このドキュメントは現在の言語では利用できません。英語版を表示しています。"
+  },
+  "search": {
+    "placeholder": "何を検索しますか？",
+    "noResults": "結果が見つかりません。",
+    "escHint": "ESC"
+  },
+  "dashboard": {
+    "welcome": "おかえりなさい、{name}",
+    "title": "学習進捗の概要です。",
+    "totalDecks": "デッキ数",
+    "totalCards": "カード数",
+    "dueToday": "今日の要復習",
+    "streak": "連続学習日数",
+    "recentDecks": "最近のデッキ",
+    "cards": "{count} 枚のカード",
+    "due": "要復習 {count}枚"
+  },
+  "auth": {
+    "loginTitle": "ログイン",
+    "registerTitle": "登録",
+    "loginDescription": "アカウントにサインイン",
+    "registerDescription": "新しいアカウントを作成",
+    "usernameLabel": "ユーザー名",
+    "usernamePlaceholder": "ユーザー名を入力",
+    "emailLabel": "メールアドレス",
+    "emailPlaceholder": "メールアドレスを入力",
+    "passwordLabel": "パスワード",
+    "passwordPlaceholder": "パスワードを入力",
+    "confirmPasswordLabel": "パスワード（確認）",
+    "confirmPasswordPlaceholder": "パスワードをもう一度入力",
+    "passwordsMismatch": "パスワードが一致しません",
+    "usernameInvalid": "ユーザー名は小文字の英数字のみで、先頭は英字である必要があります",
+    "loginButton": "ログイン",
+    "registerButton": "登録",
+    "noAccount": "アカウントをお持ちではありませんか？",
+    "goRegister": "登録",
+    "goLogin": "ログイン",
+    "termsWarning": "利用規約とプライバシーポリシーに同意してください",
+    "termsAgree": "以下に同意します",
+    "termsOfService": "利用規約",
+    "termsAnd": "および",
+    "privacyPolicy": "プライバシーポリシー",
+    "forgotPassword": "パスワードをお忘れですか？",
+    "forgotPasswordTitle": "パスワードを忘れた場合",
+    "forgotPasswordDescription": "アカウントのメールアドレスを入力すると、存在する場合にリセットリンクを送信します。",
+    "forgotPasswordButton": "リセットリンクを送信",
+    "forgotPasswordSent": "アカウントが存在する場合、リセットリンクを送信しました。",
+    "resetPasswordTitle": "新しいパスワードを設定",
+    "resetPasswordDescription": "アカウントの新しいパスワードを設定してください。",
+    "resetPasswordButton": "パスワードをリセット",
+    "resetPasswordMissingToken": "リセットリンクがないか、無効です。",
+    "requestNewResetLink": "新しいリセットリンクを再送する",
+    "verifyEmailTitle": "メールアドレスを確認",
+    "verifyEmailDescription": "このアカウントのメールアドレスを確認します。",
+    "verifyEmailPending": "メールアドレスを確認しています…",
+    "verifyEmailSuccess": "メールアドレスの確認が完了しました。",
+    "verifyEmailMissingToken": "確認リンクがないか、無効です。",
+    "verifyEmailFailed": "メールアドレスを確認できませんでした。もう一度お試しください。",
+    "verifyEmailRetry": "再試行"
+  },
+  "tags": {
+    "select-placeholder": "タグを選択",
+    "search-placeholder": "タグを検索...",
+    "empty": "タグがありません。右上の + をタップして作成してください。"
+  },
+  "common": {
+    "login": "ログイン",
+    "logout": "ログアウト",
+    "logout-confirm": "ログアウトしますか？",
+    "no-data": "データがありません",
+    "search": "検索",
+    "delete": "削除",
+    "edit": "編集",
+    "detail": "詳細",
+    "tips": "ヒント",
+    "delete-confirm-multiple": "{count}件を削除しようとしています。よろしいですか？この操作は取り消せません。",
+    "delete-confirm-single": "削除してよろしいですか？この操作は取り消せません。",
+    "confirm": "確認",
+    "cancel": "キャンセル",
+    "remove": "外す",
+    "submit": "送信",
+    "add": "{name}を追加",
+    "create": "{name}を作成",
+    "update": "{name}を更新",
+    "created-at": "作成日時",
+    "updated-at": "更新日時",
+    "all": "すべての{name}（{count}）",
+    "actions": "操作",
+    "what-is": "{name}とは？",
+    "manage": "{name}を管理する",
+    "placeholder-enter": "{name}を入力してください",
+    "save": "保存",
+    "reset": "リセット",
+    "sync": "同期",
+    "upload": "アップロード",
+    "close": "閉じる",
+    "continue": "続ける",
+    "preview": "{name}プレビュー",
+    "no-attached": "{name}が添付されていません"
+  },
+  "guide-sidebar": {
+    "menu": "メニュー",
+    "guide": "ガイド",
+    "early-access": "先行体験",
+    "background": "背景",
+    "what-is-retentio": "Rete とは",
+    "read-more": "私たちの研究",
+    "key-concepts": "主要概念",
+    "overview": "概要",
+    "decks": "デッキ",
+    "facts": "項目",
+    "cards": "カード",
+    "tags": "タグ",
+    "login-registration": "ログイン・登録",
+    "get-started": "はじめに",
+    "create-your-deck": "デッキを作成",
+    "start-studying": "学習を開始",
+    "menus-and-actions": "メニューと操作",
+    "adding-editing": "追加 / 編集",
+    "create-decks": "デッキを作成",
+    "deck-name": "デッキ名",
+    "add-fields": "フィールドを追加",
+    "frequency-of-introduce-a-new-card": "新しいカードの導入頻度",
+    "edit-decks": "デッキを編集",
+    "delete-decks": "デッキを削除",
+    "add-facts": "項目を追加",
+    "edit-facts": "項目を編集",
+    "hide-cards-delete-cards": "カードの非表示 / 削除",
+    "importing": "インポート",
+    "import-an-existing-deck": "既存のデッキをインポート",
+    "supported-format": "対応フォーマット",
+    "profile": "プロフィール",
+    "avatar-and-username": "アバターとユーザー名",
+    "change-language": "言語を変更",
+    "change-theme": "テーマを変更",
+    "logout": "ログアウト"
+  },
+  "term": {
+    "decks": "デッキ",
+    "facts": "項目",
+    "name": "名前",
+    "due": "要復習",
+    "progress": "進捗",
+    "fields": "フィールド",
+    "field": "フィールド",
+    "rate": "ペース",
+    "cards": "カード",
+    "unseen": "未学習",
+    "reviewed": "復習済み",
+    "hidden": "非表示",
+    "new-today": "本日の新規",
+    "last-review": "前回の復習",
+    "tags": "タグ",
+    "description": "説明",
+    "column": "列",
+    "row": "行",
+    "entry": "エントリ",
+    "entries": "エントリ",
+    "audio": "音声",
+    "image": "画像",
+    "video": "動画",
+    "attachment": "添付",
+    "never": "未復習"
+  }
+}

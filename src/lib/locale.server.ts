@@ -1,7 +1,7 @@
 'use server'
 import { cookies } from 'next/headers'
 
-const localeNames = ['en', 'zh'] as const
+const localeNames = ['en', 'zh', 'ja'] as const
 
 export type Locale = (typeof localeNames)[number]
 

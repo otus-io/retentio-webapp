@@ -10,7 +10,7 @@ alwaysApply: false
 
 - **Framework**: Next.js 16 App Router, React 19
 - **UI**: HeroUI (`@heroui/react`), Tailwind CSS 4 (`@tailwindcss/postcss`)
-- **i18n**: next-intl — strings in `src/i18n/locales/{en,zh}.json`; locale via `locale` cookie (not URL prefix)
+- **i18n**: next-intl — strings in `src/i18n/locales/{en,zh,ja}.json`; locale via `locale` cookie (not URL prefix)
 - **Guide**: MDX in `src/content/{en,zh}/`; search index via `pnpm generate:md`
 - **API**: `src/utils/request.ts` + thin clients in `src/api/`; domain logic in `src/modules/`
 - **Auth**: JWT in HTTP-only cookie `retentio_token`
@@ -36,7 +36,7 @@ src/
 - Prefer **Server Components** by default; add `"use client"` only when needed (hooks, browser APIs, interactivity).
 - Server actions and services live under `src/modules/<domain>/`.
 - Use shared `AppButton`, `AppInput`, etc. from `src/components/app/` — match existing HeroUI usage.
-- All user-visible strings through next-intl — update **both** `en.json` and `zh.json`.
+- All user-visible strings through next-intl — update **en.json**, **zh.json**, and **ja.json**.
 - Do not edit generated `public/search-index/` — run `pnpm generate:md` after MDX changes.
 
 ## Checks before commit

@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import en from '@/i18n/locales/en.json'
 import zh from '@/i18n/locales/zh.json'
+import ja from '@/i18n/locales/ja.json'
 
 function deepKeys(obj: Record<string, unknown>, prefix = ''): string[] {
   const keys: string[] = []
@@ -17,29 +18,38 @@ function deepKeys(obj: Record<string, unknown>, prefix = ''): string[] {
 }
 
 describe('i18n locale key consistency', () => {
-  const enKeys = new Set(deepKeys(en))
-  const zhKeys = new Set(deepKeys(zh))
+  const locales = { en, zh, ja } as const
+  const keysByLocale = Object.fromEntries(
+    Object.entries(locales).map(([name, messages]) => [name, new Set(deepKeys(messages))]),
+  ) as Record<keyof typeof locales, Set<string>>
 
-  it('两个 locale 的 key 路径完全一致', () => {
-    const onlyInEn = [...enKeys].filter((k) => !zhKeys.has(k)).sort()
-    const onlyInZh = [...zhKeys].filter((k) => !enKeys.has(k)).sort()
+  const reference = keysByLocale.en
 
+  it('すべての locale の key パスが完全に一致する', () => {
     const diffs: string[] = []
-    if (onlyInEn.length > 0) {
-      diffs.push(`仅在 en.json 中存在: ${onlyInEn.join(', ')}`)
+    for (const [name, keys] of Object.entries(keysByLocale)) {
+      if (name === 'en') continue
+      const onlyInEn = [...reference].filter((k) => !keys.has(k)).sort()
+      const onlyInLocale = [...keys].filter((k) => !reference.has(k)).sort()
+      if (onlyInEn.length > 0) {
+        diffs.push(`en にあって ${name} にない: ${onlyInEn.join(', ')}`)
+      }
+      if (onlyInLocale.length > 0) {
+        diffs.push(`${name} にあって en にない: ${onlyInLocale.join(', ')}`)
+      }
     }
-    if (onlyInZh.length > 0) {
-      diffs.push(`仅在 zh.json 中存在: ${onlyInZh.join(', ')}`)
-    }
-
     expect(diffs).toEqual([])
   })
 
-  it('两个 locale 的顶层 key 数量相同', () => {
-    expect(Object.keys(en).length).toBe(Object.keys(zh).length)
+  it('すべての locale の頂層 key 数量が同じ', () => {
+    for (const messages of Object.values(locales)) {
+      expect(Object.keys(messages).length).toBe(Object.keys(en).length)
+    }
   })
 
-  it('两个 locale 的叶子节点数量相同', () => {
-    expect(enKeys.size).toBe(zhKeys.size)
+  it('すべての locale の葉子ノード数量が同じ', () => {
+    for (const keys of Object.values(keysByLocale)) {
+      expect(keys.size).toBe(reference.size)
+    }
   })
 })

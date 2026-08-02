@@ -9,6 +9,10 @@ export const locales = [
     name: '中文',
     value: 'zh',
   },
+  {
+    name: '日本語',
+    value: 'ja',
+  },
 ] satisfies { name: string; value: Locale }[]
 
 
