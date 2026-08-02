@@ -88,6 +88,7 @@ const steps = [
 
 export default function HomePage() {
   const t = useTranslations()
+  const titleHighlight = t('home.hero.titleHighlight')
 
   return (
     <div>
@@ -99,7 +100,11 @@ export default function HomePage() {
           <div className="animate-[fade-in-left_0.8s_ease-out_both]">
             <h1 className="text-4xl sm:text-5xl md:text-6xl font-bold leading-tight mb-6 text-center">
               {t('home.hero.title')}
-              <span className="text-accent block">{t('home.hero.titleHighlight')}</span>
+              {titleHighlight
+                ? (
+                  <span className="text-accent block">{titleHighlight}</span>
+                )
+                : null}
             </h1>
             <p className="text-lg text-gray-600 dark:text-gray-400 mb-8 max-w-3xl mx-auto leading-relaxed animate-[fade-in_0.6s_0.3s_ease-out_both] text-center">
               {t('home.hero.subtitle')}
