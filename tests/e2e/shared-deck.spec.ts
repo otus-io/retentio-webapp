@@ -1,5 +1,12 @@
 import { test, expect } from '@playwright/test'
-import { skipUnlessE2ECredentials, uniqueName } from './helpers'
+import {
+  addFactRow,
+  createDeck,
+  gotoDeckFacts,
+  openDeckDetailFromList,
+  skipUnlessE2ECredentials,
+  uniqueName,
+} from './helpers'
 import { getTestUserAuthStatePath } from './global-setup'
 import { t } from './i18n'
 
@@ -51,17 +58,54 @@ test.describe('Shared deck import', () => {
     skipUnlessE2ECredentials(2)
   })
 
-  test('should import the first shared deck and delete the imported deck', async ({ page }) => {
-    await page.goto('/decks/shared')
+  test('should import a shared deck and apply an update from the author', async ({ browser, page }, testInfo) => {
+    test.setTimeout(90_000)
+    const deckName = uniqueName('SharedDeckUpdate')
+    const authorContext = await browser.newContext({
+      baseURL: testInfo.project.use.baseURL as string,
+      storageState: getTestUserAuthStatePath(1),
+    })
+    const authorPage = await authorContext.newPage()
 
-    const firstSharedDeck = page.locator('[data-slot="card"]').first()
-    await expect(firstSharedDeck).toBeVisible()
-    await firstSharedDeck.click()
+    await createDeck(authorPage, deckName)
+    await openDeckDetailFromList(authorPage, deckName)
+    await authorPage.getByRole('button', { name: t('deck-sharing.publish') }).click()
+    const publishDialog = authorPage.getByRole('dialog')
+    await publishDialog.getByRole('button', { name: t('deck-sharing.publish') }).click()
+    await expect(publishDialog).toBeHidden({ timeout: 15000 })
+    await expect(authorPage.getByText('v1', { exact: true })).toBeVisible()
+
+    await page.goto('/decks/shared')
+    await page.getByPlaceholder(t('deck-sharing.search-placeholder')).fill(deckName)
+    const sharedDeck = page.locator('[data-slot="card"]').filter({ hasText: deckName })
+    await expect(sharedDeck).toBeVisible()
+    await sharedDeck.click()
     await page.waitForURL(/\/decks\/shared\/[^/]+$/)
 
     await page.getByRole('button', { name: t('deck-sharing.import') }).click()
     await page.waitForURL(/\/decks\/[^/]+$/)
     const importedDeckPath = new URL(page.url()).pathname
+
+    await gotoDeckFacts(authorPage, deckName)
+    await addFactRow(authorPage)
+    await openDeckDetailFromList(authorPage, deckName)
+    await authorPage.getByRole('button', { name: t('deck-sharing.republish') }).click()
+    const republishDialog = authorPage.getByRole('dialog')
+    await republishDialog.getByRole('textbox', {
+      name: t('deck-sharing.version-label'),
+    }).fill('2')
+    await republishDialog.getByRole('button', { name: t('deck-sharing.republish') }).click()
+    await expect(authorPage.getByText('v2', { exact: true })).toBeVisible({ timeout: 15000 })
+
+    await page.reload()
+    await expect(page.getByText(t('deck-sharing.updates-title'))).toBeVisible()
+    const addedFacts = page.getByText(`${t('deck-sharing.added-facts')}（1）`, { exact: true })
+    await expect(addedFacts).toBeVisible()
+    await addedFacts.click()
+    await page.getByRole('button', { name: t('deck-sharing.apply-updates') }).click()
+    await expect(page.getByText(t('deck-sharing.up-to-date-title'))).toBeVisible({ timeout: 15000 })
+
+    await authorContext.close()
 
     await page.goto('/decks')
     const importedDeck = page.locator('[data-slot="card"]').filter({
