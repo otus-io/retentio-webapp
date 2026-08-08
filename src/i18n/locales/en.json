@@ -240,6 +240,10 @@
     "change-theme": "Change theme",
     "logout": "Logout"
   },
+  "deck-form": {
+    "imported-title": "Imported deck restrictions",
+    "imported-description": "This deck follows its source. Its name and fields cannot be changed. You can still adjust the rate and manage your own tags."
+  },
   "term": {
     "decks": "Decks",
     "facts": "Facts",

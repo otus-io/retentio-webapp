@@ -142,6 +142,23 @@ export const crateOrUpdateDeckSchema = z.object({
  */
 export type CreateOrUpdateDeckDTO = z.infer<typeof crateOrUpdateDeckSchema>
 
+const deckTagIdsSchema = z.union([
+  z.string().transform((v) => [v]),
+  z.array(z.string()),
+]).optional()
+
+/**
+ * 导入卡组仅允许通过卡组 PATCH 修改 rate；标签由独立关联接口处理。
+ */
+export const updateImportedDeckSchema = z.object({
+  rate: z.coerce.number().min(1, 'Rate must be at least 1').max(1000, 'Rate must be at most 1000'),
+  tag_ids: deckTagIdsSchema,
+  default_tag_ids: deckTagIdsSchema,
+})
+
+export type UpdateImportedDeckFormDTO = z.infer<typeof updateImportedDeckSchema>
+export type UpdateImportedDeckDTO = Pick<UpdateImportedDeckFormDTO, 'rate'>
+
 /**
  * 创建或更新卡组响应 DTO
  */
