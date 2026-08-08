@@ -20,9 +20,12 @@ import DecksAction from '@/components/decks/DecksAction'
 import LayoutPage from '@/components/layout/LayoutPage'
 import TagItem from '@/components/tags/TagItem'
 import DeckPublishPanel from '@/components/decks/DeckPublishPanel'
+import DeckImportUpdatesPanel from '@/components/decks/DeckImportUpdatesPanel'
+import type { DeckImportUpdatesResponseDTO } from '@/modules/deck-sharing/deck-sharing.schema'
 
 interface DecksDetailProps {
   deck: Deck
+  updates: DeckImportUpdatesResponseDTO['data'] | null
 }
 
 const containerVariants = {
@@ -33,7 +36,7 @@ const containerVariants = {
   },
 }
 
-export default function DecksDetail({ deck }: DecksDetailProps) {
+export default function DecksDetail({ deck, updates }: DecksDetailProps) {
   const t = useTranslations()
 
   const progressPct = deck.stats.cards_count > 0
@@ -62,8 +65,7 @@ export default function DecksDetail({ deck }: DecksDetailProps) {
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.35, ease: 'easeOut' }}
       >
-        <Card variant="default" className="border-border/50 border-l-2 border-l-accent/50 overflow-hidden">
-
+        <Card variant="default" className=" overflow-hidden">
           <Card.Header>
             <div className="flex items-center justify-between gap-4">
               <div className="flex-1 min-w-0">
@@ -171,6 +173,9 @@ export default function DecksDetail({ deck }: DecksDetailProps) {
           </Card.Content>
         </Card>
         {!deck.source_deck_id && <DeckPublishPanel deck={deck} />}
+        {deck.source_deck_id && updates && (
+          <DeckImportUpdatesPanel deckId={deck.id} updates={updates} />
+        )}
       </motion.div>
     </LayoutPage>
   )

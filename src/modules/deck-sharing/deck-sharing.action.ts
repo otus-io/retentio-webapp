@@ -10,7 +10,7 @@ import {
   type PublishDeckActionData,
   type PublishDeckActionPayload,
 } from '@/modules/deck-sharing/deck-sharing.schema'
-import { importDeckService, publishDeckService } from '@/modules/deck-sharing/deck-sharing.service'
+import { importDeckService, publishDeckService, syncImportedDeckService } from '@/modules/deck-sharing/deck-sharing.service'
 
 export const importDeckAction: ActionFunctionPayload<string, never> = async (sourceDeckId) => {
   const response = await importDeckService({ source_deck_id: sourceDeckId })
@@ -76,6 +76,28 @@ export const publishDeckAction: ActionFunctionPayload<PublishDeckActionPayload, 
     data: {
       version,
       publishedVersion: response.data.published_version,
+    },
+  }
+}
+
+export const syncImportedDeckAction: ActionFunctionPayload<string, { sourceVersion: number }> = async (importId) => {
+  const response = await syncImportedDeckService(importId)
+
+  if (!response.success) {
+    return {
+      success: false,
+      error: response.message,
+    }
+  }
+
+  revalidatePath(`/decks/${importId}`)
+  revalidatePath(`/decks/${importId}/facts`)
+  revalidatePath('/decks')
+
+  return {
+    success: true,
+    data: {
+      sourceVersion: response.data.source_version,
     },
   }
 }
