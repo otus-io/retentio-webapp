@@ -240,6 +240,10 @@
     "change-theme": "更改主题",
     "logout": "退出登录"
   },
+  "deck-form": {
+    "imported-title": "导入卡组限制",
+    "imported-description": "此卡组跟随源卡组，名称和字段不可修改。你仍然可以调整频率并管理自己的标签。"
+  },
   "term": {
     "decks": "卡组",
     "facts": "词条",

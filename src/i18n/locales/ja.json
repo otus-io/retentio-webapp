@@ -234,6 +234,10 @@
     "change-theme": "テーマを変更",
     "logout": "ログアウト"
   },
+  "deck-form": {
+    "imported-title": "インポートしたデッキの制限",
+    "imported-description": "このデッキは元のデッキに従うため、名前とフィールドは変更できません。ペースの調整と自分のタグの管理は引き続き行えます。"
+  },
   "term": {
     "decks": "デッキ",
     "facts": "項目",
