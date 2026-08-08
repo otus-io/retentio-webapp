@@ -1,5 +1,5 @@
-'use server'
 import DecksDetail from '@/components/decks/DecksDetail'
+import { getDeckImportUpdatesService } from '@/modules/deck-sharing/deck-sharing.service'
 import { getDeckService } from '@/modules/decks/decks.service'
 import type { Metadata } from 'next'
 import { getTranslations } from 'next-intl/server'
@@ -11,8 +11,13 @@ export default async function Page(props: PageProps<'/decks/[id]'>) {
   if(!data.success){
     notFound()
   }
+  const updatesResponse = data.data.source_deck_id
+    ? await getDeckImportUpdatesService(id)
+    : null
+  const updates = updatesResponse?.success ? updatesResponse.data : null
+
   return (
-    <DecksDetail deck={data.data} />
+    <DecksDetail deck={data.data} updates={updates} />
   )
 }
 

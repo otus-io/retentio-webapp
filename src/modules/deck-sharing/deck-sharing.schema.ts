@@ -114,6 +114,16 @@ export type ImportDeckResponseDTO = BaseApiResult<{
 export interface DeckUpdateFactSummary {
   /** 词条 ID */
   fact_id: string
+  /** 词条快照 */
+  fact?: DeckUpdateFactSnapshot
+  /** 是否存在本地覆盖 */
+  has_local_overlay?: boolean
+  /** 是否为本地词条 */
+  local?: boolean
+  /** 本地内容是否已与目标版本一致 */
+  aligned?: boolean
+  /** 同步时的默认操作 */
+  default_action?: 'accept' | 'keep'
 }
 
 /**
@@ -136,6 +146,12 @@ export interface DeckUpdateEditedFact {
   before: DeckUpdateFactSnapshot
   /** 变更后内容 */
   after: DeckUpdateFactSnapshot
+  /** 是否存在本地覆盖 */
+  has_local_overlay?: boolean
+  /** 是否为本地词条 */
+  local?: boolean
+  /** 本地内容是否已与目标版本一致 */
+  aligned?: boolean
 }
 
 /**
@@ -155,6 +171,18 @@ export interface DeckUpdateMediaChange {
 }
 
 /**
+ * 卡片模板变更
+ */
+export interface DeckUpdateCardTemplateChange {
+  /** 词条 ID */
+  fact_id: string
+  /** 新增模板 */
+  added_templates: number[][][]
+  /** 移除模板 */
+  removed_templates: number[][][]
+}
+
+/**
  * 获取导入更新（差异）响应 DTO
  */
 export type DeckImportUpdatesResponseDTO = BaseApiResult<{
@@ -170,6 +198,8 @@ export type DeckImportUpdatesResponseDTO = BaseApiResult<{
   edited_facts: DeckUpdateEditedFact[]
   /** 媒体变更 */
   media_changes: DeckUpdateMediaChange[]
+  /** 卡片模板变更 */
+  card_template_changes: DeckUpdateCardTemplateChange[]
   /** 变更摘要 */
   change_summary: string
 }>
@@ -180,6 +210,11 @@ export type DeckImportUpdatesResponseDTO = BaseApiResult<{
 export interface SyncImportedDeckDTO {
   /** 目标发布版本；省略或为 0 时推进到源卡组当前最新发布版本 */
   target_version?: number
+  /** 按词条覆盖默认同步策略 */
+  decisions?: Array<{
+    fact_id: string
+    action: 'accept' | 'keep'
+  }>
 }
 
 /**
