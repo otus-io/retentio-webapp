@@ -6,8 +6,12 @@ import AppButton from '@/components/app/AppButton'
 import AppError from '@/components/app/AppError'
 import AppInput from '@/components/app/AppInput'
 import clsx from 'clsx'
-import { ChevronDown, ChevronUp } from 'lucide-react'
-import { createDeckAction, updateDeckAction } from '@/modules/decks/decks.action'
+import { ChevronDown, ChevronUp, LockKeyhole } from 'lucide-react'
+import {
+  createDeckAction,
+  updateDeckAction,
+  updateImportedDeckAction,
+} from '@/modules/decks/decks.action'
 import type { Deck } from '@/modules/decks/decks.schema'
 import { useTranslations } from 'next-intl'
 import AppBreadcrumbs from '@/components/app/AppBreadcrumbs'
@@ -46,9 +50,12 @@ export default function DecksForm({
       },
     }
 
+  const isImported = type === 'update' && Boolean(data.source_deck_id)
   const actionHandler = type === 'create'
     ? createDeckAction
-    : updateDeckAction.bind(null, data.id)
+    : isImported
+      ? updateImportedDeckAction.bind(null, data.id)
+      : updateDeckAction.bind(null, data.id)
 
   const [state, action, isPending] = useActionState(actionHandler, defaultState)
 
@@ -59,6 +66,7 @@ export default function DecksForm({
       action={action}
       isPending={isPending}
       type={type}
+      isImported={isImported}
     />
   )
 }
@@ -68,11 +76,13 @@ function DecksFormInner({
   state,
   action,
   isPending,
+  isImported,
 }: {
   state: ActionState<any> | null,
   action: (payload: FormData) => void,
   isPending: boolean,
   type: DecksCreateFormProps['type']
+  isImported: boolean
 }) {
 
   const defaultTagIds =
@@ -109,6 +119,23 @@ function DecksFormInner({
       />
 
       <div className="max-w-lg w-full mx-auto space-y-4">
+        {isImported && (
+          <Card className="border-border/50" variant="default">
+            <Card.Header>
+              <div className="flex items-start gap-3">
+                <div className="rounded-full bg-accent/10 p-2 text-accent">
+                  <LockKeyhole className="size-4" />
+                </div>
+                <div>
+                  <Card.Title>{t('deck-form.imported-title')}</Card.Title>
+                  <Card.Description className="mt-1">
+                    {t('deck-form.imported-description')}
+                  </Card.Description>
+                </div>
+              </div>
+            </Card.Header>
+          </Card>
+        )}
         <Card>
           <Card.Header>
             <Card.Title>{title}</Card.Title>
@@ -125,6 +152,7 @@ function DecksFormInner({
                 isRequired
                 variant="secondary"
                 defaultValue={state?.data?.name}
+                isReadOnly={isImported}
               />
               {
                 fields.map((field, index) => (
@@ -138,29 +166,34 @@ function DecksFormInner({
                       className="flex-1"
                       defaultValue={field.name}
                       placeholder={t('common.placeholder-enter', { name: t('term.fields') })}
+                      isReadOnly={isImported}
 
                     />
-                    <div className={clsx(index === 0 && 'pt-6')}>
-                      <AppButton
-                        variant="danger-soft"
-                        isDisabled={fields.length <= 2}
-                        onClick={() => {
-                          setFields((prev) => prev.filter((f) => f.id !== field.id))
-                        }}
-                      >
-                        {t('common.remove')}
-                      </AppButton>
-                    </div>
+                    {!isImported && (
+                      <div className={clsx(index === 0 && 'pt-6')}>
+                        <AppButton
+                          variant="danger-soft"
+                          isDisabled={fields.length <= 2}
+                          onClick={() => {
+                            setFields((prev) => prev.filter((f) => f.id !== field.id))
+                          }}
+                        >
+                          {t('common.remove')}
+                        </AppButton>
+                      </div>
+                    )}
                   </div>
                 ))
               }
 
-              <AppButton
-                variant="secondary"
-                onClick={addField}
-              >
-                {t('common.add', { name: t('term.fields') })}
-              </AppButton>
+              {!isImported && (
+                <AppButton
+                  variant="secondary"
+                  onClick={addField}
+                >
+                  {t('common.add', { name: t('term.fields') })}
+                </AppButton>
+              )}
 
               <TagPicker
                 defaultValue={defaultTagIds}

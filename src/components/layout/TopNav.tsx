@@ -10,13 +10,12 @@ import AppLogo from '@/components/app/AppLogo'
 import useAppNavMenu from '@/hooks/useAppNavMenu'
 import { AppButtonLink } from '@/components/app/AppButtonLink'
 import GuideSearchButton from '@/components/guide/GuideSearchButton'
-import type { ProfileResponseDTO } from '@/modules/auth/auth.schema'
+import { useUserContext } from '@/context/UserContext'
 
-interface TopNavProps {
-  user?: ProfileResponseDTO | null
-}
 
-export default function TopNav({ user }: TopNavProps) {
+
+export default function TopNav() {
+  const { user } = useUserContext()
   const { navMenu } = useAppNavMenu({ isLoggedIn: !!user })
   const [mobileOpen, setMobileOpen] = useState(false)
   const toggleMobile = useCallback(() => setMobileOpen((v) => !v), [])

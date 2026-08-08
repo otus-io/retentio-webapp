@@ -1,7 +1,7 @@
 'use client'
 
 import { usePathname, useRouter, useSearchParams } from 'next/navigation'
-import { useCallback, useRef } from 'react'
+import { useCallback, useRef, useTransition } from 'react'
 import { useDebouncedCallback } from 'use-debounce'
 
 /**
@@ -26,6 +26,8 @@ interface UseSearchParamsQueryReturn {
   setParamDebounced: (key: string, value: string | undefined) => void
   setParamsDebounced: (updates: Record<string, string | undefined>) => void
   searchParams: URLSearchParams
+  /** 是否正在进行导航（Server Component 重新请求中） */
+  isPending: boolean
 }
 
 /**
@@ -42,6 +44,9 @@ export default function useSearchParamsQuery<Config extends ParamConfig[]>(
   const router = useRouter()
   const pathname = usePathname()
   const searchParams = useSearchParams()
+
+  // 用 transition 包裹导航，isPending 反映 Server Component 重新请求的整个过程
+  const [isPending, startTransition] = useTransition()
 
   const pendingUpdatesRef = useRef<Map<string, string | undefined>>(new Map())
 
@@ -60,7 +65,11 @@ export default function useSearchParamsQuery<Config extends ParamConfig[]>(
 
     pendingUpdatesRef.current.clear()
 
-    router.replace(`${pathname}?${params.toString()}`)
+    // startTransition 放在防抖回调内部：等待防抖的 300ms 不计入 pending，
+    // 只有真正触发导航后 isPending 才为 true
+    startTransition(() => {
+      router.replace(`${pathname}?${params.toString()}`)
+    })
   }, [searchParams, pathname, router])
 
   const debouncedApplyUpdates = useDebouncedCallback(
@@ -68,43 +77,6 @@ export default function useSearchParamsQuery<Config extends ParamConfig[]>(
     debounceDelay,
   )
 
-  const setParam = useCallback((key: string, value: string | undefined) => {
-    const params = new URLSearchParams(searchParams.toString())
-
-    if (value !== undefined && value !== '') {
-      params.set(key, String(value))
-    } else {
-      params.delete(key)
-    }
-
-    router.replace(`${pathname}?${params.toString()}`)
-  }, [searchParams, pathname, router])
-
-  const setParamDebounced = useCallback((key: string, value: string | undefined) => {
-    pendingUpdatesRef.current.set(key, value)
-    debouncedApplyUpdates()
-  }, [debouncedApplyUpdates])
-
-  const setParams = useCallback((updates: Record<string, string | undefined>) => {
-    const params = new URLSearchParams(searchParams.toString())
-
-    Object.entries(updates).forEach(([key, value]) => {
-      if (value !== undefined && value !== '') {
-        params.set(key, String(value))
-      } else {
-        params.delete(key)
-      }
-    })
-
-    router.replace(`${pathname}?${params.toString()}`)
-  }, [searchParams, pathname, router])
-
-  const setParamsDebounced = useCallback((updates: Record<string, string | undefined>) => {
-    Object.entries(updates).forEach(([key, value]) => {
-      pendingUpdatesRef.current.set(key, value)
-    })
-    debouncedApplyUpdates()
-  }, [debouncedApplyUpdates])
 
   const getParam = useCallback((key: string): string | undefined => {
     return searchParams.get(key) ?? undefined
@@ -123,6 +95,59 @@ export default function useSearchParamsQuery<Config extends ParamConfig[]>(
     return result
   }, [searchParams])
 
+
+
+  const setParam = useCallback((key: string, value: string | undefined) => {
+    const params = new URLSearchParams(searchParams.toString())
+    const currentValue = getParam(key)
+
+    if(currentValue === value){
+      return
+    }
+
+    if (value !== undefined && value !== '') {
+      params.set(key, String(value))
+    } else {
+      params.delete(key)
+    }
+
+    startTransition(() => {
+      router.replace(`${pathname}?${params.toString()}`)
+    })
+  }, [searchParams, pathname, router, getParam])
+
+  const setParamDebounced = useCallback((key: string, value: string | undefined) => {
+    const currentValue = getParam(key)
+    if(currentValue === value){
+      return
+    }
+    pendingUpdatesRef.current.set(key, value)
+    debouncedApplyUpdates()
+  }, [debouncedApplyUpdates, getParam])
+
+  const setParams = useCallback((updates: Record<string, string | undefined>) => {
+    const params = new URLSearchParams(searchParams.toString())
+
+    Object.entries(updates).forEach(([key, value]) => {
+      if (value !== undefined && value !== '') {
+        params.set(key, String(value))
+      } else {
+        params.delete(key)
+      }
+    })
+
+    startTransition(() => {
+      router.replace(`${pathname}?${params.toString()}`)
+    })
+  }, [searchParams, pathname, router])
+
+  const setParamsDebounced = useCallback((updates: Record<string, string | undefined>) => {
+    Object.entries(updates).forEach(([key, value]) => {
+      pendingUpdatesRef.current.set(key, value)
+    })
+    debouncedApplyUpdates()
+  }, [debouncedApplyUpdates])
+
   return {
     getParams,
     getParam,
@@ -131,5 +156,6 @@ export default function useSearchParamsQuery<Config extends ParamConfig[]>(
     setParamDebounced,
     setParamsDebounced,
     searchParams,
+    isPending,
   }
 }

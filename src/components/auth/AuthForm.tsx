@@ -25,6 +25,15 @@ export default function AuthForm({ type }: { type: 'login' | 'register' }) {
 
   const isLogin = type === 'login'
 
+  const authUrl = useMemo(() => {
+    let url = (type === 'login' ? REGISTER_PATH : LOGIN_PATH)
+    if(redirectPath !== '/'){
+      url += `?redirect=${redirectPath}`
+    }
+    return url
+  }, [type, redirectPath])
+
+
   const authAction = isLogin ? loginAction : registerAction
 
   const [state, action, isPending] = useActionState(authAction, {
@@ -147,7 +156,7 @@ export default function AuthForm({ type }: { type: 'login' | 'register' }) {
                   <AppLink
                     className="ml-1 text-sm"
                     isActive
-                    href={isLogin ? REGISTER_PATH : LOGIN_PATH}
+                    href={authUrl}
                   >
                     {isLogin ? t('goRegister') : t('goLogin')}
                   </AppLink>

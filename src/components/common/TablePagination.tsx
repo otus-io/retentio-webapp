@@ -3,21 +3,23 @@
 import { useMemo } from 'react'
 import { Pagination } from '@heroui/react'
 import useSearchParamsQuery from '@/hooks/useSearchParamsQuery'
+import clsx from 'clsx'
 
 export interface TablePaginationProps {
   totalPages: number
+  className?: string
 }
 
-export default function TablePagination({ totalPages }: TablePaginationProps) {
+export default function TablePagination({ totalPages, className }: TablePaginationProps) {
   const { getParam, setParam } = useSearchParamsQuery(['page'])
   const page = Number(getParam('page') || '1')
 
   const pageNumbers = useMemo((): (number | 'ellipsis')[] => {
-    const pages: (number | 'ellipsis')[] = []
+    const pages: (number | 'ellipsis')[] = [1]
 
-    if (totalPages <= 1) return []
+    if (totalPages <= 1)
+      return pages
 
-    pages.push(1)
     if (totalPages > 1 && page > 3) {
       pages.push('ellipsis')
     }
@@ -38,10 +40,9 @@ export default function TablePagination({ totalPages }: TablePaginationProps) {
     return pages
   }, [page, totalPages])
 
-  if (totalPages <= 1) return null
 
   return (
-    <div className="flex justify-center items-center w-full">
+    <div className={clsx('flex justify-center items-center w-full', className)}>
       <Pagination className="justify-center">
         <Pagination.Content>
           <Pagination.Item>

@@ -1,5 +1,6 @@
 'use client'
 
+import type { ReactNode } from 'react'
 import { useRef, useState, useEffect } from 'react'
 import { useTranslations } from 'next-intl'
 import { Users, Brain, Palette, Bot, ArrowRight, Clock, BookOpen, TrendingUp } from 'lucide-react'
@@ -86,7 +87,7 @@ const steps = [
   { icon: TrendingUp, key: 'step3', gradient: 'from-pink-100 to-pink-200 dark:from-pink-950 dark:to-pink-900' },
 ] as const
 
-export default function HomePage() {
+export default function HomePage({ children }:{ children?: ReactNode }) {
   const t = useTranslations()
   const titleHighlight = t('home.hero.titleHighlight')
 
@@ -154,6 +155,12 @@ export default function HomePage() {
             {t('home.cta.note')}
           </p>
         </div>
+      </section>
+
+      {/* shared */}
+
+      <section className=" max-w-content px-4 md:px-2 mx-auto">
+        {children}
       </section>
 
       {/* About Section */}

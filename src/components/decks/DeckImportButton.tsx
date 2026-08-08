@@ -1,23 +1,22 @@
 import { AppButtonLink } from '@/components/app/AppButtonLink'
 import AppTooltip from '@/components/app/AppTooltip'
 import { useBreakpointContext } from '@/context/BreakpointContext'
-import { Plus } from 'lucide-react'
+import { Download } from 'lucide-react'
 import { useTranslations } from 'next-intl'
 
-export default function DeckCreateButton() {
+export default function DeckImportButton() {
   const t = useTranslations()
   const { md } = useBreakpointContext()
-  const title = t('common.create', { name: t('term.decks') })
 
   return (
-    <AppTooltip content={title}>
+    <AppTooltip content={t('deck-sharing.import')}>
       <AppButtonLink
         variant="outline"
         size={md ? undefined : 'sm'}
-        href="/decks/create"
+        href="/decks/shared"
         isIconOnly
       >
-        <Plus className="text-muted" />
+        <Download className="text-muted" />
       </AppButtonLink>
     </AppTooltip>
   )

@@ -1,7 +1,7 @@
 'use client'
 import AppLink from '@/components/app/AppLink'
 import type { Deck } from '@/modules/decks/decks.schema'
-import { Card } from '@heroui/react'
+import { Card, Chip } from '@heroui/react'
 import { ListTodo, Clock } from 'lucide-react'
 import HighlightedText from '@/components/common/HighlightedText'
 import { useTranslations } from 'next-intl'
@@ -40,13 +40,11 @@ export default function DecksCard({
   return (
     <Card
       variant="default"
-      className="hover:shadow-sm transition-all hover:cursor-pointer duration-200 border-border/60 hover:border-accent/30 border-l-2 border-l-accent/50 hover:border-l-accent overflow-hidden"
       onClick={handleClick}
     >
-
       <Card.Header>
         <div className="flex items-center justify-between gap-2">
-          <Card.Title className="flex-1 min-w-0">
+          <Card.Title className="flex-1 min-w-0 flex gap-2">
             <AppLink
               onClick={(e) => { e.stopPropagation() }}
               href={`/decks/${deck.id}`}
@@ -54,10 +52,14 @@ export default function DecksCard({
             >
               <HighlightedText text={deck.name} highlight={highlight} />
             </AppLink>
+            {deck.visibility === 'public' && (
+              <Chip size="sm" variant="primary" color="accent">{t('term.public')}</Chip>
+            )}
           </Card.Title>
           <DecksAction deck={deck} actions={['edit', 'delete']} />
         </div>
       </Card.Header>
+
 
       <Card.Content className="pt-0 space-y-2.5">
         <div>
@@ -91,5 +93,4 @@ export default function DecksCard({
     </Card>
   )
 }
-
 
