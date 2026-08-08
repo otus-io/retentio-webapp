@@ -283,6 +283,7 @@
     "facts-count": "{count} facts",
     "empty": "No shared decks yet",
     "import": "import",
+    "go-study": "Go to study",
     "publish": "Publish deck",
     "republish": "Publish again",
     "publish-title": "Publish to shared decks",
