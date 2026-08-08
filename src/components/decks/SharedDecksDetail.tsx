@@ -9,16 +9,19 @@ import type { FormEventHandler } from 'react'
 import { useFormatter } from 'next-intl'
 import LayoutPage from '@/components/layout/LayoutPage'
 import AppButton from '@/components/app/AppButton'
+import { AppButtonLink } from '@/components/app/AppButtonLink'
 import { useUserContext } from '@/context/UserContext'
 import { showFailToast } from '@/lib/ui'
 import { importDeckAction } from '@/modules/deck-sharing/deck-sharing.action'
 
 interface SharedDecksDetailProps {
   deck: DeckCatalogItem
+  importedDeckId: string | null
 }
 
 export default function SharedDecksDetail({
   deck,
+  importedDeckId,
 }: SharedDecksDetailProps) {
   const t = useTranslations()
   const { isLogin } = useUserContext()
@@ -86,11 +89,19 @@ export default function SharedDecksDetail({
               <CalendarDays className="size-3 shrink-0" />
               <span>{publishedAt}</span>
             </div>
-            <form action={action} onSubmit={handleImport} className="ml-auto">
-              <AppButton type="submit" isPending={isPending}>
-                {t('deck-sharing.import')}
-              </AppButton>
-            </form>
+            {importedDeckId
+              ? (
+                <AppButtonLink href={`/decks/${importedDeckId}`} className="ml-auto">
+                  {t('deck-sharing.go-study')}
+                </AppButtonLink>
+              )
+              : (
+                <form action={action} onSubmit={handleImport} className="ml-auto">
+                  <AppButton type="submit" isPending={isPending}>
+                    {t('deck-sharing.import')}
+                  </AppButton>
+                </form>
+              )}
           </div>
         </Card.Content>
       </Card>
