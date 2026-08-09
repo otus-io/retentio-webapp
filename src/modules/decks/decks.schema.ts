@@ -67,7 +67,7 @@ export interface Deck {
   /**
    * 钉住的快照版本，用于读取词条/媒体。
    */
-  source_version?: string
+  source_version?: number
   /**
    * 创建导入时的 ISO 8601 时间戳。
    */
