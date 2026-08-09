@@ -11,7 +11,6 @@ import { useFormatter } from 'next-intl'
 
 interface SharedDecksCardProps {
   deck: DeckCatalogItem
-  highlight?: string
   variant?: CardVariants['variant']
 }
 
