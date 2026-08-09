@@ -1,4 +1,5 @@
 import { formatErrorMessage } from '@/utils/format'
+import { RequestError } from '@/utils/request'
 
 export interface ServiceResponseSuccess<T, Meta extends BaseApiResultMeta> {
   /**
@@ -13,6 +14,10 @@ export interface ServiceResponseSuccess<T, Meta extends BaseApiResultMeta> {
    * Error message (always null on success)
    */
   message: null
+  /**
+   * status 状态码
+   */
+  status: null
   /**
    * Additional meta information about the response (optional)
    */
@@ -33,21 +38,29 @@ export interface ServiceResponseError<Meta extends BaseApiResultMetaWithMsg = Ba
    */
   message: string
   /**
+   * status 状态码
+   */
+  status: number | null
+  /**
    * Additional meta information about the response (optional)
    */
   meta: Meta
 }
 
+
 export class ServiceResponse {
   /**
    * Creates a successful service response
    */
-  static success<Data extends BaseApiResultData, Meta extends BaseApiResultMeta>(data: BaseApiResult<Data, Meta>): ServiceResponseSuccess<Data, Meta> {
+  static success<Data extends BaseApiResultData, Meta extends BaseApiResultMeta>(
+    result: BaseApiResult<Data, Meta>,
+  ): ServiceResponseSuccess<Data, Meta> {
     return {
       success: true,
-      data: data.data,
-      meta: data.meta,
+      data: result.data,
       message: null,
+      status: null,
+      meta: result.meta,
     }
   }
 
@@ -60,8 +73,9 @@ export class ServiceResponse {
   ): ServiceResponseError {
     return {
       success: false,
-      message: error ? formatErrorMessage(error) : message,
       data: null,
+      message: error ? formatErrorMessage(error) : message,
+      status: error instanceof RequestError ? error.status : null,
       meta: { msg: message },
     }
   }

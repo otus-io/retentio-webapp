@@ -16,6 +16,16 @@ export interface RequestOptions extends RequestInit {
   onDownloadProgress?: OnProgress
 }
 
+export class RequestError extends Error {
+  constructor(
+    message: string,
+    public readonly status: number,
+  ) {
+    super(message)
+    this.name = 'RequestError'
+  }
+}
+
 async function readBodyWithProgress(res: Response, onProgress: OnProgress): Promise<Blob> {
   const contentLength = res.headers.get('content-length')
   const total = contentLength ? Number.parseInt(contentLength, 10) : null
@@ -107,7 +117,7 @@ export function createRequest(getToken: GetTokenFn) {
     if (!res.ok) {
       const errorMessage = formatErrorMessage(json ?? text)
       logger.error({ url, status: res.status, error: errorMessage }, '[request:error]')
-      throw new Error(errorMessage)
+      throw new RequestError(errorMessage, res.status)
     }
 
     return json
