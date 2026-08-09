@@ -53,7 +53,7 @@ test.describe('Decks', () => {
 
     await versionInput.fill('2')
     await republishDialog.getByRole('button', { name: t('deck-sharing.republish') }).click()
-    await expect(republishDialog).toBeVisible()
+    await expect(republishDialog).toBeHidden({ timeout: 15000 })
     await expect(page.getByText('v2', { exact: true })).toBeVisible()
   })
 
