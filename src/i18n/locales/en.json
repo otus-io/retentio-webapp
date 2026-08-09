@@ -312,6 +312,7 @@
     "edited-facts": "Edited facts",
     "media-changes": "Media changes",
     "template-changes": "Card template changes",
+    "section-count": "{label} ({count})",
     "added-templates": "Added templates",
     "removed-templates": "Removed templates",
     "fact-id": "Fact ID",

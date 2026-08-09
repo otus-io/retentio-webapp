@@ -312,6 +312,7 @@
     "edited-facts": "编辑的词条",
     "media-changes": "媒体变更",
     "template-changes": "卡片模板变更",
+    "section-count": "{label}（{count}）",
     "added-templates": "新增模板",
     "removed-templates": "移除模板",
     "fact-id": "词条 ID",

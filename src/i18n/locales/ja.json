@@ -306,6 +306,7 @@
     "edited-facts": "編集された項目",
     "media-changes": "メディアの変更",
     "template-changes": "カードテンプレートの変更",
+    "section-count": "{label}（{count}）",
     "added-templates": "追加テンプレート",
     "removed-templates": "削除テンプレート",
     "fact-id": "項目 ID",

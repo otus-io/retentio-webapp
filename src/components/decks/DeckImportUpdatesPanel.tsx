@@ -128,7 +128,7 @@ export default function DeckImportUpdatesPanel({ deckId, updates }: DeckImportUp
                     <Accordion.Trigger>
                       <span className="flex flex-1 items-center gap-2">
                         <Icon className="size-4 text-muted-foreground" />
-                        <span>{label}（{count}）</span>
+                        <span>{t('section-count', { label, count })}</span>
                       </span>
                       <Accordion.Indicator />
                     </Accordion.Trigger>
