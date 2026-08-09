@@ -3,13 +3,19 @@ import { getDeckCatalogItemService } from '@/modules/deck-sharing/deck-sharing.s
 import { getAllDecksService } from '@/modules/decks/decks.service'
 import { getToken } from '@/lib/token'
 import { notFound } from 'next/navigation'
+import AppError from '@/components/app/AppError'
 
 export default async function Page(props: PageProps<'/decks/shared/[id]'>) {
   const id = (await props.params).id
   const deckCatalog = await getDeckCatalogItemService(id)
+
   if(!deckCatalog.success){
-    notFound()
+    if(deckCatalog.status === 404){
+      notFound()
+    }
+    return <AppError page error={deckCatalog.message} />
   }
+
 
   let importedDeckId: string | null = null
   if (await getToken()) {
