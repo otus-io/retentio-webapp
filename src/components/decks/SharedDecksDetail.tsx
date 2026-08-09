@@ -24,7 +24,7 @@ export default function SharedDecksDetail({
   importedDeckId,
 }: SharedDecksDetailProps) {
   const t = useTranslations()
-  const { isLogin } = useUserContext()
+  const { isLogin, accessAction } = useUserContext()
   const format = useFormatter()
   const [state, action, isPending] = useActionState(
     importDeckAction.bind(null, deck.id),
@@ -35,11 +35,16 @@ export default function SharedDecksDetail({
     () => format.dateTime(new Date(deck.published_at), { dateStyle: 'medium' }),
     [deck.published_at, format],
   )
-  const handleImport = useCallback<FormEventHandler<HTMLFormElement>>((event) => {
-    if (isLogin) return
-    event.preventDefault()
-  }, [isLogin])
 
+  const handleImport = useCallback<FormEventHandler<HTMLFormElement>>(
+    (event) => {
+      if (isLogin) return
+
+      event.preventDefault()
+      accessAction(() => {})
+    },
+    [isLogin, accessAction],
+  )
   useEffect(() => {
     if (state?.error) showFailToast(state.error)
   }, [state])
