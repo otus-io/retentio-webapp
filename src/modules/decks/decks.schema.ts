@@ -71,7 +71,7 @@ export interface Deck {
   /**
    * 创建导入时的 ISO 8601 时间戳。
    */
-  imported_at?: number
+  imported_at?: string
 }
 
 interface Stats {
