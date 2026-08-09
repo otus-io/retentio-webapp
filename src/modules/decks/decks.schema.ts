@@ -63,7 +63,7 @@ export interface Deck {
   /**
    * 作者源卡组 ID（12 位）。
    */
-  source_deck_id: string
+  source_deck_id?: string
   /**
    * 钉住的快照版本，用于读取词条/媒体。
    */
