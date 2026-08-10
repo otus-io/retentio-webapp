@@ -48,7 +48,6 @@ export default function DecksDetail({ deck, updates }: DecksDetailProps) {
         const last_reviewed_at = deck.stats.last_reviewed_at
           ? format.dateTime(new Date(deck.stats.last_reviewed_at), { dateStyle: 'medium', timeStyle: 'short' })
           : t('term.never')
-    dateStyle: 'medium',
     timeStyle: 'short',
   })
 
