@@ -19,7 +19,7 @@ export default function SharedDecksHome({
   const router = useRouter()
 
   const handleSharedPage = useCallback(() => {
-    router.push(`/decks/shared?query=${encodeURIComponent(keywords)}`)
+    router.push(`/decks/shared?${new URLSearchParams({ query: keywords })}`)
   }, [router, keywords])
 
   const handleEnterToSharedPage = useCallback((e:KeyboardEvent<HTMLInputElement>) => {
