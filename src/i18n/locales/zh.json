@@ -299,7 +299,7 @@
     "republish-description": "当前公开版本为 v{version}。再次发布会为工作副本创建一个新的不可变快照。",
     "version-label": "确认版本号",
     "version-description": "请输入大于当前版本 v{version} 的整数。",
-    "version-error": "版本号必须是大于等于 {version} 的整数",
+    "version-error": "版本号必须是大于 {version} 的整数",
     "publish-success": "卡组发布成功",
     "updates-title": "发现卡组更新",
     "updates-description": "源卡组已从 v{sourceVersion} 更新到 v{latestVersion}，请预览后应用变更。",

@@ -293,7 +293,7 @@
     "republish-description": "現在の公開バージョンは v{version} です。再公開すると、作業コピーの新しい変更不可スナップショットが作成されます。",
     "version-label": "バージョン番号を確認",
     "version-description": "現在のバージョン v{version} より大きい整数を入力してください。",
-    "version-error": "バージョンは {version} 以上の整数である必要があります",
+    "version-error": "バージョンは {version} より大きい整数である必要があります",
     "publish-success": "デッキを公開しました",
     "updates-title": "デッキの更新があります",
     "updates-description": "元のデッキは v{sourceVersion} から v{latestVersion} に更新されました。適用前に差分を確認してください。",

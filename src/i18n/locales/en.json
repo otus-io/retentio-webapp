@@ -299,7 +299,7 @@
     "republish-description": "The current public version is v{version}. Publishing again creates a new immutable snapshot of the working copy.",
     "version-label": "Confirm version number",
     "version-description": "Enter an integer greater than the current version v{version}.",
-    "version-error": "Version must be an integer greater than or equal to {version}",
+    "version-error": "Version must be an integer greater than {version}",
     "publish-success": "Deck published successfully",
     "updates-title": "Deck updates available",
     "updates-description": "The source deck changed from v{sourceVersion} to v{latestVersion}. Preview the differences before applying them.",
