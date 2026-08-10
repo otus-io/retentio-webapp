@@ -71,7 +71,6 @@ export const publishDeckAction: ActionFunctionPayload<PublishDeckActionPayload, 
   revalidatePath('/decks/shared')
   revalidatePath(`/decks/shared/${deckId}`)
   revalidatePath('/')
-  revalidatePath('/')
 
   return {
     success: true,
