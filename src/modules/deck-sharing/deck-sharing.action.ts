@@ -68,8 +68,6 @@ export const publishDeckAction: ActionFunctionPayload<PublishDeckActionPayload, 
 
   revalidatePath(`/decks/${deckId}`)
   revalidatePath('/decks')
-  revalidatePath(`/decks/${deckId}`)
-  revalidatePath('/decks')
   revalidatePath('/decks/shared')
   revalidatePath(`/decks/shared/${deckId}`)
   revalidatePath('/')
