@@ -1,8 +1,8 @@
 'use client'
 import { useEffect } from 'react'
 import clsx from 'clsx'
-import AppLink from '@/components/app/AppLink'
 import useAppNavMenu from '@/hooks/useAppNavMenu'
+import { AppButtonLink } from '@/components/app/AppButtonLink'
 
 interface MobileNavMenuProps {
   open: boolean
@@ -29,15 +29,16 @@ export default function MobileNavMenu({ open, onClose, isLoggedIn = false }: Mob
     >
       <nav className="flex flex-col gap-1 py-4 px-4">
         {navMenu.map((item) => (
-          <AppLink
+          <AppButtonLink
             key={item.href}
             href={item.href}
-            isActive={item.isActive}
             className="block py-2.5 px-3 rounded text-base transition-colors"
             onClick={onClose}
+            variant={item.isActive ? 'primary' : 'ghost'}
+            fullWidth
           >
             {item.title}
-          </AppLink>
+          </AppButtonLink>
         ))}
       </nav>
     </aside>
