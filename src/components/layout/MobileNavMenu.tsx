@@ -36,6 +36,7 @@ export default function MobileNavMenu({ open, onClose, isLoggedIn = false }: Mob
             onClick={onClose}
             variant={item.isActive ? 'primary' : 'ghost'}
             fullWidth
+            prefetch={false}
           >
             {item.title}
           </AppButtonLink>
