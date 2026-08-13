@@ -1,3 +1,4 @@
+/* eslint-disable @next/next/no-img-element */
 import clsx from 'clsx'
 import AppLink from '@/components/app/AppLink'
 import { APP_NAME } from '@/config'
@@ -24,9 +25,9 @@ export default function AppLogo({
                 src="/logo.svg"
                 alt=""
                 aria-hidden="true"
-                className="block h-10 w-auto shrink-0"
+                className="block h-10 w-auto shrink-0 -translate-y-1"
               />
-              <span className="text-lg font-bold tracking-tight leading-none translate-y-2">{APP_NAME}</span>
+              <span className="text-lg font-bold tracking-tight leading-none ">{APP_NAME}</span>
             </>
           )
           : (
