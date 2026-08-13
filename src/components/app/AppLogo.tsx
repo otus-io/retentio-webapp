@@ -1,7 +1,7 @@
-/* eslint-disable @next/next/no-img-element */
 import clsx from 'clsx'
 import AppLink from '@/components/app/AppLink'
 import { APP_NAME } from '@/config'
+import Image from 'next/image'
 
 interface AppLogoProps {
   className?: string;
@@ -21,19 +21,25 @@ export default function AppLogo({
         hideName !== true
           ? (
             <>
-              <img
+              <Image
                 src="/logo.svg"
                 alt=""
                 aria-hidden="true"
                 className="block h-10 w-auto shrink-0 -translate-y-1"
+                unoptimized
+                width={473}
+                height={402}
               />
               <span className="text-lg font-bold tracking-tight leading-none ">{APP_NAME}</span>
             </>
           )
           : (
-            <img
+            <Image
               src="/logo.svg"
+              unoptimized
               alt={APP_NAME}
+              width={473}
+              height={402}
               className="block h-10 w-auto shrink-0"
             />
           )
