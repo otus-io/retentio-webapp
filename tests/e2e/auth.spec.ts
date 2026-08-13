@@ -1,10 +1,21 @@
 import { test, expect } from '@playwright/test'
+import { getTestUserAuthStatePath } from './global-setup'
 import { skipUnlessE2ECredentials } from './helpers'
 
 test('should be logged in via global setup', async ({ page }) => {
   skipUnlessE2ECredentials()
   await page.goto('/')
   await expect(page).not.toHaveURL(/\/login/)
+})
+
+test.describe('secondary authenticated user', () => {
+  skipUnlessE2ECredentials(2)
+  test.use({ storageState: getTestUserAuthStatePath(2) })
+
+  test('should switch to the secondary test user', async ({ page }) => {
+    await page.goto('/')
+    await expect(page).not.toHaveURL(/\/login/)
+  })
 })
 
 test.describe('unauthenticated', () => {

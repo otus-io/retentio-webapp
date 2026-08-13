@@ -3,7 +3,11 @@ import path from 'node:path'
 import type { FullConfig } from '@playwright/test'
 import { API_BASE_URL, JWT_COOKIE_NAME } from '../../src/config/index'
 
-const authStatePath = path.join('tests', 'e2e', '.auth-state.json')
+export type E2ETestUser = 1 | 2
+
+export function getTestUserAuthStatePath(user: E2ETestUser = 1): string {
+  return path.join('tests', 'e2e', user === 1 ? '.auth-state.json' : `.auth-state-${user}.json`)
+}
 
 async function fetchAuthToken(username: string, password: string): Promise<string> {
   const controller = new AbortController()
@@ -66,9 +70,13 @@ async function apiRequest(token: string, path: string, init: RequestInit = {}): 
 
 async function deleteAllDecks(token: string) {
   const res = await apiRequest(token, '/api/decks')
-  const body = await res.json() as { data?: { decks?: { id: string }[] | null } }
+  const body = await res.json() as {
+    data?: { decks?: { id: string, visibility?: 'public' | 'private' }[] | null }
+  }
   const decks = body.data?.decks ?? []
   for (const deck of decks) {
+    // Published source decks are intentionally immutable and cannot be deleted.
+    if (deck.visibility === 'public') continue
     await apiRequest(token, `/api/decks/${deck.id}`, { method: 'DELETE' })
   }
 }
@@ -87,26 +95,16 @@ async function resetE2EUserData(token: string) {
   await deleteAllTags(token)
 }
 
-export default async function globalSetup(config: FullConfig) {
-  const username = process.env.E2E_USERNAME
-  const password = process.env.E2E_PASSWORD
-  if (!username || !password) {
-    if (process.env.CI) {
-      throw new Error('E2E_USERNAME and E2E_PASSWORD must be set for e2e tests in CI')
-    }
-    console.warn('E2E_USERNAME or E2E_PASSWORD not set, skipping global auth setup')
-    return
-  }
-
-  const baseURL =
-    config.projects[0]?.use?.baseURL ??
-    process.env.PLAYWRIGHT_TEST_BASE_URL ??
-    'http://localhost:3000'
-
+async function setupTestUser(
+  user: E2ETestUser,
+  username: string,
+  password: string,
+  hostname: string,
+) {
   const token = await fetchAuthToken(username, password)
   await resetE2EUserData(token)
-  const { hostname } = new URL(baseURL)
 
+  const authStatePath = getTestUserAuthStatePath(user)
   fs.mkdirSync(path.dirname(authStatePath), { recursive: true })
   fs.writeFileSync(
     authStatePath,
@@ -126,4 +124,32 @@ export default async function globalSetup(config: FullConfig) {
       2,
     ),
   )
+}
+
+export default async function globalSetup(config: FullConfig) {
+  const username = process.env.E2E_USERNAME
+  const password = process.env.E2E_PASSWORD
+  if (!username || !password) {
+    if (process.env.CI) {
+      throw new Error('E2E_USERNAME and E2E_PASSWORD must be set for e2e tests in CI')
+    }
+    console.warn('E2E_USERNAME or E2E_PASSWORD not set, skipping global auth setup')
+    return
+  }
+
+  const baseURL =
+    config.projects[0]?.use?.baseURL ??
+    process.env.PLAYWRIGHT_TEST_BASE_URL ??
+    'http://localhost:3000'
+
+  const { hostname } = new URL(baseURL)
+  await setupTestUser(1, username, password, hostname)
+
+  const username2 = process.env.E2E_USERNAME_2
+  const password2 = process.env.E2E_PASSWORD_2
+  if (username2 && password2) {
+    await setupTestUser(2, username2, password2, hostname)
+  } else if (username2 || password2) {
+    throw new Error('E2E_USERNAME_2 and E2E_PASSWORD_2 must be set together')
+  }
 }

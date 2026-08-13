@@ -48,3 +48,4 @@ next-env.d.ts
 e2e/.auth-state.json
 tests/e2e/.auth-state.json
 .venv/
+tests/e2e/.auth-state-2.json

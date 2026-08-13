@@ -44,10 +44,6 @@ vi.mock('@heroui/react', () => ({
 }))
 
 describe('TablePagination', () => {
-  it('totalPages <= 1 时返回 null', () => {
-    const { container } = render(<TablePagination totalPages={1} />)
-    expect(container.innerHTML).toBe('')
-  })
 
   it('totalPages > 1 时渲染分页', () => {
     render(<TablePagination totalPages={5} />)

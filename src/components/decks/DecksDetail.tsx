@@ -1,7 +1,6 @@
 'use client'
 import type { Deck } from '@/modules/decks/decks.schema'
 import { Card, Chip } from '@heroui/react'
-import { useMemo } from 'react'
 import { motion } from 'framer-motion'
 import DecksIconLabel from '@/components/decks/DecksLabel'
 import {
@@ -16,13 +15,17 @@ import {
   ListIcon,
   Tag,
 } from 'lucide-react'
-import { useTranslations } from 'next-intl'
+import { useFormatter, useTranslations } from 'next-intl'
 import DecksAction from '@/components/decks/DecksAction'
 import LayoutPage from '@/components/layout/LayoutPage'
 import TagItem from '@/components/tags/TagItem'
+import DeckPublishPanel from '@/components/decks/DeckPublishPanel'
+import DeckImportUpdatesPanel from '@/components/decks/DeckImportUpdatesPanel'
+import type { DeckImportUpdatesResponseDTO } from '@/modules/deck-sharing/deck-sharing.schema'
 
 interface DecksDetailProps {
   deck: Deck
+  updates: DeckImportUpdatesResponseDTO['data'] | null
 }
 
 const containerVariants = {
@@ -33,20 +36,18 @@ const containerVariants = {
   },
 }
 
-export default function DecksDetail({ deck }: DecksDetailProps) {
+export default function DecksDetail({ deck, updates }: DecksDetailProps) {
   const t = useTranslations()
 
   const progressPct = deck.stats.cards_count > 0
     ? (deck.stats.reviewed_cards / deck.stats.cards_count) * 100
     : 0
 
-  const last_reviewed_at = useMemo(() => {
-    if (deck.stats.last_reviewed_at) {
-      const date = new Date(deck.stats.last_reviewed_at * 1000)
-      return date.toLocaleString()
-    }
-    return 'never'
-  }, [deck.stats.last_reviewed_at])
+  const format = useFormatter()
+
+  const last_reviewed_at = deck.stats.last_reviewed_at
+    ? format.dateTime(new Date(deck.stats.last_reviewed_at), { dateStyle: 'medium', timeStyle: 'short' })
+    : t('term.never')
 
   const tags = deck.tags ?? []
 
@@ -58,12 +59,12 @@ export default function DecksDetail({ deck }: DecksDetailProps) {
       ]}
     >
       <motion.div
+        className="space-y-4"
         initial={{ opacity: 0, y: 12 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.35, ease: 'easeOut' }}
       >
-        <Card variant="default" className="border-border/50 border-l-2 border-l-accent/50 overflow-hidden">
-
+        <Card variant="default" className=" overflow-hidden">
           <Card.Header>
             <div className="flex items-center justify-between gap-4">
               <div className="flex-1 min-w-0">
@@ -170,6 +171,10 @@ export default function DecksDetail({ deck }: DecksDetailProps) {
             </motion.div>
           </Card.Content>
         </Card>
+        {!deck.source_deck_id && <DeckPublishPanel deck={deck} />}
+        {deck.source_deck_id && updates && (
+          <DeckImportUpdatesPanel deckId={deck.id} updates={updates} />
+        )}
       </motion.div>
     </LayoutPage>
   )

@@ -1,8 +1,10 @@
 import { test, expect } from '@playwright/test'
 import {
+  addFactRow,
   createDeck,
   createTagInDeckPicker,
   ensureAndVerifyTagViaLibrary,
+  gotoDeckFacts,
   openDeckDetailFromList,
   openDeckEditFromList,
   removeTagChipInDeckForm,
@@ -12,6 +14,7 @@ import {
   tagChipOnDeckDetail,
   uniqueName,
 } from './helpers'
+import { t } from './i18n'
 
 test.describe('Decks', () => {
   test.beforeEach(() => {
@@ -21,6 +24,37 @@ test.describe('Decks', () => {
   test('should create a deck', async ({ page }) => {
     await createDeck(page)
     await expect(page).toHaveURL(/\/decks$/)
+  })
+
+  test('should publish and publish a new deck version', async ({ page }) => {
+    test.setTimeout(60_000)
+    const deckName = uniqueName('PublishDeck')
+
+    await createDeck(page, deckName)
+    await openDeckDetailFromList(page, deckName)
+
+    await page.getByRole('button', { name: t('deck-sharing.publish') }).click()
+    const firstPublishDialog = page.getByRole('dialog')
+    await expect(firstPublishDialog.getByText(t('deck-sharing.irreversible-description'))).toBeVisible()
+    await firstPublishDialog.getByRole('button', { name: t('deck-sharing.publish') }).click()
+    await expect(firstPublishDialog).toBeHidden({ timeout: 15000 })
+    await expect(page.getByText('v1', { exact: true })).toBeVisible()
+
+    await gotoDeckFacts(page, deckName)
+    await addFactRow(page)
+    await openDeckDetailFromList(page, deckName)
+
+    await page.getByRole('button', { name: t('deck-sharing.republish') }).click()
+    const republishDialog = page.getByRole('dialog')
+    const versionInput = republishDialog.getByRole('textbox', {
+      name: t('deck-sharing.version-label'),
+    })
+    await expect(versionInput).toHaveValue('2')
+
+    await versionInput.fill('2')
+    await republishDialog.getByRole('button', { name: t('deck-sharing.republish') }).click()
+    await expect(republishDialog).toBeHidden({ timeout: 15000 })
+    await expect(page.getByText('v2', { exact: true })).toBeVisible()
   })
 
   test('should update deck name and fields', async ({ page }) => {

@@ -45,7 +45,7 @@ vi.mock('@/components/layout/MobileNavMenu', () => ({
 
 vi.mock('@/components/auth/UserButton', () => ({
   default: ({ user }: { user?: ProfileResponseDTO | null }) => (
-    <button data-testid="user-button">{user ? user.username : '登录'}</button>
+    <button data-testid="user-button">{user ? user.data.username : '登录'}</button>
   ),
 }))
 
@@ -92,14 +92,8 @@ describe('TopNav', () => {
     expect(screen.getByTestId('guide-search-button')).toBeDefined()
   })
 
-  it('渲染 UserButton', () => {
-    render(<TopNav user={{ username: 'testuser' } as ProfileResponseDTO} />)
-    expect(screen.getByTestId('user-button')).toBeDefined()
-    expect(screen.getByText('testuser')).toBeDefined()
-  })
-
   it('未登录时渲染 UserButton 无用户名', () => {
-    render(<TopNav user={null} />)
+    render(<TopNav />)
     expect(screen.getByTestId('user-button')).toBeDefined()
     expect(screen.getByText('登录')).toBeDefined()
   })

@@ -9,6 +9,7 @@ import { DecksSearch } from '@/components/decks/DecksSearch'
 import { useDeferredValue, useMemo, useState } from 'react'
 import Fuse from 'fuse.js'
 import DeckCreateButton from '@/components/decks/DeckCreateButton'
+import DeckImportButton from '@/components/decks/DeckImportButton'
 import LayoutPage from '@/components/layout/LayoutPage'
 import AppTooltip from '@/components/app/AppTooltip'
 
@@ -56,6 +57,7 @@ export default function DecksList({
             value={keywords}
             setValue={setKeywords}
           />
+          <DeckImportButton />
           <DeckCreateButton />
         </div>
       </div>
@@ -86,7 +88,6 @@ export default function DecksList({
     </LayoutPage>
   )
 }
-
 
 
 

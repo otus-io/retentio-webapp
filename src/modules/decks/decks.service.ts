@@ -1,7 +1,12 @@
 import * as decksApi from '@/api/decks'
 import * as tagApi from '@/api/tag'
 import { ServiceResponse } from '@/lib/response'
-import type { CreateOrUpdateDeckDTO, Deck, DeckResponseDTO } from '@/modules/decks/decks.schema'
+import type {
+  CreateOrUpdateDeckDTO,
+  Deck,
+  DeckResponseDTO,
+  UpdateImportedDeckFormDTO,
+} from '@/modules/decks/decks.schema'
 import type { TagsResponseDTO } from '@/modules/tags/tags.schema'
 
 /**
@@ -74,6 +79,30 @@ export async function updateDeckService(deckId: string, data: CreateOrUpdateDeck
     return ServiceResponse.success({ data: {}, meta: { msg: 'deleteFactsService success' } })
   } catch (e) {
     return ServiceResponse.error('updateDeckService failed', e)
+  }
+}
+
+export async function updateImportedDeckService(deckId: string, data: UpdateImportedDeckFormDTO) {
+  try {
+    const {
+      default_tag_ids = [],
+      tag_ids = [],
+      rate,
+    } = data
+    const addTags = Array.from(new Set(tag_ids.filter((tagId) => !default_tag_ids.includes(tagId))))
+    const deleteTags = Array.from(new Set(default_tag_ids.filter((tagId) => !tag_ids.includes(tagId))))
+    const results = await Promise.allSettled([
+      ...addTags.map((tagId) => tagApi.associateTagToDeck(deckId, tagId)),
+      ...deleteTags.map((tagId) => tagApi.removeTagFromDeck(deckId, tagId)),
+      decksApi.updateImportedDeck(deckId, { rate }),
+    ])
+    const failed = results.filter((result) => result.status === 'rejected')
+    if (failed.length > 0) {
+      return ServiceResponse.error('updateImportedDeckService error', failed[0].reason)
+    }
+    return ServiceResponse.success({ data: {}, meta: { msg: 'updateImportedDeckService success' } })
+  } catch (e) {
+    return ServiceResponse.error('updateImportedDeckService failed', e)
   }
 }
 

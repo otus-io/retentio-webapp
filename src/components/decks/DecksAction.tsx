@@ -68,7 +68,12 @@ export default function DecksAction({ deck, actions }: DecksActionProps) {
             }
             {
               actions.includes('delete') && (
-                <Dropdown.Item id="delete" textValue="delete" variant="danger">
+                <Dropdown.Item
+                  id="delete"
+                  textValue="delete"
+                  variant="danger"
+                  isDisabled={deck.visibility === 'public'}
+                >
                   <div className="flex items-center gap-1">
                     <Trash2 className="size-3.5 text-danger" />
                     <Label>{t('common.delete')}</Label>

@@ -5,6 +5,7 @@ import type {
   DeckResponseDTO,
   DecksListResponseDTO,
   DeleteDeckResponseDTO,
+  UpdateImportedDeckDTO,
 } from '@/modules/decks/decks.schema'
 
 /**
@@ -35,6 +36,16 @@ export function createDeck(data: CreateOrUpdateDeckDTO) {
  * 更新卡组
  */
 export function updateDeck(deckId: string, data: CreateOrUpdateDeckDTO) {
+  return request<CreateOrUpdateDeckResponseDTO>(`/api/decks/${deckId}`, {
+    method: 'PATCH',
+    body: JSON.stringify(data),
+  })
+}
+
+/**
+ * 导入卡组的名称和字段来自源快照，PATCH 时只能发送 rate。
+ */
+export function updateImportedDeck(deckId: string, data: UpdateImportedDeckDTO) {
   return request<CreateOrUpdateDeckResponseDTO>(`/api/decks/${deckId}`, {
     method: 'PATCH',
     body: JSON.stringify(data),
