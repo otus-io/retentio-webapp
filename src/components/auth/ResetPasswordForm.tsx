@@ -78,7 +78,7 @@ export default function ResetPasswordForm({ token }: { token: string }) {
                   </div>
                 </Card.Content>
                 <Card.Footer>
-                  <div className="flex flex-col gap-4 w-full">
+                  <div className="flex flex-col gap-4 w-full mt-4">
                     <AppButton
                       isPending={isPending}
                       className="w-full"
