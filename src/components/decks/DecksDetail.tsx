@@ -25,6 +25,7 @@ import DeckContributionsPanel from '@/components/decks/DeckContributionsPanel'
 import DeckAuthorContributionsPanel, { type ContributionInboxTab } from '@/components/decks/DeckAuthorContributionsPanel'
 import type { DeckImportUpdatesResponseDTO } from '@/modules/deck-sharing/deck-sharing.schema'
 import type { Contribution } from '@/modules/contributions/contributions.schema'
+import useAutoRefresh from '@/hooks/useAutoRefresh'
 
 interface DecksDetailProps {
   deck: Deck
@@ -47,6 +48,7 @@ const containerVariants = {
 
 export default function DecksDetail({ deck, updates, authorContributions }: DecksDetailProps) {
   const t = useTranslations()
+  useAutoRefresh()
 
   const progressPct = deck.stats.cards_count > 0
     ? (deck.stats.reviewed_cards / deck.stats.cards_count) * 100
