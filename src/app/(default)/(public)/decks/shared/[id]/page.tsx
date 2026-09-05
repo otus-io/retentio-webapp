@@ -18,14 +18,20 @@ export default async function Page(props: PageProps<'/decks/shared/[id]'>) {
 
 
   let importedDeckId: string | null = null
+  let ownedDeckId: string | null = null
   if (await getToken()) {
     const decks = await getAllDecksService()
     if (decks.success) {
       importedDeckId = decks.data.decks.find((deck) => deck.source_deck_id === id)?.id ?? null
+      ownedDeckId = decks.data.decks.find((deck) => deck.id === id && !deck.source_deck_id)?.id ?? null
     }
   }
 
   return (
-    <SharedDecksDetail deck={deckCatalog.data} importedDeckId={importedDeckId} />
+    <SharedDecksDetail
+      deck={deckCatalog.data}
+      importedDeckId={importedDeckId}
+      ownedDeckId={ownedDeckId}
+    />
   )
 }

@@ -2,6 +2,8 @@ import * as contributionsApi from '@/api/contributions'
 import { ServiceResponse } from '@/lib/response'
 import type {
   GetContributionsDTO,
+  PendingDeckContribution,
+  SubmitDeckContributionsBatchResult,
   SubmitContributionMessageDTO,
   SubmitFactEditContributionDTO,
   SubmitFieldRenameContributionDTO,
@@ -71,6 +73,41 @@ export async function submitFieldRenameContributionService(importDeckId: string,
     return ServiceResponse.success(await contributionsApi.submitFieldRenameContribution(importDeckId, data))
   } catch (e) {
     return ServiceResponse.error('submitFieldRenameContributionService failed', e)
+  }
+}
+
+/** 依次提交本地缓存的卡组贡献，并保留每一项的提交结果 */
+export async function submitDeckContributionsBatchService(
+  importDeckId: string,
+  contributions: PendingDeckContribution[],
+) {
+  try {
+    const result: SubmitDeckContributionsBatchResult = { submitted: [], failed: [] }
+
+    for (const contribution of contributions) {
+      const response = contribution.kind === 'deck_tags'
+        ? await submitDeckTagContributionService(importDeckId, {
+          add_tags: contribution.addTags,
+          remove_tags: contribution.removeTags,
+        })
+        : await submitFieldRenameContributionService(importDeckId, {
+          proposed_fields: contribution.proposedFields,
+        })
+
+      if (response.success) {
+        result.submitted.push({
+          localId: contribution.id,
+          kind: contribution.kind,
+          contributionId: response.data.contribution_id,
+        })
+      } else {
+        result.failed.push({ localId: contribution.id, error: response.message })
+      }
+    }
+
+    return ServiceResponse.success({ data: result, meta: { msg: 'success' } })
+  } catch (e) {
+    return ServiceResponse.error('submitDeckContributionsBatchService failed', e)
   }
 }
 
