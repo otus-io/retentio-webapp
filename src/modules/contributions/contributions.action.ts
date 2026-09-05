@@ -1,8 +1,11 @@
 'use server'
 
+import { revalidatePath } from 'next/cache'
 import type {
   Contribution,
   ContributionSubmission,
+  SubmitDeckContributionsBatchDTO,
+  SubmitDeckContributionsBatchResult,
   SubmitContributionMessageDTO,
   SubmitFactEditContributionDTO,
   SubmitFieldRenameContributionDTO,
@@ -13,6 +16,7 @@ import type {
 } from '@/modules/contributions/contributions.schema'
 import {
   acceptContributionService,
+  submitDeckContributionsBatchService,
   submitDeckTagContributionService,
   submitFactAddContributionService,
   submitFactEditContributionService,
@@ -38,6 +42,15 @@ interface ContributionMutationPayload<Data> {
   sourceDeckId: string
   contributionId: string
   data: Data
+}
+
+/** 批量提交本地缓存的卡组贡献 */
+export const submitDeckContributionsBatchAction: ActionFunctionPayload<
+  SubmitDeckContributionsBatchDTO,
+  SubmitDeckContributionsBatchResult
+> = async ({ importDeckId, contributions }) => {
+  const response = await submitDeckContributionsBatchService(importDeckId, contributions)
+  return response.success ? { success: true, data: response.data } : { success: false, error: response.message }
 }
 
 /** 提交词条编辑贡献 */
@@ -109,7 +122,10 @@ export const updateContributionStatusAction: ActionFunctionPayload<
   Contribution
 > = async ({ sourceDeckId, contributionId, data }) => {
   const response = await updateContributionStatusService(sourceDeckId, contributionId, data)
-  return response.success ? { success: true, data: response.data } : { success: false, error: response.message }
+  if (!response.success) return { success: false, error: response.message }
+
+  revalidatePath(`/decks/${sourceDeckId}`)
+  return { success: true, data: response.data }
 }
 
 /** 接受贡献并应用到作者工作副本 */
@@ -118,5 +134,10 @@ export const acceptContributionAction: ActionFunctionPayload<
   Contribution
 > = async ({ sourceDeckId, contributionId }) => {
   const response = await acceptContributionService(sourceDeckId, contributionId)
-  return response.success ? { success: true, data: response.data } : { success: false, error: response.message }
+  if (!response.success) return { success: false, error: response.message }
+
+  revalidatePath(`/decks/${sourceDeckId}`)
+  revalidatePath(`/decks/${sourceDeckId}/facts`)
+  revalidatePath('/decks')
+  return { success: true, data: response.data }
 }

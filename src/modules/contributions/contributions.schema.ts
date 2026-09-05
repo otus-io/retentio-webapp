@@ -186,6 +186,50 @@ export interface SubmitFieldRenameContributionDTO {
   message?: string
 }
 
+/** 本地待提交的卡组贡献 */
+export type PendingDeckContribution = {
+  id: 'deck_tags'
+  kind: 'deck_tags'
+  preview: string
+  addTags: string[]
+  removeTags: string[]
+  savedAt: string
+} | {
+  id: 'field_rename'
+  kind: 'field_rename'
+  preview: string
+  proposedFields: string[]
+  savedAt: string
+}
+
+/** 已发送的本地贡献记录 */
+export interface SentDeckContribution {
+  id: string
+  kind: PendingDeckContribution['kind']
+  preview: string
+  contributionId: string
+  sentAt: string
+}
+
+/** 批量提交卡组贡献的请求 */
+export interface SubmitDeckContributionsBatchDTO {
+  importDeckId: string
+  contributions: PendingDeckContribution[]
+}
+
+/** 批量提交卡组贡献的结果 */
+export interface SubmitDeckContributionsBatchResult {
+  submitted: Array<{
+    localId: PendingDeckContribution['id']
+    kind: PendingDeckContribution['kind']
+    contributionId: string
+  }>
+  failed: Array<{
+    localId: PendingDeckContribution['id']
+    error: string
+  }>
+}
+
 /** 提交举报请求 DTO */
 export interface SubmitReportContributionDTO {
   /** 举报留言 */
