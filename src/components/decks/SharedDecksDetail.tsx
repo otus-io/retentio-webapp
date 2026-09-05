@@ -17,11 +17,13 @@ import { importDeckAction } from '@/modules/deck-sharing/deck-sharing.action'
 interface SharedDecksDetailProps {
   deck: DeckCatalogItem
   importedDeckId: string | null
+  ownedDeckId: string | null
 }
 
 export default function SharedDecksDetail({
   deck,
   importedDeckId,
+  ownedDeckId,
 }: SharedDecksDetailProps) {
   const t = useTranslations()
   const { isLogin, accessAction } = useUserContext()
@@ -94,19 +96,25 @@ export default function SharedDecksDetail({
               <CalendarDays className="size-3 shrink-0" />
               <span>{publishedAt}</span>
             </div>
-            {importedDeckId
+            {ownedDeckId
               ? (
-                <AppButtonLink href={`/decks/${importedDeckId}`} className="ml-auto">
-                  {t('deck-sharing.go-study')}
+                <AppButtonLink href={`/decks/${ownedDeckId}`} className="ml-auto">
+                  {t('deck-sharing.view-my-deck')}
                 </AppButtonLink>
               )
-              : (
-                <form action={action} onSubmit={handleImport} className="ml-auto">
-                  <AppButton type="submit" isPending={isPending}>
-                    {t('deck-sharing.import')}
-                  </AppButton>
-                </form>
-              )}
+              : (importedDeckId
+                ? (
+                  <AppButtonLink href={`/decks/${importedDeckId}`} className="ml-auto">
+                    {t('deck-sharing.go-study')}
+                  </AppButtonLink>
+                )
+                : (
+                  <form action={action} onSubmit={handleImport} className="ml-auto">
+                    <AppButton type="submit" isPending={isPending}>
+                      {t('deck-sharing.import')}
+                    </AppButton>
+                  </form>
+                ))}
           </div>
         </Card.Content>
       </Card>
