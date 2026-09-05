@@ -368,6 +368,7 @@ export default function DeckContributionsPanel({ deck }: DeckContributionsPanelP
               isIconOnly
               aria-label={t('field-rename-title')}
               variant="primary"
+              isDisabled={isSubmitting}
               onPress={() => setForm('field_rename')}
             >
               <PencilLine className="size-4" />
@@ -376,6 +377,7 @@ export default function DeckContributionsPanel({ deck }: DeckContributionsPanelP
               isIconOnly
               aria-label={t('deck-tags-title')}
               variant="primary"
+              isDisabled={isSubmitting}
               onPress={() => setForm('deck_tags')}
             >
               <Tags className="size-4" />
