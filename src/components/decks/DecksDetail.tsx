@@ -48,7 +48,7 @@ const containerVariants = {
 
 export default function DecksDetail({ deck, updates, authorContributions }: DecksDetailProps) {
   const t = useTranslations()
-  useAutoRefresh()
+  useAutoRefresh({ enabled: !!authorContributions })
 
   const progressPct = deck.stats.cards_count > 0
     ? (deck.stats.reviewed_cards / deck.stats.cards_count) * 100
