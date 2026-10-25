@@ -78,8 +78,8 @@ export default function AuthForm({ type }: { type: 'login' | 'register' }) {
                   isRequired
                   placeholder={t('usernamePlaceholder')}
                   variant="secondary"
-                  minLength={USERNAME_MIN}
-                  maxLength={USERNAME_MAX}
+                  minLength={isLogin ? undefined : USERNAME_MIN}
+                  maxLength={isLogin ? undefined : USERNAME_MAX}
                   defaultValue={state?.data?.username}
                 />
 
@@ -102,8 +102,8 @@ export default function AuthForm({ type }: { type: 'login' | 'register' }) {
                   name="password"
                   variant="secondary"
                   placeholder={t('passwordPlaceholder')}
-                  minLength={PASSWORD_MIN}
-                  maxLength={PASSWORD_MAX}
+                  minLength={isLogin ? undefined : PASSWORD_MIN}
+                  maxLength={isLogin ? undefined : PASSWORD_MAX}
                 />
 
                 {

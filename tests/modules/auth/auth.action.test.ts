@@ -41,12 +41,13 @@ describe('loginAction', () => {
 
   it('does not echo passwords on validation failure', async () => {
     const state = await loginAction(null, formData({
-      username: 'a',
+      username: 'a b',
       password: 'secret123',
     }))
-    expect(state?.data).toEqual({ username: 'a' })
+    expect(state?.data).toEqual({ username: 'a b' })
     expect(state?.data).not.toHaveProperty('password')
-    expect(state?.validationErrors?.username).toEqual(['usernameLength'])
+    expect(state?.validationErrors?.username).toEqual(['usernameSpaces'])
+    expect(loginServiceMock).not.toHaveBeenCalled()
   })
 
   it('trims the username before login and when repopulating the form', async () => {
@@ -70,41 +71,52 @@ describe('loginAction', () => {
     expect(state?.data).not.toHaveProperty('password')
   })
 
-  it('localizes a short password', async () => {
-    const state = await loginAction(null, formData({
-      username: 'ab',
-      password: 'short',
-    }))
-    expect(state?.validationErrors?.password).toEqual(['passwordTooShort'])
+  it('submits a short, long, or multi-byte password', async () => {
+    loginServiceMock.mockResolvedValue({
+      success: false,
+      message: 'Invalid credentials',
+      data: null,
+      meta: { msg: 'login failed' },
+    })
+    for (const password of ['short', 'a'.repeat(65), '😀'.repeat(19)]) {
+      loginServiceMock.mockClear()
+      const state = await loginAction(null, formData({
+        username: 'a',
+        password,
+      }))
+      expect(loginServiceMock).toHaveBeenCalledWith({
+        username: 'a',
+        password,
+      })
+      expect(state?.validationErrors).toBeUndefined()
+    }
   })
 
-  it('localizes a long password', async () => {
-    const state = await loginAction(null, formData({
-      username: 'ab',
-      password: 'a'.repeat(65),
-    }))
-    expect(state?.validationErrors?.password).toEqual(['passwordTooLong'])
-  })
-
-  it('localizes a password that exceeds 72 bytes', async () => {
-    const state = await loginAction(null, formData({
-      username: 'ab',
-      password: '😀'.repeat(19),
-    }))
-    expect(state?.validationErrors?.password).toEqual(['passwordTooManyBytes'])
-  })
-
-  it('localizes whitespace inside the username or password', async () => {
+  it('localizes whitespace inside the username', async () => {
     const username = await loginAction(null, formData({
       username: 'a b',
       password: 'secret123',
     }))
-    const password = await loginAction(null, formData({
+    expect(username?.validationErrors?.username).toEqual(['usernameSpaces'])
+  })
+
+  it('submits a password that contains whitespace', async () => {
+    loginServiceMock.mockResolvedValue({
+      success: false,
+      message: 'Invalid credentials',
+      data: null,
+      meta: { msg: 'login failed' },
+    })
+    const state = await loginAction(null, formData({
       username: 'ab',
       password: 'secret 123',
     }))
-    expect(username?.validationErrors?.username).toEqual(['usernameSpaces'])
-    expect(password?.validationErrors?.password).toEqual(['passwordSpaces'])
+    expect(loginServiceMock).toHaveBeenCalledWith({
+      username: 'ab',
+      password: 'secret 123',
+    })
+    expect(state?.error).toBe('Invalid credentials')
+    expect(state?.validationErrors).toBeUndefined()
   })
 
   it('does not echo passwords on service failure', async () => {

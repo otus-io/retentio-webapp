@@ -160,7 +160,7 @@ describe('registerSchema', () => {
 })
 
 describe('loginSchema', () => {
-  it('trims the username before checking length', () => {
+  it('trims the username and keeps a short name', () => {
     const result = loginSchema.safeParse({ username: '  ab  ', password: 'password' })
     expect(result.success).toBe(true)
     if (result.success) {
@@ -171,35 +171,34 @@ describe('loginSchema', () => {
     if (padded.success) {
       expect(padded.data.username).toBe('小明')
     }
+    const short = loginSchema.safeParse({ username: ' a ', password: 'password' })
+    expect(short.success).toBe(true)
+    if (short.success) {
+      expect(short.data.username).toBe('a')
+    }
   })
 
-  it('rejects whitespace inside the username or password', () => {
+  it('rejects whitespace inside the username and accepts it in the password', () => {
     const username = loginSchema.safeParse({ username: '  a b  ', password: 'password' })
     const password = loginSchema.safeParse({ username: 'ab', password: 'pass word' })
+    const tab = loginSchema.safeParse({ username: 'ab', password: 'pass\tword' })
     expect(username.success).toBe(false)
-    expect(password.success).toBe(false)
+    expect(password.success).toBe(true)
+    expect(tab.success).toBe(true)
     if (!username.success) {
       expect(username.error.flatten().fieldErrors.username).toEqual([USERNAME_SPACES])
     }
-    if (!password.success) {
-      expect(password.error.flatten().fieldErrors.password).toEqual([PASSWORD_SPACES])
-    }
   })
 
-  it('rejects a username that is still too short after trim', () => {
-    const result = loginSchema.safeParse({ username: ' a ', password: 'password' })
-    expect(result.success).toBe(false)
-    if (!result.success) {
-      expect(result.error.flatten().fieldErrors.username).toEqual([USERNAME_LENGTH])
-    }
+  it('accepts a short, long, or multi-byte password', () => {
+    expect(loginSchema.safeParse({ username: 'a', password: 'short' }).success).toBe(true)
+    expect(loginSchema.safeParse({ username: 'ab', password: 'a'.repeat(65) }).success).toBe(true)
+    expect(loginSchema.safeParse({ username: 'ab', password: '😀'.repeat(19) }).success).toBe(true)
   })
 
-  it('rejects a password longer than 64 characters', () => {
-    const result = loginSchema.safeParse({ username: 'ab', password: 'a'.repeat(65) })
-    expect(result.success).toBe(false)
-    if (!result.success) {
-      expect(result.error.flatten().fieldErrors.password).toEqual([PASSWORD_TOO_LONG])
-    }
+  it('rejects an empty username or password', () => {
+    expect(loginSchema.safeParse({ username: '   ', password: 'password' }).success).toBe(false)
+    expect(loginSchema.safeParse({ username: 'ab', password: '' }).success).toBe(false)
   })
 })
 

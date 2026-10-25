@@ -38,15 +38,10 @@ function utf8ByteLength(value: string) {
   return new TextEncoder().encode(value).length
 }
 
-function usernameLengthField() {
-  return z.string().trim().superRefine((value, ctx) => {
+function loginUsernameField() {
+  return z.string().trim().min(1).superRefine((value, ctx) => {
     if (hasWhitespace(value)) {
       ctx.addIssue(USERNAME_SPACES)
-      return z.NEVER
-    }
-    const n = charLength(value)
-    if (n < USERNAME_MIN || n > USERNAME_MAX) {
-      ctx.addIssue(USERNAME_LENGTH)
       return z.NEVER
     }
   })
@@ -91,10 +86,11 @@ function passwordField() {
   })
 }
 
-// 登录
+// Login trims the username and rejects whitespace inside it.
+// Length limits apply when a password is created or reset, so an older password can still sign in.
 export const loginSchema = z.object({
-  username: usernameLengthField(),
-  password: passwordField(),
+  username: loginUsernameField(),
+  password: z.string().min(1),
   redirect: z.string().optional(),
 })
 
