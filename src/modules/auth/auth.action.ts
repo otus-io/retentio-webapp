@@ -6,8 +6,12 @@ import z from 'zod'
 import { LOGIN_PATH } from '@/config'
 import { formDataToObject } from '@/utils/format'
 import {
+  PASSWORD_TOO_LONG,
+  PASSWORD_TOO_MANY_BYTES,
+  PASSWORD_TOO_SHORT,
   PASSWORDS_MISMATCH,
   USERNAME_INVALID,
+  USERNAME_LENGTH,
   forgotPasswordSchema,
   loginSchema,
   registerSchema,
@@ -33,6 +37,10 @@ async function localizeAuthFieldErrors(
     out[key] = messages.map((msg) => {
       if (msg === PASSWORDS_MISMATCH) return t('passwordsMismatch')
       if (msg === USERNAME_INVALID) return t('usernameInvalid')
+      if (msg === USERNAME_LENGTH) return t('usernameLength')
+      if (msg === PASSWORD_TOO_SHORT) return t('passwordTooShort')
+      if (msg === PASSWORD_TOO_LONG) return t('passwordTooLong')
+      if (msg === PASSWORD_TOO_MANY_BYTES) return t('passwordTooManyBytes')
       return msg
     })
   }

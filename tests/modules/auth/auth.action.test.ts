@@ -41,12 +41,28 @@ describe('loginAction', () => {
 
   it('does not echo passwords on validation failure', async () => {
     const state = await loginAction(null, formData({
-      username: 'ab',
+      username: 'a',
       password: 'secret123',
     }))
-    expect(state?.data).toEqual({ username: 'ab' })
+    expect(state?.data).toEqual({ username: 'a' })
     expect(state?.data).not.toHaveProperty('password')
-    expect(state?.validationErrors?.username).toBeDefined()
+    expect(state?.validationErrors?.username).toEqual(['usernameLength'])
+  })
+
+  it('localizes a short password', async () => {
+    const state = await loginAction(null, formData({
+      username: 'ab',
+      password: 'short',
+    }))
+    expect(state?.validationErrors?.password).toEqual(['passwordTooShort'])
+  })
+
+  it('localizes a long password', async () => {
+    const state = await loginAction(null, formData({
+      username: 'ab',
+      password: 'a'.repeat(65),
+    }))
+    expect(state?.validationErrors?.password).toEqual(['passwordTooLong'])
   })
 
   it('does not echo passwords on service failure', async () => {
