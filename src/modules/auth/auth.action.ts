@@ -6,8 +6,14 @@ import z from 'zod'
 import { LOGIN_PATH } from '@/config'
 import { formDataToObject } from '@/utils/format'
 import {
+  PASSWORD_SPACES,
+  PASSWORD_TOO_LONG,
+  PASSWORD_TOO_MANY_BYTES,
+  PASSWORD_TOO_SHORT,
   PASSWORDS_MISMATCH,
   USERNAME_INVALID,
+  USERNAME_LENGTH,
+  USERNAME_SPACES,
   forgotPasswordSchema,
   loginSchema,
   registerSchema,
@@ -33,6 +39,12 @@ async function localizeAuthFieldErrors(
     out[key] = messages.map((msg) => {
       if (msg === PASSWORDS_MISMATCH) return t('passwordsMismatch')
       if (msg === USERNAME_INVALID) return t('usernameInvalid')
+      if (msg === USERNAME_LENGTH) return t('usernameLength')
+      if (msg === USERNAME_SPACES) return t('usernameSpaces')
+      if (msg === PASSWORD_SPACES) return t('passwordSpaces')
+      if (msg === PASSWORD_TOO_SHORT) return t('passwordTooShort')
+      if (msg === PASSWORD_TOO_LONG) return t('passwordTooLong')
+      if (msg === PASSWORD_TOO_MANY_BYTES) return t('passwordTooManyBytes')
       return msg
     })
   }
@@ -46,21 +58,21 @@ function resetPasswordSafeData(data: Record<string, unknown>) {
 }
 
 /** Keep non-secret fields for form repopulation; never echo passwords. */
-function authFormSafeData(data: Record<string, unknown>) {
+function authFormSafeData<T extends { password?: unknown, confirmPassword?: unknown }>(data: T) {
   const { password: _password, confirmPassword: _confirmPassword, ...safe } = data
   return safe
 }
 
 export const loginAction: ActionFunction = async (_, formData) => {
   const data = formDataToObject(formData)
-  const safeData = authFormSafeData(data)
   const result = loginSchema.safeParse(data)
   if (!result.success) {
     return {
       validationErrors: await localizeAuthFieldErrors(z.flattenError(result.error).fieldErrors),
-      data: safeData,
+      data: authFormSafeData(data),
     }
   }
+  const safeData = authFormSafeData(result.data)
   const res = await loginService(result.data)
   if (!res.success) {
     return {
@@ -75,14 +87,14 @@ export const loginAction: ActionFunction = async (_, formData) => {
 
 export const registerAction: ActionFunction = async (_, formData) => {
   const data = formDataToObject(formData)
-  const safeData = authFormSafeData(data)
   const result = registerSchema.safeParse(data)
   if (!result.success) {
     return {
       validationErrors: await localizeAuthFieldErrors(z.flattenError(result.error).fieldErrors),
-      data: safeData,
+      data: authFormSafeData(data),
     }
   }
+  const safeData = authFormSafeData(result.data)
   const res = await registerService(result.data)
   if (!res.success) {
     return {

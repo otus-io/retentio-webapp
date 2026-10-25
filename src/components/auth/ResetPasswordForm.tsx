@@ -6,6 +6,7 @@ import { useTranslations } from 'next-intl'
 import { startTransition, useActionState, useCallback } from 'react'
 import { FORGOT_PASSWORD_PATH, LOGIN_PATH } from '@/config'
 import { resetPasswordAction } from '@/modules/auth/auth.action'
+import { PASSWORD_MAX, PASSWORD_MIN } from '@/modules/auth/auth.schema'
 import AppButton from '@/components/app/AppButton'
 import AppError from '@/components/app/AppError'
 import AppLink from '@/components/app/AppLink'
@@ -65,7 +66,8 @@ export default function ResetPasswordForm({ token }: { token: string }) {
                       name="password"
                       variant="secondary"
                       placeholder={t('passwordPlaceholder')}
-                      minLength={8}
+                      minLength={PASSWORD_MIN}
+                      maxLength={PASSWORD_MAX}
                     />
                     <AppPasswordInput
                       isRequired
@@ -73,7 +75,6 @@ export default function ResetPasswordForm({ token }: { token: string }) {
                       name="confirmPassword"
                       variant="secondary"
                       placeholder={t('confirmPasswordPlaceholder')}
-                      minLength={8}
                     />
                   </div>
                 </Card.Content>

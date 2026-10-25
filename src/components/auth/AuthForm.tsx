@@ -7,6 +7,7 @@ import { useTranslations } from 'next-intl'
 import { startTransition, useActionState, useCallback, useMemo, useState } from 'react'
 import { FORGOT_PASSWORD_PATH, LOGIN_PATH, REGISTER_PATH } from '@/config'
 import { loginAction, registerAction } from '@/modules/auth/auth.action'
+import { PASSWORD_MAX, PASSWORD_MIN, USERNAME_MAX, USERNAME_MIN } from '@/modules/auth/auth.schema'
 import AppButton from '@/components/app/AppButton'
 import AppError from '@/components/app/AppError'
 import AppInput from '@/components/app/AppInput'
@@ -77,6 +78,8 @@ export default function AuthForm({ type }: { type: 'login' | 'register' }) {
                   isRequired
                   placeholder={t('usernamePlaceholder')}
                   variant="secondary"
+                  minLength={isLogin ? undefined : USERNAME_MIN}
+                  maxLength={isLogin ? undefined : USERNAME_MAX}
                   defaultValue={state?.data?.username}
                 />
 
@@ -99,7 +102,8 @@ export default function AuthForm({ type }: { type: 'login' | 'register' }) {
                   name="password"
                   variant="secondary"
                   placeholder={t('passwordPlaceholder')}
-                  minLength={isLogin ? 6 : 8}
+                  minLength={isLogin ? undefined : PASSWORD_MIN}
+                  maxLength={isLogin ? undefined : PASSWORD_MAX}
                 />
 
                 {
@@ -120,7 +124,6 @@ export default function AuthForm({ type }: { type: 'login' | 'register' }) {
                       name="confirmPassword"
                       variant="secondary"
                       placeholder={t('confirmPasswordPlaceholder')}
-                      minLength={8}
                     />
                   )
                 }
