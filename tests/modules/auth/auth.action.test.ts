@@ -41,15 +41,15 @@ describe('loginAction', () => {
 
   it('does not echo passwords on validation failure', async () => {
     const state = await loginAction(null, formData({
-      username: 'ab',
+      username: '',
       password: 'secret123',
     }))
-    expect(state?.data).toEqual({ username: 'ab' })
+    expect(state?.data).toEqual({ username: '' })
     expect(state?.data).not.toHaveProperty('password')
     expect(state?.validationErrors?.username).toBeDefined()
   })
 
-  it('does not echo passwords on service failure', async () => {
+  it('submits a three-character username without echoing passwords on service failure', async () => {
     loginServiceMock.mockResolvedValue({
       success: false,
       message: 'Invalid credentials',
@@ -57,12 +57,17 @@ describe('loginAction', () => {
       meta: { msg: 'login failed' },
     })
     const state = await loginAction(null, formData({
-      username: 'alice',
+      username: 'joe',
       password: 'secret123',
       redirect: '/',
     }))
+    expect(loginServiceMock).toHaveBeenCalledWith({
+      username: 'joe',
+      password: 'secret123',
+      redirect: '/',
+    })
     expect(state?.success).toBe(false)
-    expect(state?.data).toEqual({ username: 'alice', redirect: '/' })
+    expect(state?.data).toEqual({ username: 'joe', redirect: '/' })
     expect(state?.data).not.toHaveProperty('password')
   })
 })

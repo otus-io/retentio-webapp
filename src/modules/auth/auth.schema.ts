@@ -8,7 +8,7 @@ export const USERNAME_INVALID = 'username_invalid'
 // 登录
 export const loginSchema = z.object({
   username: z.string()
-    .min(4),
+    .min(1),
   password: z.string().min(6),
   redirect: z.string().optional(),
 })
