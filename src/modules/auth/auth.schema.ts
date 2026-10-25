@@ -6,6 +6,10 @@ export const PASSWORDS_MISMATCH = 'passwords_mismatch'
 export const USERNAME_INVALID = 'username_invalid'
 /** Sentinel for username length; mapped to i18n in auth actions. */
 export const USERNAME_LENGTH = 'username_length'
+/** Sentinel for whitespace inside a username; mapped to i18n in auth actions. */
+export const USERNAME_SPACES = 'username_spaces'
+/** Sentinel for whitespace inside a password; mapped to i18n in auth actions. */
+export const PASSWORD_SPACES = 'password_spaces'
 /** Sentinel for a too-short password; mapped to i18n in auth actions. */
 export const PASSWORD_TOO_SHORT = 'password_too_short'
 /** Sentinel for a too-long password; mapped to i18n in auth actions. */
@@ -20,8 +24,14 @@ export const PASSWORD_MAX = 64
 /** bcrypt rejects passwords longer than 72 bytes. */
 export const PASSWORD_MAX_BYTES = 72
 
+const whitespace = /\s/u
+
 function charLength(value: string) {
   return [...value].length
+}
+
+function hasWhitespace(value: string) {
+  return whitespace.test(value)
 }
 
 function utf8ByteLength(value: string) {
@@ -29,17 +39,56 @@ function utf8ByteLength(value: string) {
 }
 
 function usernameLengthField() {
-  return z.string().refine((value) => {
-    const n = charLength(value.trim())
-    return n >= USERNAME_MIN && n <= USERNAME_MAX
-  }, USERNAME_LENGTH)
+  return z.string().trim().superRefine((value, ctx) => {
+    if (hasWhitespace(value)) {
+      ctx.addIssue(USERNAME_SPACES)
+      return z.NEVER
+    }
+    const n = charLength(value)
+    if (n < USERNAME_MIN || n > USERNAME_MAX) {
+      ctx.addIssue(USERNAME_LENGTH)
+      return z.NEVER
+    }
+  })
+}
+
+function registerUsernameField() {
+  return z.string().trim().superRefine((value, ctx) => {
+    if (hasWhitespace(value)) {
+      ctx.addIssue(USERNAME_SPACES)
+      return z.NEVER
+    }
+    if (!/^[a-z][a-z0-9_-]*$/.test(value)) {
+      ctx.addIssue(USERNAME_INVALID)
+      return z.NEVER
+    }
+    const n = charLength(value)
+    if (n < USERNAME_MIN || n > USERNAME_MAX) {
+      ctx.addIssue(USERNAME_LENGTH)
+      return z.NEVER
+    }
+  })
 }
 
 function passwordField() {
-  return z.string()
-    .refine((value) => charLength(value) >= PASSWORD_MIN, PASSWORD_TOO_SHORT)
-    .refine((value) => charLength(value) <= PASSWORD_MAX, PASSWORD_TOO_LONG)
-    .refine((value) => utf8ByteLength(value) <= PASSWORD_MAX_BYTES, PASSWORD_TOO_MANY_BYTES)
+  return z.string().superRefine((value, ctx) => {
+    if (hasWhitespace(value)) {
+      ctx.addIssue(PASSWORD_SPACES)
+      return z.NEVER
+    }
+    if (charLength(value) < PASSWORD_MIN) {
+      ctx.addIssue(PASSWORD_TOO_SHORT)
+      return z.NEVER
+    }
+    if (charLength(value) > PASSWORD_MAX) {
+      ctx.addIssue(PASSWORD_TOO_LONG)
+      return z.NEVER
+    }
+    if (utf8ByteLength(value) > PASSWORD_MAX_BYTES) {
+      ctx.addIssue(PASSWORD_TOO_MANY_BYTES)
+      return z.NEVER
+    }
+  })
 }
 
 // 登录
@@ -53,15 +102,10 @@ export type LoginDTO = z.infer<typeof loginSchema>
 
 // 注册
 export const registerSchema = z.object({
-  username: z.string()
-    .regex(/^[a-z][a-z0-9_-]*$/, USERNAME_INVALID)
-    .refine((value) => {
-      const n = charLength(value)
-      return n >= USERNAME_MIN && n <= USERNAME_MAX
-    }, USERNAME_LENGTH),
+  username: registerUsernameField(),
   email: z.email(),
   password: passwordField(),
-  confirmPassword: passwordField(),
+  confirmPassword: z.string(),
   redirect: z.string().optional(),
 }).refine((data) => data.password === data.confirmPassword, {
   message: PASSWORDS_MISMATCH,
@@ -81,7 +125,7 @@ export type ForgotPasswordDTO = z.infer<typeof forgotPasswordSchema>
 export const resetPasswordSchema = z.object({
   token: z.string().min(1),
   password: passwordField(),
-  confirmPassword: passwordField(),
+  confirmPassword: z.string(),
 }).refine((data) => data.password === data.confirmPassword, {
   message: PASSWORDS_MISMATCH,
   path: ['confirmPassword'],

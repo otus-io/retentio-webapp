@@ -49,6 +49,27 @@ describe('loginAction', () => {
     expect(state?.validationErrors?.username).toEqual(['usernameLength'])
   })
 
+  it('trims the username before login and when repopulating the form', async () => {
+    loginServiceMock.mockResolvedValue({
+      success: false,
+      message: 'Invalid credentials',
+      data: null,
+      meta: { msg: 'login failed' },
+    })
+    const state = await loginAction(null, formData({
+      username: '  ab  ',
+      password: 'secret123',
+      redirect: '/',
+    }))
+    expect(loginServiceMock).toHaveBeenCalledWith({
+      username: 'ab',
+      password: 'secret123',
+      redirect: '/',
+    })
+    expect(state?.data?.username).toBe('ab')
+    expect(state?.data).not.toHaveProperty('password')
+  })
+
   it('localizes a short password', async () => {
     const state = await loginAction(null, formData({
       username: 'ab',
@@ -63,6 +84,27 @@ describe('loginAction', () => {
       password: 'a'.repeat(65),
     }))
     expect(state?.validationErrors?.password).toEqual(['passwordTooLong'])
+  })
+
+  it('localizes a password that exceeds 72 bytes', async () => {
+    const state = await loginAction(null, formData({
+      username: 'ab',
+      password: '😀'.repeat(19),
+    }))
+    expect(state?.validationErrors?.password).toEqual(['passwordTooManyBytes'])
+  })
+
+  it('localizes whitespace inside the username or password', async () => {
+    const username = await loginAction(null, formData({
+      username: 'a b',
+      password: 'secret123',
+    }))
+    const password = await loginAction(null, formData({
+      username: 'ab',
+      password: 'secret 123',
+    }))
+    expect(username?.validationErrors?.username).toEqual(['usernameSpaces'])
+    expect(password?.validationErrors?.password).toEqual(['passwordSpaces'])
   })
 
   it('does not echo passwords on service failure', async () => {
@@ -102,6 +144,45 @@ describe('registerAction', () => {
     expect(state?.data).not.toHaveProperty('password')
     expect(state?.data).not.toHaveProperty('confirmPassword')
     expect(state?.validationErrors?.confirmPassword).toBeDefined()
+  })
+
+  it('trims the username before register', async () => {
+    registerServiceMock.mockResolvedValue({
+      success: false,
+      message: 'Username taken',
+      data: null,
+      meta: { msg: 'register failed' },
+    })
+    const state = await registerAction(null, formData({
+      username: '  ab  ',
+      email: 'a@b.com',
+      password: 'secret123',
+      confirmPassword: 'secret123',
+    }))
+    expect(registerServiceMock).toHaveBeenCalledWith(expect.objectContaining({
+      username: 'ab',
+    }))
+    expect(state?.data?.username).toBe('ab')
+    expect(state?.data).not.toHaveProperty('password')
+  })
+
+  it('localizes an invalid username and leaves other messages unchanged', async () => {
+    const username = await registerAction(null, formData({
+      username: 'Alice',
+      email: 'a@b.com',
+      password: 'secret123',
+      confirmPassword: 'secret123',
+    }))
+    const email = await registerAction(null, formData({
+      username: 'alice',
+      email: 'not-an-email',
+      password: 'secret123',
+      confirmPassword: 'secret123',
+    }))
+    expect(username?.validationErrors?.username).toEqual(['usernameInvalid'])
+    const emailErrors = email?.validationErrors?.email
+    expect(emailErrors?.[0]).toBeTruthy()
+    expect(emailErrors).not.toContain('usernameInvalid')
   })
 
   it('does not echo passwords on service failure', async () => {

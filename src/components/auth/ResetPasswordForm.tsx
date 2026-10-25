@@ -75,8 +75,6 @@ export default function ResetPasswordForm({ token }: { token: string }) {
                       name="confirmPassword"
                       variant="secondary"
                       placeholder={t('confirmPasswordPlaceholder')}
-                      minLength={PASSWORD_MIN}
-                      maxLength={PASSWORD_MAX}
                     />
                   </div>
                 </Card.Content>

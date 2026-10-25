@@ -124,8 +124,6 @@ export default function AuthForm({ type }: { type: 'login' | 'register' }) {
                       name="confirmPassword"
                       variant="secondary"
                       placeholder={t('confirmPasswordPlaceholder')}
-                      minLength={PASSWORD_MIN}
-                      maxLength={PASSWORD_MAX}
                     />
                   )
                 }
