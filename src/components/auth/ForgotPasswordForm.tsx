@@ -64,7 +64,7 @@ export default function ForgotPasswordForm() {
                     />
                   </div>
                 </Card.Content>
-                <Card.Footer>
+                <Card.Footer className="mt-4">
                   <div className="flex flex-col gap-4 w-full">
                     <AppButton
                       isPending={isPending}
