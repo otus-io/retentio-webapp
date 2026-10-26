@@ -21,11 +21,21 @@ import LayoutPage from '@/components/layout/LayoutPage'
 import TagItem from '@/components/tags/TagItem'
 import DeckPublishPanel from '@/components/decks/DeckPublishPanel'
 import DeckImportUpdatesPanel from '@/components/decks/DeckImportUpdatesPanel'
+import DeckContributionsPanel from '@/components/decks/DeckContributionsPanel'
+import DeckAuthorContributionsPanel, { type ContributionInboxTab } from '@/components/decks/DeckAuthorContributionsPanel'
 import type { DeckImportUpdatesResponseDTO } from '@/modules/deck-sharing/deck-sharing.schema'
+import type { Contribution } from '@/modules/contributions/contributions.schema'
+import useAutoRefresh from '@/hooks/useAutoRefresh'
 
 interface DecksDetailProps {
   deck: Deck
   updates: DeckImportUpdatesResponseDTO['data'] | null
+  authorContributions: {
+    contributions: Contribution[]
+    selectedTab: ContributionInboxTab
+    total: number
+    loadFailed: boolean
+  } | null
 }
 
 const containerVariants = {
@@ -36,8 +46,9 @@ const containerVariants = {
   },
 }
 
-export default function DecksDetail({ deck, updates }: DecksDetailProps) {
+export default function DecksDetail({ deck, updates, authorContributions }: DecksDetailProps) {
   const t = useTranslations()
+  useAutoRefresh({ enabled: !!authorContributions })
 
   const progressPct = deck.stats.cards_count > 0
     ? (deck.stats.reviewed_cards / deck.stats.cards_count) * 100
@@ -172,9 +183,21 @@ export default function DecksDetail({ deck, updates }: DecksDetailProps) {
           </Card.Content>
         </Card>
         {!deck.source_deck_id && <DeckPublishPanel deck={deck} />}
+        {authorContributions
+          ? (
+            <DeckAuthorContributionsPanel
+              deckId={deck.id}
+              contributions={authorContributions.contributions}
+              selectedTab={authorContributions.selectedTab}
+              total={authorContributions.total}
+              loadFailed={authorContributions.loadFailed}
+            />
+          )
+          : null}
         {deck.source_deck_id && updates && (
           <DeckImportUpdatesPanel deckId={deck.id} updates={updates} />
         )}
+        {deck.source_deck_id && <DeckContributionsPanel deck={deck} />}
       </motion.div>
     </LayoutPage>
   )
