@@ -2,6 +2,7 @@ import { describe, expect, it, vi } from 'vitest'
 import { fireEvent, render, screen } from '@testing-library/react'
 import FactsGridCellRenderer from '@/components/facts/FactsGridCellRenderer'
 import { resolveCellEntry } from '@/components/facts/resolveCellEntry'
+import { spliceDeletedFieldFromRow } from '@/components/facts/spliceDeletedFieldFromRow'
 import { rawSymbol } from '@/components/facts/token'
 import type { Deck } from '@/modules/decks/decks.schema'
 import type { Fact } from '@/modules/facts/facts.schema'
@@ -72,6 +73,36 @@ function renderCell(overrides: Partial<ICellRendererParams> & {
 
   return render(<FactsGridCellRenderer {...params} />)
 }
+
+describe('spliceDeletedFieldFromRow', () => {
+  it('removes the field key and splices raw entries at the deleted index', () => {
+    const next = spliceDeletedFieldFromRow(
+      {
+        Front: { text: 'a', audio: 'x' },
+        Back: { text: 'b', audio: '' },
+        [rawSymbol]: {
+          id: 'f1',
+          entries: [
+            { text: 'a', audio: 'x' },
+            { text: 'b', audio: '' },
+          ],
+          fields: [],
+          tags: [],
+        },
+      },
+      0,
+      'Front',
+    )
+    expect(next.Front).toBeUndefined()
+    expect(next.Back).toEqual({ text: 'b', audio: '' })
+    expect((next[rawSymbol] as Fact).entries).toEqual([{ text: 'b', audio: '' }])
+  })
+
+  it('leaves data unchanged when there is no raw fact snapshot', () => {
+    const next = spliceDeletedFieldFromRow({ Front: { text: 'a' } }, 0, undefined)
+    expect(next).toEqual({ Front: { text: 'a' } })
+  })
+})
 
 describe('resolveCellEntry', () => {
   it('prefers entry with audio from field data', () => {
@@ -221,10 +252,63 @@ describe('FactsGridCellRenderer', () => {
     )
   })
 
+  it('uses resolveCellEntry for attachments when only raw fact has audio', () => {
+    const onAttachmentClick = vi.fn()
+    renderCell({
+      onAttachmentClick,
+      data: {
+        Front: { text: 'hello', audio: '', image: '', video: '' },
+        [rawSymbol]: makeFact('audio-raw'),
+      },
+    })
+    fireEvent.click(document.querySelector('.facts-grid-cell-media')!)
+    expect(onAttachmentClick).toHaveBeenCalledWith(
+      expect.objectContaining({ id: 'fact-1' }),
+      'Front',
+      expect.objectContaining({ audio: 'audio-raw' }),
+    )
+  })
+
+  it('hides play button on a remaining no-audio field after deleting the first of three fields', () => {
+    const before = {
+      Front: { text: 'front', audio: 'audio-front', image: '', video: '' },
+      Middle: { text: 'mid', audio: '', image: '', video: '' },
+      Back: { text: 'back', audio: '', image: '', video: '' },
+      [rawSymbol]: {
+        id: 'fact-1',
+        entries: [
+          { text: 'front', audio: 'audio-front', image: '', video: '' },
+          { text: 'mid', audio: '', image: '', video: '' },
+          { text: 'back', audio: '', image: '', video: '' },
+        ],
+        fields: [],
+        tags: [],
+      } satisfies Fact,
+    }
+    const after = spliceDeletedFieldFromRow(before, 0, 'Front')
+    renderCell({
+      data: after,
+      column: { getColId: () => 'Middle' },
+      colDef: { field: 'Middle', context: {} },
+      api: {
+        getColumnDefs: () => [{ field: 'Middle' }, { field: 'Back' }],
+      },
+      getValue: () => 'mid',
+    } as never)
+    expect(screen.queryByRole('button', { name: /^play-/ })).toBeNull()
+    expect(screen.getByText('mid')).toBeDefined()
+  })
+
+
+
   it('does not call onAttachmentClick when entry cannot be resolved', () => {
     const onAttachmentClick = vi.fn()
     renderCell({
       onAttachmentClick,
+      data: {
+        Front: undefined,
+        [rawSymbol]: undefined,
+      },
       api: {
         getColumnDefs: () => [],
       },
@@ -238,6 +322,11 @@ describe('FactsGridCellRenderer', () => {
     renderCell({
       onAttachmentClick,
       column: undefined,
+      colDef: { field: undefined, context: {} },
+      data: {
+        Front: { text: 'hello', audio: 'audio-1', image: '', video: '' },
+        [rawSymbol]: makeFact(),
+      },
       api: {
         getColumnDefs: () => null,
       },

@@ -91,6 +91,120 @@ describe('FactsAudioPlayButton', () => {
     expect(audioInstances[0].play).toHaveBeenCalledTimes(2)
   })
 
+  it('still plays when media cache write fails', async () => {
+    const blob = new Blob(['x'], { type: 'audio/mpeg' })
+    mockGet.mockResolvedValue(undefined)
+    mockGetMedia.mockResolvedValue({ url: 'blob:fetched', blob })
+    mockSet.mockRejectedValue(new Error('idb full'))
+
+    render(<FactsAudioPlayButton mediaId="audio-1" />)
+    await clickPlay()
+
+    await waitFor(() => {
+      expect(screen.getByRole('button', { name: 'Pause Audio' })).toBeDefined()
+    })
+    expect(audioInstances[0].src).toBe('blob:fetched')
+  })
+
+  it('revokes stale object URL when mediaId changes before replay', async () => {
+    mockGet.mockResolvedValue(new Blob(['a'], { type: 'audio/mpeg' }))
+    const { rerender } = render(<FactsAudioPlayButton mediaId="audio-1" />)
+    await clickPlay()
+    await waitFor(() => {
+      expect(screen.getByRole('button', { name: 'Pause Audio' })).toBeDefined()
+    })
+    await clickPlay('Pause Audio')
+
+    ;(URL.createObjectURL as ReturnType<typeof vi.fn>).mockReturnValue('blob:audio-2')
+    mockGet.mockResolvedValue(new Blob(['b'], { type: 'audio/mpeg' }))
+    rerender(<FactsAudioPlayButton mediaId="audio-2" />)
+    await clickPlay()
+
+    await waitFor(() => {
+      expect(screen.getByRole('button', { name: 'Pause Audio' })).toBeDefined()
+    })
+    expect(URL.revokeObjectURL).toHaveBeenCalledWith('blob:cached')
+    expect(mockGet).toHaveBeenCalledWith('audio-2')
+    expect(audioInstances[0].src).toBe('blob:audio-2')
+  })
+
+  it('does not start playback if another button took ownership during download', async () => {
+    let resolveMedia!: (value: { url: string, blob: Blob }) => void
+    let resolveCacheB!: (value: Blob | undefined) => void
+    mockGet
+      .mockResolvedValueOnce(undefined)
+      .mockImplementationOnce(
+        () => new Promise((resolve) => {
+          resolveCacheB = resolve
+        }),
+      )
+    mockGetMedia.mockImplementation(
+      () => new Promise((resolve) => {
+        resolveMedia = resolve
+      }),
+    )
+    mockSet.mockResolvedValue(undefined)
+
+    const containerA = document.body.appendChild(document.createElement('div'))
+    const containerB = document.body.appendChild(document.createElement('div'))
+    const { unmount: unmountA } = render(
+      <FactsAudioPlayButton mediaId="audio-a" />,
+      { container: containerA },
+    )
+    await act(async () => {
+      fireEvent.click(containerA.querySelector('button')!)
+    })
+    await waitFor(() => {
+      expect(mockGetMedia).toHaveBeenCalled()
+    })
+
+    const { unmount: unmountB } = render(
+      <FactsAudioPlayButton mediaId="audio-b" />,
+      { container: containerB },
+    )
+    await act(async () => {
+      fireEvent.click(containerB.querySelector('button')!)
+    })
+    await waitFor(() => {
+      expect(resolveCacheB).toBeTypeOf('function')
+    })
+
+    await act(async () => {
+      resolveMedia({
+        url: 'blob:late-a',
+        blob: new Blob(['a'], { type: 'audio/mpeg' }),
+      })
+      await Promise.resolve()
+    })
+    expect(URL.revokeObjectURL).toHaveBeenCalledWith('blob:late-a')
+
+    await act(async () => {
+      resolveCacheB(new Blob(['b'], { type: 'audio/mpeg' }))
+      await Promise.resolve()
+    })
+    await waitFor(() => {
+      expect(containerB.querySelector('button')?.getAttribute('aria-label')).toBe('Pause Audio')
+    })
+    expect(containerA.querySelector('button')?.getAttribute('aria-label')).toBe('Play Audio')
+
+    unmountA()
+    unmountB()
+    containerA.remove()
+    containerB.remove()
+  })
+
+  it('stops Enter keydown from bubbling to a parent action', () => {
+    const onKeyDown = vi.fn()
+    render(
+      <div onKeyDown={onKeyDown}>
+        <FactsAudioPlayButton mediaId="audio-1" />
+      </div>,
+    )
+    fireEvent.keyDown(screen.getByRole('button', { name: 'Play Audio' }), { key: 'Enter' })
+    expect(onKeyDown).not.toHaveBeenCalled()
+  })
+
+
   it('unlocks audio with silent wav before media fetch resolves', async () => {
     let resolveMedia!: (value: { url: string, blob: Blob }) => void
     mockGet.mockResolvedValue(undefined)
@@ -363,7 +477,7 @@ describe('FactsAudioPlayButton', () => {
     expect(URL.revokeObjectURL).toHaveBeenCalledWith('blob:orphaned-fetch')
   })
 
-  it('revokes cached blob URL if unmounted during cache lookup', async () => {
+  it('does not create an object URL if unmounted during cache lookup', async () => {
     let resolveCache!: (value: Blob) => void
     mockGet.mockImplementation(
       () => new Promise((resolve) => {
@@ -386,8 +500,8 @@ describe('FactsAudioPlayButton', () => {
       await Promise.resolve()
     })
 
-    expect(URL.createObjectURL).toHaveBeenCalled()
-    expect(URL.revokeObjectURL).toHaveBeenCalledWith('blob:cached')
+    expect(URL.createObjectURL).not.toHaveBeenCalled()
+    expect(URL.revokeObjectURL).not.toHaveBeenCalled()
   })
 
   it('keeps mousedown from bubbling to the cell', () => {

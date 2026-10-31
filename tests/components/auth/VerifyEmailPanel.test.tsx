@@ -154,6 +154,8 @@ describe('VerifyEmailPanel', () => {
       )
     })
     expect(screen.getByRole('button', { name: 'verifyEmailRetry' })).toBeDefined()
+    expect(screen.queryByRole('link', { name: 'verifyEmailGetIos' })).toBeNull()
+    expect(screen.queryByRole('link', { name: 'verifyEmailGetAndroid' })).toBeNull()
     expect(replaceStateMock).not.toHaveBeenCalled()
   })
 })

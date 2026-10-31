@@ -22,6 +22,7 @@ import { CircleQuestionMark, Columns4Icon, RefreshCwIcon, Rows4Icon, Trash2Icon 
 import { updateFact } from '@/api/facts'
 import FactsMediaModal from '@/components/facts/FactsMediaModal'
 import type { MediaType } from '@/hooks/useFactsCellAttachments'
+import { spliceDeletedFieldFromRow } from '@/components/facts/spliceDeletedFieldFromRow'
 import { actionSymbol, rawSymbol } from '@/components/facts/token'
 import { useTranslations } from 'next-intl'
 import LayoutPage from '@/components/layout/LayoutPage'
@@ -203,8 +204,18 @@ export default function FactsGridPage({ facts, meta, deck }: FactsGridPageProps)
 
   const handleDeleteColDef = useCallback((uid: string) => {
     const currentDefs = getCurrentColDefs()
+    const contentDefs = currentDefs.filter((def) => !def.context?.isActionColumn)
+    const deleteIndex = contentDefs.findIndex((def) => def.context?.uid === uid)
+    const deletedDef = deleteIndex >= 0 ? contentDefs[deleteIndex] : undefined
+    const deletedFieldKey = deletedDef?.field ?? deletedDef?.headerName
     const newDefs = currentDefs.filter((def) => def.context?.uid !== uid)
     gridRef.current?.api.setGridOption('columnDefs', newDefs)
+    if (deleteIndex >= 0) {
+      const fieldKey = typeof deletedFieldKey === 'string' ? deletedFieldKey : undefined
+      gridRef.current?.api.forEachNode((node) => {
+        node.setData(spliceDeletedFieldFromRow(node.data ?? {}, deleteIndex, fieldKey))
+      })
+    }
     handleDebouncedFieldsChange()
   }, [getCurrentColDefs, handleDebouncedFieldsChange])
 

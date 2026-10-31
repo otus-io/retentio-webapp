@@ -5,6 +5,19 @@ import {
 } from '@/api/media'
 import { getFact } from '@/api/facts'
 
+const versionMaps = new Map<string, Record<string, number>>()
+
+vi.mock('idb-keyval', () => ({
+  createStore: (db: string, store: string) => `${db}:${store}`,
+  get: async (key: string) => versionMaps.get(key),
+  set: async (key: string, value: Record<string, number>) => {
+    versionMaps.set(key, value)
+  },
+  del: async (key: string) => {
+    versionMaps.delete(key)
+  },
+}))
+
 vi.mock('@/api/facts', () => ({
   getFact: vi.fn(),
 }))
@@ -16,10 +29,11 @@ vi.mock('@/utils/request', () => ({
 describe('resolveImportedMediaVersion', () => {
   beforeEach(() => {
     __clearMediaVersionCache()
+    versionMaps.clear()
     vi.mocked(getFact).mockReset()
   })
 
-  it('loads media_versions once and returns a positive pin', async () => {
+  it('loads media_versions from getFact and returns a positive pin', async () => {
     vi.mocked(getFact).mockResolvedValue({
       data: { media_versions: { 'audio-1': 3, 'img-1': 0 } },
     } as Awaited<ReturnType<typeof getFact>>)
@@ -30,7 +44,26 @@ describe('resolveImportedMediaVersion', () => {
     await expect(
       resolveImportedMediaVersion('deck-1', 'fact-1', 'img-1'),
     ).resolves.toBeUndefined()
-    expect(getFact).toHaveBeenCalledTimes(1)
+    // No session cache: each settled call refreshes from getFact.
+    expect(getFact).toHaveBeenCalledTimes(2)
+  })
+
+  it('persists media_versions and refreshes the pin on later getFact', async () => {
+    vi.mocked(getFact)
+      .mockResolvedValueOnce({
+        data: { media_versions: { 'audio-1': 3 } },
+      } as Awaited<ReturnType<typeof getFact>>)
+      .mockResolvedValueOnce({
+        data: { media_versions: { 'audio-1': 5 } },
+      } as Awaited<ReturnType<typeof getFact>>)
+
+    await expect(
+      resolveImportedMediaVersion('deck-1', 'fact-1', 'audio-1'),
+    ).resolves.toBe(3)
+    await expect(
+      resolveImportedMediaVersion('deck-1', 'fact-1', 'audio-1'),
+    ).resolves.toBe(5)
+    expect(versionMaps.get('deck-1:fact-1')).toEqual({ 'audio-1': 5 })
   })
 
   it('coalesces concurrent misses into one getFact call', async () => {
@@ -65,7 +98,7 @@ describe('resolveImportedMediaVersion', () => {
     ).resolves.toBeUndefined()
   })
 
-  it('allows a retry after getFact fails', async () => {
+  it('allows a retry after getFact fails with no cache', async () => {
     vi.mocked(getFact)
       .mockRejectedValueOnce(new Error('network'))
       .mockResolvedValueOnce({
@@ -78,6 +111,23 @@ describe('resolveImportedMediaVersion', () => {
     await expect(
       resolveImportedMediaVersion('deck-1', 'fact-1', 'audio-1'),
     ).resolves.toBe(4)
+    expect(getFact).toHaveBeenCalledTimes(2)
+  })
+
+  it('falls back to persisted media_versions when getFact fails', async () => {
+    vi.mocked(getFact)
+      .mockResolvedValueOnce({
+        data: { media_versions: { 'audio-1': 7 } },
+      } as Awaited<ReturnType<typeof getFact>>)
+      .mockRejectedValueOnce(new Error('offline'))
+
+    await expect(
+      resolveImportedMediaVersion('deck-1', 'fact-1', 'audio-1'),
+    ).resolves.toBe(7)
+
+    await expect(
+      resolveImportedMediaVersion('deck-1', 'fact-1', 'audio-1'),
+    ).resolves.toBe(7)
     expect(getFact).toHaveBeenCalledTimes(2)
   })
 })

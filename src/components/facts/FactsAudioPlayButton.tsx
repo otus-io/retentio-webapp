@@ -40,6 +40,7 @@ export default function FactsAudioPlayButton({
   const [playing, setPlaying] = useState(false)
   const audioRef = useRef<HTMLAudioElement | null>(null)
   const urlRef = useRef<string | null>(null)
+  const urlMediaIdRef = useRef<string | null>(null)
   const isSharedRef = useRef(false)
   const mountedRef = useRef(true)
 
@@ -64,6 +65,7 @@ export default function FactsAudioPlayButton({
       if (urlRef.current) {
         URL.revokeObjectURL(urlRef.current)
         urlRef.current = null
+        urlMediaIdRef.current = null
       }
     }
   }, [stop])
@@ -93,13 +95,25 @@ export default function FactsAudioPlayButton({
     }
 
     try {
+      if (urlRef.current && urlMediaIdRef.current !== mediaId) {
+        URL.revokeObjectURL(urlRef.current)
+        urlRef.current = null
+        urlMediaIdRef.current = null
+      }
+
       let url = urlRef.current
       if (!url) {
         const version = imported && deckId && factId
           ? await resolveImportedMediaVersion(deckId, factId, mediaId)
           : undefined
+        if (!mountedRef.current || !isSharedRef.current) {
+          return
+        }
         const key = cacheKey(mediaId, version)
         const cached = await mediaCache.get(key)
+        if (!mountedRef.current || !isSharedRef.current) {
+          return
+        }
         if (cached) {
           url = URL.createObjectURL(cached)
         }
@@ -107,16 +121,22 @@ export default function FactsAudioPlayButton({
           const data = version && version > 0
             ? await getMedia(mediaId, undefined, version)
             : await getMedia(mediaId)
-          await mediaCache.set(key, data.blob)
           url = data.url
+          try {
+            await mediaCache.set(key, data.blob)
+          }
+          catch {
+            // Playback can continue without a durable cache entry.
+          }
         }
-        if (!mountedRef.current) {
+        if (!mountedRef.current || !isSharedRef.current) {
           if (url !== urlRef.current) {
             URL.revokeObjectURL(url)
           }
           return
         }
         urlRef.current = url
+        urlMediaIdRef.current = mediaId
       }
 
       audio.src = url
@@ -140,6 +160,8 @@ export default function FactsAudioPlayButton({
     ? t('common.pause', { name: t('term.audio') })
     : t('common.play', { name: t('term.audio') })
 
+  // Native <button>: HeroUI AppButton press handling would fight AG Grid / ListBox
+  // stopPropagation on mouse/keyboard and this control's compact icon-only chrome.
   return (
     <button
       type="button"
@@ -152,6 +174,11 @@ export default function FactsAudioPlayButton({
       onMouseDown={(e) => {
         e.stopPropagation()
         e.preventDefault()
+      }}
+      onKeyDown={(e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.stopPropagation()
+        }
       }}
       onClick={handleClick}
     >

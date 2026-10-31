@@ -5,7 +5,7 @@ import { resolveCellEntry } from '@/components/facts/resolveCellEntry'
 import { rawSymbol } from '@/components/facts/token'
 import type { Deck } from '@/modules/decks/decks.schema'
 import type { Entry, Fact } from '@/modules/facts/facts.schema'
-import type { ColDef, ICellRendererParams } from 'ag-grid-community'
+import type { ICellRendererParams } from 'ag-grid-community'
 import { Paperclip } from 'lucide-react'
 import { useTranslations } from 'next-intl'
 import { useCallback } from 'react'
@@ -21,12 +21,10 @@ const playButtonClassName
 export default function FactsGridCellRenderer(props: FactsGridCellRendererProps) {
   const t = useTranslations()
   const handleAttachmentClick = useCallback(() => {
-    const currentFact = props.data?.[rawSymbol] as Fact
-    const allColumns = (props.api.getColumnDefs() ?? []) as ColDef<Record<string, any>>[]
-    const fieldKey = props.column?.getColId() ?? ''
-    const fieldIndex = allColumns.findIndex((col) => col.field === fieldKey)
-    const entry = fieldIndex >= 0 ? currentFact.entries[fieldIndex] : undefined
-    if (entry) {
+    const currentFact = props.data?.[rawSymbol] as Fact | undefined
+    const fieldKey = props.column?.getColId() ?? props.colDef?.field ?? ''
+    const entry = resolveCellEntry(props)
+    if (currentFact && entry) {
       props.onAttachmentClick?.(currentFact, fieldKey, entry)
     }
   }, [props])
