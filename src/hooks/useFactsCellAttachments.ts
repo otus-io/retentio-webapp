@@ -84,17 +84,20 @@ export function useFactsCellAttachments(
       return
     }
     setLoading(true)
-    const formData = new FormData()
-    formData.append('file', files[0])
-    const { data } = await uploadMedia(formData)
-    const mediaType = mimeToMediaType(data.mime)
-    dispatch({
-      type: 'SET_VALUE',
-      key: mediaType,
-      value: data.id,
-    })
-    onUpload?.(data.id, mediaType)
-    setLoading(false)
+    try {
+      const formData = new FormData()
+      formData.append('file', files[0])
+      const { data } = await uploadMedia(formData)
+      const mediaType = mimeToMediaType(data.mime)
+      dispatch({
+        type: 'SET_VALUE',
+        key: mediaType,
+        value: data.id,
+      })
+      onUpload?.(data.id, mediaType)
+    } finally {
+      setLoading(false)
+    }
   }, [loading, onUpload])
 
   const handlePreview = useCallback(async (item: MediaItem) => {

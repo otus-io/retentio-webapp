@@ -7,7 +7,7 @@ import type { Deck } from '@/modules/decks/decks.schema'
 import type { Entry, Fact } from '@/modules/facts/facts.schema'
 import type { ColDef, ICellRendererParams } from 'ag-grid-community'
 import { Paperclip } from 'lucide-react'
-
+import { useTranslations } from 'next-intl'
 import { useCallback } from 'react'
 
 interface FactsGridCellRendererProps extends ICellRendererParams {
@@ -19,6 +19,7 @@ const playButtonClassName
   = 'facts-grid-cell-audio-play inline-flex size-6 shrink-0 items-center justify-center rounded-full border border-default bg-background text-foreground hover:bg-default'
 
 export default function FactsGridCellRenderer(props: FactsGridCellRendererProps) {
+  const t = useTranslations()
   const handleAttachmentClick = useCallback(() => {
     const currentFact = props.data?.[rawSymbol] as Fact
     const allColumns = (props.api.getColumnDefs() ?? []) as ColDef<Record<string, any>>[]
@@ -60,7 +61,7 @@ export default function FactsGridCellRenderer(props: FactsGridCellRendererProps)
           : null}
         <AppTooltip
           trigger={false}
-          content={<p>附件</p>}
+          content={<p>{t('term.attachment')}</p>}
         >
           <button
             type="button"

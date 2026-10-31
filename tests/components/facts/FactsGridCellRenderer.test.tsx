@@ -17,8 +17,17 @@ vi.mock('@/components/facts/FactsAudioPlayButton', () => ({
   ),
 }))
 
+vi.mock('next-intl', () => ({
+  useTranslations: () => (key: string) => key,
+}))
+
 vi.mock('@/components/app/AppTooltip', () => ({
-  default: ({ children }: { children?: React.ReactNode }) => <>{children}</>,
+  default: ({ children, content }: { children?: React.ReactNode; content?: React.ReactNode }) => (
+    <>
+      <div data-testid="attachment-tooltip">{content}</div>
+      {children}
+    </>
+  ),
 }))
 
 const deck = { id: 'deck-1', name: 'Deck', fields: ['Front'] } as Deck
@@ -150,6 +159,7 @@ describe('FactsGridCellRenderer', () => {
     renderCell()
     expect(screen.getByRole('button', { name: 'play-audio-1' })).toBeDefined()
     expect(screen.getByText('hello')).toBeDefined()
+    expect(screen.getByTestId('attachment-tooltip').textContent).toBe('term.attachment')
   })
 
   it('shows play button when only raw fact has audio', () => {
