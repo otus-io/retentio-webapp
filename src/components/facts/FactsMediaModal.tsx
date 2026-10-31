@@ -4,6 +4,7 @@ import { Paperclip } from 'lucide-react'
 import { Description, Label, ListBox } from '@heroui/react'
 import { useTranslations } from 'next-intl'
 import AppButton from '@/components/app/AppButton'
+import FactsAudioPlayButton from '@/components/facts/FactsAudioPlayButton'
 import FactsMediaPreviewModal from '@/components/facts/FactsMediaPreviewModal'
 import type { MediaType } from '@/hooks/useFactsCellAttachments'
 import { useFactsCellAttachments } from '@/hooks/useFactsCellAttachments'
@@ -12,6 +13,8 @@ import type { GridApi } from 'ag-grid-community'
 export interface FactsMediaModalProps {
   entry?: Entry
   id?: string
+  deckId?: string
+  imported?: boolean
   isOpen: boolean,
   getApi: () => GridApi<any>
   setIsOpen: (isOpen: boolean) => void
@@ -21,6 +24,8 @@ export interface FactsMediaModalProps {
 export default function FactsMediaModal({
   entry,
   id,
+  deckId,
+  imported,
   isOpen,
   getApi,
   setIsOpen,
@@ -36,6 +41,9 @@ export default function FactsMediaModal({
       getApi={getApi}
       isOpen={isOpen}
       entry={entry}
+      deckId={deckId}
+      imported={imported}
+      id={id}
       key={id}
     />
   )
@@ -43,6 +51,9 @@ export default function FactsMediaModal({
 
 function FactsAttachmentInner({
   entry,
+  id,
+  deckId,
+  imported,
   isOpen,
   setIsOpen,
   onUpload,
@@ -60,7 +71,7 @@ function FactsAttachmentInner({
     setIsOpen: setIsPreviewOpen,
   } = useFactsCellAttachments(entry, (fileId: string, mediaType: MediaType) => {
     return onUpload?.(fileId, mediaType)
-  })
+  }, { deckId, factId: id, imported })
 
   return (
     <>
@@ -93,8 +104,19 @@ function FactsAttachmentInner({
                         <Description className="pointer-events-auto!">
                           {hasValue
                             ? (
-                              <span>
-                                {item.value}
+                              <span className="inline-flex items-center gap-2 max-w-full">
+                                <span className="truncate">{item.value}</span>
+                                {item.key === 'audio' && item.value && !item.loading
+                                  ? (
+                                    <FactsAudioPlayButton
+                                      mediaId={item.value}
+                                      deckId={deckId}
+                                      factId={id}
+                                      imported={imported}
+                                      className="inline-flex size-6 shrink-0 items-center justify-center rounded-full border border-default bg-background text-foreground hover:bg-default"
+                                    />
+                                  )
+                                  : null}
                               </span>
                             )
                             : (

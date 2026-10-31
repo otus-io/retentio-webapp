@@ -394,6 +394,9 @@ export default function FactsGridPage({ facts, meta, deck }: FactsGridPageProps)
         setIsOpen={setIsOpen}
         isOpen={isOpen}
         entry={target?.entry}
+        id={target?.factId}
+        deckId={deck.id}
+        imported={Boolean(deck.source_deck_id)}
         getApi={() => gridRef.current!.api}
         onUpload={handleAttachmentUpload}
       />

@@ -23,7 +23,10 @@ describe('AppLogo', () => {
   it('默认显示 logo 图片与名称', () => {
     render(<AppLogo />)
     const link = screen.getByRole('link')
-    expect(link.querySelector('img[src="/logo.svg"]')).toBeTruthy()
+    const img = link.querySelector('img[src="/logo.svg"]')
+    expect(img).toBeTruthy()
+    expect(img?.className).toContain('h-10')
+    expect(img?.className).not.toContain('translate-y')
     expect(screen.getByText('Rete')).toBeDefined()
   })
 

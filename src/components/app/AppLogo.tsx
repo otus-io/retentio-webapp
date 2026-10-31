@@ -25,7 +25,7 @@ export default function AppLogo({
                 src="/logo.svg"
                 alt=""
                 aria-hidden="true"
-                className="block h-10 w-auto shrink-0 -translate-y-1"
+                className="block h-10 w-auto shrink-0"
                 unoptimized
                 width={473}
                 height={402}

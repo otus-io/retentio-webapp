@@ -1,6 +1,7 @@
 import { describe, expect, it, vi, beforeEach } from 'vitest'
 import { render, screen, waitFor } from '@testing-library/react'
 import type { ReactNode } from 'react'
+import { PLAY_STORE_URL, TESTFLIGHT_JOIN_URL } from '@/config'
 
 const verifyEmailActionMock = vi.fn()
 const replaceStateMock = vi.fn()
@@ -39,6 +40,7 @@ vi.mock('@/components/app/AppLink', () => ({
 }))
 
 vi.mock('@heroui/react', () => ({
+  buttonVariants: () => 'btn',
   Card: Object.assign(
     ({ children }: { children?: ReactNode }) => <div data-testid="card">{children}</div>,
     {
@@ -89,6 +91,25 @@ describe('VerifyEmailPanel', () => {
     })
     // Success is client state only — not driven by a URL marker.
     expect(replaceStateMock.mock.calls.some((call) => String(call[2]).includes('verified='))).toBe(false)
+    expect(screen.getByText('verifyEmailOpenAppHint')).toBeDefined()
+    expect(screen.getByRole('link', { name: 'verifyEmailGetIos' }).getAttribute('href')).toBe(
+      TESTFLIGHT_JOIN_URL,
+    )
+    expect(screen.getByRole('link', { name: 'verifyEmailGetAndroid' }).getAttribute('href')).toBe(
+      PLAY_STORE_URL,
+    )
+  })
+
+  it('does not show store links before verification succeeds', () => {
+    render(
+      <VerifyEmailPanel
+        token=""
+        initialStatus="error"
+        initialError="verifyEmailMissingToken"
+      />,
+    )
+    expect(screen.queryByRole('link', { name: 'verifyEmailGetIos' })).toBeNull()
+    expect(screen.queryByRole('link', { name: 'verifyEmailGetAndroid' })).toBeNull()
   })
 
   it('clears the token from the URL after a successful retry', async () => {

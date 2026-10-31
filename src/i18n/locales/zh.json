@@ -130,8 +130,8 @@
     "passwordsMismatch": "两次输入的密码不一致",
     "usernameInvalid": "用户名只能包含小写字母和数字，且必须以字母开头",
     "usernameLength": "用户名须为 2 到 32 个字符",
-    "usernameSpaces": "用户名不能包含空格",
-    "passwordSpaces": "密码不能包含空格",
+    "usernameSpaces": "用户名不能包含空白字符",
+    "passwordSpaces": "密码不能包含空白字符",
     "passwordTooShort": "密码至少需要 8 个字符",
     "passwordTooLong": "密码最多 64 个字符",
     "passwordTooManyBytes": "密码按编码计算过长（多字节字符过多）",
@@ -159,6 +159,9 @@
     "verifyEmailDescription": "确认此账户的邮箱地址。",
     "verifyEmailPending": "正在验证邮箱…",
     "verifyEmailSuccess": "邮箱验证成功。",
+    "verifyEmailOpenAppHint": "请在手机上打开应用继续。",
+    "verifyEmailGetIos": "获取 iOS 应用（TestFlight）",
+    "verifyEmailGetAndroid": "获取 Android 应用",
     "verifyEmailMissingToken": "验证链接缺失或无效。",
     "verifyEmailFailed": "无法验证邮箱，请重试。",
     "verifyEmailRetry": "重试"
@@ -201,6 +204,8 @@
     "close": "关闭",
     "continue": "继续",
     "preview": "{name}预览",
+    "play": "播放{name}",
+    "pause": "暂停{name}",
     "no-attached": "未附加{name}"
   },
   "guide-sidebar": {
