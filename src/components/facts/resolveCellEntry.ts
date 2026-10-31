@@ -4,7 +4,7 @@ import type { ColDef } from 'ag-grid-community'
 
 /** Resolve the cell entry from row data and/or the fact snapshot (same path as attachments). */
 export function resolveCellEntry(props: {
-  data?: Record<string, unknown>
+  data?: Record<string, unknown> & { [rawSymbol]?: Fact }
   column?: { getColId?: () => string } | null
   colDef?: { headerName?: string; field?: string } | null
   api?: { getColumnDefs?: () => ColDef[] | null | undefined }
@@ -16,7 +16,7 @@ export function resolveCellEntry(props: {
     ? props.data?.[headerName] as Entry | undefined
     : undefined
 
-  const fact = props.data?.[rawSymbol] as Fact | undefined
+  const fact = props.data?.[rawSymbol]
   const allColumns = (props.api?.getColumnDefs?.() ?? []) as ColDef<Record<string, unknown>>[]
   const fieldIndex = fieldKey
     ? allColumns.findIndex((col) => (col.field ?? col.colId) === fieldKey)
