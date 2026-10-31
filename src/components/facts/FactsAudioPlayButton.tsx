@@ -41,6 +41,7 @@ export default function FactsAudioPlayButton({
   const audioRef = useRef<HTMLAudioElement | null>(null)
   const urlRef = useRef<string | null>(null)
   const isSharedRef = useRef(false)
+  const mountedRef = useRef(true)
 
   const stop = useCallback(() => {
     const audio = audioRef.current
@@ -56,7 +57,9 @@ export default function FactsAudioPlayButton({
   }, [])
 
   useEffect(() => {
+    mountedRef.current = true
     return () => {
+      mountedRef.current = false
       stop()
       if (urlRef.current) {
         URL.revokeObjectURL(urlRef.current)
@@ -107,6 +110,12 @@ export default function FactsAudioPlayButton({
           await mediaCache.set(key, data.blob)
           url = data.url
         }
+        if (!mountedRef.current) {
+          if (url !== urlRef.current) {
+            URL.revokeObjectURL(url)
+          }
+          return
+        }
         urlRef.current = url
       }
 
@@ -121,7 +130,9 @@ export default function FactsAudioPlayButton({
       stop()
     }
     finally {
-      setLoading(false)
+      if (mountedRef.current) {
+        setLoading(false)
+      }
     }
   }, [mediaId, playing, stop, imported, deckId, factId])
 

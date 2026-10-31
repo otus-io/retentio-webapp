@@ -4,6 +4,8 @@ import type { UploadMediaResult } from '@/modules/media/media.schema'
 
 /** factKey → media id → snapshot version */
 const mediaVersionCache = new Map<string, Record<string, number>>()
+/** In-flight getFact by factKey — coalesces concurrent resolveImportedMediaVersion calls. */
+const pendingMediaVersionRequests = new Map<string, Promise<Record<string, number>>>()
 
 /**
  * For imported decks, resolve the snapshot pin so `GET /api/media/{id}?v=` succeeds
@@ -17,9 +19,20 @@ export async function resolveImportedMediaVersion(
   const key = `${deckId}:${factId}`
   let map = mediaVersionCache.get(key)
   if (!map) {
-    const res = await getFact(deckId, factId)
-    map = res.data.media_versions ?? {}
-    mediaVersionCache.set(key, map)
+    let pending = pendingMediaVersionRequests.get(key)
+    if (!pending) {
+      pending = getFact(deckId, factId)
+        .then((res) => {
+          const versions = res.data.media_versions ?? {}
+          mediaVersionCache.set(key, versions)
+          return versions
+        })
+        .finally(() => {
+          pendingMediaVersionRequests.delete(key)
+        })
+      pendingMediaVersionRequests.set(key, pending)
+    }
+    map = await pending
   }
   const v = map[mediaId]
   return typeof v === 'number' && v > 0 ? v : undefined
@@ -28,6 +41,7 @@ export async function resolveImportedMediaVersion(
 /** @internal test helper */
 export function __clearMediaVersionCache() {
   mediaVersionCache.clear()
+  pendingMediaVersionRequests.clear()
 }
 
 /**

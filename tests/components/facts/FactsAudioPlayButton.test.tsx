@@ -332,6 +332,64 @@ describe('FactsAudioPlayButton', () => {
     expect(URL.revokeObjectURL).toHaveBeenCalledWith('blob:cached')
   })
 
+  it('revokes fetched blob URL if unmounted during network load', async () => {
+    let resolveMedia!: (value: { url: string, blob: Blob }) => void
+    mockGet.mockResolvedValue(undefined)
+    mockGetMedia.mockImplementation(
+      () => new Promise((resolve) => {
+        resolveMedia = resolve
+      }),
+    )
+    mockSet.mockResolvedValue(undefined)
+
+    const { unmount } = render(<FactsAudioPlayButton mediaId="audio-1" />)
+    await act(async () => {
+      fireEvent.click(screen.getByRole('button', { name: 'Play Audio' }))
+    })
+    await waitFor(() => {
+      expect(mockGetMedia).toHaveBeenCalled()
+    })
+
+    unmount()
+
+    await act(async () => {
+      resolveMedia({
+        url: 'blob:orphaned-fetch',
+        blob: new Blob(['x'], { type: 'audio/mpeg' }),
+      })
+      await Promise.resolve()
+    })
+
+    expect(URL.revokeObjectURL).toHaveBeenCalledWith('blob:orphaned-fetch')
+  })
+
+  it('revokes cached blob URL if unmounted during cache lookup', async () => {
+    let resolveCache!: (value: Blob) => void
+    mockGet.mockImplementation(
+      () => new Promise((resolve) => {
+        resolveCache = resolve
+      }),
+    )
+
+    const { unmount } = render(<FactsAudioPlayButton mediaId="audio-1" />)
+    await act(async () => {
+      fireEvent.click(screen.getByRole('button', { name: 'Play Audio' }))
+    })
+    await waitFor(() => {
+      expect(mockGet).toHaveBeenCalled()
+    })
+
+    unmount()
+
+    await act(async () => {
+      resolveCache(new Blob(['cached'], { type: 'audio/mpeg' }))
+      await Promise.resolve()
+    })
+
+    expect(URL.createObjectURL).toHaveBeenCalled()
+    expect(URL.revokeObjectURL).toHaveBeenCalledWith('blob:cached')
+  })
+
   it('keeps mousedown from bubbling to the cell', () => {
     const onMouseDown = vi.fn()
     render(
