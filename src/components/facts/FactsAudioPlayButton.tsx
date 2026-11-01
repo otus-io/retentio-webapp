@@ -6,7 +6,7 @@ import { Loader2, Pause, Play } from 'lucide-react'
 import { useTranslations } from 'next-intl'
 import { useCallback, useEffect, useRef, useState } from 'react'
 
-const mediaCache = createBlobCache('retentio', 'media-blobs')
+const mediaCache = createBlobCache('retentio-media-blobs', 'media-blobs')
 
 /** Short silent clip so playback starts inside the click gesture, before the file download. */
 const SILENT_WAV = 'data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEARKwAAIhYAQACABAAZGF0YQAAAAA='

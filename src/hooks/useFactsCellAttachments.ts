@@ -43,7 +43,7 @@ function mediaReducer(state: MediaItem[], action: MediaAction) {
   }
 }
 
-const mediaCache = createBlobCache('retentio', 'media-blobs')
+const mediaCache = createBlobCache('retentio-media-blobs', 'media-blobs')
 
 
 function mimeToMediaType(mime: string): MediaType {

@@ -3,8 +3,8 @@ import { request, type OnProgress } from '@/utils/request'
 import type { UploadMediaResult } from '@/modules/media/media.schema'
 import { createStore, get, set } from 'idb-keyval'
 
-/** Persisted factKey → media id → snapshot version (offline fallback). */
-const mediaVersionsStore = createStore('retentio', 'media-versions')
+/** Persisted factKey → media id → snapshot version (offline fallback). Own DB: idb-keyval creates one store per DB. */
+const mediaVersionsStore = createStore('retentio-media-versions', 'media-versions')
 /** In-flight getFact by factKey — coalesces concurrent resolveImportedMediaVersion calls. */
 const pendingMediaVersionRequests = new Map<string, Promise<Record<string, number>>>()
 
