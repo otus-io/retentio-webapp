@@ -4,6 +4,11 @@ import createMDX from '@next/mdx'
 
 const nextConfig: NextConfig = {
   pageExtensions: ['js', 'jsx', 'md', 'mdx', 'ts', 'tsx'],
+  experimental: {
+    // 16.2.2 defaults this on; it grows RAM/CPU until OOM in `next dev`.
+    // https://github.com/vercel/next.js/issues/91396
+    turbopackServerFastRefresh: false,
+  },
   outputFileTracingIncludes: {
     '/guide/*': ['./content/**/*'],
   },

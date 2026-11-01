@@ -96,7 +96,11 @@ export type FactsListResponseDTO = PaginationResult<{ facts: Fact[] }>
 /**
  * 获取单个词条响应 DTO
  */
-export type FactResponseDTO = BaseApiResult<{ fact: Fact }>
+export type FactResponseDTO = BaseApiResult<{
+  fact: Fact
+  /** Import decks: media id → published snapshot pin for `GET /api/media/{id}?v=` */
+  media_versions?: Record<string, number>
+}>
 
 /**
  * 更新词条响应 DTO

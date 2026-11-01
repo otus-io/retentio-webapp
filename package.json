@@ -12,6 +12,7 @@
     "start": "npm run generate:md && next start",
     "lint": "eslint --fix .",
     "lint:ci": "eslint .",
+    "typecheck": "next typegen && tsc --noEmit -p tsconfig.typecheck.json",
     "test": "vitest run",
     "test:coverage": "vitest run --coverage",
     "test:watch": "vitest",

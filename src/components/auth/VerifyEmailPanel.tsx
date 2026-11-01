@@ -1,9 +1,14 @@
 'use client'
 
-import { Card } from '@heroui/react'
+import { Card, buttonVariants } from '@heroui/react'
 import { useTranslations } from 'next-intl'
 import { useEffect, useRef, useState, useTransition } from 'react'
-import { LOGIN_PATH, VERIFY_EMAIL_PATH } from '@/config'
+import {
+  LOGIN_PATH,
+  PLAY_STORE_URL,
+  TESTFLIGHT_JOIN_URL,
+  VERIFY_EMAIL_PATH,
+} from '@/config'
 import { verifyEmailAction } from '@/modules/auth/auth.action'
 import AppButton from '@/components/app/AppButton'
 import AppError from '@/components/app/AppError'
@@ -81,7 +86,28 @@ export default function VerifyEmailPanel({
                 <p className="text-sm text-default-500">{t('verifyEmailPending')}</p>
               )}
               {status === 'success' && (
-                <p className="text-sm text-default-500">{t('verifyEmailSuccess')}</p>
+                <>
+                  <p className="text-sm text-default-500">{t('verifyEmailSuccess')}</p>
+                  <p className="text-sm text-default-500">{t('verifyEmailOpenAppHint')}</p>
+                  <div className="flex flex-col gap-2">
+                    <a
+                      href={TESTFLIGHT_JOIN_URL}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className={buttonVariants({ size: 'lg', fullWidth: true })}
+                    >
+                      {t('verifyEmailGetIos')}
+                    </a>
+                    <a
+                      href={PLAY_STORE_URL}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className={buttonVariants({ size: 'lg', fullWidth: true, variant: 'outline' })}
+                    >
+                      {t('verifyEmailGetAndroid')}
+                    </a>
+                  </div>
+                </>
               )}
               {status === 'error' && error && <AppError error={error} />}
               {status === 'error' && hasToken && (

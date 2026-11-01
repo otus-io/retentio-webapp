@@ -130,8 +130,8 @@
     "passwordsMismatch": "パスワードが一致しません",
     "usernameInvalid": "ユーザー名は小文字の英数字のみで、先頭は英字である必要があります",
     "usernameLength": "ユーザー名は2〜32文字にしてください",
-    "usernameSpaces": "ユーザー名にスペースは使えません",
-    "passwordSpaces": "パスワードにスペースは使えません",
+    "usernameSpaces": "ユーザー名に空白文字は使えません",
+    "passwordSpaces": "パスワードに空白文字は使えません",
     "passwordTooShort": "パスワードは8文字以上にしてください",
     "passwordTooLong": "パスワードは64文字以内にしてください",
     "passwordTooManyBytes": "パスワードはエンコードすると長すぎます（マルチバイト文字が多すぎます）",
@@ -159,6 +159,9 @@
     "verifyEmailDescription": "このアカウントのメールアドレスを確認します。",
     "verifyEmailPending": "メールアドレスを確認しています…",
     "verifyEmailSuccess": "メールアドレスの確認が完了しました。",
+    "verifyEmailOpenAppHint": "スマホのアプリで続行してください。",
+    "verifyEmailGetIos": "iOSアプリを入手（TestFlight）",
+    "verifyEmailGetAndroid": "Androidアプリを入手",
     "verifyEmailMissingToken": "確認リンクがないか、無効です。",
     "verifyEmailFailed": "メールアドレスを確認できませんでした。もう一度お試しください。",
     "verifyEmailRetry": "再試行"
@@ -201,6 +204,8 @@
     "close": "閉じる",
     "continue": "続ける",
     "preview": "{name}プレビュー",
+    "play": "{name}を再生",
+    "pause": "{name}を一時停止",
     "no-attached": "{name}が添付されていません"
   },
   "guide-sidebar": {

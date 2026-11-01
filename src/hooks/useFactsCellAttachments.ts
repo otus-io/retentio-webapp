@@ -59,7 +59,11 @@ function mimeToMediaType(mime: string): MediaType {
   throw new Error('unknown Media Type ')
 }
 
-export function useFactsCellAttachments(entry?: Entry, onUpload?: (fileId: string, mediaType: MediaType) => void){
+export function useFactsCellAttachments(
+  entry?: Entry,
+  onUpload?: (fileId: string, mediaType: MediaType) => void,
+  opts?: { deckId?: string; factId?: string; imported?: boolean },
+){
   const t = useTranslations()
   const [file, setFile] = useState<FactsMediaPreviewModalProps['file']>()
   const [fileType, setFileType] = useState<MediaType>()
@@ -80,17 +84,20 @@ export function useFactsCellAttachments(entry?: Entry, onUpload?: (fileId: strin
       return
     }
     setLoading(true)
-    const formData = new FormData()
-    formData.append('file', files[0])
-    const { data } = await uploadMedia(formData)
-    const mediaType = mimeToMediaType(data.mime)
-    dispatch({
-      type: 'SET_VALUE',
-      key: mediaType,
-      value: data.id,
-    })
-    onUpload?.(data.id, mediaType)
-    setLoading(false)
+    try {
+      const formData = new FormData()
+      formData.append('file', files[0])
+      const { data } = await uploadMedia(formData)
+      const mediaType = mimeToMediaType(data.mime)
+      dispatch({
+        type: 'SET_VALUE',
+        key: mediaType,
+        value: data.id,
+      })
+      onUpload?.(data.id, mediaType)
+    } finally {
+      setLoading(false)
+    }
   }, [loading, onUpload])
 
   const handlePreview = useCallback(async (item: MediaItem) => {
@@ -99,7 +106,13 @@ export function useFactsCellAttachments(entry?: Entry, onUpload?: (fileId: strin
       if(!media){
         return
       }
-      const cachedBlob = await mediaCache.get(media)
+      let version: number | undefined
+      if (opts?.imported && opts.deckId && opts.factId) {
+        const { resolveImportedMediaVersion } = await import('@/api/media')
+        version = await resolveImportedMediaVersion(opts.deckId, opts.factId, media)
+      }
+      const cacheKey = version && version > 0 ? `${media}:v${version}` : media
+      const cachedBlob = await mediaCache.get(cacheKey)
       if(cachedBlob){
         setFile(URL.createObjectURL(cachedBlob))
         setFileType(item.key)
@@ -108,17 +121,17 @@ export function useFactsCellAttachments(entry?: Entry, onUpload?: (fileId: strin
         dispatch({ type: 'SET_PROGRESS', key: item.key, progress: '0' })
         const data = await getMedia(media, ({ progress: p }) => {
           dispatch({ type: 'SET_PROGRESS', key: item.key, progress: `${Number((p ?? 0) * 100).toFixed(0)}` })
-        })
+        }, version)
         setFile(data.url)
         setFileType(item.key)
-        await mediaCache.set(media, data.blob)
+        await mediaCache.set(cacheKey, data.blob)
       }
       setIsOpen(true)
     } finally {
       dispatch({ type: 'SET_LOADING', key: item.key, loading: false })
       dispatch({ type: 'SET_PROGRESS', key: item.key, progress: null })
     }
-  }, [setIsOpen])
+  }, [setIsOpen, opts?.imported, opts?.deckId, opts?.factId])
 
 
   const { getInputProps, open: upload } = useMediaUpload({

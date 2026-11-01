@@ -1,7 +1,8 @@
-import { describe, expect, it, vi } from 'vitest'
-import { renderHook } from '@testing-library/react'
+import { describe, expect, it, vi, beforeEach } from 'vitest'
+import { act, renderHook } from '@testing-library/react'
 import { useFactsCellAttachments } from '@/hooks/useFactsCellAttachments'
 import type { Entry } from '@/modules/facts/facts.schema'
+import { uploadMedia } from '@/api/media'
 
 vi.mock('next-intl', () => ({
   useTranslations: () => (key: string) => key,
@@ -19,11 +20,16 @@ vi.mock('@/lib/idb-cache', () => ({
   }),
 }))
 
-vi.mock('./useMediaUpload', () => ({
-  useMediaUpload: () => ({
-    getInputProps: vi.fn(),
-    open: vi.fn(),
-  }),
+let onAccepted: ((files: File[]) => void | Promise<void>) | undefined
+
+vi.mock('@/hooks/useMediaUpload', () => ({
+  useMediaUpload: (opts: { onAccepted: (files: File[]) => void | Promise<void> }) => {
+    onAccepted = opts.onAccepted
+    return {
+      getInputProps: vi.fn(),
+      open: vi.fn(),
+    }
+  },
 }))
 
 const mockEntry: Entry = {
@@ -34,6 +40,11 @@ const mockEntry: Entry = {
 }
 
 describe('useFactsCellAttachments', () => {
+  beforeEach(() => {
+    onAccepted = undefined
+    vi.mocked(uploadMedia).mockReset()
+  })
+
   it('无 entry 时返回空 mediaList', () => {
     const { result } = renderHook(() => useFactsCellAttachments())
     expect(result.current.mediaList).toHaveLength(0)
@@ -66,5 +77,69 @@ describe('useFactsCellAttachments', () => {
     expect(typeof result.current.upload).toBe('function')
     expect(typeof result.current.preview).toBe('function')
     expect(typeof result.current.getInputProps).toBe('function')
+  })
+
+  it('clears loading after a successful upload', async () => {
+    vi.mocked(uploadMedia).mockResolvedValueOnce({
+      data: { id: 'new-image', mime: 'image/png' },
+    } as Awaited<ReturnType<typeof uploadMedia>>)
+    const onUpload = vi.fn()
+    const { result } = renderHook(() => useFactsCellAttachments(mockEntry, onUpload))
+
+    await act(async () => {
+      await onAccepted?.([new File(['x'], 'a.png', { type: 'image/png' })])
+    })
+
+    expect(result.current.loading).toBe(false)
+    expect(result.current.mediaList[1].value).toBe('new-image')
+    expect(onUpload).toHaveBeenCalledWith('new-image', 'image')
+  })
+
+  it('clears loading when uploadMedia rejects', async () => {
+    vi.mocked(uploadMedia).mockRejectedValueOnce(new Error('upload failed'))
+    const { result } = renderHook(() => useFactsCellAttachments(mockEntry))
+
+    await act(async () => {
+      await expect(
+        onAccepted?.([new File(['x'], 'a.png', { type: 'image/png' })]),
+      ).rejects.toThrow('upload failed')
+    })
+
+    expect(result.current.loading).toBe(false)
+  })
+
+  it('skips upload while already loading', async () => {
+    let resolveUpload!: (value: Awaited<ReturnType<typeof uploadMedia>>) => void
+    vi.mocked(uploadMedia).mockImplementationOnce(
+      () => new Promise((resolve) => {
+        resolveUpload = resolve
+      }),
+    )
+    const { result } = renderHook(() => useFactsCellAttachments(mockEntry))
+
+    let firstUpload!: Promise<void | undefined>
+    act(() => {
+      firstUpload = Promise.resolve(
+        onAccepted?.([new File(['x'], 'a.png', { type: 'image/png' })]),
+      )
+    })
+
+    await act(async () => {
+      await Promise.resolve()
+    })
+    expect(result.current.loading).toBe(true)
+
+    await act(async () => {
+      await onAccepted?.([new File(['y'], 'b.png', { type: 'image/png' })])
+    })
+    expect(uploadMedia).toHaveBeenCalledTimes(1)
+
+    await act(async () => {
+      resolveUpload({
+        data: { id: 'new-image', mime: 'image/png' },
+      } as Awaited<ReturnType<typeof uploadMedia>>)
+      await firstUpload
+    })
+    expect(result.current.loading).toBe(false)
   })
 })
