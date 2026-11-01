@@ -12,12 +12,6 @@ vi.mock('@/components/facts/FactsAction', () => ({
   default: () => <div data-testid="facts-action" />,
 }))
 
-vi.mock('@/components/facts/FactsAudioPlayButton', () => ({
-  default: ({ mediaId }: { mediaId: string }) => (
-    <button type="button" aria-label={`play-${mediaId}`} />
-  ),
-}))
-
 vi.mock('next-intl', () => ({
   useTranslations: () => (key: string) => key,
 }))
@@ -72,6 +66,10 @@ function renderCell(overrides: Partial<ICellRendererParams> & {
   }
 
   return render(<FactsGridCellRenderer {...params} />)
+}
+
+function paperclipDisplay() {
+  return (document.querySelector('.facts-grid-cell-media') as HTMLElement).style.display
 }
 
 describe('spliceDeletedFieldFromRow', () => {
@@ -186,59 +184,82 @@ describe('resolveCellEntry', () => {
 })
 
 describe('FactsGridCellRenderer', () => {
-  it('shows audio play button when entry has audio', () => {
+  it('always shows paperclip when entry has audio', () => {
     renderCell()
-    expect(screen.getByRole('button', { name: 'play-audio-1' })).toBeDefined()
+    expect(paperclipDisplay()).toBe('block')
     expect(screen.getByText('hello')).toBeDefined()
     expect(screen.getByTestId('attachment-tooltip').textContent).toBe('term.attachment')
   })
 
-  it('shows play button when only raw fact has audio', () => {
+  it('always shows paperclip when only raw fact has audio', () => {
     renderCell({
       data: {
         Front: { text: 'hello', audio: '', image: '', video: '' },
         [rawSymbol]: makeFact('audio-raw'),
       },
     })
-    expect(screen.getByRole('button', { name: 'play-audio-raw' })).toBeDefined()
+    expect(paperclipDisplay()).toBe('block')
   })
 
-  it('hides audio play button when entry has no audio', () => {
+  it('always shows paperclip when entry has only an image', () => {
+    renderCell({
+      data: {
+        Front: { text: 'hello', audio: '', image: 'image-1', video: '' },
+        [rawSymbol]: makeFact(''),
+      },
+    })
+    expect(paperclipDisplay()).toBe('block')
+  })
+
+  it('always shows paperclip when entry has only a video', () => {
+    renderCell({
+      data: {
+        Front: { text: 'hello', audio: '', image: '', video: 'video-1' },
+        [rawSymbol]: makeFact(''),
+      },
+    })
+    expect(paperclipDisplay()).toBe('block')
+  })
+
+  it('shows paperclip only on focus when entry has no media', () => {
     renderCell({
       data: {
         Front: { text: 'hello', audio: '', image: '', video: '' },
         [rawSymbol]: makeFact(''),
       },
     })
-    expect(screen.queryByRole('button', { name: /^play-/ })).toBeNull()
+    expect(paperclipDisplay()).toBe('var(--cell-display, none)')
   })
 
-  it('hides audio play button when audio is whitespace', () => {
+  it('shows paperclip only on focus when media ids are whitespace', () => {
     renderCell({
       data: {
-        Front: { text: 'hello', audio: '   ', image: '', video: '' },
+        Front: { text: 'hello', audio: '   ', image: ' ', video: ' ' },
         [rawSymbol]: makeFact('   '),
       },
     })
-    expect(screen.queryByRole('button', { name: /^play-/ })).toBeNull()
+    expect(paperclipDisplay()).toBe('var(--cell-display, none)')
   })
 
-  it('hides audio play button when cell entry is missing and raw has no audio', () => {
+  it('shows paperclip only on focus when cell entry is missing', () => {
     renderCell({
       data: {
         Front: undefined,
-        [rawSymbol]: makeFact(''),
+        [rawSymbol]: undefined,
       },
-    })
-    expect(screen.queryByRole('button', { name: /^play-/ })).toBeNull()
+      api: {
+        getColumnDefs: () => [],
+      },
+    } as never)
+    expect(paperclipDisplay()).toBe('var(--cell-display, none)')
   })
 
-  it('renders action column without play button', () => {
+  it('renders action column without paperclip', () => {
     renderCell({
       colDef: { context: { isActionColumn: true } },
     })
     expect(screen.getByTestId('facts-action')).toBeDefined()
-    expect(screen.queryByRole('button', { name: /^play-/ })).toBeNull()
+    expect(document.querySelector('.facts-grid-cell-media')).toBeNull()
   })
 
   it('calls onAttachmentClick when paperclip is clicked', () => {
@@ -269,7 +290,7 @@ describe('FactsGridCellRenderer', () => {
     )
   })
 
-  it('hides play button on a remaining no-audio field after deleting the first of three fields', () => {
+  it('shows paperclip only on focus for a remaining no-media field after deleting the first of three fields', () => {
     const before = {
       Front: { text: 'front', audio: 'audio-front', image: '', video: '' },
       Middle: { text: 'mid', audio: '', image: '', video: '' },
@@ -295,7 +316,7 @@ describe('FactsGridCellRenderer', () => {
       },
       getValue: () => 'mid',
     } as never)
-    expect(screen.queryByRole('button', { name: /^play-/ })).toBeNull()
+    expect(paperclipDisplay()).toBe('var(--cell-display, none)')
     expect(screen.getByText('mid')).toBeDefined()
   })
 
@@ -335,7 +356,7 @@ describe('FactsGridCellRenderer', () => {
     expect(onAttachmentClick).not.toHaveBeenCalled()
   })
 
-  it('renders without play button when column is missing and raw has no audio', () => {
+  it('shows paperclip only on focus when column is missing and raw has no audio', () => {
     renderCell({
       column: undefined,
       data: {
@@ -343,7 +364,7 @@ describe('FactsGridCellRenderer', () => {
         [rawSymbol]: makeFact(''),
       },
     } as never)
-    expect(screen.queryByRole('button', { name: /^play-/ })).toBeNull()
+    expect(paperclipDisplay()).toBe('var(--cell-display, none)')
     expect(screen.getByText('hello')).toBeDefined()
   })
 })

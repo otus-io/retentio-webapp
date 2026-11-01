@@ -1,6 +1,5 @@
 import AppTooltip from '@/components/app/AppTooltip'
 import FactsAction from '@/components/facts/FactsAction'
-import FactsAudioPlayButton from '@/components/facts/FactsAudioPlayButton'
 import { resolveCellEntry } from '@/components/facts/resolveCellEntry'
 import { rawSymbol } from '@/components/facts/token'
 import type { Deck } from '@/modules/decks/decks.schema'
@@ -14,9 +13,6 @@ interface FactsGridCellRendererProps extends ICellRendererParams {
   onAttachmentClick?: (fact: Fact, fieldKey: string, entry: Entry) => void
   deck: Deck
 }
-
-const playButtonClassName
-  = 'facts-grid-cell-audio-play inline-flex size-6 shrink-0 items-center justify-center rounded-full border border-default bg-background text-foreground hover:bg-default'
 
 export default function FactsGridCellRenderer(props: FactsGridCellRendererProps) {
   const t = useTranslations()
@@ -39,24 +35,12 @@ export default function FactsGridCellRenderer(props: FactsGridCellRendererProps)
   }
 
   const entry = resolveCellEntry(props)
-  const audioId = entry?.audio?.trim()
-  const fact = props.data?.[rawSymbol] as Fact | undefined
+  const hasMedia = Boolean(entry?.audio?.trim() || entry?.image?.trim() || entry?.video?.trim())
 
   return (
     <div className="flex items-center h-full min-w-0 w-full facts-grid-cell-renderer">
       <span className="truncate min-w-0">{props.getValue?.()}</span>
       <div className="ml-auto flex items-center gap-1 shrink-0 pl-1">
-        {audioId
-          ? (
-            <FactsAudioPlayButton
-              mediaId={audioId}
-              deckId={props.deck.id}
-              factId={fact?.id}
-              imported={Boolean(props.deck.source_deck_id)}
-              className={playButtonClassName}
-            />
-          )
-          : null}
         <AppTooltip
           trigger={false}
           content={<p>{t('term.attachment')}</p>}
@@ -66,7 +50,7 @@ export default function FactsGridCellRenderer(props: FactsGridCellRendererProps)
             tabIndex={0}
             className="facts-grid-cell-media"
             style={{
-              display: 'var(--cell-display, none)',
+              display: hasMedia ? 'block' : 'var(--cell-display, none)',
             }}
             onClick={() => handleAttachmentClick()}
           >
