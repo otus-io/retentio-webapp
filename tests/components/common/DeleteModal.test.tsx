@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest'
-import { render, screen } from '@testing-library/react'
+import { act, fireEvent, render, screen, waitFor } from '@testing-library/react'
 import DeleteModal from '@/components/common/DeleteModal'
 
 const mockSetIsOpen = vi.fn()
@@ -102,5 +102,26 @@ describe('DeleteModal', () => {
   it('渲染关闭按钮', () => {
     render(<DeleteModal {...defaultProps} />)
     expect(screen.getByLabelText('Close')).toBeDefined()
+  })
+
+  it('删除成功时关闭弹窗并调用 onSuccess', async () => {
+    const setIsOpen = vi.fn()
+    const onSuccess = vi.fn()
+    const action = vi.fn(async () => ({ success: true }))
+    render(
+      <DeleteModal
+        action={action}
+        isOpen
+        setIsOpen={setIsOpen}
+        onSuccess={onSuccess}
+      />,
+    )
+    await act(async () => {
+      fireEvent.click(screen.getByText('确认'))
+    })
+    await waitFor(() => {
+      expect(setIsOpen).toHaveBeenCalledWith(false)
+    })
+    expect(onSuccess).toHaveBeenCalledTimes(1)
   })
 })

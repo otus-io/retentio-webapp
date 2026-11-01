@@ -82,4 +82,46 @@ describe('TablePagination', () => {
     page2.click()
     expect(mockSetParam).toHaveBeenCalledWith('page', '2')
   })
+
+  it('page 参数为空时按第一页处理', () => {
+    mockGetParam.mockReturnValue(undefined)
+    render(<TablePagination totalPages={5} />)
+    expect(screen.getByText('1').closest('button')?.getAttribute('data-active')).toBe('true')
+    expect(screen.getByText('‹').closest('button')?.hasAttribute('disabled')).toBe(true)
+    mockGetParam.mockReset()
+  })
+
+  it('页数不是数字时不追加末页', () => {
+    mockGetParam.mockReset()
+    render(<TablePagination totalPages={Number.NaN} />)
+    expect(screen.getByText('1')).toBeDefined()
+    expect(screen.queryByText('2')).toBeNull()
+    expect(screen.queryByText('NaN')).toBeNull()
+  })
+
+  it('只有一页时只渲染第一页', () => {
+    mockGetParam.mockReset()
+    render(<TablePagination totalPages={1} />)
+    expect(screen.getByText('1')).toBeDefined()
+    expect(screen.queryByText('2')).toBeNull()
+    expect(screen.queryByText('...')).toBeNull()
+  })
+
+  it('点击上一页时写入上一页页码', () => {
+    mockGetParam.mockReturnValue('3')
+    mockSetParam.mockClear()
+    render(<TablePagination totalPages={5} />)
+    screen.getByText('‹').closest('button')?.click()
+    expect(mockSetParam).toHaveBeenCalledWith('page', '2')
+    mockGetParam.mockReset()
+  })
+
+  it('点击下一页时写入下一页页码', () => {
+    mockGetParam.mockReturnValue('3')
+    mockSetParam.mockClear()
+    render(<TablePagination totalPages={5} />)
+    screen.getByText('›').closest('button')?.click()
+    expect(mockSetParam).toHaveBeenCalledWith('page', '4')
+    mockGetParam.mockReset()
+  })
 })

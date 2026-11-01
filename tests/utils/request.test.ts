@@ -1,10 +1,22 @@
-import { afterEach, describe, expect, it, vi } from 'vitest'
-import { API_BASE_URL } from '@/config'
-import { createRequest } from '@/utils/request'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+import { API_BASE_URL, JWT_COOKIE_NAME } from '@/config'
+import { createRequest, request } from '@/utils/request'
+
+const cookiesMock = vi.fn()
+
+vi.mock('next/headers', () => ({
+  cookies: (...args: unknown[]) => cookiesMock(...args),
+}))
 
 describe('createRequest', () => {
+  beforeEach(() => {
+    cookiesMock.mockReset()
+  })
+
   afterEach(() => {
     vi.restoreAllMocks()
+    vi.unstubAllGlobals()
+    document.cookie = `${JWT_COOKIE_NAME}=; Max-Age=0`
   })
 
   it('成功请求返回 JSON', async () => {
@@ -114,5 +126,103 @@ describe('createRequest', () => {
     expect(progressEvents.length).toBeGreaterThanOrEqual(1)
     expect(progressEvents[0].total).toBe(contentLength)
     expect(progressEvents[progressEvents.length - 1].loaded).toBe(contentLength)
+  })
+
+  it('缺少 Content-Length 与 Content-Type 时进度为 null 且不解析正文', async () => {
+    vi.spyOn(globalThis, 'fetch').mockResolvedValue(
+      new Response(new Uint8Array([1, 2, 3])),
+    )
+
+    const progressEvents: { loaded: number, total: number | null, progress: number | null }[] = []
+    const requestWithProgress = createRequest(vi.fn().mockResolvedValue(null))
+    const result = await requestWithProgress('/api/data', {
+      onDownloadProgress: (event) => progressEvents.push(event),
+    })
+
+    expect(result).toBeNull()
+    expect(progressEvents[0]).toEqual({ loaded: 0, total: null, progress: null })
+    expect(progressEvents.some((event) => event.loaded === 3 && event.total === null && event.progress === null)).toBe(true)
+  })
+
+  it('将 Headers 实例规范为普通对象', async () => {
+    const getToken = vi.fn().mockResolvedValue('token')
+    vi.spyOn(globalThis, 'fetch').mockResolvedValue(
+      new Response('{}', { headers: { 'Content-Type': 'application/json' } }),
+    )
+
+    const req = createRequest(getToken)
+    await req('/api/users', { headers: new Headers({ 'X-Custom': 'abc' }) })
+
+    const headers = (fetch as ReturnType<typeof vi.fn>).mock.calls[0][1].headers
+    expect(headers['x-custom']).toBe('abc')
+    expect(headers['Content-Type']).toBe('application/json;charset=UTF-8')
+    expect(headers.Authorization).toBe('Bearer token')
+  })
+
+  it('将头元组数组规范为普通对象', async () => {
+    vi.spyOn(globalThis, 'fetch').mockResolvedValue(
+      new Response('{}', { headers: { 'Content-Type': 'application/json' } }),
+    )
+
+    const req = createRequest(vi.fn().mockResolvedValue(null))
+    await req('/api/users', { headers: [['X-Request-Id', 'req-1']] })
+
+    const headers = (fetch as ReturnType<typeof vi.fn>).mock.calls[0][1].headers
+    expect(headers['X-Request-Id']).toBe('req-1')
+    expect(headers['Content-Type']).toBe('application/json;charset=UTF-8')
+  })
+
+  it('复制普通对象请求头', async () => {
+    vi.spyOn(globalThis, 'fetch').mockResolvedValue(
+      new Response('{}', { headers: { 'Content-Type': 'application/json' } }),
+    )
+
+    const req = createRequest(vi.fn().mockResolvedValue(null))
+    await req('/api/users', { headers: { 'X-Plain': 'yes' } })
+
+    const headers = (fetch as ReturnType<typeof vi.fn>).mock.calls[0][1].headers
+    expect(headers['X-Plain']).toBe('yes')
+    expect(headers['Content-Type']).toBe('application/json;charset=UTF-8')
+  })
+
+  it('浏览器环境从客户端 cookie 读取 token', async () => {
+    document.cookie = `${JWT_COOKIE_NAME}=client-token`
+    vi.spyOn(globalThis, 'fetch').mockResolvedValue(
+      new Response('{}', { headers: { 'Content-Type': 'application/json' } }),
+    )
+
+    await request('/api/profile')
+
+    expect(fetch).toHaveBeenCalledWith(
+      `${API_BASE_URL}/api/profile`,
+      expect.objectContaining({
+        headers: expect.objectContaining({
+          Authorization: 'Bearer client-token',
+        }),
+      }),
+    )
+    expect(cookiesMock).not.toHaveBeenCalled()
+  })
+
+  it('服务端环境从 cookie store 读取 token', async () => {
+    cookiesMock.mockResolvedValue({
+      get: (name: string) => (name === JWT_COOKIE_NAME ? { value: 'server-token' } : undefined),
+    })
+    vi.stubGlobal('window', undefined)
+    vi.spyOn(globalThis, 'fetch').mockResolvedValue(
+      new Response('{}', { headers: { 'Content-Type': 'application/json' } }),
+    )
+
+    await request('/api/profile')
+
+    expect(cookiesMock).toHaveBeenCalled()
+    expect(fetch).toHaveBeenCalledWith(
+      `${API_BASE_URL}/api/profile`,
+      expect.objectContaining({
+        headers: expect.objectContaining({
+          Authorization: 'Bearer server-token',
+        }),
+      }),
+    )
   })
 })

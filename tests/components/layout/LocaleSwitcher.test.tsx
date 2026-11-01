@@ -1,7 +1,9 @@
 import { describe, expect, it, vi } from 'vitest'
-import { render, screen } from '@testing-library/react'
-import type { ComponentProps } from 'react'
+import { act, render, screen } from '@testing-library/react'
+import { createContext, useContext, type ComponentProps } from 'react'
 import type { LucideProps } from 'lucide-react'
+
+const SelectedContext = createContext(false)
 
 const mockSetLocaleAction = vi.fn()
 
@@ -22,8 +24,22 @@ vi.mock('@heroui/react', () => ({
       Popover: ({ children }: { children?: React.ReactNode }) => (
         <div data-testid="popover">{children}</div>
       ),
-      Menu: ({ children, selectionMode }: { children?: React.ReactNode; selectionMode?: string }) => (
+      Menu: ({
+        children,
+        selectionMode,
+        onSelectionChange,
+      }: {
+        children?: React.ReactNode
+        selectionMode?: string
+        onSelectionChange?: (keys: Set<string> | null) => void
+      }) => (
         <ul data-testid="menu" data-selection-mode={selectionMode}>
+          <button type="button" data-testid="select-zh" onClick={() => onSelectionChange?.(new Set(['zh']))}>
+            zh
+          </button>
+          <button type="button" data-testid="select-none" onClick={() => onSelectionChange?.(null)}>
+            none
+          </button>
           {children}
         </ul>
       ),
@@ -37,11 +53,14 @@ vi.mock('@heroui/react', () => ({
         id: string
         textValue: string
       }) => {
-        const resolved = typeof children === 'function' ? children({ isSelected: id === 'en' }) : children
+        const isSelected = id === 'en'
+        const resolved = typeof children === 'function' ? children({ isSelected }) : children
         return (
-          <li data-testid={`item-${id}`} data-text={textValue}>
-            {resolved}
-          </li>
+          <SelectedContext.Provider value={isSelected}>
+            <li data-testid={`item-${id}`} data-text={textValue}>
+              {resolved}
+            </li>
+          </SelectedContext.Provider>
         )
       },
       ItemIndicator: ({
@@ -49,7 +68,8 @@ vi.mock('@heroui/react', () => ({
       }: {
         children: RenderChildren
       }) => {
-        const resolved = typeof children === 'function' ? children({ isSelected: true }) : children
+        const isSelected = useContext(SelectedContext)
+        const resolved = typeof children === 'function' ? children({ isSelected }) : children
         return <span data-testid="item-indicator">{resolved as React.ReactNode}</span>
       },
     },
@@ -89,5 +109,26 @@ describe('LocaleSwitcher', () => {
     // 'en' is the current locale, indicator shows check for it
     expect(enItem.querySelector('[data-testid="item-indicator"]')).toBeDefined()
     expect(zhItem.querySelector('[data-testid="item-indicator"]')).toBeDefined()
+    expect(enItem.querySelector('[data-testid="check-icon"]')).toBeTruthy()
+    expect(zhItem.querySelector('[data-testid="check-icon"]')).toBeNull()
+    expect(screen.getByTestId('item-ja').querySelector('[data-testid="check-icon"]')).toBeNull()
+  })
+
+  it('选择语言时调用 setLocaleAction', async () => {
+    mockSetLocaleAction.mockResolvedValue(undefined)
+    render(<LocaleSwitcher />)
+    await act(async () => {
+      screen.getByTestId('select-zh').click()
+    })
+    expect(mockSetLocaleAction).toHaveBeenCalledWith('zh')
+  })
+
+  it('空选择不切换语言', async () => {
+    mockSetLocaleAction.mockClear()
+    render(<LocaleSwitcher />)
+    await act(async () => {
+      screen.getByTestId('select-none').click()
+    })
+    expect(mockSetLocaleAction).not.toHaveBeenCalled()
   })
 })

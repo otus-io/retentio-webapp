@@ -1,8 +1,36 @@
+import type * as ReactNamespace from 'react'
 import { describe, expect, it, vi, beforeEach } from 'vitest'
-import { render, screen } from '@testing-library/react'
+import { act, render, screen } from '@testing-library/react'
+
+const homeFlags = vi.hoisted(() => ({
+  hideHighlight: false,
+  nullSectionRef: false,
+}))
+
+vi.mock('react', async () => {
+  const actual = await vi.importActual<typeof ReactNamespace>('react')
+  return {
+    ...actual,
+    useRef: (initial: unknown) => {
+      if (homeFlags.nullSectionRef) {
+        const ref = { current: null as unknown }
+        Object.defineProperty(ref, 'current', {
+          configurable: true,
+          enumerable: true,
+          get: () => null,
+          set: () => {},
+        })
+        return ref
+      }
+      return actual.useRef(initial)
+    },
+  }
+})
 
 vi.mock('next-intl', () => ({
-  useTranslations: () => (key: string) => key,
+  useTranslations: () => (key: string) => (
+    homeFlags.hideHighlight && key === 'home.hero.titleHighlight' ? '' : key
+  ),
 }))
 
 vi.mock('next/link', () => ({
@@ -43,15 +71,28 @@ vi.mock('lucide-react', () => ({
 import { PLAY_STORE_URL, TESTFLIGHT_JOIN_URL } from '@/config'
 import HomePage from '@/components/home/HomePage'
 
+interface ObserverStub {
+  callback: IntersectionObserverCallback
+  observe: ReturnType<typeof vi.fn>
+  disconnect: ReturnType<typeof vi.fn>
+}
+
 describe('HomePage', () => {
+  const observers: ObserverStub[] = []
+
   beforeEach(() => {
+    observers.length = 0
+    homeFlags.hideHighlight = false
+    homeFlags.nullSectionRef = false
     vi.stubGlobal('IntersectionObserver', vi.fn(function (
-      this: { observe: ReturnType<typeof vi.fn>; disconnect: ReturnType<typeof vi.fn> },
-      _callback: IntersectionObserverCallback,
+      this: ObserverStub,
+      callback: IntersectionObserverCallback,
       _options?: IntersectionObserverInit,
     ) {
+      this.callback = callback
       this.observe = vi.fn()
       this.disconnect = vi.fn()
+      observers.push(this)
     }))
   })
 
@@ -121,5 +162,52 @@ describe('HomePage', () => {
     const titles = screen.getAllByText('home.features.sectionTitle')
     const container = titles[0].closest('div')
     expect(container?.className).toContain('opacity-0')
+  })
+
+  it('进入视口后显示，未相交时保持隐藏', () => {
+    render(<HomePage />)
+    const section = screen.getByText('home.about.title').closest('div')
+    expect(section?.className).toContain('opacity-0')
+    expect(IntersectionObserver).toHaveBeenCalledWith(
+      expect.any(Function),
+      { rootMargin: '-80px' },
+    )
+
+    act(() => {
+      for (const observer of observers) {
+        observer.callback(
+          [{ isIntersecting: false } as IntersectionObserverEntry],
+          observer as unknown as IntersectionObserver,
+        )
+      }
+    })
+    expect(section?.className).toContain('opacity-0')
+    expect(observers[0].disconnect).not.toHaveBeenCalled()
+
+    act(() => {
+      for (const observer of observers) {
+        observer.callback(
+          [{ isIntersecting: true } as IntersectionObserverEntry],
+          observer as unknown as IntersectionObserver,
+        )
+      }
+    })
+    expect(section?.className).toContain('opacity-100')
+    expect(section?.className).not.toContain('opacity-0')
+    expect(observers[0].disconnect).toHaveBeenCalledTimes(1)
+  })
+
+  it('标题高亮为空时不渲染强调文本', () => {
+    homeFlags.hideHighlight = true
+    render(<HomePage />)
+    expect(screen.getByText('home.hero.title')).toBeDefined()
+    expect(screen.queryByText('home.hero.titleHighlight')).toBeNull()
+  })
+
+  it('区块节点尚未挂载时不创建观察器', () => {
+    homeFlags.nullSectionRef = true
+    render(<HomePage />)
+    expect(observers).toHaveLength(0)
+    expect(screen.getByText('home.about.title').closest('div')?.className).toContain('opacity-0')
   })
 })

@@ -37,4 +37,16 @@ describe('AppTextarea', () => {
     render(<AppTextarea label="简介" description="最多 500 字" />)
     expect(screen.getByTestId('description')).toBeDefined()
   })
+
+  it('渲染 prefix 和 suffix', () => {
+    render(
+      <AppTextarea
+        label="简介"
+        prefix={<span>前</span>}
+        suffix={<span>后</span>}
+      />,
+    )
+    expect(screen.getByTestId('input-prefix').textContent).toBe('前')
+    expect(screen.getByTestId('input-suffix').textContent).toBe('后')
+  })
 })
