@@ -525,4 +525,126 @@ describe('FactsAudioPlayButton', () => {
     unmount()
     expect(URL.revokeObjectURL).not.toHaveBeenCalled()
   })
+
+  it('stops Space from bubbling and lets other keys through', () => {
+    const onKeyDown = vi.fn()
+    render(
+      <div onKeyDown={onKeyDown}>
+        <FactsAudioPlayButton mediaId="audio-1" />
+      </div>,
+    )
+    const button = screen.getByRole('button', { name: 'Play Audio' })
+    fireEvent.keyDown(button, { key: ' ' })
+    expect(onKeyDown).not.toHaveBeenCalled()
+    fireEvent.keyDown(button, { key: 'Escape' })
+    expect(onKeyDown).toHaveBeenCalledTimes(1)
+  })
+
+  it('does not download if unmounted while resolving an imported version', async () => {
+    let resolveVersion!: (version: number) => void
+    mockResolveVersion.mockImplementation(
+      () => new Promise((resolve) => {
+        resolveVersion = resolve
+      }),
+    )
+
+    const { unmount } = render(
+      <FactsAudioPlayButton mediaId="audio-1" deckId="deck-1" factId="fact-1" imported />,
+    )
+    await act(async () => {
+      fireEvent.click(screen.getByRole('button', { name: 'Play Audio' }))
+    })
+    await waitFor(() => {
+      expect(mockResolveVersion).toHaveBeenCalledWith('deck-1', 'fact-1', 'audio-1')
+    })
+
+    unmount()
+    await act(async () => {
+      resolveVersion(3)
+      await Promise.resolve()
+    })
+
+    expect(mockGet).not.toHaveBeenCalled()
+    expect(mockGetMedia).not.toHaveBeenCalled()
+  })
+
+  it('does not revoke an abandoned download that produced no object url', async () => {
+    let resolveSet!: () => void
+    mockGet.mockResolvedValue(undefined)
+    mockGetMedia.mockResolvedValue({ url: null, blob: new Blob(['x']) })
+    mockSet.mockImplementation(
+      () => new Promise((resolve) => {
+        resolveSet = resolve
+      }),
+    )
+
+    const { unmount } = render(<FactsAudioPlayButton mediaId="audio-1" />)
+    await act(async () => {
+      fireEvent.click(screen.getByRole('button', { name: 'Play Audio' }))
+    })
+    await waitFor(() => {
+      expect(mockSet).toHaveBeenCalledWith('audio-1', expect.any(Blob))
+    })
+
+    unmount()
+    ;(URL.revokeObjectURL as ReturnType<typeof vi.fn>).mockClear()
+    await act(async () => {
+      resolveSet()
+      await Promise.resolve()
+    })
+    expect(URL.revokeObjectURL).not.toHaveBeenCalled()
+  })
+
+  it('does not download if another player takes over while the version resolves', async () => {
+    let resolveVersion!: (version: number) => void
+    let resolveCacheB!: (value: Blob | undefined) => void
+    mockResolveVersion.mockImplementation(
+      () => new Promise((resolve) => {
+        resolveVersion = resolve
+      }),
+    )
+    mockGet.mockImplementation(
+      () => new Promise((resolve) => {
+        resolveCacheB = resolve
+      }),
+    )
+
+    const containerA = document.body.appendChild(document.createElement('div'))
+    const containerB = document.body.appendChild(document.createElement('div'))
+    const { unmount: unmountA } = render(
+      <FactsAudioPlayButton mediaId="audio-a" deckId="deck-1" factId="fact-1" imported />,
+      { container: containerA },
+    )
+    await act(async () => {
+      fireEvent.click(containerA.querySelector('button')!)
+    })
+    await waitFor(() => {
+      expect(mockResolveVersion).toHaveBeenCalledWith('deck-1', 'fact-1', 'audio-a')
+    })
+
+    const { unmount: unmountB } = render(
+      <FactsAudioPlayButton mediaId="audio-b" />,
+      { container: containerB },
+    )
+    await act(async () => {
+      fireEvent.click(containerB.querySelector('button')!)
+    })
+    await waitFor(() => {
+      expect(resolveCacheB).toBeTypeOf('function')
+    })
+
+    await act(async () => {
+      resolveVersion(4)
+      await Promise.resolve()
+    })
+    expect(mockGet.mock.calls.map((call) => call[0])).toEqual(['audio-b'])
+    expect(mockGetMedia).not.toHaveBeenCalled()
+    expect(containerA.querySelector('button')?.getAttribute('aria-label')).toBe('Play Audio')
+    expect(containerA.querySelector('button')?.hasAttribute('disabled')).toBe(false)
+
+    unmountA()
+    unmountB()
+    containerA.remove()
+    containerB.remove()
+  })
 })

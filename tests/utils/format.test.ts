@@ -47,6 +47,27 @@ describe('formatErrorMessage', () => {
   it('优先使用提供的 defaultError', () => {
     expect(formatErrorMessage(null, '默认错误信息')).toBe('默认错误信息')
   })
+
+  it('AggregateError 中的非 Error 项序列化为 JSON', () => {
+    const err = new AggregateError([new Error('err1'), { code: 2 }], 'aggregate')
+    expect(formatErrorMessage(err)).toBe('err1; {"code":2}')
+  })
+
+  it('null 且未提供 defaultError 时返回 JSON null', () => {
+    expect(formatErrorMessage(null)).toBe('null')
+  })
+
+  it('undefined 且未提供 defaultError 时返回未知错误', () => {
+    expect(formatErrorMessage(undefined)).toBe('未知错误')
+  })
+
+  it('message 与 msg 不是字符串时使用 defaultError', () => {
+    expect(formatErrorMessage({ message: 12, msg: { text: 'nope' } }, '默认错误信息')).toBe('默认错误信息')
+  })
+
+  it('无法 JSON 序列化时返回未知错误', () => {
+    expect(formatErrorMessage(() => 'hidden')).toBe('未知错误')
+  })
 })
 
 describe('formDataToObject', () => {
@@ -67,5 +88,13 @@ describe('formDataToObject', () => {
   it('处理空 FormData', () => {
     const fd = new FormData()
     expect(formDataToObject(fd)).toEqual({})
+  })
+
+  it('将三个及以上重复字段追加到同一数组', () => {
+    const fd = new FormData()
+    fd.append('role', 'admin')
+    fd.append('role', 'user')
+    fd.append('role', 'guest')
+    expect(formDataToObject(fd)).toEqual({ role: ['admin', 'user', 'guest'] })
   })
 })

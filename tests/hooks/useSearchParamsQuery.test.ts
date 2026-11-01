@@ -21,7 +21,7 @@ vi.mock('next/navigation', () => ({
 }))
 
 vi.mock('use-debounce', () => ({
-  useDebouncedCallback: (fn: () => void) => fn,
+  useDebouncedCallback: (fn: () => void) => () => fn(),
 }))
 
 describe('useSearchParamsQuery', () => {
@@ -84,5 +84,45 @@ describe('useSearchParamsQuery', () => {
     const { result } = renderHook(() => useSearchParamsQuery([]))
 
     expect(result.current.searchParams).toBe(params)
+  })
+
+  it('setParam 值未变化时不导航', () => {
+    replaceMock.mockClear()
+    useSearchParams.mockReturnValue(new URLSearchParams('page=2'))
+    const { result } = renderHook(() => useSearchParamsQuery([]))
+
+    result.current.setParam('page', '2')
+    expect(replaceMock).not.toHaveBeenCalled()
+  })
+
+  it('setParamDebounced 值未变化时不导航', () => {
+    replaceMock.mockClear()
+    useSearchParams.mockReturnValue(new URLSearchParams('q=test'))
+    const { result } = renderHook(() => useSearchParamsQuery([]))
+
+    result.current.setParamDebounced('q', 'test')
+    expect(replaceMock).not.toHaveBeenCalled()
+  })
+
+  it('setParams 删除空值和未定义值并保留其余参数', () => {
+    replaceMock.mockClear()
+    useSearchParams.mockReturnValue(new URLSearchParams('keep=1&drop=x&gone=y'))
+    const { result } = renderHook(() => useSearchParamsQuery([]))
+
+    result.current.setParams({ page: '2', drop: '', gone: undefined })
+    expect(replaceMock).toHaveBeenCalledWith('/test?keep=1&page=2')
+  })
+
+  it('setParamsDebounced 写入、删除参数，空更新不导航', () => {
+    replaceMock.mockClear()
+    useSearchParams.mockReturnValue(new URLSearchParams('q=old&page=1'))
+    const { result } = renderHook(() => useSearchParamsQuery([]))
+
+    result.current.setParamsDebounced({ q: 'new', page: '', extra: undefined })
+    expect(replaceMock).toHaveBeenCalledWith('/test?q=new')
+
+    replaceMock.mockClear()
+    result.current.setParamsDebounced({})
+    expect(replaceMock).not.toHaveBeenCalled()
   })
 })

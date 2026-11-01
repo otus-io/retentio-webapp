@@ -1,11 +1,12 @@
 import { describe, expect, it, vi } from 'vitest'
-import { render, screen } from '@testing-library/react'
+import { fireEvent, render, screen } from '@testing-library/react'
 import type { ComponentProps } from 'react'
 
 vi.mock('@heroui/react', () => ({
   Select: Object.assign(
     ({ children, value, className, placeholder, onChange, ...rest }: ComponentProps<'div'> & { value?: string; placeholder?: string; onChange?: (value: string | null) => void }) => (
       <div data-testid="select" data-value={value} className={className} {...rest}>
+        <button type="button" data-testid="select-pick" onClick={() => onChange?.('2')}>选择</button>
         {children}
       </div>
     ),
@@ -55,5 +56,22 @@ describe('AppSelect', () => {
   it('受控模式下使用外部 value', () => {
     render(<AppSelect items={items} label="选择器" value="2" />)
     expect(screen.getByTestId('select').getAttribute('data-value')).toBe('2')
+  })
+
+  it('非受控时选择会更新内部值并通知 onChange', () => {
+    const onChange = vi.fn()
+    render(<AppSelect items={items} label="选择器" onChange={onChange} />)
+    expect(screen.getByTestId('select').getAttribute('data-value')).toBeNull()
+    fireEvent.click(screen.getByTestId('select-pick'))
+    expect(onChange).toHaveBeenCalledWith('2')
+    expect(screen.getByTestId('select').getAttribute('data-value')).toBe('2')
+  })
+
+  it('受控时选择只通知 onChange 且保持外部 value', () => {
+    const onChange = vi.fn()
+    render(<AppSelect items={items} label="选择器" value="1" onChange={onChange} />)
+    fireEvent.click(screen.getByTestId('select-pick'))
+    expect(onChange).toHaveBeenCalledWith('2')
+    expect(screen.getByTestId('select').getAttribute('data-value')).toBe('1')
   })
 })

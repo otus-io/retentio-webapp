@@ -42,4 +42,11 @@ describe('AppBreadcrumbs', () => {
     expect(links[0].getAttribute('href')).toBe('/')
     expect(links[1].getAttribute('href')).toBe('/users')
   })
+
+  it('href 为空时渲染纯文本', () => {
+    render(<AppBreadcrumbs items={[{ href: '', title: '当前页' }]} />)
+    const current = screen.getByText('当前页')
+    expect(current.closest('a')).toBeNull()
+    expect(screen.getByRole('link', { name: '首页' }).getAttribute('href')).toBe('/')
+  })
 })

@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest'
-import { render, screen } from '@testing-library/react'
+import { fireEvent, render, screen } from '@testing-library/react'
 import type { ReactNode } from 'react'
 
 vi.mock('next-intl', () => ({
@@ -52,6 +52,7 @@ vi.mock('@heroui/react', () => ({
   ),
 }))
 
+import { resetPasswordAction } from '@/modules/auth/auth.action'
 import ResetPasswordForm from '@/components/auth/ResetPasswordForm'
 
 describe('ResetPasswordForm', () => {
@@ -70,5 +71,22 @@ describe('ResetPasswordForm', () => {
     expect(hidden?.value).toBe('reset-tok')
     expect(container.querySelector('input[name="password"]')).toBeTruthy()
     expect(container.querySelector('input[name="confirmPassword"]')).toBeTruthy()
+  })
+
+  it('submits the new password with the hidden token', () => {
+    const { container } = render(<ResetPasswordForm token="reset-tok" />)
+    fireEvent.change(screen.getByLabelText('passwordLabel'), {
+      target: { value: 'new-secret' },
+    })
+    fireEvent.change(screen.getByLabelText('confirmPasswordLabel'), {
+      target: { value: 'new-secret' },
+    })
+    fireEvent.submit(container.querySelector('form')!)
+
+    expect(resetPasswordAction).toHaveBeenCalledTimes(1)
+    const formData = vi.mocked(resetPasswordAction).mock.calls[0][1] as FormData
+    expect(formData.get('token')).toBe('reset-tok')
+    expect(formData.get('password')).toBe('new-secret')
+    expect(formData.get('confirmPassword')).toBe('new-secret')
   })
 })
