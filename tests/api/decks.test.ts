@@ -20,9 +20,11 @@ describe('decks api', () => {
     })
   })
 
-  it('lists every deck', () => {
-    getAllDecks()
+  it('lists every deck', async () => {
+    const decks = [{ id: 'deck-1' }]
+    vi.mocked(request).mockResolvedValue(decks)
 
+    await expect(getAllDecks()).resolves.toBe(decks)
     expect(request).toHaveBeenCalledWith('/api/decks')
   })
 
@@ -39,6 +41,7 @@ describe('decks api', () => {
       method: 'POST',
       body: JSON.stringify({ name: 'Spanish', fields: ['front', 'back'], rate: 20 }),
     })
+    expect(request).toHaveBeenCalledTimes(1)
   })
 
   it('updates a deck', () => {

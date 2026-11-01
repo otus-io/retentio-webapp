@@ -190,6 +190,9 @@ describe('AuthForm', () => {
     fireEvent.change(screen.getByRole('textbox', { name: 'usernameLabel' }), {
       target: { value: 'ada' },
     })
+    fireEvent.change(screen.getByRole('textbox', { name: 'emailLabel' }), {
+      target: { value: 'ada@example.com' },
+    })
     fireEvent.submit(document.querySelector('form')!)
 
     expect(showWarningToast).not.toHaveBeenCalled()
@@ -197,6 +200,7 @@ describe('AuthForm', () => {
     const formData = vi.mocked(registerAction).mock.calls[0][1] as FormData
     expect(formData.get('terms')).toBe('true')
     expect(formData.get('username')).toBe('ada')
+    expect(formData.get('email')).toBe('ada@example.com')
     expect(loginAction).not.toHaveBeenCalled()
   })
 })

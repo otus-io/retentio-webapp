@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import {
   __clearMediaVersionCache,
   getMedia,
@@ -140,15 +140,21 @@ describe('getMedia / uploadMedia', () => {
     vi.mocked(request).mockReset()
   })
 
+  afterEach(() => {
+    vi.restoreAllMocks()
+  })
+
   it('returns an object URL for the downloaded blob', async () => {
     const blob = new Blob(['audio'], { type: 'audio/mpeg' })
     const onDownloadProgress = vi.fn()
     vi.mocked(request).mockResolvedValue(blob)
+    const createObjectURL = vi.spyOn(URL, 'createObjectURL')
 
     const result = await getMedia('media-1', onDownloadProgress)
 
     expect(result.blob).toBe(blob)
     expect(result.url.startsWith('blob:')).toBe(true)
+    expect(createObjectURL).toHaveBeenCalledWith(blob)
     expect(request).toHaveBeenCalledWith('/api/media/media-1', { onDownloadProgress })
     URL.revokeObjectURL(result.url)
   })

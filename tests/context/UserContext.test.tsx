@@ -94,10 +94,12 @@ describe('UserContext', () => {
 
     expect(screen.getByTestId('isLogin').textContent).toBe('false')
     expect(screen.getByTestId('username').textContent).toBe('')
+    expect(pushMock).not.toHaveBeenCalled()
 
     fireEvent.click(screen.getByTestId('run'))
 
     expect(calls).toEqual([])
+    expect(pushMock).toHaveBeenCalledTimes(1)
     expect(pushMock).toHaveBeenCalledWith('/login?redirect=/decks/42')
   })
 
