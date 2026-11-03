@@ -93,4 +93,5 @@ describe('AppModal', () => {
     render(<AppModal {...baseProps} title="提示" footer={false}><p>test</p></AppModal>)
     expect(screen.queryByTestId('modal-footer')).toBeNull()
   })
+
 })

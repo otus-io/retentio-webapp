@@ -1,8 +1,14 @@
-import { describe, expect, it, vi, beforeEach } from 'vitest'
+import { describe, expect, it, vi, beforeEach, afterEach } from 'vitest'
 import { act, renderHook } from '@testing-library/react'
 import { useFactsCellAttachments } from '@/hooks/useFactsCellAttachments'
 import type { Entry } from '@/modules/facts/facts.schema'
-import { uploadMedia } from '@/api/media'
+import { getMedia, resolveImportedMediaVersion, uploadMedia } from '@/api/media'
+import type { OnProgress } from '@/utils/request'
+
+const { cacheGet, cacheSet } = vi.hoisted(() => ({
+  cacheGet: vi.fn(),
+  cacheSet: vi.fn(),
+}))
 
 vi.mock('next-intl', () => ({
   useTranslations: () => (key: string) => key,
@@ -11,12 +17,13 @@ vi.mock('next-intl', () => ({
 vi.mock('@/api/media', () => ({
   getMedia: vi.fn(),
   uploadMedia: vi.fn(),
+  resolveImportedMediaVersion: vi.fn(),
 }))
 
 vi.mock('@/lib/idb-cache', () => ({
   createBlobCache: () => ({
-    get: vi.fn(),
-    set: vi.fn(),
+    get: cacheGet,
+    set: cacheSet,
   }),
 }))
 
@@ -43,6 +50,17 @@ describe('useFactsCellAttachments', () => {
   beforeEach(() => {
     onAccepted = undefined
     vi.mocked(uploadMedia).mockReset()
+    vi.mocked(getMedia).mockReset()
+    vi.mocked(resolveImportedMediaVersion).mockReset()
+    cacheGet.mockReset()
+    cacheSet.mockReset()
+    cacheGet.mockResolvedValue(undefined)
+    cacheSet.mockResolvedValue(undefined)
+    vi.spyOn(URL, 'createObjectURL').mockReturnValue('blob:cached-preview')
+  })
+
+  afterEach(() => {
+    vi.restoreAllMocks()
   })
 
   it('无 entry 时返回空 mediaList', () => {
@@ -141,5 +159,194 @@ describe('useFactsCellAttachments', () => {
       await firstUpload
     })
     expect(result.current.loading).toBe(false)
+  })
+
+  it('stores audio and video uploads on the matching row', async () => {
+    const cases = [
+      { mime: 'audio/mpeg', id: 'new-audio', index: 0, type: 'audio' },
+      { mime: 'video/mp4', id: 'new-video', index: 2, type: 'video' },
+    ] as const
+
+    for (const item of cases) {
+      vi.mocked(uploadMedia).mockResolvedValueOnce({
+        data: { id: item.id, mime: item.mime },
+      } as Awaited<ReturnType<typeof uploadMedia>>)
+      const onUpload = vi.fn()
+      const { result, unmount } = renderHook(() => useFactsCellAttachments(mockEntry, onUpload))
+
+      await act(async () => {
+        await onAccepted?.([new File(['x'], 'file', { type: item.mime })])
+      })
+
+      expect(result.current.mediaList[item.index].value).toBe(item.id)
+      expect(onUpload).toHaveBeenCalledWith(item.id, item.type)
+      expect(result.current.loading).toBe(false)
+      unmount()
+    }
+  })
+
+  it('rejects an unknown upload mime and keeps the current values', async () => {
+    vi.mocked(uploadMedia).mockResolvedValueOnce({
+      data: { id: 'bad', mime: 'application/pdf' },
+    } as Awaited<ReturnType<typeof uploadMedia>>)
+    const onUpload = vi.fn()
+    const { result } = renderHook(() => useFactsCellAttachments(mockEntry, onUpload))
+
+    await act(async () => {
+      await expect(
+        onAccepted?.([new File(['x'], 'a.pdf', { type: 'application/pdf' })]),
+      ).rejects.toThrow('unknown Media Type')
+    })
+
+    expect(onUpload).not.toHaveBeenCalled()
+    expect(result.current.loading).toBe(false)
+    expect(result.current.mediaList.map((item) => item.value)).toEqual(['audio-1', 'img-1', 'vid-1'])
+  })
+
+  it('does not open a preview when the media id is missing', async () => {
+    const { result } = renderHook(() => useFactsCellAttachments(mockEntry))
+    const item = { ...result.current.mediaList[2], value: undefined }
+
+    await act(async () => {
+      await result.current.preview(item)
+    })
+
+    expect(result.current.isOpen).toBe(false)
+    expect(result.current.file).toBeUndefined()
+    expect(cacheGet).not.toHaveBeenCalled()
+    expect(getMedia).not.toHaveBeenCalled()
+  })
+
+  it('opens a cached preview without downloading', async () => {
+    const blob = new Blob(['cached'])
+    cacheGet.mockResolvedValue(blob)
+    const { result } = renderHook(() => useFactsCellAttachments(mockEntry))
+
+    await act(async () => {
+      await result.current.preview(result.current.mediaList[1])
+    })
+
+    expect(getMedia).not.toHaveBeenCalled()
+    expect(URL.createObjectURL).toHaveBeenCalledWith(blob)
+    expect(result.current.file).toBe('blob:cached-preview')
+    expect(result.current.fileType).toBe('image')
+    expect(result.current.isOpen).toBe(true)
+    expect(result.current.mediaList[1].loading).toBe(false)
+    expect(result.current.mediaList[1].progress).toBeNull()
+    expect(result.current.mediaList[0].loading).toBe(false)
+  })
+
+  it('downloads a preview and reports progress for the matching row', async () => {
+    let onProgress: OnProgress | undefined
+    let release!: (value: { url: string, blob: Blob }) => void
+    const blob = new Blob(['img'])
+    vi.mocked(getMedia).mockImplementation((_id, progress) => {
+      onProgress = progress
+      return new Promise((resolve) => {
+        release = resolve
+      })
+    })
+    const { result } = renderHook(() => useFactsCellAttachments(mockEntry))
+    const image = result.current.mediaList[1]
+
+    let pending!: Promise<void>
+    act(() => {
+      pending = result.current.preview(image)
+    })
+    await act(async () => {
+      await Promise.resolve()
+    })
+    expect(onProgress).toBeTypeOf('function')
+    expect(result.current.mediaList[1].loading).toBe(true)
+    expect(result.current.mediaList[1].progress).toBe('0')
+    expect(result.current.mediaList[0].progress).toBeNull()
+
+    await act(async () => {
+      onProgress?.({ progress: 0.5 } as ProgressEvent)
+    })
+    expect(result.current.mediaList[1].progress).toBe('50')
+
+    await act(async () => {
+      onProgress?.({ progress: null } as unknown as ProgressEvent)
+    })
+    expect(result.current.mediaList[1].progress).toBe('0')
+
+    await act(async () => {
+      release({ url: 'blob:fetched', blob })
+      await pending
+    })
+    expect(getMedia).toHaveBeenCalledWith('img-1', expect.any(Function), undefined)
+    expect(cacheSet).toHaveBeenCalledWith('img-1', blob)
+    expect(result.current.file).toBe('blob:fetched')
+    expect(result.current.fileType).toBe('image')
+    expect(result.current.isOpen).toBe(true)
+    expect(result.current.mediaList[1].loading).toBe(false)
+    expect(result.current.mediaList[1].progress).toBeNull()
+  })
+
+  it('previews imported media with the published snapshot version', async () => {
+    const blob = new Blob(['a'])
+    vi.mocked(resolveImportedMediaVersion).mockResolvedValue(4)
+    vi.mocked(getMedia).mockResolvedValue({ url: 'blob:ver', blob })
+    const { result } = renderHook(() => useFactsCellAttachments(mockEntry, undefined, {
+      imported: true,
+      deckId: 'deck-1',
+      factId: 'fact-1',
+    }))
+
+    await act(async () => {
+      await result.current.preview(result.current.mediaList[0])
+    })
+
+    expect(resolveImportedMediaVersion).toHaveBeenCalledWith('deck-1', 'fact-1', 'audio-1')
+    expect(cacheGet).toHaveBeenCalledWith('audio-1:v4')
+    expect(getMedia).toHaveBeenCalledWith('audio-1', expect.any(Function), 4)
+    expect(cacheSet).toHaveBeenCalledWith('audio-1:v4', blob)
+    expect(result.current.file).toBe('blob:ver')
+    expect(result.current.fileType).toBe('audio')
+    expect(result.current.isOpen).toBe(true)
+  })
+
+  it('ignores a zero published version when previewing imported media', async () => {
+    vi.mocked(resolveImportedMediaVersion).mockResolvedValue(0)
+    vi.mocked(getMedia).mockResolvedValue({ url: 'blob:plain', blob: new Blob(['a']) })
+    const { result } = renderHook(() => useFactsCellAttachments(mockEntry, undefined, {
+      imported: true,
+      deckId: 'deck-1',
+      factId: 'fact-1',
+    }))
+
+    await act(async () => {
+      await result.current.preview(result.current.mediaList[0])
+    })
+
+    expect(cacheGet).toHaveBeenCalledWith('audio-1')
+    expect(getMedia).toHaveBeenCalledWith('audio-1', expect.any(Function), 0)
+  })
+
+  it('does not resolve a version unless the cell is an imported fact', async () => {
+    const cases = [
+      undefined,
+      { imported: false, deckId: 'deck-1', factId: 'fact-1' },
+      { imported: true, factId: 'fact-1' },
+      { imported: true, deckId: 'deck-1' },
+    ] as const
+
+    for (const opts of cases) {
+      cacheGet.mockClear()
+      vi.mocked(getMedia).mockClear()
+      vi.mocked(resolveImportedMediaVersion).mockClear()
+      vi.mocked(getMedia).mockResolvedValue({ url: 'blob:plain', blob: new Blob(['a']) })
+      const { result, unmount } = renderHook(() => useFactsCellAttachments(mockEntry, undefined, opts))
+
+      await act(async () => {
+        await result.current.preview(result.current.mediaList[0])
+      })
+
+      expect(resolveImportedMediaVersion).not.toHaveBeenCalled()
+      expect(cacheGet).toHaveBeenCalledWith('audio-1')
+      expect(getMedia).toHaveBeenCalledWith('audio-1', expect.any(Function), undefined)
+      unmount()
+    }
   })
 })

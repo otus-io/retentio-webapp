@@ -309,5 +309,41 @@ describe('GuideSearchModal', () => {
         expect(input.value).toBe('')
       })
     })
+
+    it('关闭时保留已输入查询，再次打开时清空', async () => {
+      const { rerender } = render(<GuideSearchModal {...defaultProps} />)
+      await waitFor(() => {
+        expect(screen.getByText('快速开始')).toBeDefined()
+      })
+      fireEvent.change(screen.getByRole('textbox'), { target: { value: 'API' } })
+      expect((screen.getByRole('textbox') as HTMLInputElement).value).toBe('API')
+
+      rerender(<GuideSearchModal isOpen={false} onOpenChange={defaultProps.onOpenChange} />)
+      expect(screen.queryByRole('textbox')).toBeNull()
+
+      rerender(<GuideSearchModal {...defaultProps} />)
+      await waitFor(() => {
+        expect((screen.getByRole('textbox') as HTMLInputElement).value).toBe('')
+      })
+    })
+  })
+
+  describe('空结果键盘', () => {
+    it('没有结果时 Enter 和其他按键都不导航', async () => {
+      global.fetch = vi.fn().mockResolvedValue({
+        json: () => Promise.resolve([]),
+      })
+      render(<GuideSearchModal {...defaultProps} />)
+      await waitFor(() => {
+        expect(screen.getByText('没有找到结果')).toBeDefined()
+      })
+
+      const input = screen.getByRole('textbox')
+      fireEvent.keyDown(input, { key: 'a' })
+      fireEvent.keyDown(input, { key: 'Enter' })
+
+      expect(pushMock).not.toHaveBeenCalled()
+      expect(defaultProps.onOpenChange).not.toHaveBeenCalled()
+    })
   })
 })

@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest'
-import { render, screen } from '@testing-library/react'
+import { fireEvent, render, screen } from '@testing-library/react'
 import type { ReactNode } from 'react'
 
 vi.mock('next-intl', () => ({
@@ -51,6 +51,7 @@ vi.mock('@heroui/react', () => ({
   ),
 }))
 
+import { forgotPasswordAction } from '@/modules/auth/auth.action'
 import ForgotPasswordForm from '@/components/auth/ForgotPasswordForm'
 
 describe('ForgotPasswordForm', () => {
@@ -59,5 +60,23 @@ describe('ForgotPasswordForm', () => {
     expect(screen.getByText('forgotPasswordTitle')).toBeDefined()
     expect(screen.getByRole('button', { name: 'forgotPasswordButton' })).toBeDefined()
     expect(screen.getByRole('link', { name: 'goLogin' }).getAttribute('href')).toBe('/login')
+  })
+
+  it('shows a confirmation after the reset email is accepted', () => {
+    vi.mocked(forgotPasswordAction).mockReturnValue({
+      success: true,
+      data: { email: 'ada@example.com' },
+    })
+    render(<ForgotPasswordForm />)
+    fireEvent.change(screen.getByLabelText('emailLabel'), {
+      target: { value: 'ada@example.com' },
+    })
+    fireEvent.submit(document.querySelector('form')!)
+
+    expect(screen.getByText('forgotPasswordSent')).toBeDefined()
+    expect(screen.queryByRole('button', { name: 'forgotPasswordButton' })).toBeNull()
+    expect(screen.getByRole('link', { name: 'goLogin' }).getAttribute('href')).toBe('/login')
+    const formData = vi.mocked(forgotPasswordAction).mock.calls[0][1] as FormData
+    expect(formData.get('email')).toBe('ada@example.com')
   })
 })

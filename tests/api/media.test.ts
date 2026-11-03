@@ -1,9 +1,12 @@
-import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import {
   __clearMediaVersionCache,
+  getMedia,
   resolveImportedMediaVersion,
+  uploadMedia,
 } from '@/api/media'
 import { getFact } from '@/api/facts'
+import { request } from '@/utils/request'
 
 const versionMaps = new Map<string, Record<string, number>>()
 
@@ -129,5 +132,74 @@ describe('resolveImportedMediaVersion', () => {
       resolveImportedMediaVersion('deck-1', 'fact-1', 'audio-1'),
     ).resolves.toBe(7)
     expect(getFact).toHaveBeenCalledTimes(2)
+  })
+})
+
+describe('getMedia / uploadMedia', () => {
+  beforeEach(() => {
+    vi.mocked(request).mockReset()
+  })
+
+  afterEach(() => {
+    vi.restoreAllMocks()
+  })
+
+  it('returns an object URL for the downloaded blob', async () => {
+    const blob = new Blob(['audio'], { type: 'audio/mpeg' })
+    const onDownloadProgress = vi.fn()
+    vi.mocked(request).mockResolvedValue(blob)
+    const createObjectURL = vi.spyOn(URL, 'createObjectURL')
+
+    const result = await getMedia('media-1', onDownloadProgress)
+
+    expect(result.blob).toBe(blob)
+    expect(result.url.startsWith('blob:')).toBe(true)
+    expect(createObjectURL).toHaveBeenCalledWith(blob)
+    expect(request).toHaveBeenCalledWith('/api/media/media-1', { onDownloadProgress })
+    URL.revokeObjectURL(result.url)
+  })
+
+  it('appends a positive snapshot version to the media URL', async () => {
+    const blob = new Blob(['img'], { type: 'image/png' })
+    const onDownloadProgress = vi.fn()
+    vi.mocked(request).mockResolvedValue(blob)
+
+    const result = await getMedia('media-2', onDownloadProgress, 2)
+
+    expect(result.blob).toBe(blob)
+    expect(request).toHaveBeenCalledWith('/api/media/media-2?v=2', { onDownloadProgress })
+    URL.revokeObjectURL(result.url)
+  })
+
+  it('omits the version query when version is missing, zero, or negative', async () => {
+    const blob = new Blob(['x'])
+    vi.mocked(request).mockResolvedValue(blob)
+
+    await getMedia('media-3')
+    await getMedia('media-3', undefined, 0)
+    await getMedia('media-3', undefined, -1)
+
+    expect(request).toHaveBeenNthCalledWith(1, '/api/media/media-3', {
+      onDownloadProgress: undefined,
+    })
+    expect(request).toHaveBeenNthCalledWith(2, '/api/media/media-3', {
+      onDownloadProgress: undefined,
+    })
+    expect(request).toHaveBeenNthCalledWith(3, '/api/media/media-3', {
+      onDownloadProgress: undefined,
+    })
+  })
+
+  it('posts form data to /api/media and returns the upload result', async () => {
+    const formData = new FormData()
+    formData.append('file', new Blob(['a']), 'a.txt')
+    const uploaded = { data: { id: 'media-9' }, meta: { msg: 'ok' } }
+    vi.mocked(request).mockResolvedValue(uploaded)
+
+    await expect(uploadMedia(formData)).resolves.toBe(uploaded)
+    expect(request).toHaveBeenCalledWith('/api/media', {
+      method: 'POST',
+      body: formData,
+    })
   })
 })

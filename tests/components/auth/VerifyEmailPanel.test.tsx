@@ -1,5 +1,5 @@
 import { describe, expect, it, vi, beforeEach } from 'vitest'
-import { render, screen, waitFor } from '@testing-library/react'
+import { act, render, screen, waitFor } from '@testing-library/react'
 import type { ReactNode } from 'react'
 import { PLAY_STORE_URL, TESTFLIGHT_JOIN_URL } from '@/config'
 
@@ -157,5 +157,73 @@ describe('VerifyEmailPanel', () => {
     expect(screen.queryByRole('link', { name: 'verifyEmailGetIos' })).toBeNull()
     expect(screen.queryByRole('link', { name: 'verifyEmailGetAndroid' })).toBeNull()
     expect(replaceStateMock).not.toHaveBeenCalled()
+  })
+
+  it('ignores a verification result that arrives after unmount', async () => {
+    let resolveVerify!: (value: { success: boolean, error?: string | null }) => void
+    verifyEmailActionMock.mockReturnValue(new Promise((resolve) => {
+      resolveVerify = resolve
+    }))
+    const { unmount } = render(
+      <VerifyEmailPanel
+        token="tok-cancel"
+        initialStatus="pending"
+        initialError={null}
+      />,
+    )
+    await waitFor(() => {
+      expect(verifyEmailActionMock).toHaveBeenCalledWith('tok-cancel')
+    })
+
+    unmount()
+    await act(async () => {
+      resolveVerify({ success: true })
+    })
+    expect(replaceStateMock).not.toHaveBeenCalled()
+  })
+
+  it('uses the fallback message when verification returns no error', async () => {
+    verifyEmailActionMock.mockResolvedValue({ success: false, error: null })
+    render(
+      <VerifyEmailPanel
+        token="tok-empty"
+        initialStatus="pending"
+        initialError={null}
+      />,
+    )
+    await waitFor(() => {
+      expect(screen.getByTestId('app-error').textContent).toBe('verifyEmailFailed')
+    })
+    expect(screen.getByRole('button', { name: 'verifyEmailRetry' })).toBeDefined()
+  })
+
+  it('shows a retry failure and falls back when that error is empty', async () => {
+    verifyEmailActionMock
+      .mockResolvedValueOnce({ success: false, error: 'temp fail' })
+      .mockResolvedValueOnce({ success: false, error: 'still bad' })
+      .mockResolvedValueOnce({ success: false, error: null })
+
+    render(
+      <VerifyEmailPanel
+        token="tok-retry-fail"
+        initialStatus="pending"
+        initialError={null}
+      />,
+    )
+    await waitFor(() => {
+      expect(screen.getByRole('button', { name: 'verifyEmailRetry' })).toBeDefined()
+    })
+
+    screen.getByRole('button', { name: 'verifyEmailRetry' }).click()
+    await waitFor(() => {
+      expect(screen.getByTestId('app-error').textContent).toBe('still bad')
+    })
+
+    screen.getByRole('button', { name: 'verifyEmailRetry' }).click()
+    await waitFor(() => {
+      expect(screen.getByTestId('app-error').textContent).toBe('verifyEmailFailed')
+    })
+    expect(verifyEmailActionMock).toHaveBeenCalledTimes(3)
+    expect(screen.queryByText('verifyEmailSuccess')).toBeNull()
   })
 })

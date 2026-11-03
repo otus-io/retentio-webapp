@@ -7,14 +7,16 @@ vi.mock('@heroui/react', () => ({
     children,
     type,
     variant,
+    isPending,
     ...props
   }: {
     children?: React.ReactNode | ((props: { isPending?: boolean }) => React.ReactNode)
     type?: string
     variant?: string
+    isPending?: boolean
     [key: string]: unknown
   }) => {
-    const resolved = typeof children === 'function' ? children({ isPending: false }) : children
+    const resolved = typeof children === 'function' ? children({ isPending: Boolean(isPending) }) : children
     return (
       <button type={type === 'submit' ? 'submit' : type === 'reset' ? 'reset' : 'button'} data-variant={variant} {...props}>
         {resolved}
@@ -43,6 +45,20 @@ describe('AppButton', () => {
   it('渲染图标', () => {
     render(<AppButton icon={<span data-testid="icon" />}>按钮</AppButton>)
     expect(screen.getByTestId('icon')).toBeDefined()
+  })
+
+  it('isPending 时显示 Spinner 并把状态传给函数子节点', () => {
+    render(
+      <AppButton
+        isPending
+        icon={<span data-testid="icon" />}
+      >
+        {(renderProps) => (renderProps.isPending ? '加载中' : '就绪')}
+      </AppButton>,
+    )
+    expect(screen.getByTestId('spinner').className).toBe('size-3.5')
+    expect(screen.queryByTestId('icon')).toBeNull()
+    expect(screen.getByRole('button', { name: '加载中' })).toBeDefined()
   })
 })
 

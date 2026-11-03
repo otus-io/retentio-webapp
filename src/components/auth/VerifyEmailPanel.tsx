@@ -57,7 +57,6 @@ export default function VerifyEmailPanel({
   }, [hasToken, initialStatus, t, token])
 
   function handleRetry() {
-    if (!hasToken) return
     startTransition(async () => {
       setError(null)
       setStatus('pending')

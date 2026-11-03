@@ -38,8 +38,6 @@ function mediaReducer(state: MediaItem[], action: MediaAction) {
     case 'SET_PROGRESS':
       return state.map((item) =>
         item.key === action.key ? { ...item, progress: action.progress } : item)
-    default:
-      return state
   }
 }
 

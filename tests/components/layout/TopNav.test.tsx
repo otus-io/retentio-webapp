@@ -1,16 +1,20 @@
-import { describe, expect, it, vi } from 'vitest'
+import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { render, screen, fireEvent } from '@testing-library/react'
 import type { ComponentProps } from 'react'
 import type MobileMenuButton from '@/components/layout/MobileMenuButton'
 import type MobileNavMenu from '@/components/layout/MobileNavMenu'
 import type { ProfileResponseDTO } from '@/modules/auth/auth.schema'
 
+const navState = vi.hoisted(() => ({
+  menu: [
+    { title: '指南', href: '/guide', isActive: true },
+    { title: '牌组', href: '/decks', isActive: false },
+  ],
+}))
+
 vi.mock('@/hooks/useAppNavMenu', () => ({
   default: () => ({
-    navMenu: [
-      { title: '指南', href: '/guide', isActive: true },
-      { title: '牌组', href: '/decks', isActive: false },
-    ],
+    navMenu: navState.menu,
   }),
 }))
 
@@ -68,6 +72,13 @@ vi.mock('@/components/guide/GuideSearchButton', () => ({
 import TopNav from '@/components/layout/TopNav'
 
 describe('TopNav', () => {
+  beforeEach(() => {
+    navState.menu = [
+      { title: '指南', href: '/guide', isActive: true },
+      { title: '牌组', href: '/decks', isActive: false },
+    ]
+  })
+
   it('渲染 AppLogo', () => {
     render(<TopNav />)
     expect(screen.getByTestId('app-logo')).toBeDefined()
@@ -119,5 +130,15 @@ describe('TopNav', () => {
 
     fireEvent.click(screen.getByTestId('mobile-nav-close'))
     expect(screen.queryByTestId('mobile-nav-menu')).toBeNull()
+  })
+
+  it('按激活状态切换主导航和指南的按钮样式', () => {
+    navState.menu = [
+      { title: '指南', href: '/guide', isActive: false },
+      { title: '牌组', href: '/decks', isActive: true },
+    ]
+    render(<TopNav />)
+    expect(screen.getByTestId('nav-link-/decks').getAttribute('data-variant')).toBe('primary')
+    expect(screen.getByTestId('nav-link-/guide').getAttribute('data-variant')).toBe('ghost')
   })
 })

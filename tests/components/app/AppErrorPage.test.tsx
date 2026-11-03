@@ -1,15 +1,26 @@
 import { describe, expect, it, vi } from 'vitest'
-import { render, screen } from '@testing-library/react'
+import { fireEvent, render, screen } from '@testing-library/react'
 import type { ComponentProps, ReactNode } from 'react'
 import type { LucideProps } from 'lucide-react'
+
+const { mockBack } = vi.hoisted(() => ({
+  mockBack: vi.fn(),
+}))
 
 vi.mock('next-intl', () => ({
   useTranslations: () => {
     const map: Record<string, string> = { 'common.reset': '重置' }
     const t = (key: string) => map[key] || key
-    t.rich = (key: string, elements: Record<string, (chunks: ReactNode) => ReactNode>) => {
+    t.rich = (key: string, elements: Record<string, (chunks?: ReactNode) => ReactNode>) => {
       if (key === 'error.not-find-desc') {
-        return <>页面未找到 {elements.back('返回')} {elements.home('首页')}</>
+        return (
+          <>
+            页面未找到
+            {elements.br()}
+            {elements.back('返回')}
+            {elements.home('首页')}
+          </>
+        )
       }
       return key
     }
@@ -18,7 +29,7 @@ vi.mock('next-intl', () => ({
 }))
 
 vi.mock('next/navigation', () => ({
-  useRouter: () => ({ back: vi.fn() }),
+  useRouter: () => ({ back: mockBack }),
 }))
 
 vi.mock('@/components/app/AppLink', () => ({
@@ -63,5 +74,38 @@ describe('AppErrorPage', () => {
   it('无 reset 时不渲染按钮', () => {
     render(<AppErrorPage code={500} message="错误" />)
     expect(screen.queryByRole('button')).toBeNull()
+  })
+
+  it('404 时插入换行并在点击返回时回到上一页', () => {
+    mockBack.mockClear()
+    const { container } = render(<AppErrorPage code={404} message="页面未找到" />)
+    expect(container.querySelector('br')).not.toBeNull()
+    fireEvent.click(screen.getByText('返回'))
+    expect(mockBack).toHaveBeenCalledTimes(1)
+  })
+
+  it('有 digest 时展示错误摘要', () => {
+    const error = Object.assign(new Error('boom'), { digest: 'abc123' })
+    const log = vi.spyOn(console, 'log').mockImplementation(() => {})
+    render(<AppErrorPage code={500} message="错误" error={error} />)
+    expect(screen.getByText('Error Digest: abc123')).toBeDefined()
+    expect(log).toHaveBeenCalledWith(error)
+    log.mockRestore()
+  })
+
+  it('digest 为空时展示意外错误文案', () => {
+    const error = Object.assign(new Error('boom'), { digest: '' })
+    const log = vi.spyOn(console, 'log').mockImplementation(() => {})
+    render(<AppErrorPage code={500} message="错误" error={error} />)
+    expect(screen.getByText('An unexpected error has occurred.')).toBeDefined()
+    log.mockRestore()
+  })
+
+  it('error 不含 digest 时不展示摘要', () => {
+    const log = vi.spyOn(console, 'log').mockImplementation(() => {})
+    render(<AppErrorPage code={500} message="错误" error={new Error('boom')} />)
+    expect(screen.queryByText(/Error Digest/)).toBeNull()
+    expect(screen.queryByText('An unexpected error has occurred.')).toBeNull()
+    log.mockRestore()
   })
 })

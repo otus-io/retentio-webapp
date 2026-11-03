@@ -57,26 +57,24 @@ export default function AppModal({
           {
             footer === false
               ? null
-              : typeof footer === 'function'
-                ? footer
-                : (
-                  <>
-                    <Modal.Footer>
-                      <AppButton
-                        variant="secondary"
-                        onClick={handleCancel}
-                      >
-                        {t('common.cancel')}
-                      </AppButton>
-                      <AppButton
-                        variant="primary"
-                        onClick={handleComfirm}
-                      >
-                        {t('common.confirm')}
-                      </AppButton>
-                    </Modal.Footer>
-                  </>
-                )
+              : (
+                <>
+                  <Modal.Footer>
+                    <AppButton
+                      variant="secondary"
+                      onClick={handleCancel}
+                    >
+                      {t('common.cancel')}
+                    </AppButton>
+                    <AppButton
+                      variant="primary"
+                      onClick={handleComfirm}
+                    >
+                      {t('common.confirm')}
+                    </AppButton>
+                  </Modal.Footer>
+                </>
+              )
           }
         </Modal.Dialog>
       </Modal.Container>

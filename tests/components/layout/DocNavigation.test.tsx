@@ -98,4 +98,21 @@ describe('DocNavigation', () => {
     expect(screen.getByText('content.previous')).toBeDefined()
     expect(screen.getByText('guide-sidebar.guide')).toBeDefined()
   })
+
+  it('没有 href 的条目不参与当前页匹配', () => {
+    vi.mocked(useSidebar).mockReturnValue({
+      flattenItems: [
+        { titleKey: 'guide-sidebar.early-access' },
+        ...createFlattenItems(),
+      ],
+    } as SidebarContextType)
+    vi.mocked(usePathname).mockReturnValue('/guide/key-concepts/overview')
+
+    render(<DocNavigation />)
+    expect(screen.getByText('content.previous')).toBeDefined()
+    expect(screen.getByText('guide-sidebar.guide')).toBeDefined()
+    expect(screen.getByText('content.next')).toBeDefined()
+    expect(screen.getByText('guide-sidebar.decks')).toBeDefined()
+    expect(screen.queryByText('guide-sidebar.early-access')).toBeNull()
+  })
 })
