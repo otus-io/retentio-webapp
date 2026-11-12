@@ -51,7 +51,7 @@ Production Next.js web app: marketing, auth, dashboard/library, MDX user guide. 
 
 ### Key Principles
 
-- Never modify production code solely to make tests pass — fix real bugs first
+- Never modify tests solely to make them pass — fix real bugs first
 - CI must pass: `pnpm lint:ci`, `pnpm test`, `pnpm build`, `pnpm test:e2e` (on PRs)
 
 ## Git Workflow
