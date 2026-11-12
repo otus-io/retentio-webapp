@@ -1,6 +1,6 @@
 ---
 name: next-webapp
-description: Next.js App Router conventions for retentio-webapp: stack, file organization, server components, modules, HeroUI app components, next-intl strings. Use when writing or editing src/**/*.ts or src/**/*.tsx.
+description: "Next.js App Router conventions for retentio-webapp: stack, file organization, server components, modules, HeroUI app components, next-intl strings. Use when writing or editing src/**/*.ts or src/**/*.tsx."
 ---
 
 # Next.js Web App Conventions
