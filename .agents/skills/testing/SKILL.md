@@ -1,7 +1,6 @@
 ---
-description: Vitest and Playwright test conventions
-globs: "{tests/**/*.test.{ts,tsx},tests/e2e/**/*.ts}"
-alwaysApply: false
+name: testing
+description: Vitest and Playwright test conventions for retentio-webapp. Use when writing, editing or running tests under tests/, including tests/e2e.
 ---
 
 # Testing Conventions
@@ -30,4 +29,4 @@ pnpm test:e2e:ui             # debug UI
 
 ## Blackbox principle
 
-Fix production bugs first. Do not weaken tests to hide failures. See `failing-tests-debugging.mdc`.
+Fix production bugs first. Do not weaken tests to hide failures. See "Debugging Failing Tests" in `AGENTS.md`.
