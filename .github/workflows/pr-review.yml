@@ -256,7 +256,7 @@ jobs:
             - Test coverage for behavior changes (unit tests; e2e for auth/navigation)
 
             Skip lockfiles, generated public/search-index/, and build artifacts.
-            Follow CLAUDE.md / AGENTS.md and .cursor/rules when applicable.
+            Follow CLAUDE.md / AGENTS.md and .agents/skills when applicable.
 
             The PR branch is already checked out in the working directory.
 

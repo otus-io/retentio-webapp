@@ -1,16 +1,38 @@
-# Cursor Rules
+# AI agent instructions
 
-Rules live in `.cursor/rules/`. Project skill: `.cursor/skills/validate-minimal-changes/SKILL.md`
+One set of instructions is shared by Claude Code, Cursor and Codex.
 
-| Rule                       | File                                             | Scope                               | Description                                             |
-| -------------------------- | ------------------------------------------------ | ----------------------------------- | ------------------------------------------------------- |
-| Validate & minimal changes | `validate-minimal-changes.mdc`                   | Always                              | Validate first/after, minimal diffs, fix prod not tests |
-| Project conventions        | `project-conventions.mdc`                        | Always                              | Commits, PRs, i18n, pnpm                                |
-| Failing tests              | `failing-tests-debugging.mdc`                    | Always                              | Debug implementation before weakening tests             |
-| Next.js webapp             | `next-webapp.mdc`                                | `src/**/*.{ts,tsx}`                 | App Router, HeroUI, next-intl, modules/                 |
-| Testing                    | `testing.mdc`                                    | `tests/**/*.test.*`, `tests/e2e/**` | Vitest + Playwright                                     |
-| Git workflow               | `git-workflow.mdc`                               | Always                              | Feature branches, pnpm                                  |
-| CI workflows               | `ci-workflows.mdc`                               | `.github/workflows/**`              | build-test-deploy-webapp, pr-review                     |
-| Cost / concise             | `cost-optimization.mdc`, `concise-responses.mdc` | Always                              | Token efficiency, brief replies                         |
+| What                    | Where                                          | Loaded                    |
+| ----------------------- | ---------------------------------------------- | ------------------------- |
+| Always-on rules         | [`AGENTS.md`](../AGENTS.md)                    | Every task                |
+| Claude Code entry point | `CLAUDE.md` (imports `AGENTS.md`)              | Every task                |
+| Task-specific skills    | `.agents/skills/<name>/SKILL.md`               | On demand, by description |
+| Claude Code skills path | `.claude/skills` (symlink to `.agents/skills`) | On demand                 |
+
+## Always-on rules (`AGENTS.md`)
+
+- Next.js 16 notice (managed block at the top of the file)
+- Project conventions: commits, PRs, i18n, pnpm
+- Git workflow: feature branches, no direct push to `main`
+- Validate and keep changes minimal: validate first/after, minimal diffs, fix prod not tests
+- Debugging failing tests: debug the implementation before weakening tests
+- Concise responses and cost optimization
+
+## Skills
+
+| Skill          | Use when                       | Description                                    |
+| -------------- | ------------------------------ | ---------------------------------------------- |
+| `next-webapp`  | Editing `src/**/*.{ts,tsx}`    | App Router, HeroUI, next-intl, modules/        |
+| `testing`      | Editing `tests/**`             | Vitest + Playwright                            |
+| `ci-workflows` | Editing `.github/workflows/**` | build-test-deploy-webapp, pr-review            |
+| `heroui-react` | Building UI with HeroUI        | Component docs and theming (third-party skill) |
+
+## Adding or changing instructions
+
+1. A rule that must hold on every task goes in `AGENTS.md`, below the managed Next.js block.
+2. Guidance for one kind of task goes in a new `.agents/skills/<name>/SKILL.md` with `name`
+   (matching the folder) and `description` frontmatter. Say in the description when to use it.
+3. Do not add tool-specific copies (`.cursor/rules`, `.claude/skills` files); edit the shared files.
+4. Update this document.
 
 See `README.md` for stack and folder layout. API reference: `docs/api.md` (+ `docs/api_zh.md`).
