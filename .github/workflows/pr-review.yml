@@ -242,7 +242,6 @@ jobs:
         uses: anthropics/claude-code-action@v1
         with:
           anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
-          track_progress: true
           prompt: |
             REPO: ${{ github.repository }}
             PR NUMBER: ${{ github.event.pull_request.number }}
@@ -261,7 +260,8 @@ jobs:
             The PR branch is already checked out in the working directory.
 
             Start the top-level summary with "## 🤖 Claude Code Review".
-            Use `gh pr comment` for the summary.
+            Post the summary with `gh pr comment --edit-last --create-if-none` so every run updates the
+            same comment instead of adding a new one.
             Use `mcp__github_inline_comment__create_inline_comment` (with `confirmed: true`) only for real bugs — not style or naming nits.
             Do not submit a formal APPROVE or REQUEST CHANGES review event.
           claude_args: |
