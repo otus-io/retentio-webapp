@@ -1,7 +1,7 @@
 'use client'
 import { Alert, useOverlayState } from '@heroui/react'
 import { useTranslations } from 'next-intl'
-import { useTransition } from 'react'
+import { useState, useTransition } from 'react'
 import AppButton from '@/components/app/AppButton'
 import ChangeEmailModal from '@/components/auth/ChangeEmailModal'
 import { useUserContext } from '@/context/UserContext'
@@ -13,6 +13,8 @@ export default function EmailVerificationBanner() {
   const { user } = useUserContext()
   const modal = useOverlayState()
   const [isPending, startTransition] = useTransition()
+  // A fresh key per opening remounts the modal, dropping the previous attempt's errors.
+  const [modalSession, setModalSession] = useState(0)
 
   if (!user || user.data.email_verified !== false) return null
   const { email } = user.data
@@ -36,13 +38,18 @@ export default function EmailVerificationBanner() {
             <AppButton size="sm" variant="secondary" onPress={resend} isPending={isPending}>
               {t('resendVerification')}
             </AppButton>
-            <AppButton size="sm" variant="ghost" onPress={modal.open} isDisabled={isPending}>
+            <AppButton
+              size="sm"
+              variant="ghost"
+              onPress={() => { setModalSession((n) => n + 1); modal.open() }}
+              isDisabled={isPending}
+            >
               {t('changeEmail')}
             </AppButton>
           </div>
         </Alert.Content>
       </Alert>
-      <ChangeEmailModal {...modal} currentEmail={email} />
+      <ChangeEmailModal key={modalSession} {...modal} currentEmail={email} />
     </div>
   )
 }

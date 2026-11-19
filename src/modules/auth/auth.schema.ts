@@ -16,6 +16,10 @@ export const PASSWORD_TOO_SHORT = 'password_too_short'
 export const PASSWORD_TOO_LONG = 'password_too_long'
 /** Sentinel for a password over bcrypt's byte limit; mapped to i18n in auth actions. */
 export const PASSWORD_TOO_MANY_BYTES = 'password_too_many_bytes'
+/** Sentinel for a malformed email; mapped to i18n in auth actions. */
+export const EMAIL_INVALID = 'email_invalid'
+/** Sentinel for an empty password; mapped to i18n in auth actions. */
+export const PASSWORD_REQUIRED = 'password_required'
 
 /** Backend `code` on 403 when publish/contribute needs a verified email. */
 export const EMAIL_NOT_VERIFIED_CODE = 'email_not_verified'
@@ -143,8 +147,8 @@ export type VerifyEmailDTO = z.infer<typeof verifyEmailSchema>
 
 // 修改邮箱（需当前密码）
 export const changeEmailSchema = z.object({
-  email: z.email(),
-  password: z.string().min(1),
+  email: z.email(EMAIL_INVALID),
+  password: z.string().min(1, PASSWORD_REQUIRED),
 })
 
 export type ChangeEmailDTO = z.infer<typeof changeEmailSchema>

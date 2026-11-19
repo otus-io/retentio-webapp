@@ -175,7 +175,9 @@
     "newEmailLabel": "新邮箱",
     "currentPasswordLabel": "当前密码",
     "changeEmailSuccess": "邮箱已修改，请查收发送到 {email} 的验证链接。",
-    "emailInUseHint": "该邮箱已被注册。如果是你的邮箱，请在登录页使用“忘记密码？”找回账号。"
+    "emailInUseHint": "该邮箱已被注册。如果是你的邮箱，请在登录页使用“忘记密码？”找回账号。",
+    "emailInvalid": "请输入有效的邮箱地址",
+    "passwordRequired": "请输入密码"
   },
   "tags": {
     "select-placeholder": "选择标签",

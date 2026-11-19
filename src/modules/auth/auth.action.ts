@@ -7,6 +7,8 @@ import { LOGIN_PATH } from '@/config'
 import { formDataToObject } from '@/utils/format'
 import {
   EMAIL_IN_USE_MESSAGE,
+  EMAIL_INVALID,
+  PASSWORD_REQUIRED,
   PASSWORD_SPACES,
   PASSWORD_TOO_LONG,
   PASSWORD_TOO_MANY_BYTES,
@@ -49,6 +51,8 @@ async function localizeAuthFieldErrors(
       if (msg === PASSWORD_TOO_SHORT) return t('passwordTooShort')
       if (msg === PASSWORD_TOO_LONG) return t('passwordTooLong')
       if (msg === PASSWORD_TOO_MANY_BYTES) return t('passwordTooManyBytes')
+      if (msg === EMAIL_INVALID) return t('emailInvalid')
+      if (msg === PASSWORD_REQUIRED) return t('passwordRequired')
       return msg
     })
   }
@@ -185,7 +189,7 @@ export const changeEmailAction: ActionFunction = async (_, formData) => {
   const result = changeEmailSchema.safeParse(data)
   if (!result.success) {
     return {
-      validationErrors: z.flattenError(result.error).fieldErrors,
+      validationErrors: await localizeAuthFieldErrors(z.flattenError(result.error).fieldErrors),
       data: { email: data.email },
     }
   }

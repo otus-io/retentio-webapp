@@ -175,7 +175,9 @@
     "newEmailLabel": "New email",
     "currentPasswordLabel": "Current password",
     "changeEmailSuccess": "Email changed. Check {email} for a verification link.",
-    "emailInUseHint": "This email is already registered. If it is yours, use “Forgot password?” on the login page to get back in."
+    "emailInUseHint": "This email is already registered. If it is yours, use “Forgot password?” on the login page to get back in.",
+    "emailInvalid": "Enter a valid email address",
+    "passwordRequired": "Enter your password"
   },
   "tags": {
     "select-placeholder": "Select tags",

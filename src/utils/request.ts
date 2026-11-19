@@ -85,6 +85,8 @@ export function createRequest(getToken: GetTokenFn) {
 
     const initForLog = {
       ...init,
+      // Bodies carry passwords (login, register, change email); never log them.
+      ...(init.body !== undefined ? { body: '[REDACTED]' } : {}),
       headers: {
         ...(init.headers as Record<string, string>),
         ...(headers.Authorization ? { Authorization: '[REDACTED]' } : {}),

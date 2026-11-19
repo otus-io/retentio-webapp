@@ -6,6 +6,7 @@ const showSuccessToast = vi.fn()
 const showFailToast = vi.fn()
 const userState = vi.hoisted(() => ({ user: null as unknown }))
 const openModal = vi.fn()
+const modalMounts = vi.fn()
 
 vi.mock('next-intl', () => ({
   useTranslations: () => (key: string, values?: Record<string, string>) =>
@@ -17,9 +18,15 @@ vi.mock('@/lib/ui', () => ({
   showFailToast: (...args: unknown[]) => showFailToast(...args),
 }))
 vi.mock('@/modules/auth/auth.action', () => ({ resendVerificationAction: vi.fn() }))
-vi.mock('@/components/auth/ChangeEmailModal', () => ({
-  default: ({ currentEmail }: { currentEmail: string }) => <div data-testid="modal">{currentEmail}</div>,
-}))
+vi.mock('@/components/auth/ChangeEmailModal', async () => {
+  const { useEffect } = await import('react')
+  return {
+    default: function MockModal({ currentEmail }: { currentEmail: string }) {
+      useEffect(() => { modalMounts() }, [])
+      return <div data-testid="modal">{currentEmail}</div>
+    },
+  }
+})
 vi.mock('@/components/app/AppButton', () => ({
   default: ({ children, onPress }: { children?: ReactNode, onPress?: () => void }) => (
     <button type="button" onClick={onPress}>{children}</button>
@@ -64,6 +71,15 @@ describe('EmailVerificationBanner', () => {
     expect(screen.getByTestId('modal').textContent).toBe('a@b.com')
     fireEvent.click(screen.getByRole('button', { name: 'changeEmail' }))
     expect(openModal).toHaveBeenCalled()
+  })
+
+  it('remounts the modal on every opening so old errors are dropped', () => {
+    userState.user = profile(false)
+    render(<EmailVerificationBanner />)
+    expect(modalMounts).toHaveBeenCalledTimes(1)
+    fireEvent.click(screen.getByRole('button', { name: 'changeEmail' }))
+    fireEvent.click(screen.getByRole('button', { name: 'changeEmail' }))
+    expect(modalMounts).toHaveBeenCalledTimes(3)
   })
 
   it('toasts success after resending the link', async () => {

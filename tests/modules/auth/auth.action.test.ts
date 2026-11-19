@@ -641,8 +641,8 @@ describe('changeEmailAction', () => {
 
   it('returns field errors without calling the API for invalid input', async () => {
     const state = await changeEmailAction(null, formData({ email: 'not-an-email', password: '' }))
-    expect(state?.validationErrors?.email).toBeDefined()
-    expect(state?.validationErrors?.password).toBeDefined()
+    expect(state?.validationErrors?.email).toEqual(['emailInvalid'])
+    expect(state?.validationErrors?.password).toEqual(['passwordRequired'])
     expect(state?.data).toEqual({ email: 'not-an-email' })
     expect(changeEmailServiceMock).not.toHaveBeenCalled()
   })

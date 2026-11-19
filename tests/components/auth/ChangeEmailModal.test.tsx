@@ -19,20 +19,24 @@ vi.mock('@/components/app/AppError', () => ({
   default: ({ error }: { error?: string }) => (error ? <p role="alert">{error}</p> : null),
 }))
 vi.mock('@/components/app/AppInput', () => ({
-  default: ({ name, label, defaultValue }: { name: string, label: string, defaultValue?: string }) => (
-    <label>{label}<input name={name} defaultValue={defaultValue} /></label>
+  default: ({ name, label, defaultValue, onChange }: {
+    name: string, label: string, defaultValue?: string, onChange?: (v: string) => void
+  }) => (
+    <label>{label}<input name={name} defaultValue={defaultValue} onChange={(e) => onChange?.(e.target.value)} /></label>
   ),
 }))
 vi.mock('@/components/app/AppPasswordInput', () => ({
-  default: ({ name, label }: { name: string, label: string }) => (
-    <label>{label}<input name={name} type="password" /></label>
+  default: ({ name, label, onChange }: { name: string, label: string, onChange?: (v: string) => void }) => (
+    <label>{label}<input name={name} type="password" onChange={(e) => onChange?.(e.target.value)} /></label>
   ),
 }))
 vi.mock('@heroui/react', () => {
   const Pass = ({ children }: { children?: ReactNode }) => <div>{children}</div>
   return {
-    Form: ({ children, action }: { children?: ReactNode, action: (fd: FormData) => void }) => (
-      <form action={action}>{children}</form>
+    Form: ({ children, action, onSubmit }: {
+      children?: ReactNode, action: (fd: FormData) => void, onSubmit?: () => void
+    }) => (
+      <form action={action} onSubmit={onSubmit}>{children}</form>
     ),
     Modal: {
       Backdrop: ({ children, isOpen }: { children?: ReactNode, isOpen: boolean }) => (isOpen ? <div>{children}</div> : null),
@@ -81,6 +85,20 @@ describe('ChangeEmailModal', () => {
     expect(await screen.findByRole('alert')).toHaveProperty('textContent', 'Invalid credentials')
     expect(close).not.toHaveBeenCalled()
     expect((screen.getByLabelText('auth.newEmailLabel') as HTMLInputElement).value).toBe('new@b.com')
+  })
+
+  it('clears the error on edit and shows the next failure after a retry', async () => {
+    vi.mocked(changeEmailAction).mockResolvedValueOnce({ success: false, error: 'Invalid credentials', data: { email: 'a@b.com' } })
+    renderModal()
+    submit('a@b.com', 'wrong')
+    expect(await screen.findByRole('alert')).toHaveProperty('textContent', 'Invalid credentials')
+
+    fireEvent.change(screen.getByLabelText('auth.currentPasswordLabel'), { target: { value: 'wrong2' } })
+    expect(screen.queryByRole('alert')).toBeNull()
+
+    vi.mocked(changeEmailAction).mockResolvedValueOnce({ success: false, error: 'Email already in use', data: { email: 'a@b.com' } })
+    fireEvent.submit(document.querySelector('form')!)
+    expect(await screen.findByRole('alert')).toHaveProperty('textContent', 'Email already in use')
   })
 
   it('toasts and closes after a successful change', async () => {

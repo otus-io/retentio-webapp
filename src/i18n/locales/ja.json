@@ -175,7 +175,9 @@
     "newEmailLabel": "新しいメールアドレス",
     "currentPasswordLabel": "現在のパスワード",
     "changeEmailSuccess": "メールアドレスを変更しました。{email} に届く確認リンクを開いてください。",
-    "emailInUseHint": "このメールアドレスは登録済みです。ご自身のものであれば、ログイン画面の「パスワードをお忘れですか？」から再設定してください。"
+    "emailInUseHint": "このメールアドレスは登録済みです。ご自身のものであれば、ログイン画面の「パスワードをお忘れですか？」から再設定してください。",
+    "emailInvalid": "有効なメールアドレスを入力してください",
+    "passwordRequired": "パスワードを入力してください"
   },
   "tags": {
     "select-placeholder": "タグを選択",
