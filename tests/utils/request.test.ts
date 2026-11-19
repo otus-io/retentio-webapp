@@ -226,3 +226,31 @@ describe('createRequest', () => {
     )
   })
 })
+
+describe('RequestError code', () => {
+  afterEach(() => {
+    vi.restoreAllMocks()
+  })
+
+  it('keeps the backend error code from the JSON body', async () => {
+    vi.spyOn(globalThis, 'fetch').mockResolvedValue(
+      new Response(JSON.stringify({ msg: 'Email verification required', code: 'email_not_verified' }), {
+        status: 403,
+        headers: { 'Content-Type': 'application/json' },
+      }),
+    )
+    const error = await createRequest(vi.fn().mockResolvedValue(null))('/api/decks/1/publish').catch((e) => e)
+    expect(error).toMatchObject({ status: 403, code: 'email_not_verified', message: 'Email verification required' })
+  })
+
+  it('leaves the code null when the body has none', async () => {
+    vi.spyOn(globalThis, 'fetch').mockResolvedValue(
+      new Response(JSON.stringify({ msg: 'Deck not found' }), {
+        status: 404,
+        headers: { 'Content-Type': 'application/json' },
+      }),
+    )
+    const error = await createRequest(vi.fn().mockResolvedValue(null))('/api/decks/1').catch((e) => e)
+    expect(error.code).toBeNull()
+  })
+})

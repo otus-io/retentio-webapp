@@ -4,6 +4,7 @@ import { revalidatePath } from 'next/cache'
 import { getTranslations } from 'next-intl/server'
 import { redirect } from 'next/navigation'
 import z from 'zod'
+import { EMAIL_NOT_VERIFIED_CODE } from '@/modules/auth/auth.schema'
 import type { PublishDeckDTO } from '@/modules/deck-sharing/deck-sharing.schema'
 import {
   createPublishDeckVersionSchema,
@@ -61,7 +62,9 @@ export const publishDeckAction: ActionFunctionPayload<PublishDeckActionPayload, 
   if (!response.success) {
     return {
       success: false,
-      error: response.message,
+      error: response.code === EMAIL_NOT_VERIFIED_CODE
+        ? (await getTranslations('auth'))('emailNotVerifiedError')
+        : response.message,
       data: { version },
     }
   }

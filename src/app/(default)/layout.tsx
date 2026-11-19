@@ -1,3 +1,4 @@
+import EmailVerificationBanner from '@/components/auth/EmailVerificationBanner'
 import Footer from '@/components/layout/Footer'
 import TopNav from '@/components/layout/TopNav'
 import { UserContextProvider } from '@/context/UserContext'
@@ -10,6 +11,7 @@ export default async function Layout({ children }: { children: React.ReactNode }
     <UserContextProvider user={user?.success ? user : null}>
       <section>
         <TopNav />
+        <EmailVerificationBanner />
         {children}
         <Footer />
       </section>

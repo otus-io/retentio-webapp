@@ -1,5 +1,6 @@
 import * as authApi from '@/api/auth'
 import type {
+  ChangeEmailDTO,
   ForgotPasswordDTO,
   LoginDTO,
   RegisterDTO,
@@ -63,6 +64,22 @@ export async function verifyEmailService(params: VerifyEmailDTO) {
     return ServiceResponse.success(await authApi.verifyEmail(params))
   } catch (e) {
     return ServiceResponse.error('verifyEmail failed', e)
+  }
+}
+
+export async function resendVerificationService(email: string) {
+  try {
+    return ServiceResponse.success(await authApi.resendVerification(email))
+  } catch (e) {
+    return ServiceResponse.error('resendVerification failed', e)
+  }
+}
+
+export async function changeEmailService(params: ChangeEmailDTO) {
+  try {
+    return ServiceResponse.success(await authApi.changeEmail(params))
+  } catch (e) {
+    return ServiceResponse.error('changeEmail failed', e)
   }
 }
 

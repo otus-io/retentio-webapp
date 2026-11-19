@@ -45,4 +45,10 @@ describe('ServiceResponse', () => {
       meta: { msg: 'loginFailed failed' },
     })
   })
+
+  it('carries the backend error code of a RequestError', () => {
+    const res = ServiceResponse.error('publish failed', new RequestError('Email verification required', 403, 'email_not_verified'))
+    expect(res.code).toBe('email_not_verified')
+    expect(res.status).toBe(403)
+  })
 })

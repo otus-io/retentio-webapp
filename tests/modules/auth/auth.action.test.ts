@@ -6,6 +6,8 @@ const forgotPasswordServiceMock = vi.fn()
 const resetPasswordServiceMock = vi.fn()
 const verifyEmailServiceMock = vi.fn()
 const logoutServiceMock = vi.fn()
+const resendVerificationServiceMock = vi.fn()
+const changeEmailServiceMock = vi.fn()
 const getTranslationsMock = vi.fn(async () => (key: string) => key)
 
 const flattenOverride = vi.hoisted(() => ({
@@ -50,16 +52,20 @@ vi.mock('@/modules/auth/auth.service', () => ({
   resetPasswordService: (...args: unknown[]) => resetPasswordServiceMock(...args),
   verifyEmailService: (...args: unknown[]) => verifyEmailServiceMock(...args),
   logoutService: (...args: unknown[]) => logoutServiceMock(...args),
+  resendVerificationService: (...args: unknown[]) => resendVerificationServiceMock(...args),
+  changeEmailService: (...args: unknown[]) => changeEmailServiceMock(...args),
 }))
 
 import { revalidatePath } from 'next/cache'
 import { redirect } from 'next/navigation'
 import { LOGIN_PATH } from '@/config'
 import {
+  changeEmailAction,
   forgotPasswordAction,
   loginAction,
   logoutAction,
   registerAction,
+  resendVerificationAction,
   resetPasswordAction,
   verifyEmailAction,
 } from '@/modules/auth/auth.action'
@@ -408,6 +414,28 @@ describe('registerAction', () => {
     expect(state).toBeUndefined()
     expect(redirect).toHaveBeenCalledWith('/')
   })
+
+  it('hints at password reset when the email is already registered', async () => {
+    registerServiceMock.mockResolvedValue({ success: false, message: 'Email already in use', status: 409 })
+    const state = await registerAction(null, formData({
+      username: 'alice',
+      email: 'a@b.com',
+      password: 'secret123',
+      confirmPassword: 'secret123',
+    }))
+    expect(state).toMatchObject({ error: 'emailInUseHint', success: false })
+  })
+
+  it('keeps the backend message for other conflicts', async () => {
+    registerServiceMock.mockResolvedValue({ success: false, message: 'Username already exists', status: 409 })
+    const state = await registerAction(null, formData({
+      username: 'alice',
+      email: 'a@b.com',
+      password: 'secret123',
+      confirmPassword: 'secret123',
+    }))
+    expect(state).toMatchObject({ error: 'Username already exists' })
+  })
 })
 
 describe('resetPasswordAction', () => {
@@ -585,6 +613,56 @@ describe('localizeAuthFieldErrors', () => {
     expect(state?.validationErrors).toEqual({ username: undefined })
     expect(state?.data).toEqual({ username: 'a b' })
     expect(loginServiceMock).not.toHaveBeenCalled()
+  })
+})
+
+describe('resendVerificationAction', () => {
+  beforeEach(() => {
+    resendVerificationServiceMock.mockReset()
+  })
+
+  it('returns success when the resend request is accepted', async () => {
+    resendVerificationServiceMock.mockResolvedValue({ success: true })
+    expect(await resendVerificationAction('a@b.com')).toEqual({ success: true })
+    expect(resendVerificationServiceMock).toHaveBeenCalledWith('a@b.com')
+  })
+
+  it('returns the error message when the request fails', async () => {
+    resendVerificationServiceMock.mockResolvedValue({ success: false, message: 'Too many requests' })
+    expect(await resendVerificationAction('a@b.com')).toEqual({ success: false, error: 'Too many requests' })
+  })
+})
+
+describe('changeEmailAction', () => {
+  beforeEach(() => {
+    changeEmailServiceMock.mockReset()
+    vi.mocked(revalidatePath).mockClear()
+  })
+
+  it('returns field errors without calling the API for invalid input', async () => {
+    const state = await changeEmailAction(null, formData({ email: 'not-an-email', password: '' }))
+    expect(state?.validationErrors?.email).toBeDefined()
+    expect(state?.validationErrors?.password).toBeDefined()
+    expect(state?.data).toEqual({ email: 'not-an-email' })
+    expect(changeEmailServiceMock).not.toHaveBeenCalled()
+  })
+
+  it('returns the backend message and never echoes the password on failure', async () => {
+    changeEmailServiceMock.mockResolvedValue({ success: false, message: 'Invalid credentials' })
+    const state = await changeEmailAction(null, formData({ email: 'new@b.com', password: 'wrong' }))
+    expect(state).toEqual({ error: 'Invalid credentials', data: { email: 'new@b.com' }, success: false })
+    expect(revalidatePath).not.toHaveBeenCalled()
+  })
+
+  it('revalidates the layout and returns the new email on success', async () => {
+    changeEmailServiceMock.mockResolvedValue({
+      success: true,
+      data: { email: 'new@b.com', username: 'alice', email_verified: false },
+    })
+    const state = await changeEmailAction(null, formData({ email: 'new@b.com', password: 'secret123' }))
+    expect(changeEmailServiceMock).toHaveBeenCalledWith({ email: 'new@b.com', password: 'secret123' })
+    expect(state).toEqual({ data: { email: 'new@b.com' }, success: true })
+    expect(revalidatePath).toHaveBeenCalledWith('/', 'layout')
   })
 })
 

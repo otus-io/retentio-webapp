@@ -227,6 +227,7 @@ export interface SubmitDeckContributionsBatchResult {
   failed: Array<{
     localId: PendingDeckContribution['id']
     error: string
+    code?: string
   }>
 }
 

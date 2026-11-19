@@ -6,6 +6,7 @@ import z from 'zod'
 import { LOGIN_PATH } from '@/config'
 import { formDataToObject } from '@/utils/format'
 import {
+  EMAIL_IN_USE_MESSAGE,
   PASSWORD_SPACES,
   PASSWORD_TOO_LONG,
   PASSWORD_TOO_MANY_BYTES,
@@ -14,6 +15,7 @@ import {
   USERNAME_INVALID,
   USERNAME_LENGTH,
   USERNAME_SPACES,
+  changeEmailSchema,
   forgotPasswordSchema,
   loginSchema,
   registerSchema,
@@ -21,10 +23,12 @@ import {
   verifyEmailSchema,
 } from './auth.schema'
 import {
+  changeEmailService,
   forgotPasswordService,
   loginService,
   registerService,
   logoutService,
+  resendVerificationService,
   resetPasswordService,
   verifyEmailService,
 } from './auth.service'
@@ -97,8 +101,9 @@ export const registerAction: ActionFunction = async (_, formData) => {
   const safeData = authFormSafeData(result.data)
   const res = await registerService(result.data)
   if (!res.success) {
+    const emailInUse = res.status === 409 && res.message === EMAIL_IN_USE_MESSAGE
     return {
-      error: res.message,
+      error: emailInUse ? (await getTranslations('auth'))('emailInUseHint') : res.message,
       data: safeData,
       success: false,
     }
@@ -168,6 +173,32 @@ export async function verifyEmailAction(token: string) {
     }
   }
   return { success: true as const }
+}
+
+export async function resendVerificationAction(email: string) {
+  const res = await resendVerificationService(email)
+  return res.success ? { success: true as const } : { success: false as const, error: res.message }
+}
+
+export const changeEmailAction: ActionFunction = async (_, formData) => {
+  const data = formDataToObject(formData)
+  const result = changeEmailSchema.safeParse(data)
+  if (!result.success) {
+    return {
+      validationErrors: z.flattenError(result.error).fieldErrors,
+      data: { email: data.email },
+    }
+  }
+  const res = await changeEmailService(result.data)
+  if (!res.success) {
+    return {
+      error: res.message,
+      data: { email: result.data.email },
+      success: false,
+    }
+  }
+  revalidatePath('/', 'layout')
+  return { data: { email: res.data.email }, success: true }
 }
 
 export async function logoutAction() {

@@ -164,7 +164,18 @@
     "verifyEmailGetAndroid": "Get Android app",
     "verifyEmailMissingToken": "Verification link is missing or invalid.",
     "verifyEmailFailed": "Could not verify email. Please try again.",
-    "verifyEmailRetry": "Retry"
+    "verifyEmailRetry": "Retry",
+    "emailUnverifiedTitle": "Verify your email",
+    "emailUnverifiedBanner": "We sent a verification link to {email}. Verify it to publish decks and send contributions.",
+    "emailNotVerifiedError": "Verify your email first. Use the banner at the top of the page to resend the link or fix your address.",
+    "resendVerification": "Resend link",
+    "verificationSent": "If the address is unverified, a new link is on its way.",
+    "changeEmail": "Change email",
+    "changeEmailDescription": "Current email: {email}. The new address must be verified again.",
+    "newEmailLabel": "New email",
+    "currentPasswordLabel": "Current password",
+    "changeEmailSuccess": "Email changed. Check {email} for a verification link.",
+    "emailInUseHint": "This email is already registered. If it is yours, use “Forgot password?” on the login page to get back in."
   },
   "tags": {
     "select-placeholder": "Select tags",

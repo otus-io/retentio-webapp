@@ -8,6 +8,7 @@ import { useEffect, useState, useTransition } from 'react'
 import AppButton from '@/components/app/AppButton'
 import AppInput from '@/components/app/AppInput'
 import { showFailToast, showSuccessToast } from '@/lib/ui'
+import { EMAIL_NOT_VERIFIED_CODE } from '@/modules/auth/auth.schema'
 import { submitDeckContributionsBatchAction } from '@/modules/contributions/contributions.action'
 import type { PendingDeckContribution, SentDeckContribution } from '@/modules/contributions/contributions.schema'
 import type { Deck } from '@/modules/decks/decks.schema'
@@ -287,6 +288,7 @@ function ContributionFormModal({ deck, kind, existing, onClose, onSave }: Contri
 
 export default function DeckContributionsPanel({ deck }: DeckContributionsPanelProps) {
   const t = useTranslations('contributions')
+  const tAuth = useTranslations('auth')
   const pendingStorageKey = `retentio_pending_contribs_v2:${deck.id}`
   const sentStorageKey = `retentio_sent_contribs_v1:${deck.id}`
   const [selectedTab, setSelectedTab] = useState('pending')
@@ -347,7 +349,11 @@ export default function DeckContributionsPanel({ deck }: DeckContributionsPanelP
         setSelectedTab('sent')
         showSuccessToast(t('batch-submit-success', { count: batchResult.submitted.length }))
       }
-      if (batchResult.failed.length > 0) showFailToast(t('batch-submit-failed', { count: batchResult.failed.length }))
+      if (batchResult.failed.some((item) => item.code === EMAIL_NOT_VERIFIED_CODE)) {
+        showFailToast(tAuth('emailNotVerifiedError'))
+      } else if (batchResult.failed.length > 0) {
+        showFailToast(t('batch-submit-failed', { count: batchResult.failed.length }))
+      }
     })
   }
 

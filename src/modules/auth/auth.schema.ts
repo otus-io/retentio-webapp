@@ -17,6 +17,11 @@ export const PASSWORD_TOO_LONG = 'password_too_long'
 /** Sentinel for a password over bcrypt's byte limit; mapped to i18n in auth actions. */
 export const PASSWORD_TOO_MANY_BYTES = 'password_too_many_bytes'
 
+/** Backend `code` on 403 when publish/contribute needs a verified email. */
+export const EMAIL_NOT_VERIFIED_CODE = 'email_not_verified'
+/** Backend `msg` on 409 when registering with a taken email. */
+export const EMAIL_IN_USE_MESSAGE = 'Email already in use'
+
 export const USERNAME_MIN = 2
 export const USERNAME_MAX = 32
 export const PASSWORD_MIN = 8
@@ -136,6 +141,16 @@ export const verifyEmailSchema = z.object({
 
 export type VerifyEmailDTO = z.infer<typeof verifyEmailSchema>
 
+// 修改邮箱（需当前密码）
+export const changeEmailSchema = z.object({
+  email: z.email(),
+  password: z.string().min(1),
+})
+
+export type ChangeEmailDTO = z.infer<typeof changeEmailSchema>
+
+export type ChangeEmailResponseDTO = BaseApiResult<{ email: string; username: string; email_verified: boolean }>
+
 export type LoginResponseDTO = BaseApiResult<
   { token: string },
   { expires: string }
@@ -147,6 +162,6 @@ export type RegisterResponseDTO = BaseApiResult<
 >
 
 export type ProfileResponseDTO = BaseApiResult<
-  { email: string; username: string },
+  { email: string; username: string; email_verified: boolean },
   { created_at: string }
 >

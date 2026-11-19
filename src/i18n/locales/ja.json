@@ -164,7 +164,18 @@
     "verifyEmailGetAndroid": "Androidアプリを入手",
     "verifyEmailMissingToken": "確認リンクがないか、無効です。",
     "verifyEmailFailed": "メールアドレスを確認できませんでした。もう一度お試しください。",
-    "verifyEmailRetry": "再試行"
+    "verifyEmailRetry": "再試行",
+    "emailUnverifiedTitle": "メールアドレスを確認してください",
+    "emailUnverifiedBanner": "{email} に確認リンクを送信しました。確認するとデッキの公開や提案の送信ができます。",
+    "emailNotVerifiedError": "先にメールアドレスを確認してください。ページ上部の案内からリンクの再送信やアドレスの変更ができます。",
+    "resendVerification": "リンクを再送信",
+    "verificationSent": "未確認のアドレスであれば、新しいリンクを送信しました。",
+    "changeEmail": "メールアドレスを変更",
+    "changeEmailDescription": "現在のメールアドレス：{email}。新しいアドレスは再度確認が必要です。",
+    "newEmailLabel": "新しいメールアドレス",
+    "currentPasswordLabel": "現在のパスワード",
+    "changeEmailSuccess": "メールアドレスを変更しました。{email} に届く確認リンクを開いてください。",
+    "emailInUseHint": "このメールアドレスは登録済みです。ご自身のものであれば、ログイン画面の「パスワードをお忘れですか？」から再設定してください。"
   },
   "tags": {
     "select-placeholder": "タグを選択",
