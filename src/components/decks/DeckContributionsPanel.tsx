@@ -349,11 +349,9 @@ export default function DeckContributionsPanel({ deck }: DeckContributionsPanelP
         setSelectedTab('sent')
         showSuccessToast(t('batch-submit-success', { count: batchResult.submitted.length }))
       }
-      if (batchResult.failed.some((item) => item.code === EMAIL_NOT_VERIFIED_CODE)) {
-        showFailToast(tAuth('emailNotVerifiedError'))
-      } else if (batchResult.failed.length > 0) {
-        showFailToast(t('batch-submit-failed', { count: batchResult.failed.length }))
-      }
+      const otherFailures = batchResult.failed.filter((item) => item.code !== EMAIL_NOT_VERIFIED_CODE)
+      if (otherFailures.length < batchResult.failed.length) showFailToast(tAuth('emailNotVerifiedError'))
+      if (otherFailures.length > 0) showFailToast(t('batch-submit-failed', { count: otherFailures.length }))
     })
   }
 

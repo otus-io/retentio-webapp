@@ -5,7 +5,8 @@ import type { ReactNode } from 'react'
 const showFailToast = vi.fn()
 
 vi.mock('next-intl', () => ({
-  useTranslations: (ns?: string) => (key: string) => `${ns}.${key}`,
+  useTranslations: (ns?: string) => (key: string, values?: { count?: number }) =>
+    `${ns}.${key}${values?.count === undefined ? '' : `:${values.count}`}`,
 }))
 vi.mock('@/lib/ui', () => ({
   showFailToast: (...args: unknown[]) => showFailToast(...args),
@@ -58,7 +59,7 @@ async function submitAll() {
   await screen.findByText('+a')
   // The pending table renders first; the sent table also gets a mocked Table.Content.
   fireEvent.click(screen.getAllByRole('button', { name: 'select all' })[0])
-  fireEvent.click(screen.getByRole('button', { name: 'contributions.submit-selected' }))
+  fireEvent.click(screen.getByRole('button', { name: /^contributions\.submit-selected/ }))
 }
 
 describe('DeckContributionsPanel batch failures', () => {
@@ -84,6 +85,7 @@ describe('DeckContributionsPanel batch failures', () => {
     })
     await submitAll()
     await waitFor(() => expect(showFailToast).toHaveBeenCalledWith('auth.emailNotVerifiedError'))
+    expect(showFailToast).toHaveBeenCalledTimes(1)
   })
 
   it('reports the failure count for other errors', async () => {
@@ -92,6 +94,23 @@ describe('DeckContributionsPanel batch failures', () => {
       data: { submitted: [], failed: [{ localId: 'deck_tags', error: 'boom' }] },
     })
     await submitAll()
-    await waitFor(() => expect(showFailToast).toHaveBeenCalledWith('contributions.batch-submit-failed'))
+    await waitFor(() => expect(showFailToast).toHaveBeenCalledWith('contributions.batch-submit-failed:1'))
+    expect(showFailToast).not.toHaveBeenCalledWith('auth.emailNotVerifiedError')
+  })
+
+  it('reports other failures alongside the verify-email message', async () => {
+    vi.mocked(submitDeckContributionsBatchAction).mockResolvedValue({
+      success: true,
+      data: {
+        submitted: [],
+        failed: [
+          { localId: 'deck_tags', error: 'Email verification required', code: 'email_not_verified' },
+          { localId: 'field_rename', error: 'boom' },
+        ],
+      },
+    })
+    await submitAll()
+    await waitFor(() => expect(showFailToast).toHaveBeenCalledWith('auth.emailNotVerifiedError'))
+    expect(showFailToast).toHaveBeenCalledWith('contributions.batch-submit-failed:1')
   })
 })
