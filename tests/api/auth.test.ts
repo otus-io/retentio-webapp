@@ -6,7 +6,17 @@ vi.mock('@/utils/request', () => ({
   request: (...args: unknown[]) => requestMock(...args),
 }))
 
-import { forgotPassword, getProfile, login, logout, register, resetPassword, verifyEmail } from '@/api/auth'
+import {
+  changeEmail,
+  forgotPassword,
+  getProfile,
+  login,
+  logout,
+  register,
+  resendVerification,
+  resetPassword,
+  verifyEmail,
+} from '@/api/auth'
 
 describe('auth API clients', () => {
   beforeEach(() => {
@@ -66,5 +76,21 @@ describe('auth API clients', () => {
   it('logout posts to /auth/logout', async () => {
     await logout()
     expect(requestMock).toHaveBeenCalledWith('/auth/logout', { method: 'POST' })
+  })
+
+  it('resendVerification posts email to /auth/resend-verification', async () => {
+    await resendVerification('a@b.com')
+    expect(requestMock).toHaveBeenCalledWith('/auth/resend-verification', {
+      method: 'POST',
+      body: JSON.stringify({ email: 'a@b.com' }),
+    })
+  })
+
+  it('changeEmail patches /api/profile/email with email and password', async () => {
+    await changeEmail({ email: 'new@b.com', password: 'secret123' })
+    expect(requestMock).toHaveBeenCalledWith('/api/profile/email', {
+      method: 'PATCH',
+      body: JSON.stringify({ email: 'new@b.com', password: 'secret123' }),
+    })
   })
 })

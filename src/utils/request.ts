@@ -20,6 +20,8 @@ export class RequestError extends Error {
   constructor(
     message: string,
     public readonly status: number,
+    /** Stable backend error code (e.g. `email_not_verified`), when the body has one. */
+    public readonly code: string | null = null,
   ) {
     super(message)
     this.name = 'RequestError'
@@ -83,6 +85,8 @@ export function createRequest(getToken: GetTokenFn) {
 
     const initForLog = {
       ...init,
+      // Bodies carry passwords (login, register, change email); never log them.
+      ...(init.body !== undefined ? { body: '[REDACTED]' } : {}),
       headers: {
         ...(init.headers as Record<string, string>),
         ...(headers.Authorization ? { Authorization: '[REDACTED]' } : {}),
@@ -117,7 +121,8 @@ export function createRequest(getToken: GetTokenFn) {
     if (!res.ok) {
       const errorMessage = formatErrorMessage(json ?? text)
       logger.error({ url, status: res.status, error: errorMessage }, '[request:error]')
-      throw new RequestError(errorMessage, res.status)
+      const code = typeof json?.code === 'string' ? json.code : null
+      throw new RequestError(errorMessage, res.status, code)
     }
 
     return json

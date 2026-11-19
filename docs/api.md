@@ -17,6 +17,10 @@ This guide walks you through using the Retentio API via Swagger UI.
   - [Logout](#logout)
   - [Forgot Password](#forgot-password)
   - [Reset Password](#reset-password)
+  - [Verify Email](#verify-email)
+  - [Resend Verification](#resend-verification)
+  - [Change Email](#change-email)
+  - [Delete Account](#delete-account)
 - [2. Decks](#2-decks)
   - [Create a Deck](#create-a-deck)
   - [Get a Single Deck](#get-a-single-deck)
@@ -62,6 +66,7 @@ This guide walks you through using the Retentio API via Swagger UI.
   - [Hide a Card](#hide-a-card)
   - [Delete a Card](#delete-a-card)
   - [Get card stats](#get-card-stats)
+  - [Reviews by day](#reviews-by-day)
 - [6. Media (Audio / Images)](#6-media-audio--images)
   - [Upload media](#upload-media)
   - [List media](#list-media)
@@ -69,6 +74,11 @@ This guide walks you through using the Retentio API via Swagger UI.
   - [Download media](#download-media)
   - [Delete media](#delete-media)
   - [Using media in facts](#using-media-in-facts)
+- [7. Quality](#7-quality)
+  - [Quality catalog](#quality-catalog)
+  - [Quality stats](#quality-stats)
+  - [Fact quality](#fact-quality)
+  - [Contributions (quality-related)](#contributions-quality-related)
 - [Error responses reference](#error-responses-reference)
 - [Response examples reference](#response-examples-reference)
 - [Next Steps](#next-steps)
@@ -98,9 +108,13 @@ This guide walks you through using the Retentio API via Swagger UI.
 | `/auth/register`                                                      | POST   | Register user                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         |
 | `/auth/login`                                                         | POST   | Login                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 |
 | `/auth/logout`                                                        | POST   | Logout (invalidate token)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             |
-| `/auth/forgot-password`                                               | POST   | Request password reset token                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          |
+| `/auth/forgot-password`                                               | POST   | Request password reset (emails a link; see [Forgot Password](#forgot-password))                                                                                                                                                                                                                                                                                                                                                                                                                                       |
 | `/auth/reset-password`                                                | POST   | Reset password with token                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             |
+| `/auth/verify-email`                                                  | POST   | Verify email with token from verification email                                                                                                                                                                                                                                                                                                                                                                                                                                                                       |
+| `/auth/resend-verification`                                           | POST   | Resend verification email (anti-enumeration)                                                                                                                                                                                                                                                                                                                                                                                                                                                                          |
 | `/api/profile`                                                        | GET    | Get current user profile                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
+| `/api/profile`                                                        | DELETE | Delete the authenticated account (body: `password`). Account keys are removed first (gates the JWT), then unpublished source decks and import decks are removed; published source decks are anonymized (owner `deleted`). Failed password attempts: 5 / 15 min. See [Delete Account](#delete-account).                                                                                                                                                                                                                |
+| `/api/profile/email`                                                  | PATCH  | Change email (body: `email`, `password`); new address starts unverified. See [Change Email](#change-email).                                                                                                                                                                                                                                                                                                                                                                                                           |
 | `/api/decks`                                                          | POST   | Create deck. Body: `name`, **`fields`** (≥1 column name, required), **`rate`** (required, 1–1000), optional **`tags`**.                                                                                                                                                                                                                                                                                                                                                                                               |
 | `/api/decks`                                                          | GET    | List all decks                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        |
 | `/api/decks/{id}`                                                     | GET    | Get deck details. Source decks include `visibility`, `published_version`. Import decks include `source_deck_id`, `source_version`, `imported_at`.                                                                                                                                                                                                                                                                                                                                                                     |
@@ -110,6 +124,7 @@ This guide walks you through using the Retentio API via Swagger UI.
 | `/api/decks/catalog`                                                  | GET    | **(Sharing)** List public published source decks (importable catalog). **No login required.** Query: `limit`, `offset`, optional `query` (name, description, owner, deck tag names). Newest publish first. Import via `POST /api/decks/import` requires JWT.                                                                                                                                                                                                                                                          |
 | `/api/decks/catalog/{id}`                                             | GET    | **(Sharing)** Get one public published source deck by source deck ID (same row shape as list entries). **No login required.** **404** if not importable.                                                                                                                                                                                                                                                                                                                                                              |
 | `/api/decks/{id}/publish`                                             | POST   | **(Sharing)** Author: snapshot working copy into next `published_version`. First publish requires `visibility: "public"`. **200**.                                                                                                                                                                                                                                                                                                                                                                                    |
+| `/api/decks/{id}/publish-preview`                                     | GET    | **(Sharing)** Author: diff working copy vs last publish (counts; `?detail=1` for ids/previews). Source decks only. **200**.                                                                                                                                                                                                                                                                                                                                                                                           |
 | `/api/decks/{id}/updates`                                             | GET    | **(Sharing)** Importer: diff between pinned `source_version` and source’s latest publish (includes overlay/`aligned`/`card_template_changes`). Import deck only.                                                                                                                                                                                                                                                                                                                                                      |
 | `/api/decks/{id}/sync`                                                | POST   | **(Sharing)** Importer: advance pinned snapshot (optional `target_version`, optional per-fact `decisions[]`). Import deck only. **200**.                                                                                                                                                                                                                                                                                                                                                                              |
 | `/api/decks/{id}/contributions/facts/{factId}/edit`                   | POST   | **(Sharing)** Importer: submit current private overlay as `fact_edit`. **201**. See [Import overlays & contributions](#import-overlays--contributions).                                                                                                                                                                                                                                                                                                                                                               |
@@ -119,19 +134,28 @@ This guide walks you through using the Retentio API via Swagger UI.
 | `/api/decks/{id}/contributions/facts/{factId}/report`                 | POST   | **(Sharing)** Importer: message-only `report` (no accept). **201**.                                                                                                                                                                                                                                                                                                                                                                                                                                                   |
 | `/api/decks/{id}/contributions/deck-tags`                             | POST   | **(Sharing)** Importer: submit deck tag add/remove as `deck_tag_update`. **201**.                                                                                                                                                                                                                                                                                                                                                                                                                                     |
 | `/api/decks/{id}/contributions/fields/rename`                         | POST   | **(Sharing)** Importer: submit same-length `proposed_fields` as `field_rename`. **201**.                                                                                                                                                                                                                                                                                                                                                                                                                              |
+| `/api/decks/{id}/contributions/qa-review`                             | POST   | **(Sharing)** Importer: ask the author to adopt their QA sign-offs as `qa_review`. **201**. See [QA review request](#qa-review-request).                                                                                                                                                                                                                                                                                                                                                                              |
 | `/api/decks/{id}/contributions`                                       | GET    | **(Sharing)** Author inbox on **source** deck. Query: `status`, `type`, `reporter`, `fact_id`, `media_type`, `limit`, `offset`.                                                                                                                                                                                                                                                                                                                                                                                       |
 | `/api/decks/{id}/contributions/{contributionId}`                      | PATCH  | **(Sharing)** Author: set status `open` / `resolved` / `dismissed`.                                                                                                                                                                                                                                                                                                                                                                                                                                                   |
 | `/api/decks/{id}/contributions/{contributionId}/accept`               | POST   | **(Sharing)** Author: accept into working copy (then publish). **200**.                                                                                                                                                                                                                                                                                                                                                                                                                                               |
+| `/api/decks/{id}/contributions/{contributionId}/qa-review`            | GET    | **(Sharing)** Author: live status of each sign-off in a `qa_review`.                                                                                                                                                                                                                                                                                                                                                                                                                                                  |
 | `/api/decks/{id}/contributions/{contributionId}/media/{attachmentId}` | GET    | **(Sharing)** Author: download immutable contribution attachment bytes.                                                                                                                                                                                                                                                                                                                                                                                                                                               |
 | `/api/decks/{id}/facts/{operation}`                                   | POST   | Add facts (operation: `append`, `prepend`, `shuffle`, `spread`). Body: `facts` (required), optional `template`, and optional **`tags`** or **`tag_ids`** per fact item (mutually exclusive per item; `tags` = names auto-created if missing, `tag_ids` = existing IDs). Column labels live on the deck (`PATCH /api/decks/{id}` → `fields`), not on each fact. To add a card for an existing fact, use POST `/api/decks/{id}/card` instead. On **imported** decks: private overlay + `local_facts` (no contribution). |
 | `/api/decks/{id}/facts`                                               | GET    | List facts (paged): default `limit` **50**, `offset` **0**; max `limit` **200**. `meta`: `count`, `has_more`, `limit`, `offset`, `total`.                                                                                                                                                                                                                                                                                                                                                                             |
+| `/api/decks/{id}/facts/ids`                                           | GET    | Full list of fact ids (`data.fact_ids`) sorted ascending; **not paged** (`limit` / `offset` ignored). `meta`: `total`. Skips fact bodies and tags, so an id whose fact record is missing or unparseable is still listed. For QA flows that walk facts and fetch each on demand. Optional `unverified_columns=0,2` lists only facts still needing a human sign-off in those columns — see [Quality stats](#quality-stats).                                                                                             |
 | `/api/decks/{id}/facts/{factId}`                                      | GET    | Get a specific fact                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   |
 | `/api/decks/{id}/facts/{factId}`                                      | PATCH  | Update a fact’s `entries` only (column names are edited on the deck). On **imported** decks: private overlay only (no contribution).                                                                                                                                                                                                                                                                                                                                                                                  |
 | `/api/decks/{id}/facts/{factId}`                                      | DELETE | Delete a fact. On **imported** decks: soft-hide snapshot fact or drop local-only fact (no contribution).                                                                                                                                                                                                                                                                                                                                                                                                              |
+| `/api/decks/{id}/facts/{factId}/quality`                              | PUT    | Upsert editorial quality scores for a fact (whole record replaced). Deck owner (source or import); import requires pinned snapshot fact. See [7. Quality](#7-quality).                                                                                                                                                                                                                                                                                                                                                |
+| `/api/decks/{id}/facts/{factId}/quality`                              | GET    | Get a fact's quality record; **404** when none stored.                                                                                                                                                                                                                                                                                                                                                                                                                                                                |
+| `/api/decks/{id}/facts/{factId}/quality`                              | DELETE | Clear a fact's quality record (succeeds even when none stored).                                                                                                                                                                                                                                                                                                                                                                                                                                                       |
+| `/api/decks/{id}/quality`                                             | GET    | **(Quality catalog)** List facts with quality, keeping only matching entries. Query: `max_score`, `entry`, `aspect`, `model`, `limit`, `offset`. `meta`: `effective_score`, `total_entries`, `has_more`, `limit`, `offset` (no `count`/`total`). See [Quality catalog](#quality-catalog).                                                                                                                                                                                                                             |
+| `/api/decks/{id}/quality/stats`                                       | GET    | Human-verification counts and QA resume cursor. See [Quality stats](#quality-stats).                                                                                                                                                                                                                                                                                                                                                                                                                                  |
 | `/api/decks/{id}/card`                                                | GET    | Get most urgent card. Optional query: `tag_id` to restrict selection to cards whose facts have this tag in this deck.                                                                                                                                                                                                                                                                                                                                                                                                 |
 | `/api/decks/{id}/card`                                                | POST   | Add one card from an existing fact (e.g. reversed). Body: `fact_id`, `template`, optional `operation`.                                                                                                                                                                                                                                                                                                                                                                                                                |
 | `/api/decks/{id}/card`                                                | PATCH  | Update card interval or visibility (by card_id)                                                                                                                                                                                                                                                                                                                                                                                                                                                                       |
 | `/api/decks/{id}/cards`                                               | GET    | Get card stats (`stats` nested, same shape as GET /api/decks/{id}) and the `cards` array. Optional query: `tag_id` to filter cards by fact tag in this deck; `stats_only=true` omits `cards`.                                                                                                                                                                                                                                                                                                                         |
+| `/api/decks/{id}/reviews/by-day`                                      | GET    | Dense UTC day series of review counts for the last `days` calendar days (default **7**, max **366**). Missing days are `count: 0`. See [Reviews by day](#reviews-by-day).                                                                                                                                                                                                                                                                                                                                             |
 | `/api/decks/{id}/cards/{cardId}`                                      | DELETE | Delete a single card (fact and other cards unchanged)                                                                                                                                                                                                                                                                                                                                                                                                                                                                 |
 | `/api/decks/{id}/reschedule`                                          | POST   | **Not wired** — route not registered on the current server; **404** (typically no JSON `{ "msg" }` body). See [Reschedule deck](#reschedule-deck).                                                                                                                                                                                                                                                                                                                                                                    |
 | `/api/tags`                                                           | POST   | Create a tag (`name`, optional `description`). **201** on success.                                                                                                                                                                                                                                                                                                                                                                                                                                                    |
@@ -227,7 +251,18 @@ Requires the `Authorization: Bearer <token>` header. Invalidates the token so it
 }
 ```
 
-**Response:**
+**Response (production / Resend configured):**
+
+```json
+{
+  "data": {
+    "msg": "If the email exists, a reset link has been sent"
+  },
+  "meta": null
+}
+```
+
+**Response (development without `RESEND_API_KEY` only):**
 
 ```json
 {
@@ -240,7 +275,7 @@ Requires the `Authorization: Bearer <token>` header. Invalidates the token so it
 }
 ```
 
-> The reset token expires after 15 minutes. In production, this token would be sent via email instead of in the response.
+> The reset token expires after 15 minutes. With Resend configured, the link is emailed from `noreply@retentio.app` and `reset_token` is **not** returned in the body. See [`docs/email-resend.md`](email-resend.md).
 
 ### Reset Password
 
@@ -265,6 +300,135 @@ Requires the `Authorization: Bearer <token>` header. Invalidates the token so it
 ```
 
 > After resetting, log in with your new password. The reset token is single-use and cannot be reused.
+> The reset link proves the user owns the inbox, so a successful reset also marks the email verified. A link mailed
+> to an address the account no longer uses returns **400** `Invalid or expired reset token`.
+
+### Verify Email
+
+**Endpoint:** `POST /auth/verify-email`
+
+```json
+{
+  "token": "a3f8b2c1d4e5f6..."
+}
+```
+
+**Response:**
+
+```json
+{
+  "data": {
+    "msg": "Email verified successfully"
+  },
+  "meta": null
+}
+```
+
+> Soft verification: login and most routes work before verify. Publishing and submitting contributions return
+> **403** with `"code": "email_not_verified"` until the email is verified (see
+> [Email verification required](#email-verification-required)). Registration sends a verification email when Resend
+> is configured; with `ENV=development` and no `RESEND_API_KEY`, new accounts are created already verified.
+> A link mailed to an address the account no longer uses (see [Change Email](#change-email)) returns **400**
+> `Invalid or expired verification token`.
+
+### Resend Verification
+
+**Endpoint:** `POST /auth/resend-verification`
+
+```json
+{
+  "email": "swagger@example.com"
+}
+```
+
+**Response:**
+
+```json
+{
+  "data": {
+    "msg": "If the email exists and is unverified, a verification link has been sent"
+  },
+  "meta": null
+}
+```
+
+> Always returns **200** (anti-enumeration). Rate-limited per email (~60s).
+
+### Change Email
+
+**Endpoint:** `PATCH /api/profile/email`
+
+Requires the `Authorization: Bearer <token>` header. Lets a user fix a mistyped address while logged in.
+
+```json
+{
+  "email": "new@example.com",
+  "password": "123456"
+}
+```
+
+**Response:**
+
+```json
+{
+  "data": {
+    "username": "swagger",
+    "email": "new@example.com",
+    "email_verified": false
+  },
+  "meta": null
+}
+```
+
+- The email is trimmed and lowercased. The new address starts **unverified**, so the
+  [verified-email routes](#email-verification-required) return **403** until it is verified.
+- A verification link is mailed to the new address, unless that address is in its ~60s resend cooldown. Verify and
+  reset links mailed to the old address stop working.
+- Failed password confirmations share the [Delete Account](#delete-account) limit: **5 attempts / 15 minutes** per
+  username → **429** `Too many attempts. Try again later.`
+- **400** when the new email equals the current one; **409** when another account uses it.
+
+### Delete Account
+
+**Endpoint:** `DELETE /api/profile`
+
+Requires the `Authorization: Bearer <token>` header. Permanently deletes the authenticated user's account after password confirmation. Use this for in-app account deletion (e.g. Apple App Store guideline 5.1.1(v)).
+
+```json
+{
+  "password": "123456"
+}
+```
+
+**Response:**
+
+```json
+{
+  "data": {
+    "msg": "Account deleted successfully",
+    "username": "swagger",
+    "deleted_decks": 3,
+    "anonymized_published_decks": 1
+  },
+  "meta": null
+}
+```
+
+What the server does on success:
+
+- Deletes the account keys first (`user:{username}`, email index, verify cooldown, delete-attempt counter). `JwtAuthMiddleware` checks user-key existence, so this immediately gates the account even if later content cleanup fails.
+- Deletes all **import** decks and all **unpublished** source decks (`published_version == 0`) owned by the user, including their facts, cards, tag associations, and user-owned media.
+- **Anonymizes published source decks** (`published_version > 0`): the deck, its snapshots, and catalog listing are kept, but `owner` is set to `deleted` and the deck is removed from the user's deck set. Importers continue studying their pinned snapshots. Media still referenced by an anonymized deck is re-owned by `deleted` rather than deleted.
+- Removes leftover tags, the user media index, and daily counters.
+- Blacklists the current JWT (same mechanism as [Logout](#logout)), so the token can no longer be used.
+
+Notes:
+
+- Not idempotent: a second call with the same token returns **401** (token blacklisted / user gone).
+- Failed password confirmations are rate-limited per username: **5 attempts / 15 minutes** → **429** `Too many delete attempts. Try again later.` (correct password is also blocked while the window is open). The counter is shared with [Change Email](#change-email).
+- If content purge fails after account keys are removed (**500**), the account stays gated and the token is blacklisted; the client cannot retry. Orphaned decks/media may remain until an ops reconciliation job (not part of this API) cleans up decks whose `owner` has no `user:{username}` key. Prefer orphaned content over a live account with decks already gone.
+- `deleted` is a reserved username and cannot be registered.
+- The same email or username can be registered again afterward; anonymized published decks are **not** reattached to the new account.
 
 ---
 
@@ -412,7 +576,9 @@ Omit both fields or use `[]` for an untagged deck. Sending **`tags` and `tag_ids
       "due_cards": 0,
       "hidden_cards": 0,
       "new_cards_today": 0,
-      "last_reviewed_at": 0
+      "last_reviewed_at": 0,
+      "total_reviews": 0,
+      "total_reviews_today": 0
     },
     "created_at": "2026-02-08T12:00:00Z",
     "updated_at": "2026-02-08T12:00:00Z",
@@ -465,8 +631,11 @@ Omit both fields or use `[]` for an untagged deck. Sending **`tags` and `tag_ids
           "due_cards": 0,
           "hidden_cards": 0,
           "new_cards_today": 0,
-          "last_reviewed_at": 0
+          "last_reviewed_at": 0,
+          "total_reviews": 0,
+          "total_reviews_today": 0
         },
+        "qa_verified": false,
         "created_at": "2026-02-08T12:00:00Z",
         "updated_at": "2026-02-08T12:00:00Z"
       }
@@ -490,16 +659,26 @@ Omit both fields or use `[]` for an untagged deck. Sending **`tags` and `tag_ids
 
 > **Understanding `stats`:**
 >
-> | Field              | Description                                                      |
-> | ------------------ | ---------------------------------------------------------------- |
-> | `cards_count`      | Total number of cards in the deck                                |
-> | `facts_count`      | Total number of facts in the deck                                |
-> | `unseen_cards`     | New cards that have never been reviewed                          |
-> | `reviewed_cards`   | Cards that have been studied at least once                       |
-> | `due_cards`        | Cards currently due for review (due_date <= now)                 |
-> | `hidden_cards`     | Cards hidden from review by the user                             |
-> | `new_cards_today`  | Cards that were added today (since midnight)                     |
-> | `last_reviewed_at` | Unix timestamp of the most recent review (`0` if never reviewed) |
+> | Field                 | Description                                                      |
+> | --------------------- | ---------------------------------------------------------------- |
+> | `cards_count`         | Total number of cards in the deck                                |
+> | `facts_count`         | Total number of facts in the deck                                |
+> | `unseen_cards`        | New cards that have never been reviewed                          |
+> | `reviewed_cards`      | Cards that have been studied at least once                       |
+> | `due_cards`           | Cards currently due for review (due_date <= now)                 |
+> | `hidden_cards`        | Cards hidden from review by the user                             |
+> | `new_cards_today`     | Cards that were added today (since midnight)                     |
+> | `last_reviewed_at`    | Unix timestamp of the most recent review (`0` if never reviewed) |
+> | `total_reviews`       | Card reviews done on this deck, all time                         |
+> | `total_reviews_today` | Card reviews done on this deck since midnight                    |
+>
+> Unlike the card counts above, `total_reviews` / `total_reviews_today` count **review actions**: each interval update via `PATCH /api/decks/{id}/card` adds one. Hiding a card is not a review, and the counters start at `0` for decks reviewed before this was added. They are always deck-wide, even when `tag_id` narrows the other stats.
+>
+> `new_cards_today` and `total_reviews_today` use midnight **UTC**. Per-day review buckets live in `deck:{id}:reviews_by_day`; read a dense series via [Reviews by day](#reviews-by-day) (`GET /api/decks/{id}/reviews/by-day?days=7`).
+>
+> **`qa_verified`** is `true` when the deck has at least one text/audio aspect and every one is human-verified by a
+> trusted signer — the owner, plus the source author on imports (an import's local facts are not counted). Cached
+> for up to 10 minutes; quality writes, fact add/edit/delete, and sync refresh it immediately.
 >
 > Stats are computed on-the-fly. For a freshly created empty deck,
 > all values are `0`. After adding facts, `cards_count` and
@@ -659,7 +838,8 @@ Example: `GET /api/decks/catalog?limit=20&offset=0&query=JLPT`
         "published_version": 3,
         "fact_count": 120,
         "deck_tag_names": ["JLPT N5", "verbs"],
-        "published_at": "2026-05-22T12:00:00Z"
+        "published_at": "2026-05-22T12:00:00Z",
+        "qa_verified": true
       }
     ]
   },
@@ -704,7 +884,7 @@ Unpublished or non-public decks do not appear. Private decks never appear even i
 
 **Who:** Anyone (no `Authorization` header required).
 
-**Purpose:** Load **one** importable catalog row by **source deck ID** — same fields as a list entry (`id`, `name`, `description`, `owner`, `fields`, `published_version`, `fact_count`, `deck_tag_names`, `published_at`). Use for catalog detail pages or direct links without paging the full list.
+**Purpose:** Load **one** importable catalog row by **source deck ID** — same fields as a list entry (`id`, `name`, `description`, `owner`, `fields`, `published_version`, `fact_count`, `deck_tag_names`, `published_at`, `qa_verified`). Use for catalog detail pages or direct links without paging the full list.
 
 **Path parameter:** `{id}` — source deck ID (same value as `source_deck_id` for `POST /api/decks/import`).
 
@@ -723,7 +903,10 @@ Example: `GET /api/decks/catalog/a1b2c3d4e5f6`
     "published_version": 3,
     "fact_count": 120,
     "deck_tag_names": ["JLPT N5", "verbs"],
-    "published_at": "2026-05-22T12:00:00Z"
+    "published_at": "2026-05-22T12:00:00Z",
+    "qa_verified": true,
+    "contributors": ["bob", "carol"],
+    "contributor_count": 2
   },
   "meta": {
     "msg": "ok"
@@ -731,7 +914,7 @@ Example: `GET /api/decks/catalog/a1b2c3d4e5f6`
 }
 ```
 
-Field meanings match the [list catalog](#deck-catalog) table. **`description`** comes from the latest published snapshot; if the snapshot has none, the server falls back to the source deck’s stored description.
+**`contributors`** (detail only) lists, sorted, up to 10 importers whose contributions the author **accepted** (any type: edits, new facts, tags, QA reviews); **`contributor_count`** is the full number. The owner and deleted accounts are never listed, and deleting an account removes its credits. On the detail **`contributor_count`** is always present (`0` when nobody has been credited yet) and **`contributors`** is omitted when empty; both are omitted only if the credits could not be read. Credits are recorded on accept, and accepts made before this field existed are backfilled the first time the detail is read. Field meanings otherwise match the [list catalog](#deck-catalog) table. **`qa_verified`** is `true` when the **author** human-verified every text/audio aspect of the source deck's **current** facts; importers' sign-offs never count. The author's deck is the source of truth, so deleting a fact never turns the badge off and an unverified add turns it off before the next publish (cached up to 10 minutes; the author's writes refresh it immediately). **`description`** comes from the latest published snapshot; if the snapshot has none, the server falls back to the source deck’s stored description.
 
 **Inclusion rules:** Same as the list — public, published source deck only. Private, unpublished, or import rows → **404**.
 
@@ -787,6 +970,53 @@ Field meanings match the [list catalog](#deck-catalog) table. **`description`** 
 | **403** | `Not authorized`                                                                                                                                 |
 | **404** | `Deck not found`                                                                                                                                 |
 | **409** | `no changes to publish` (working copy identical to previous snapshot)                                                                            |
+
+---
+
+### Publish preview (unpublished changes)
+
+**Endpoint:** `GET /api/decks/{id}/publish-preview`
+
+**Who:** Owner of a **source** deck (not an import row).
+
+**Purpose:** Diff the author’s **working copy** against the last published snapshot. Used by clients to flash “unpublished changes” and show a summary before `POST /publish`. See [publish-preview-and-update-indicators.md](publish-preview-and-update-indicators.md).
+
+**Query:** optional `detail=1` (or `true`) — include fact id/preview rows and `media_changes`.
+
+**Success (200) — counts (default):**
+
+```json
+{
+  "data": {
+    "published_version": 3,
+    "has_unpublished_changes": true,
+    "facts": { "added": 1, "edited": 3, "removed": 0 },
+    "media": { "added": 2, "updated": 1, "deleted": 1 },
+    "tags": {
+      "deck": { "added": 1, "removed": 0 },
+      "facts": { "added": 4, "removed": 2, "facts_changed": 3 }
+    },
+    "card_templates_changed": 1,
+    "meta_changed": false
+  },
+  "meta": { "msg": "ok" }
+}
+```
+
+For a deck that has been published before, `has_unpublished_changes` matches whether `POST /publish` would succeed:
+`false` means a republish would return **409** (no changes). A never-published deck (`published_version == 0`) gets a
+clean preview (`has_unpublished_changes: false`, zero counts) because there is no snapshot to diff, but its first
+`POST /publish` still succeeds.
+
+`meta_changed` is true when the deck **name**, **description**, **fields**, and/or **rate** differ from the last manifest. All deck metadata is in the publish fingerprint, so a metadata-only edit also sets `has_unpublished_changes: true` and `POST /publish` succeeds.
+
+**Errors:**
+
+| Status  | Typical `msg`                                        |
+| ------- | ---------------------------------------------------- |
+| **400** | `publish preview is only available for source decks` |
+| **403** | `Not authorized`                                     |
+| **404** | `Deck not found`                                     |
 
 ---
 
@@ -1007,7 +1237,7 @@ When already up to date: `source_version == latest_version` and diff arrays are 
 }
 ```
 
-**Server behavior:** Bumps pinned version; rebuilds import fact set from target manifest; preserves private overlays / `local_facts` / `hidden_facts` according to decisions; removes importer cards only for facts the importer **accepts** as removed; adds cards for newly accepted facts. Also copies **`name`**, **`fields`**, and **`rate`** from the target snapshot manifest into the import deck row (overwriting any prior importer `rate` set via PATCH). Template removals never delete importer-owned cards.
+**Server behavior:** Bumps pinned version; rebuilds import fact set from target manifest; preserves private overlays / `local_facts` / `hidden_facts` according to decisions; removes importer cards only for facts the importer **accepts** as removed; adds cards for newly accepted facts. Also copies **`name`** and **`fields`** from the target snapshot manifest into the import deck row. **`rate`** is importer-owned study pacing and is **not** overwritten by sync (a prior importer `rate` set via PATCH is preserved). Template removals never delete importer-owned cards.
 
 **Errors:**
 
@@ -1054,7 +1284,6 @@ Same as a normal owned deck: `GET/POST/PATCH/DELETE` card routes work; schedulin
 - Importers download published author media via `GET /api/media/{id}?v=<version>`.
 - Bytes are served from the **versioned** blob, not the author’s working copy.
 - `v` is required for non-owners and must be a positive integer.
-- Fact list/detail return raw media ids in `entries`. For a single fact, `GET …/facts/{factId}` may include sibling `data.media_versions` (`{ mediaId: pinnedVersion }`) for building `GET /api/media/{id}?v=…`. Do **not** use deck `source_version` as `v` (copy-on-write media may pin an older version). Next-card responses already embed `?v=` in media URLs.
 - Importers may upload **their own** media with `POST /api/media` and `deck_id={importId}` for private overlays / contributions.
 - Importers cannot upload or delete another user’s working-copy media.
 
@@ -1075,17 +1304,18 @@ Examples below use source `srcdeck12345`, import `impdeck12345`, and snapshot fa
 - Overlay writes (POST/PATCH/DELETE facts) never create or update a contribution.
 - Submission bodies never include `type` — the server derives internal `type` from the route.
 - Accepted contributions update the author’s **working copy** only; the author must still [publish](#publish-a-deck) before importers see them via updates/sync.
-- Daily quota: max **20 new** contribution rows per source deck per UTC day (refreshing an open dedupe target does not consume quota) → **429** `daily contribution limit exceeded`.
+- Daily quota: max **200 new** contribution rows per source deck per UTC day (refreshing an open dedupe target does not consume quota) → **429** `daily contribution limit exceeded`.
 
-| Internal `type`   | Submit route (import id)                                                 |
-| ----------------- | ------------------------------------------------------------------------ |
-| `fact_edit`       | `POST …/contributions/facts/{factId}/edit`                               |
-| `fact_add`        | `POST …/contributions/facts/{factId}/add`                                |
-| `fact_tag_update` | `POST …/contributions/facts/{factId}/tags`                               |
-| `deck_tag_update` | `POST …/contributions/deck-tags`                                         |
-| `template_add`    | `POST …/contributions/facts/{factId}/templates`                          |
-| `field_rename`    | `POST …/contributions/fields/rename`                                     |
-| `report`          | `POST …/contributions/facts/{factId}/report` (inbox only; cannot accept) |
+| Internal `type`   | Submit route (import id)                                                     |
+| ----------------- | ---------------------------------------------------------------------------- |
+| `fact_edit`       | `POST …/contributions/facts/{factId}/edit`                                   |
+| `fact_add`        | `POST …/contributions/facts/{factId}/add`                                    |
+| `fact_tag_update` | `POST …/contributions/facts/{factId}/tags`                                   |
+| `deck_tag_update` | `POST …/contributions/deck-tags`                                             |
+| `template_add`    | `POST …/contributions/facts/{factId}/templates`                              |
+| `field_rename`    | `POST …/contributions/fields/rename`                                         |
+| `report`          | `POST …/contributions/facts/{factId}/report` (inbox only; cannot accept)     |
+| `qa_review`       | `POST …/contributions/qa-review` (author adopts the importer's QA sign-offs) |
 
 #### Private overlay fact mutations
 
@@ -1221,9 +1451,6 @@ Snapshot facts soft-hide privately; local-only facts are removed from the import
         { "text": "りんご" }
       ],
       "tags": []
-    },
-    "media_versions": {
-      "impaud0001": 2
     }
   },
   "meta": {
@@ -1465,7 +1692,68 @@ Reports appear in the author inbox but **cannot be accepted** (`report cannot be
 | **400** | `overlay required: fact has no private overlay`, `overlay must differ from snapshot`, `fact_id must be in local_facts`, `add_tags or remove_tags is required`, `proposed_fields length must match pinned fields`, `message is required`, … |
 | **403** | `Not authorized`, `contributions are only available on imported decks`                                                                                                                                                                     |
 | **404** | `deck not found`, `fact not found`, `source deck not found`                                                                                                                                                                                |
-| **429** | `daily contribution limit exceeded`                                                                                                                                                                                                        |
+
+##### QA review request
+
+**Endpoint:** `POST /api/decks/{importId}/contributions/qa-review`
+
+**Who:** Import deck owner. **Request body:** optional `{ "message": "…" }`.
+
+Asks the author to adopt the caller's QA sign-offs so they count toward the catalog badge. The server collects every
+human sign-off by the caller on the import's QA facts (local facts excluded) that carries a content `fingerprint`
+matching the author's **current** content, and freezes that list on the contribution. One open request per
+importer and deck: calling again refreshes it (new list, `updated_at` bumped, no quota). Design:
+[`qa-review-requests.md`](qa-review-requests.md).
+
+**Success (201):**
+
+```json
+{
+  "data": {
+    "contribution_id": "cont0009",
+    "source_deck_id": "srcdeck12345",
+    "type": "qa_review",
+    "status": "open",
+    "qa_review": { "facts": 120, "aspects": 240 }
+  },
+  "meta": { "msg": "contribution submitted" }
+}
+```
+
+| Status  | `msg`                                                                                                                                                                                            |
+| ------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| **400** | `nothing to review` (no transferable sign-offs), `cannot request review of your own deck`, `contributions are only available on imported decks`, `message must be between 1 and 2000 characters` |
+| **429** | `daily contribution limit exceeded` (new requests only)                                                                                                                                          |
+
+**Preview (author):** `GET /api/decks/{sourceId}/contributions/{contributionId}/qa-review` evaluates each frozen
+sign-off now: `ready` (content matches, not yet signed by the author), `changed` (the author's content differs or
+the entry is gone), `verified` (already signed by the author), `removed` (fact no longer on the deck). Works for any
+status. **400** for other contribution types.
+
+```json
+{
+  "data": {
+    "summary": { "ready": 230, "changed": 6, "verified": 4, "removed": 0 },
+    "facts": [
+      {
+        "fact_id": "fact0001",
+        "preview": "Apple",
+        "aspects": [
+          { "entry": 0, "aspect": "text", "status": "ready" },
+          { "entry": 0, "aspect": "audio", "status": "changed" }
+        ]
+      }
+    ]
+  },
+  "meta": { "msg": "ok" }
+}
+```
+
+**Accept:** [Accept a contribution](#accept-a-contribution) signs every `ready` sign-off in the author's name and
+skips the rest; the response's `qa_review` adds `signed_aspects` and `skipped_aspects`. Accepting an already
+accepted `qa_review` → **400** `cannot modify accepted contribution`. Inbox rows carry the `qa_review` summary and
+no `fact_id`.
+| **429** | `daily contribution limit exceeded` |
 
 #### Author contribution inbox
 
@@ -1745,6 +2033,8 @@ Allowed statuses: `open`, `resolved`, `dismissed`. Terminal cleanup on media-bea
 
 ## 3. Facts
 
+Editorial **quality** and importer **contributions** are in [7. Quality](#7-quality).
+
 ### Add Facts
 
 **Endpoint:** `POST /api/decks/{id}/facts/{operation}`
@@ -1756,7 +2046,7 @@ Allowed statuses: `open`, `resolved`, `dismissed`. Terminal cleanup on media-bea
 - `id`: `a1b2c3d4e5f6` (your deck ID)
 - `operation`: `append`
 
-**Request Body:** An object with a required **`facts`** array and optional **`template`**. Each fact item has required **`entries`** and optional **`tags`** or **`tag_ids`** (not both on the same item). Each **entry** is an object with optional `text`, `audio`, `image`, `video`, `json` (at least one content field required across the fact). **`fields` are not sent per fact** — use **`GET /api/decks/{id}`** (or PATCH the deck) for the deck’s `fields` list; that list supplies labels when studying (e.g. next-card `field` on each entry). The server generates a unique fact ID for each fact and creates one or more **cards** per fact depending on `template` (see **Template: default and sibling cards** below).
+**Request Body:** An object with a required **`facts`** array and optional **`template`**. Each fact item has required **`entries`** and optional **`tags`** or **`tag_ids`** (not both on the same item). Optional top-level **`verified: true`** records the owner's human sign-off (`model: human`, score 10) on every text/audio aspect of the new facts — the app sends it for facts typed in; bulk uploads omit it so QA still covers them. Ignored on imported decks. Each **entry** is an object with optional `text`, `audio`, `image`, `video`, `json` (at least one content field required across the fact). **`fields` are not sent per fact** — use **`GET /api/decks/{id}`** (or PATCH the deck) for the deck’s `fields` list; that list supplies labels when studying (e.g. next-card `field` on each entry). The server generates a unique fact ID for each fact and creates one or more **cards** per fact depending on `template` (see **Template: default and sibling cards** below).
 
 #### Optional tags (per fact)
 
@@ -1938,6 +2228,14 @@ Authorization: Bearer <token>
 
 Each fact always includes **`tags`**: an array of `{ "id", "name", "description" }` objects (empty array when none). A fact can have **many** tags; the list is sorted by **tag name** in list/detail responses. Tags are not stored inside the fact record in Redis; the API resolves them from per-user association keys. **Column labels are not returned on each fact** — use the deck’s **`fields`** from **`GET /api/decks/{id}`** (same order as `entries` indices).
 
+**Imported decks:** `data` also includes **`media_versions`**, mapping each media id on the page's facts to its pinned
+snapshot version (download it as `/api/media/{mediaId}?v={version}`). Ids missing from the map (e.g. local-fact media)
+are fetched without `v`. The key is omitted for owned decks, and for imports whose snapshot manifest is unavailable.
+
+```json
+{ "media_versions": { "eloc-x9k2m4np-0-16762-1787232390671": 15 } }
+```
+
 ### Get one fact
 
 **Endpoint:** `GET /api/decks/{id}/facts/{factId}`
@@ -1954,29 +2252,6 @@ Each fact always includes **`tags`**: an array of `{ "id", "name", "description"
         { "id": "a1b2c3d4", "name": "food", "description": "" },
         { "id": "f6e5d4c3", "name": "noun", "description": "Parts of speech" }
       ]
-    }
-  },
-  "meta": { "msg": "Fact retrieved successfully" }
-}
-```
-
-On **imported** decks, when the pinned snapshot maps this fact’s user media ids to positive published versions, `data` also includes sibling **`media_versions`**: `{ "<mediaId>": <pinnedVersion>, … }`. Omitted when empty or on source decks. `entries` still carry raw media ids (not URLs). Download with `GET /api/media/{id}?v={media_versions[id]}` — do **not** use deck `source_version` as `v` (copy-on-write may pin an older media version). Fact **list** (`GET …/facts`) does not include `media_versions`.
-
-**Imported-deck example** (when pins exist):
-
-```json
-{
-  "data": {
-    "fact": {
-      "id": "fact0001",
-      "entries": [
-        { "text": "Apple", "audio": "impaud0001" },
-        { "text": "りんご" }
-      ],
-      "tags": []
-    },
-    "media_versions": {
-      "impaud0001": 2
     }
   },
   "meta": { "msg": "Fact retrieved successfully" }
@@ -2367,9 +2642,9 @@ Example: `GET /api/decks/{id}/card?tag_id=Kt8QmNz2`
 
 - `id`: `a1b2c3d4e5f6` (your deck ID)
 
-**Response shape:** `front` and `back` are arrays of **entry objects** in **template order** (one object per fact entry index on that side). Each object matches a fact **entry**: optional **`field`** (label) and optional **`text`**, **`audio`**, **`image`**, **`video`**, **`json`** string keys (omitted when empty). When present, **`field`** comes from the deck’s **`fields`** list (`fields[i]` for entry index `i`); if the deck has fewer names than entries, some objects may omit `field`. Text and its pronunciation clip are explicit siblings on the same object (e.g. `"text": "Hello"` and `"audio": "https://.../api/media/…"`). For media keys, values are **full media URLs** when the server can determine a base URL. Use each URL with the same `Authorization: Bearer <token>` to download the file.
+**Response shape:** Returns the **most urgent** card as `data.card` and, when a second eligible (non-hidden) card exists, the **second-most urgent** as `data.next_card`. `data.urgency` is the primary card’s urgency; `next_card` includes its own `urgency` field. `front` and `back` are arrays of **entry objects** in **template order** (one object per fact entry index on that side). Each object matches a fact **entry**: optional **`field`** (label) and optional **`text`**, **`audio`**, **`image`**, **`video`**, **`json`** string keys (omitted when empty). When present, **`field`** comes from the deck’s **`fields`** list (`fields[i]` for entry index `i`); if the deck has fewer names than entries, some objects may omit `field`. Text and its pronunciation clip are explicit siblings on the same object (e.g. `"text": "Hello"` and `"audio": "https://.../api/media/…"`). For media keys, values are **full media URLs** when the server can determine a base URL. Use each URL with the same `Authorization: Bearer <token>` to download the file.
 
-Each JSON example below has a matching integration test in [`api/tests/integration/card_test.go`](../api/tests/integration/card_test.go): `TestGetNextCard` (with field names from the deck) and `TestNextCardUrgencySelection` (no field names when deck labels are missing/short, text+audio+image, multi-front, front-only, split template `[[0,1],[2,3]]`, and full URL host).
+Each JSON example below has a matching integration test in [`api/tests/integration/card_test.go`](../api/tests/integration/card_test.go): `TestGetNextCard` (with field names from the deck) and `TestNextCardUrgencySelection` (no field names when deck labels are missing/short, text+audio+image, multi-front, front-only, split template `[[0,1],[2,3]]`, full URL host, and `next_card` ranking).
 
 **Response (no field names):**
 
@@ -2387,7 +2662,19 @@ Each JSON example below has a matching integration test in [`api/tests/integrati
       "front": [{ "text": "Apple" }],
       "back": [{ "text": "苹果" }]
     },
-    "urgency": 1.0
+    "urgency": 1.0,
+    "next_card": {
+      "id": "cardB",
+      "fact_id": "factB",
+      "template": [[0], [1]],
+      "last_review": 1763269600,
+      "due_date": 1763269900,
+      "hidden": false,
+      "created_at": 1763269500,
+      "front": [{ "text": "Book" }],
+      "back": [{ "text": "书" }],
+      "urgency": 0.5
+    }
   },
   "meta": {
     "msg": "Next urgent card retrieved successfully"
@@ -2769,6 +3056,56 @@ Example: `GET /api/decks/{id}/cards?tag_id=Kt8QmNz2&stats_only=true`
 }
 ```
 
+### Reviews by day
+
+**Endpoint:** `GET /api/decks/{id}/reviews/by-day`
+
+**Who:** Deck owner (source or imported). Counts are **per deck ID** — an importer’s histogram is on their import deck; the author’s is on the source deck. They are not merged.
+
+**Purpose:** Activity histogram for charts. Returns a **dense** UTC calendar-day series ending today (inclusive). Days with no reviews still appear with `count: 0`. Written when a card interval is updated (`PATCH /api/decks/{id}/card` with `interval`); visibility updates do not count. Same counters as `stats.total_reviews` / `stats.total_reviews_today`.
+
+**Query:**
+
+| Query  | Description                                                                                     |
+| ------ | ----------------------------------------------------------------------------------------------- |
+| `days` | Number of UTC calendar days ending today. Default **7**. Range **1–366**. Omit for the default. |
+
+Example: `GET /api/decks/{id}/reviews/by-day?days=7`
+
+**GET — success (200):**
+
+```json
+{
+  "data": {
+    "days": [
+      { "day": "20260906", "count": 0 },
+      { "day": "20260907", "count": 4 },
+      { "day": "20260908", "count": 11 },
+      { "day": "20260909", "count": 0 },
+      { "day": "20260910", "count": 7 },
+      { "day": "20260911", "count": 15 },
+      { "day": "20260912", "count": 3 }
+    ],
+    "timezone": "UTC"
+  },
+  "meta": { "msg": "ok" }
+}
+```
+
+| Field          | Meaning                                             |
+| -------------- | --------------------------------------------------- |
+| `days`         | Oldest → newest. Length equals `days` query (or 7). |
+| `days[].day`   | UTC date `YYYYMMDD`                                 |
+| `days[].count` | Review events that day (`0` if none stored)         |
+| `timezone`     | Always `"UTC"`                                      |
+
+| Status  | Typical `msg`                                                                       |
+| ------- | ----------------------------------------------------------------------------------- |
+| **400** | `days must be between 1 and 366`                                                    |
+| **403** | `Not authorized to access this deck`                                                |
+| **404** | `Deck not found`                                                                    |
+| **500** | `Error retrieving deck`, `Error parsing deck data`, `Error retrieving review stats` |
+
 ---
 
 ## 6. Media (Audio / Images)
@@ -2846,7 +3183,7 @@ Returns metadata only (id, owner, filename, mime, size, checksum, created_at), n
 
 Returns the media file (binary) for user-owned media by ID. Requires `Authorization: Bearer <token>`. Response headers include `Content-Type`, `Content-Length`, and `ETag` (same as `checksum`). Send `If-None-Match: <ETag>` to get `304 Not Modified` when the file is unchanged. The **Get Next Card** response puts full URLs in the `audio`, `image`, and `video` fields of each front/back entry (e.g. `https://api.retentio.app:8443/api/media/{id}`); use that URL with the same auth header to load the file.
 
-**Published media:** Any authenticated user may download immutable published bytes by passing **`?v=<version>`** with a positive version. Without `v`, only the media owner may download the working copy. Import-deck card responses include the pinned `?v=` in media URLs automatically. For fact detail / grid playback without a card URL, take `v` from GetFact `media_versions`, not deck `source_version`.
+**Published media:** Any authenticated user may download immutable published bytes by passing **`?v=<version>`** with a positive version. Without `v`, only the media owner may download the working copy. Import-deck card responses include the pinned `?v=` in media URLs automatically.
 
 ### Delete media
 
@@ -2868,9 +3205,241 @@ For full design (upload, delete, display, sync), see **[Media Upload design doc]
 
 ---
 
+## 7. Quality
+
+Two separate stores. Do not mix them:
+
+| Layer             | What it measures                                                        | Who writes                                               | Per column?                                           |
+| ----------------- | ----------------------------------------------------------------------- | -------------------------------------------------------- | ----------------------------------------------------- |
+| **Quality**       | Editorial score + producer `model` (`claude`, `elevenlabs`, `human`, …) | Source **owner** or import **owner** `PUT`               | Yes (`entries["0"].text` / `.audio`)                  |
+| **Contributions** | Importer proposals and issue reports to the author inbox                | Importer `POST …/contributions/…`; author accept/resolve | `fact_edit` freezes overlay; `report` is message-only |
+
+Quality is not study content and is not published. Contributions never include `type` in the body (route sets it). Design notes: [`fact-quality.md`](fact-quality.md), [`import-local-overlays-contributions.md`](import-local-overlays-contributions.md).
+
+### Quality catalog
+
+**Endpoint:** `GET /api/decks/{id}/quality`
+
+**Who:** Deck owner on a **source** or **imported** deck (`Authorization: Bearer <token>`).
+
+**Purpose:** Browse stored editorial quality as a **regen queue** — facts whose entry aspects match the filter, worst scores first. Per-fact write/read/clear is [Fact quality](#fact-quality). Importer proposals are [Contributions (quality-related)](#contributions-quality-related). Design notes: [`fact-quality.md`](fact-quality.md).
+
+Facts with **no** quality record, or with no matching aspects, are omitted. An empty `items` array is still **200**. Each returned item is flat (`fact_id`, `entries`, `updated_at`) — no nested `quality` wrapper. Matching items keep **only** matching indexes/aspects.
+
+**Query parameters:**
+
+| Parameter   | Default                        | Description                                                                                            |
+| ----------- | ------------------------------ | ------------------------------------------------------------------------------------------------------ |
+| `max_score` | _(omit = every stored aspect)_ | Keep aspects scored **≤** this integer (**1–10**).                                                     |
+| `entry`     | _(every index)_                | Only this entry index (non-negative integer; canonicalized, so `02` matches `"2"`).                    |
+| `aspect`    | _(text and audio)_             | Only `text` or `audio`.                                                                                |
+| `model`     | _(every model)_                | Only aspects whose `model` equals this string (trimmed; case-sensitive).                               |
+| `limit`     | `50`                           | Page size in **facts** that have ≥1 matching entry (max **200**; non-positive values fall back to 50). |
+| `offset`    | `0`                            | Facts to skip after sort (negative/invalid → `0`).                                                     |
+
+Example: `GET /api/decks/a1b2c3d4e5f6/quality?max_score=2&aspect=audio&model=elevenlabs&limit=50&offset=0`
+
+**Matching:** an aspect matches when its `score` is ≤ `max_score` (if set) and it passes `entry` / `aspect` / `model`. An entry index is included if it has at least one matching aspect. Sort: lowest matching aspect score, then `fact_id`. That minimum is for ordering only and is not returned.
+
+Example for `max_score=2` on one fact:
+
+| Stored                               | Returned `entries`                                          |
+| ------------------------------------ | ----------------------------------------------------------- |
+| `0.audio=1`, `2.text=1`, `2.audio=3` | `"0": { audio: 1 }`, `"2": { text: 1 }` — not `2.audio` (3) |
+| `2.text=4`, `2.audio=5`              | fact omitted                                                |
+| no quality key                       | omitted                                                     |
+
+**Success (200):**
+
+```json
+{
+  "data": {
+    "items": [
+      {
+        "fact_id": "x9k2m4np",
+        "entries": {
+          "0": { "audio": { "score": 1, "model": "elevenlabs" } },
+          "2": { "text": { "score": 1, "model": "claude" } }
+        },
+        "updated_at": "2026-07-30T01:04:00Z"
+      }
+    ]
+  },
+  "meta": {
+    "msg": "ok",
+    "effective_score": 2,
+    "total_entries": 2,
+    "has_more": false,
+    "limit": 50,
+    "offset": 0
+  }
+}
+```
+
+| Field        | Meaning                                                                         |
+| ------------ | ------------------------------------------------------------------------------- |
+| `fact_id`    | Fact id                                                                         |
+| `entries`    | Matching entry indexes/aspects only                                             |
+| `updated_at` | From the stored quality record (not bumped when shrinking a fact drops indexes) |
+
+| Meta field                      | Meaning                                                                                             |
+| ------------------------------- | --------------------------------------------------------------------------------------------------- |
+| `effective_score`               | Echo of request `max_score`. **Omitted** when the request had no `max_score`.                       |
+| `total_entries`                 | Deck-wide count of **matching entry indexes** (not fact count). Here two indexes on one fact → `2`. |
+| `has_more` / `limit` / `offset` | Pagination over **facts** in `items`                                                                |
+
+This list does **not** include `count` / `total` — use `total_entries` for the matching-index total. Cost tracks deck size (`MGET` of every `fact:{id}:quality` in the deck, then filter/sort), not `limit`; sized for authoring decks in the low thousands of facts.
+
+**Errors:**
+
+| Status  | Typical `msg`                                                                  |
+| ------- | ------------------------------------------------------------------------------ |
+| **403** | `Not authorized to access this deck`                                           |
+| **400** | `max_score must be between 1 and 10`                                           |
+| **400** | `entry must be a non-negative integer`                                         |
+| **400** | `aspect must be text or audio`                                                 |
+| **404** | `Deck not found`                                                               |
+| **500** | `Error retrieving quality`, `Error retrieving deck`, `Error parsing deck data` |
+
+### Quality stats
+
+**Endpoint:** `GET /api/decks/{id}/quality/stats`
+
+**Who:** Deck owner on a **source** or **imported** deck.
+
+**Purpose:** QA progress header (human-verified aspect/fact counts) and server-stored resume cursor (`last_fact_id`). Counts are computed from fact entries plus stored quality; on imported decks, entry shapes come from the **pinned snapshot**. Design notes: [`fact-quality.md`](fact-quality.md).
+
+**GET — success (200):**
+
+```json
+{
+  "data": {
+    "verified_aspects": 12,
+    "total_aspects": 40,
+    "verified_facts": 3,
+    "total_facts": 10,
+    "last_fact_id": "abc12345",
+    "last_fact_updated_at": "2026-08-28T20:53:00Z",
+    "cursors": { "0": "abc12345", "2": "def67890" }
+  },
+  "meta": { "msg": "ok" }
+}
+```
+
+| Field                                | Meaning                                                                                                                                                                                  |
+| ------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `verified_aspects` / `total_aspects` | Human/10 scoreable text/audio aspects vs all non-empty text/audio fields. Only sign-offs by the deck owner count (imports: also the source author); an import's local facts are excluded |
+| `verified_facts` / `total_facts`     | Facts fully human-verified vs facts with ≥1 scoreable aspect                                                                                                                             |
+| `last_fact_id`                       | Legacy deck-wide QA resume cursor; omitted when unset                                                                                                                                    |
+| `cursors`                            | Per-column resume map (`"0"` → fact id); omitted when empty                                                                                                                              |
+| `last_fact_updated_at`               | UTC RFC3339 when cursor was last written                                                                                                                                                 |
+
+**`PUT …/facts/{factId}/quality`** sets `last_fact_id` to that fact on success (no separate stats write needed). Optional body `columns` advances those per-column cursors (forward-only). Cursors are kept for older clients; new QA walks use `GET /api/decks/{id}/facts/ids?unverified_columns=0,2` instead, which lists (ascending) only facts with a text/audio aspect in those columns that no trusted signer has verified. Column indexes outside the deck's `fields` → **400** `unverified_columns must be deck field indexes`.
+
+**Sign-offs (`by`):** every `model: human` aspect stores its signer in `by`. On PUT, echoing the stored `by` of an unchanged sign-off keeps it; any other human aspect is stamped with the caller. On imported decks the source author's sign-offs survive an importer's PUT. Each fresh human sign-off also stores a server-assigned `fingerprint` of the content the signer saw (client values are ignored); an echoed sign-off keeps its stored one. Accepting a `fact_add` / `fact_edit` contribution signs off (text and audio) what it changed in the author's name; editing a source fact clears the sign-offs of the text/audio it changed.
+
+| Status  | Typical `msg`                                                  |
+| ------- | -------------------------------------------------------------- |
+| **403** | `Not authorized to access this deck`                           |
+| **404** | `Deck not found`                                               |
+| **500** | `Error retrieving quality stats`, `Error saving quality stats` |
+
+Related routes (details in the subsections below):
+
+| Endpoint                                                              | Method | Who                           | Summary                                                                                                                                                                                                                                                                    |
+| --------------------------------------------------------------------- | ------ | ----------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `/api/decks/{id}/facts/{factId}/quality`                              | PUT    | Deck owner (source or import) | Replace whole quality record. Import: pinned snapshot facts only; indexes validated against snapshot. Sets `verified_by` when any aspect uses `model: human` and `by` per human aspect. On success, advances deck QA `last_fact_id` (see [Quality stats](#quality-stats)). |
+| `/api/decks/{id}/facts/{factId}/quality`                              | GET    | Deck owner                    | One fact; **404** if none stored. Source or imported.                                                                                                                                                                                                                      |
+| `/api/decks/{id}/facts/{factId}/quality`                              | DELETE | Source owner                  | Clear quality (ok if missing).                                                                                                                                                                                                                                             |
+| `/api/decks/{id}/quality`                                             | GET    | Deck owner                    | This catalog (regen queue). Source or imported.                                                                                                                                                                                                                            |
+| `/api/decks/{id}/contributions/facts/{factId}/edit`                   | POST   | Import owner                  | `fact_edit` — freeze overlay. **201**.                                                                                                                                                                                                                                     |
+| `/api/decks/{id}/contributions/facts/{factId}/add`                    | POST   | Import owner                  | `fact_add`. **201**.                                                                                                                                                                                                                                                       |
+| `/api/decks/{id}/contributions/facts/{factId}/tags`                   | POST   | Import owner                  | `fact_tag_update`. **201**.                                                                                                                                                                                                                                                |
+| `/api/decks/{id}/contributions/facts/{factId}/templates`              | POST   | Import owner                  | `template_add`. **201**.                                                                                                                                                                                                                                                   |
+| `/api/decks/{id}/contributions/facts/{factId}/report`                 | POST   | Import owner                  | `report` (cannot accept). **201**.                                                                                                                                                                                                                                         |
+| `/api/decks/{id}/contributions/deck-tags`                             | POST   | Import owner                  | `deck_tag_update`. **201**.                                                                                                                                                                                                                                                |
+| `/api/decks/{id}/contributions/fields/rename`                         | POST   | Import owner                  | `field_rename`. **201**.                                                                                                                                                                                                                                                   |
+| `/api/decks/{id}/contributions/qa-review`                             | POST   | Import owner                  | `qa_review` — ask the author to adopt QA sign-offs. **201**.                                                                                                                                                                                                               |
+| `/api/decks/{id}/contributions`                                       | GET    | Source owner                  | Author inbox. Query: `status`, `type`, `reporter`, `fact_id`, `media_type`, `limit`, `offset`.                                                                                                                                                                             |
+| `/api/decks/{id}/contributions/{contributionId}`                      | PATCH  | Source owner                  | Status `open` / `resolved` / `dismissed`.                                                                                                                                                                                                                                  |
+| `/api/decks/{id}/contributions/{contributionId}/accept`               | POST   | Source owner                  | Accept into working copy (then [publish](#publish-a-deck)).                                                                                                                                                                                                                |
+| `/api/decks/{id}/contributions/{contributionId}/qa-review`            | GET    | Source owner                  | Live status of a `qa_review`'s sign-offs.                                                                                                                                                                                                                                  |
+| `/api/decks/{id}/contributions/{contributionId}/media/{attachmentId}` | GET    | Source owner                  | Download contribution attachment bytes.                                                                                                                                                                                                                                    |
+
+Request/response examples for contributions: [Import overlays & contributions](#import-overlays--contributions). Errors: [Quality errors](#quality-errors) and [Deck sharing](#deck-sharing) under [Error responses reference](#error-responses-reference).
+
+### Fact quality
+
+Editorial scores used to find content worth regenerating (weak examples, bad audio). Not study content and not in publish snapshots. **PUT** is deck owner on a source or imported deck (import: fact must be in the pinned snapshot; entry indexes validated against the snapshot). **GET** / list: deck owner on source or imported decks. **DELETE** remains source-owner only (imported → **400** `fact quality is only available on source decks`). List/filter: [Quality catalog](#quality-catalog). Design notes: [`fact-quality.md`](fact-quality.md).
+
+Each entry index (`"0"`, `"2"`, …, matching the fact's `entries` positions) may score `text` and/or `audio` with `score` **1–10** (1 worst) and `model` (`claude`, `elevenlabs`, `human`, …). Deleting a fact or deck deletes its quality (except deleting a fact from a published deck: importers still have it until they sync, so the record is kept); shrinking `entries` drops scores for indexes that no longer exist. **PUT replaces the whole record**; the server sets `fact_id`, `updated_at`, and `verified_by` (JWT username when any aspect uses `model: human`; omit from request body). On success it also sets the deck's QA resume cursor (`last_fact_id`) to this fact. Optional `columns` (entry indexes) advances those per-column resume cursors to this fact, forward-only — see [Quality stats](#quality-stats). Empty `entries`, missing `text`/`audio` on an index, non-canonical keys (`"02"`), out-of-range indexes, empty `model`, or score outside 1–10 → **400**. On imported decks, facts outside the pinned snapshot → **400** `fact not in pinned snapshot`.
+
+**Endpoint:** `PUT /api/decks/{id}/facts/{factId}/quality`
+
+```json
+{
+  "entries": {
+    "0": { "audio": { "score": 1, "model": "elevenlabs" } },
+    "2": {
+      "text": { "score": 1, "model": "claude" },
+      "audio": { "score": 3, "model": "elevenlabs" }
+    }
+  },
+  "columns": [0, 2]
+}
+```
+
+**Response `200`:**
+
+```json
+{
+  "data": {
+    "quality": {
+      "fact_id": "x9k2m4np",
+      "entries": {
+        "0": { "audio": { "score": 1, "model": "elevenlabs" } },
+        "2": {
+          "text": { "score": 1, "model": "claude" },
+          "audio": { "score": 3, "model": "elevenlabs" }
+        }
+      },
+      "updated_at": "2026-07-30T01:04:00Z"
+    }
+  },
+  "meta": { "msg": "Quality updated successfully" }
+}
+```
+
+**Endpoint:** `GET /api/decks/{id}/facts/{factId}/quality` — same `data.quality` shape; `meta.msg` is `Quality retrieved successfully`. **404** `Quality not found` when none stored.
+
+**Endpoint:** `DELETE /api/decks/{id}/facts/{factId}/quality` — `{ "data": { "fact_id": "x9k2m4np" }, "meta": { "msg": "Quality deleted successfully" } }` even when nothing was stored.
+
+Deck-wide list/filter: [Quality catalog](#quality-catalog). Typical errors: [Quality errors](#quality-errors) under [Error responses reference](#error-responses-reference).
+
+### Contributions (quality-related)
+
+Importer **submit** routes use the **import** deck id. Author **inbox** routes use the **source** deck id. Overlay `PATCH`/`POST` facts do **not** create a contribution. Daily quota: max **200** new rows per source / UTC day (`contributionDailyLimit` in `api/deck/contribution.go`); refresh of an open dedupe target does not consume quota → **429** `daily contribution limit exceeded`.
+
+| Internal `type`                                                         | Submit route (import id)                     | Quality effect                                                                                                                                   |
+| ----------------------------------------------------------------------- | -------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `fact_edit`                                                             | `POST …/contributions/facts/{factId}/edit`   | Proposed overlay; author can **accept**. Optional `message`, `entry_index`. Dedupe `fact_edit:{factId}`.                                         |
+| `report`                                                                | `POST …/contributions/facts/{factId}/report` | Message-only; **cannot accept**. No server dedupe.                                                                                               |
+| `fact_add`                                                              | `POST …/contributions/facts/{factId}/add`    | New local fact.                                                                                                                                  |
+| `fact_tag_update` / `deck_tag_update` / `template_add` / `field_rename` | See catalog above                            | Structure/tags, not scores.                                                                                                                      |
+| `qa_review`                                                             | `POST …/contributions/qa-review`             | On accept, the author signs off the importer's matching sign-offs. Dedupe `qa_review` per importer. See [QA review request](#qa-review-request). |
+
+**`fact_edit` (QA edits):** overlay must exist and differ from the snapshot. Body does not include `entries` — the server freezes overlay as `proposed_entries`. Full example: [Fact edit (current overlay)](#fact-edit-current-overlay).
+
+**`report` (QA must not use this for “verified”):** body `{ "message": "…" }` (required). Increments `reports` and lowers `p_good`. Full example: [Message-only report](#message-only-report).
+
+**Inbox:** `GET /api/decks/{sourceId}/contributions?type=fact_edit|report&reporter=…`. Accept: `POST …/contributions/{id}/accept` (not for `report`). Resolve/dismiss: `PATCH …/contributions/{id}`. Full examples: [Author contribution inbox](#author-contribution-inbox).
+
+---
+
 ## Error responses reference
 
-All JSON API errors use the same envelope — there are **no numeric application error codes**, only an HTTP status and a string `msg`:
+All JSON API errors use the same envelope — an HTTP status and a string `msg`. A few errors also carry a stable
+string `code` for clients to branch on (see [Email verification required](#email-verification-required)):
 
 ```json
 { "msg": "Deck not found" }
@@ -2917,38 +3486,62 @@ These appear on many authenticated routes.
 | **500** | `Error retrieving deck`              | Redis/read failure loading deck                     |
 | **500** | `Error parsing deck data`            | Corrupt deck JSON in storage                        |
 
+### Email verification required
+
+These routes need a verified email. Unverified callers get **403**
+`{ "msg": "Email verification required", "code": "email_not_verified" }`; clients should offer
+[Resend Verification](#resend-verification). Accounts created before email verification existed count as verified.
+
+- `POST /api/decks/{id}/publish`
+- `POST /api/decks/{id}/contributions/facts/{factId}/edit`, `/add`, `/tags`, `/templates`, `/report`
+- `POST /api/decks/{id}/contributions/deck-tags`, `/fields/rename`, `/qa-review`
+
 ---
 
 ### Authentication (`/auth/*`)
 
-| Endpoint                     | Status  | `msg`                                                                                                                                                                         |
-| ---------------------------- | ------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `POST /auth/register`        | **400** | `Invalid request payload`                                                                                                                                                     |
-|                              | **400** | `Username, password, and email are required`                                                                                                                                  |
-|                              | **409** | `Username already exists`                                                                                                                                                     |
-|                              | **409** | `Email already in use`                                                                                                                                                        |
-|                              | **500** | `Error checking username`, `Error checking email`, `Could not hash password`, `Error serializing user data`, `Error creating user`                                            |
-| `POST /auth/login`           | **400** | `Invalid request payload`                                                                                                                                                     |
-|                              | **400** | `Username and password are required`                                                                                                                                          |
-|                              | **401** | `Invalid credentials`                                                                                                                                                         |
-|                              | **500** | `Error retrieving user data`, `Error parsing user data`, `Could not generate token`                                                                                           |
-| `POST /auth/logout`          | **401** | `Authorization token required`, `Invalid or expired token`                                                                                                                    |
-|                              | **500** | `Error logging out`                                                                                                                                                           |
-| `POST /auth/forgot-password` | **400** | `Invalid request payload`, `Email is required`                                                                                                                                |
-|                              | **500** | `Error generating reset token`, `Error storing reset token`                                                                                                                   |
-| `POST /auth/reset-password`  | **400** | `Invalid request payload`, `Token and new password are required`, `Invalid or expired reset token`, `User not found for reset token`                                          |
-|                              | **500** | `Error validating reset token`, `Error retrieving user data`, `Error parsing user data`, `Could not hash password`, `Error serializing user data`, `Error resetting password` |
+| Endpoint                     | Status  | `msg`                                                                                                                                                                                                                                                                                                                                                                    |
+| ---------------------------- | ------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `POST /auth/register`        | **400** | `Invalid request payload`                                                                                                                                                                                                                                                                                                                                                |
+|                              | **400** | `Username, password, and email are required`, `Username must be between 2 and 32 characters`, `Username must not contain whitespace`, `Invalid email address`, `Password must be at least 8 characters`, `Password must not contain whitespace`, `Password must be at most 64 characters`, `Password is too long when encoded (contains too many multi-byte characters)` |
+|                              | **409** | `Username already exists`                                                                                                                                                                                                                                                                                                                                                |
+|                              | **409** | `Email already in use`                                                                                                                                                                                                                                                                                                                                                   |
+|                              | **500** | `Error checking username`, `Error checking email`, `Could not hash password`, `Error serializing user data`, `Error creating user`                                                                                                                                                                                                                                       |
+| `POST /auth/login`           | **400** | `Invalid request payload`                                                                                                                                                                                                                                                                                                                                                |
+|                              | **400** | `Username and password are required`, `Username must not contain whitespace`                                                                                                                                                                                                                                                                                             |
+|                              | **401** | `Invalid credentials`                                                                                                                                                                                                                                                                                                                                                    |
+|                              | **500** | `Error retrieving user data`, `Error parsing user data`, `Could not generate token`                                                                                                                                                                                                                                                                                      |
+| `POST /auth/logout`          | **401** | `Authorization token required`, `Invalid or expired token`                                                                                                                                                                                                                                                                                                               |
+|                              | **500** | `Error logging out`                                                                                                                                                                                                                                                                                                                                                      |
+| `POST /auth/forgot-password` | **400** | `Invalid request payload`, `Email is required`                                                                                                                                                                                                                                                                                                                           |
+|                              | **500** | `Error generating reset token`, `Error storing reset token`                                                                                                                                                                                                                                                                                                              |
+| `POST /auth/reset-password`  | **400** | `Invalid request payload`, `Token and new password are required`, `Password must be at least 8 characters`, `Password must not contain whitespace`, `Password must be at most 64 characters`, `Password is too long when encoded (contains too many multi-byte characters)`, `Invalid or expired reset token`, `User not found for reset token`                          |
+|                              | **500** | `Error validating reset token`, `Error retrieving user data`, `Error parsing user data`, `Could not hash password`, `Error serializing user data`, `Error resetting password`                                                                                                                                                                                            |
 
-> **`POST /auth/forgot-password`** always returns **200** when the email is unknown (anti-enumeration). No error body in that case.
+> **`POST /auth/forgot-password`** always returns **200** when the email is unknown (anti-enumeration). No error body in that case. Same for **`POST /auth/resend-verification`**.
+
+| `POST /auth/verify-email` | **400** | `Invalid request payload`, `Token is required`, `Invalid or expired verification token`, `User not found for verification token` |
+| `POST /auth/resend-verification` | **400** | `Invalid request payload`, `Email is required` |
 
 ---
 
 ### Profile
 
-| Endpoint           | Status  | `msg`                                                      |
-| ------------------ | ------- | ---------------------------------------------------------- |
-| `GET /api/profile` | **404** | `User not found`                                           |
-|                    | **500** | `Error retrieving user profile`, `Error parsing user data` |
+| Endpoint                   | Status  | `msg`                                                                                                                    |
+| -------------------------- | ------- | ------------------------------------------------------------------------------------------------------------------------ |
+| `GET /api/profile`         | **404** | `User not found`                                                                                                         |
+|                            | **500** | `Error retrieving user profile`, `Error parsing user data`                                                               |
+| `DELETE /api/profile`      | **400** | `Invalid request payload`, `Password is required`                                                                        |
+|                            | **401** | `Invalid credentials`                                                                                                    |
+|                            | **404** | `User not found`                                                                                                         |
+|                            | **429** | `Too many delete attempts. Try again later.`                                                                             |
+|                            | **500** | `Error deleting account`                                                                                                 |
+| `PATCH /api/profile/email` | **400** | `Invalid request payload`, `Email and password are required`, `Invalid email address`, `New email matches current email` |
+|                            | **401** | `Invalid credentials`                                                                                                    |
+|                            | **404** | `User not found`                                                                                                         |
+|                            | **409** | `Email already in use`                                                                                                   |
+|                            | **429** | `Too many attempts. Try again later.`                                                                                    |
+|                            | **500** | `Error changing email`                                                                                                   |
 
 Also subject to [JWT middleware errors](#cross-cutting-errors).
 
@@ -3002,6 +3595,9 @@ Also subject to [JWT middleware errors](#cross-cutting-errors).
 |                                                 | **404** | `Deck not found`                                                                                                                                                                                                                           |
 |                                                 | **409** | `no changes to publish`                                                                                                                                                                                                                    |
 |                                                 | **500** | Other publish failures (raw `err.Error()` in `msg`)                                                                                                                                                                                        |
+| `GET /api/decks/{id}/publish-preview`           | **400** | `publish preview is only available for source decks`                                                                                                                                                                                       |
+|                                                 | **403** | `Not authorized`                                                                                                                                                                                                                           |
+|                                                 | **404** | `Deck not found`                                                                                                                                                                                                                           |
 | `POST /api/decks/import`                        | **400** | `source_deck_id is required`                                                                                                                                                                                                               |
 |                                                 | **400** | `maximum number of tags reached`, `maximum tags per deck reached`, `maximum fact tags per deck reached`                                                                                                                                    |
 |                                                 | **403** | `source deck is not importable`, `source deck has not been published`, `cannot import an imported deck`, `cannot import your own deck`                                                                                                     |
@@ -3120,6 +3716,10 @@ Tag **name** validation (`POST /api/tags`, `PATCH /api/tags/{tagId}`, tag names 
 |                                         | **500** | `Error checking card`, `Error deleting card`                                                                                                                                                       |
 | `GET /api/decks/{id}/cards`             | **404** | `tag not found` (when `tag_id` query is set)                                                                                                                                                       |
 |                                         | **500** | `Error retrieving cards`, `Error retrieving facts`, `Error retrieving tag`                                                                                                                         |
+| `GET /api/decks/{id}/reviews/by-day`    | **400** | `days must be between 1 and 366`                                                                                                                                                                   |
+|                                         | **403** | `Not authorized to access this deck`                                                                                                                                                               |
+|                                         | **404** | `Deck not found`                                                                                                                                                                                   |
+|                                         | **500** | `Error retrieving deck`, `Error parsing deck data`, `Error retrieving review stats`                                                                                                                |
 
 > **Success (200) with empty study queue:** `GET …/card` may return `"card": []` and `meta.msg` of `No cards in this deck` or `No cards found, please add some facts to your deck` — these are **not** errors.
 
@@ -3143,6 +3743,41 @@ Tag **name** validation (`POST /api/tags`, `PATCH /api/tags/{tagId}`, tag names 
 
 ---
 
+### Quality errors
+
+Also subject to [JWT middleware errors](#cross-cutting-errors). Quality GET/list allow deck owner on source and import; quality DELETE rejects imported decks with **400**; PUT quality requires deck owner (source or import).
+
+| Endpoint                                        | Status  | `msg`                                                                                                                                         |
+| ----------------------------------------------- | ------- | --------------------------------------------------------------------------------------------------------------------------------------------- |
+| `PUT /api/decks/{id}/facts/{factId}/quality`    | **400** | `Invalid request payload`                                                                                                                     |
+|                                                 | **400** | `at least one entry is required`                                                                                                              |
+|                                                 | **400** | `entry "{i}": index must be a non-negative integer` (non-canonical keys such as `"02"` included)                                              |
+|                                                 | **400** | `entry "{i}": index out of range for a fact with {n} entries`                                                                                 |
+|                                                 | **400** | `entry "{i}": text or audio is required`                                                                                                      |
+|                                                 | **400** | `entry "{i}" text\|audio: score must be between 1 and 10`                                                                                     |
+|                                                 | **400** | `entry "{i}" text\|audio: model is required`                                                                                                  |
+|                                                 | **400** | `fact not in pinned snapshot` (import deck; fact outside pinned manifest)                                                                     |
+|                                                 | **403** | `Not authorized to access this deck`                                                                                                          |
+|                                                 | **404** | `Deck not found`, `Fact not found`                                                                                                            |
+|                                                 | **500** | `Error retrieving fact`, `Error parsing fact data`, `Error serializing quality data`, `Error saving quality`, `Error checking fact existence` |
+| `GET /api/decks/{id}/facts/{factId}/quality`    | **403** | `Not authorized to access this deck`                                                                                                          |
+|                                                 | **404** | `Deck not found`, `Fact not found`, `Quality not found`                                                                                       |
+|                                                 | **500** | `Error retrieving quality`, `Error parsing quality data`, `Error checking fact existence`                                                     |
+| `DELETE /api/decks/{id}/facts/{factId}/quality` | **400** | `fact quality is only available on source decks`                                                                                              |
+|                                                 | **403** | `Not authorized to access this deck`                                                                                                          |
+|                                                 | **404** | `Deck not found`, `Fact not found`                                                                                                            |
+|                                                 | **500** | `Error deleting quality`, `Error checking fact existence`                                                                                     |
+| `GET /api/decks/{id}/quality`                   | **400** | `max_score must be between 1 and 10`                                                                                                          |
+|                                                 | **400** | `entry must be a non-negative integer`                                                                                                        |
+|                                                 | **400** | `aspect must be text or audio`                                                                                                                |
+|                                                 | **403** | `Not authorized to access this deck`                                                                                                          |
+|                                                 | **404** | `Deck not found`                                                                                                                              |
+|                                                 | **500** | `Error retrieving quality`                                                                                                                    |
+
+Contribution submit/inbox errors: [Deck sharing](#deck-sharing).
+
+---
+
 ### Client handling notes
 
 1. **Parse errors:** Read `response.body` as JSON; use the `msg` field for user-visible text. Fall back to HTTP status text if the body is not JSON.
@@ -3160,9 +3795,13 @@ Tag **name** validation (`POST /api/tags`, `PATCH /api/tags/{tagId}`, tag names 
 | `/auth/register`                                  | POST        | `{ "data": { … }, "meta": { "msg": "..." } }` — see [Create a User](#create-a-user)                                                                                                                                                                                                  |
 | `/auth/login`                                     | POST        | `{ "data": { "token", "expires" }, "meta": { "expires" } }`                                                                                                                                                                                                                          |
 | `/auth/logout`                                    | POST        | `{ "data": { "msg": "Logged out successfully" }, "meta": null }`                                                                                                                                                                                                                     |
-| `/auth/forgot-password`                           | POST        | `{ "data": { "reset_token" }, "meta": { "expires_in" } }`                                                                                                                                                                                                                            |
+| `/auth/forgot-password`                           | POST        | With Resend: `{ "data": { "msg" } }`. Dev without key: `{ "data": { "reset_token" }, "meta": { "expires_in" } }`                                                                                                                                                                     |
 | `/auth/reset-password`                            | POST        | `{ "data": { "msg": "Password reset successfully" }, "meta": null }`                                                                                                                                                                                                                 |
+| `/auth/verify-email`                              | POST        | `{ "data": { "msg": "Email verified successfully" }, "meta": null }`                                                                                                                                                                                                                 |
+| `/auth/resend-verification`                       | POST        | `{ "data": { "msg" }, "meta": null }` (always 200 when email valid shape)                                                                                                                                                                                                            |
 | `/api/profile`                                    | GET         | `{ "data": { user profile }, "meta": { "msg" } }`                                                                                                                                                                                                                                    |
+| `/api/profile`                                    | DELETE      | `{ "data": { "msg": "Account deleted successfully", "username", "deleted_decks", "anonymized_published_decks" }, "meta": null }`                                                                                                                                                     |
+| `/api/profile/email`                              | PATCH       | `{ "data": { "username", "email", "email_verified": false }, "meta": null }`                                                                                                                                                                                                         |
 | `/api/decks`                                      | POST        | `{ "data": { "deck_id" }, "meta": { "msg" } }`                                                                                                                                                                                                                                       |
 | `/api/decks`                                      | GET         | `{ "data": { "decks": [ … ] }, "meta": { "total", "msg" } }`                                                                                                                                                                                                                         |
 | `/api/decks/{id}`                                 | GET         | `{ "data": { deck + stats }, "meta": { "msg" } }`                                                                                                                                                                                                                                    |
@@ -3171,18 +3810,25 @@ Tag **name** validation (`POST /api/tags`, `PATCH /api/tags/{tagId}`, tag names 
 | `/api/decks/{id}/facts/{op}`                      | POST        | Add facts: body `facts[]` with optional `tags` (names) per item; `{ "data": { "fact_length" }, "meta": { "msg" } }` (no tags in response)                                                                                                                                            |
 | `/api/decks/{id}/card`                            | POST        | Add card from existing fact: `{ "data": { "card_id" }, "meta": { "msg" } }`                                                                                                                                                                                                          |
 | `/api/decks/{id}/facts`                           | GET         | `{ "data": { "facts": [ … ] }, "meta": { "msg", "count", "has_more", "limit", "offset", "total" } }` — defaults `limit` 50, `offset` 0                                                                                                                                               |
-| `/api/decks/{id}/facts/{factId}`                  | GET         | `{ "data": { "fact": { …, "tags": [ … ] }, "media_versions"?: { … } }, "meta": { "msg" } }`                                                                                                                                                                                          |
+| `/api/decks/{id}/facts/{factId}`                  | GET         | `{ "data": { "fact": { …, "tags": [ … ] } }, "meta": { "msg" } }`                                                                                                                                                                                                                    |
 | `/api/decks/{id}/facts/{factId}`                  | PATCH       | `{ "data": { "fact_id" }, "meta": { "msg" } }`                                                                                                                                                                                                                                       |
 | `/api/decks/{id}/facts/{factId}`                  | DELETE      | `{ "data": { "fact_id" }, "meta": { "msg" } }`                                                                                                                                                                                                                                       |
-| `/api/decks/{id}/card`                            | GET         | Optional query `tag_id`. Response shape unchanged: `{ "data": { "card": { id, fact_id, template, …, front[], back[] }, "urgency" }, "meta": { "msg", … } }`                                                                                                                          |
+| `/api/decks/{id}/facts/{factId}/quality`          | PUT         | `{ "data": { "quality": { "fact_id", "entries", "updated_at" } }, "meta": { "msg": "Quality updated successfully" } }`                                                                                                                                                               |
+| `/api/decks/{id}/facts/{factId}/quality`          | GET         | same `data.quality`; `meta.msg` `Quality retrieved successfully`; **404** `Quality not found` if none stored                                                                                                                                                                         |
+| `/api/decks/{id}/facts/{factId}/quality`          | DELETE      | `{ "data": { "fact_id" }, "meta": { "msg": "Quality deleted successfully" } }` — 200 even when nothing was stored                                                                                                                                                                    |
+| `/api/decks/{id}/quality`                         | GET         | `{ "data": { "items": [ { "fact_id", "entries", "updated_at" } ] }, "meta": { "msg": "ok", "effective_score"?, "total_entries", "has_more", "limit", "offset" } }` — no `count`/`total`; defaults `limit` 50, `offset` 0                                                             |
+| `/api/decks/{id}/quality/stats`                   | GET         | `{ "data": { "verified_aspects", "total_aspects", "verified_facts", "total_facts", "last_fact_id"?, "last_fact_updated_at"?, "cursors"? }, "meta": { "msg": "ok" } }` — see [Quality stats](#quality-stats)                                                                          |
+| `/api/decks/{id}/card`                            | GET         | Optional query `tag_id`. `{ "data": { "card": { id, fact_id, template, …, front[], back[] }, "urgency", "next_card"? }, "meta": { "msg", … } }` — `next_card` is second-most urgent when present (includes its own `urgency`)                                                        |
 | `/api/decks/{id}/card`                            | PATCH       | Interval: `{ "data": { "last_review", "due_date", "new_interval" }, "meta": { "msg" } }`; visibility: `{ "data": { "hidden_status" }, "meta": { "msg" } }`                                                                                                                           |
 | `/api/decks/{id}/cards`                           | GET         | Optional query `tag_id`, `stats_only`. `{ "data": { "stats", "cards"? }, "meta": { "msg" } }` — `stats` same shape as GET /api/decks/{id}; `cards` omitted when `stats_only=true`                                                                                                    |
+| `/api/decks/{id}/reviews/by-day`                  | GET         | Optional query `days` (default 7, max 366). `{ "data": { "days": [ { "day", "count" } ], "timezone": "UTC" }, "meta": { "msg": "ok" } }` — see [Reviews by day](#reviews-by-day)                                                                                                     |
 | `/api/decks/{id}/cards/{cardId}`                  | DELETE      | `{ "data": { "card_id" }, "meta": { "msg" } }`                                                                                                                                                                                                                                       |
 | `/api/decks/{id}/reschedule`                      | POST        | **Not wired** — **404** (typically no JSON `{ "msg" }` body). See [Reschedule deck](#reschedule-deck).                                                                                                                                                                               |
 | `/api/decks/catalog`                              | GET         | `{ "data": { "decks": [ … ] }, "meta": { "msg", "count", "total", "limit", "offset", "has_more" } }` — defaults `limit` 50, `offset` 0; optional `query`                                                                                                                             |
-| `/api/decks/catalog/{id}`                         | GET         | `{ "data": { "id", "name", "description", "owner", "fields", "published_version", "fact_count", "deck_tag_names", "published_at" }, "meta": { "msg" } }` — one catalog row; **404** if not importable                                                                                |
+| `/api/decks/catalog/{id}`                         | GET         | `{ "data": { "id", "name", "description", "owner", "fields", "published_version", "fact_count", "deck_tag_names", "published_at", "qa_verified" }, "meta": { "msg" } }` — one catalog row; **404** if not importable                                                                 |
 | `/api/decks/import`                               | POST        | **201** — `{ "data": { "id", "source_deck_id", "source_version", "imported_at" }, "meta": { "msg" } }`                                                                                                                                                                               |
 | `/api/decks/{id}/publish`                         | POST        | `{ "data": { "published_version", "visibility" }, "meta": { "msg": "published" } }`                                                                                                                                                                                                  |
+| `/api/decks/{id}/publish-preview`                 | GET         | `{ "data": { "published_version", "has_unpublished_changes", "facts", "media", "tags", … }, "meta": { "msg": "ok" } }` — optional `?detail=1`                                                                                                                                        |
 | `/api/decks/{id}/updates`                         | GET         | `{ "data": { "source_version", "latest_version", "added_facts", "removed_facts", "edited_facts", "media_changes", "card_template_changes", … }, "meta": { "msg" } }` — see [Get import updates](#get-import-updates-diff)                                                            |
 | `/api/decks/{id}/sync`                            | POST        | Body optional `target_version`, `decisions[]`; `{ "data": { "source_version" }, "meta": { "msg": "synced" } }`                                                                                                                                                                       |
 | `/api/decks/{id}/contributions/facts/…` etc.      | POST        | **201** — `{ "data": { "contribution_id", "source_deck_id", "type", "status", … }, "meta": { "msg": "contribution submitted" } }` — see [Import overlays & contributions](#import-overlays--contributions)                                                                           |

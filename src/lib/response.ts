@@ -42,6 +42,10 @@ export interface ServiceResponseError<Meta extends BaseApiResultMetaWithMsg = Ba
    */
   status: number | null
   /**
+   * Stable backend error code, when the API sent one
+   */
+  code?: string
+  /**
    * Additional meta information about the response (optional)
    */
   meta: Meta
@@ -76,6 +80,7 @@ export class ServiceResponse {
       data: null,
       message: error ? formatErrorMessage(error) : message,
       status: error instanceof RequestError ? error.status : null,
+      code: error instanceof RequestError ? error.code ?? undefined : undefined,
       meta: { msg: message },
     }
   }

@@ -1,5 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { API_BASE_URL, JWT_COOKIE_NAME } from '@/config'
+import { logger } from '@/lib/logger'
 import { createRequest, request } from '@/utils/request'
 
 const cookiesMock = vi.fn()
@@ -224,5 +225,64 @@ describe('createRequest', () => {
         }),
       }),
     )
+  })
+})
+
+describe('RequestError code', () => {
+  afterEach(() => {
+    vi.restoreAllMocks()
+  })
+
+  it('keeps the backend error code from the JSON body', async () => {
+    vi.spyOn(globalThis, 'fetch').mockResolvedValue(
+      new Response(JSON.stringify({ msg: 'Email verification required', code: 'email_not_verified' }), {
+        status: 403,
+        headers: { 'Content-Type': 'application/json' },
+      }),
+    )
+    const error = await createRequest(vi.fn().mockResolvedValue(null))('/api/decks/1/publish').catch((e) => e)
+    expect(error).toMatchObject({ status: 403, code: 'email_not_verified', message: 'Email verification required' })
+  })
+
+  it('leaves the code null when the body has none', async () => {
+    vi.spyOn(globalThis, 'fetch').mockResolvedValue(
+      new Response(JSON.stringify({ msg: 'Deck not found' }), {
+        status: 404,
+        headers: { 'Content-Type': 'application/json' },
+      }),
+    )
+    const error = await createRequest(vi.fn().mockResolvedValue(null))('/api/decks/1').catch((e) => e)
+    expect(error.code).toBeNull()
+  })
+})
+
+describe('request logging', () => {
+  afterEach(() => {
+    vi.restoreAllMocks()
+  })
+
+  it('redacts the body in the log but sends it to fetch', async () => {
+    const info = vi.spyOn(logger, 'info').mockImplementation(() => undefined as never)
+    vi.spyOn(globalThis, 'fetch').mockResolvedValue(
+      new Response('{}', { headers: { 'Content-Type': 'application/json' } }),
+    )
+    const body = JSON.stringify({ username: 'ada', password: 'secret123' })
+    await createRequest(vi.fn().mockResolvedValue(null))('/auth/login', { method: 'POST', body })
+
+    const logged = info.mock.calls.find(([, msg]) => msg === '[request]')![0] as { init: { body: unknown } }
+    expect(logged.init.body).toBe('[REDACTED]')
+    expect(JSON.stringify(info.mock.calls)).not.toContain('secret123')
+    expect(fetch).toHaveBeenCalledWith(expect.any(String), expect.objectContaining({ body }))
+  })
+
+  it('logs requests without a body unchanged', async () => {
+    const info = vi.spyOn(logger, 'info').mockImplementation(() => undefined as never)
+    vi.spyOn(globalThis, 'fetch').mockResolvedValue(
+      new Response('{}', { headers: { 'Content-Type': 'application/json' } }),
+    )
+    await createRequest(vi.fn().mockResolvedValue(null))('/api/profile')
+
+    const logged = info.mock.calls.find(([, msg]) => msg === '[request]')![0] as { init: object }
+    expect(logged.init).not.toHaveProperty('body')
   })
 })

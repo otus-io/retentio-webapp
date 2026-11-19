@@ -101,7 +101,7 @@ export async function submitDeckContributionsBatchService(
           contributionId: response.data.contribution_id,
         })
       } else {
-        result.failed.push({ localId: contribution.id, error: response.message })
+        result.failed.push({ localId: contribution.id, error: response.message, code: response.code })
       }
     }
 

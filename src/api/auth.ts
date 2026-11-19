@@ -1,5 +1,7 @@
 import { request } from '@/utils/request'
 import type {
+  ChangeEmailDTO,
+  ChangeEmailResponseDTO,
   ForgotPasswordDTO,
   LoginDTO,
   LoginResponseDTO,
@@ -60,6 +62,26 @@ export function verifyEmail(params: VerifyEmailDTO) {
   return request<BaseApiResult<{ msg: string }>>('/auth/verify-email', {
     method: 'POST',
     body: JSON.stringify({ token: params.token }),
+  })
+}
+
+/**
+ * 重新发送验证邮件（始终返回 200，防止枚举邮箱）
+ */
+export function resendVerification(email: string) {
+  return request<BaseApiResult<{ msg: string }>>('/auth/resend-verification', {
+    method: 'POST',
+    body: JSON.stringify({ email }),
+  })
+}
+
+/**
+ * 修改邮箱；新邮箱需重新验证
+ */
+export function changeEmail(params: ChangeEmailDTO) {
+  return request<ChangeEmailResponseDTO>('/api/profile/email', {
+    method: 'PATCH',
+    body: JSON.stringify({ email: params.email, password: params.password }),
   })
 }
 
