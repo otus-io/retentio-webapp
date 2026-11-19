@@ -973,7 +973,7 @@
 }
 ```
 
-`has_unpublished_changes` 与 `POST /publish` 能否成功一致（发布会返回 **409** 时为 false）。`published_version == 0` 时响应为干净状态（`has_unpublished_changes: false`，计数全为 0）。
+对于已发布过的卡组，`has_unpublished_changes` 与 `POST /publish` 能否成功一致：`false` 表示再次发布会返回 **409**（没有改动）。从未发布的卡组（`published_version == 0`）因为没有可对比的快照，预览为干净状态（`has_unpublished_changes: false`，计数全为 0），但其首次 `POST /publish` 仍会成功。
 
 卡组的 **name**、**description**、**fields** 和/或 **rate** 与上次清单不同时，`meta_changed` 为 true。所有卡组元数据都计入发布指纹，因此仅修改元数据也会使 `has_unpublished_changes: true`，`POST /publish` 可以成功。
 
@@ -3726,16 +3726,14 @@ Accept: application/json
 |                                                 | **403** | `Not authorized to access this deck`                                                                                                          |
 |                                                 | **404** | `Deck not found`、`Fact not found`                                                                                                            |
 |                                                 | **500** | `Error retrieving fact`、`Error parsing fact data`、`Error serializing quality data`、`Error saving quality`、`Error checking fact existence` |
-| `GET /api/decks/{id}/facts/{factId}/quality`    | **400** | `fact quality is only available on source decks`                                                                                              |
-|                                                 | **403** | `Not authorized to access this deck`                                                                                                          |
+| `GET /api/decks/{id}/facts/{factId}/quality`    | **403** | `Not authorized to access this deck`                                                                                                          |
 |                                                 | **404** | `Deck not found`、`Fact not found`、`Quality not found`                                                                                       |
 |                                                 | **500** | `Error retrieving quality`、`Error parsing quality data`、`Error checking fact existence`                                                     |
 | `DELETE /api/decks/{id}/facts/{factId}/quality` | **400** | `fact quality is only available on source decks`                                                                                              |
 |                                                 | **403** | `Not authorized to access this deck`                                                                                                          |
 |                                                 | **404** | `Deck not found`、`Fact not found`                                                                                                            |
 |                                                 | **500** | `Error deleting quality`、`Error checking fact existence`                                                                                     |
-| `GET /api/decks/{id}/quality`                   | **400** | `fact quality is only available on source decks`                                                                                              |
-|                                                 | **400** | `max_score must be between 1 and 10`                                                                                                          |
+| `GET /api/decks/{id}/quality`                   | **400** | `max_score must be between 1 and 10`                                                                                                          |
 |                                                 | **400** | `entry must be a non-negative integer`                                                                                                        |
 |                                                 | **400** | `aspect must be text or audio`                                                                                                                |
 |                                                 | **403** | `Not authorized to access this deck`                                                                                                          |
