@@ -6,7 +6,6 @@ import z from 'zod'
 import { LOGIN_PATH } from '@/config'
 import { formDataToObject } from '@/utils/format'
 import {
-  EMAIL_IN_USE_MESSAGE,
   EMAIL_INVALID,
   PASSWORD_REQUIRED,
   PASSWORD_SPACES,
@@ -107,15 +106,13 @@ export const registerAction: ActionFunction = async (_, formData) => {
   const safeData = authFormSafeData(result.data)
   const res = await registerService(result.data)
   if (!res.success) {
-    const emailInUse = res.status === 409 && res.message === EMAIL_IN_USE_MESSAGE
     return {
-      error: emailInUse ? (await getTranslations('auth'))('emailInUseHint') : res.message,
+      error: res.message,
       data: safeData,
       success: false,
     }
   }
-  revalidatePath('/')
-  redirect(result.data.redirect || '/')
+  return { data: safeData, success: true }
 }
 
 export const forgotPasswordAction: ActionFunction = async (_, formData) => {
@@ -162,6 +159,12 @@ export const resetPasswordAction: ActionFunction = async (_, formData) => {
   redirect(LOGIN_PATH)
 }
 
+/** Verify-email 409s: another sign-up claimed the username or email before the link was opened. */
+const VERIFY_CONFLICT_KEYS: Record<string, 'verifyEmailUsernameTaken' | 'verifyEmailAccountExists'> = {
+  'Username already exists; sign up again with another username': 'verifyEmailUsernameTaken',
+  'An account with this email already exists': 'verifyEmailAccountExists',
+}
+
 export async function verifyEmailAction(token: string) {
   const t = await getTranslations('auth')
   const result = verifyEmailSchema.safeParse({ token })
@@ -174,7 +177,7 @@ export async function verifyEmailAction(token: string) {
   const res = await verifyEmailService(result.data)
   if (!res.success) {
     return {
-      error: res.message,
+      error: VERIFY_CONFLICT_KEYS[res.message] ? t(VERIFY_CONFLICT_KEYS[res.message]) : res.message,
       success: false as const,
     }
   }
@@ -203,8 +206,9 @@ export const changeEmailAction: ActionFunction = async (_, formData) => {
       success: false,
     }
   }
+  // The response keeps the current email until the link mailed to the new address is opened.
   revalidatePath('/', 'layout')
-  return { data: { email: res.data.email }, success: true }
+  return { data: { email: result.data.email }, success: true }
 }
 
 export const deleteAccountAction: ActionFunction = async (_, formData) => {

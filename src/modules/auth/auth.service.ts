@@ -33,14 +33,12 @@ export async function loginService(params: LoginDTO) {
   }
 }
 
+/** Starts a sign-up. The account exists only after the emailed link is opened, so there is no login here. */
 export async function registerService(params: RegisterDTO) {
   const { username, password, email } = params
   try {
-    await authApi.register({ username, password, email })
-    const loginRes = await authApi.login({ username, password })
-    return await fetchProfileWithTokenService(loginRes.data.token)
+    return ServiceResponse.success(await authApi.register({ username, password, email }))
   } catch (e) {
-    await removeToken()
     return ServiceResponse.error('registerFailed failed', e)
   }
 }

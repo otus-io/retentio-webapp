@@ -173,13 +173,17 @@
     "resendVerification": "Resend link",
     "verificationSent": "If the address is unverified, a new link is on its way.",
     "changeEmail": "Change email",
-    "changeEmailDescription": "Current email: {email}. The new address must be verified again.",
+    "changeEmailDescription": "Current email: {email}. We will send a confirmation link to the new address; your email stays the same until you open it.",
     "newEmailLabel": "New email",
     "currentPasswordLabel": "Current password",
-    "changeEmailSuccess": "Email changed. Check {email} for a verification link.",
-    "emailInUseHint": "This email is already registered. If it is yours, use “Forgot password?” on the login page to get back in.",
+    "changeEmailSuccess": "Check {email} for a confirmation link. Your email changes when you open it.",
     "emailInvalid": "Enter a valid email address",
-    "passwordRequired": "Enter your password"
+    "passwordRequired": "Enter your password",
+    "usernameOrEmailLabel": "Username or email",
+    "usernameOrEmailPlaceholder": "Enter your username or email",
+    "registerCheckEmail": "Check {email} to finish signing up. Your account is created when you open the link in that email.",
+    "verifyEmailUsernameTaken": "Someone took that username before you opened the link. Please sign up again with another username.",
+    "verifyEmailAccountExists": "An account with this email already exists. Log in, or use “Forgot password?” on the login page."
   },
   "tags": {
     "select-placeholder": "Select tags",

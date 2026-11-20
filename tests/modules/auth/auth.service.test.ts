@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import * as authApi from '@/api/auth'
-import { changeEmailService, deleteAccountService, resendVerificationService } from '@/modules/auth/auth.service'
+import { changeEmailService, deleteAccountService, registerService, resendVerificationService } from '@/modules/auth/auth.service'
 import { removeToken } from '@/lib/token'
 import { RequestError } from '@/utils/request'
 
@@ -8,6 +8,8 @@ vi.mock('@/api/auth', () => ({
   resendVerification: vi.fn(),
   changeEmail: vi.fn(),
   deleteAccount: vi.fn(),
+  register: vi.fn(),
+  login: vi.fn(),
 }))
 
 vi.mock('@/lib/token', () => ({
@@ -78,5 +80,28 @@ describe('deleteAccountService', () => {
     expect(await deleteAccountService({ password: 'x' }))
       .toMatchObject({ success: false, status: 401, message: 'Invalid credentials' })
     expect(removeToken).not.toHaveBeenCalled()
+  })
+})
+
+describe('registerService', () => {
+  beforeEach(() => {
+    vi.clearAllMocks()
+  })
+
+  const params = { username: 'alice', email: 'a@b.com', password: 'secret123', confirmPassword: 'secret123' }
+
+  it('starts the sign-up without logging in', async () => {
+    const data = { username: 'alice', email: 'a@b.com', email_verified: false }
+    vi.mocked(authApi.register).mockResolvedValue({ data, meta: { msg: 'ok' } })
+    const res = await registerService(params)
+    expect(authApi.register).toHaveBeenCalledWith({ username: 'alice', email: 'a@b.com', password: 'secret123' })
+    expect(authApi.login).not.toHaveBeenCalled()
+    expect(res).toMatchObject({ success: true, data })
+  })
+
+  it('returns status and message on failure', async () => {
+    vi.mocked(authApi.register).mockRejectedValue(new RequestError('Username already exists', 409))
+    expect(await registerService(params))
+      .toMatchObject({ success: false, status: 409, message: 'Username already exists' })
   })
 })

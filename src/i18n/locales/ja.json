@@ -173,13 +173,17 @@
     "resendVerification": "リンクを再送信",
     "verificationSent": "未確認のアドレスであれば、新しいリンクを送信しました。",
     "changeEmail": "メールアドレスを変更",
-    "changeEmailDescription": "現在のメールアドレス：{email}。新しいアドレスは再度確認が必要です。",
+    "changeEmailDescription": "現在のメールアドレス：{email}。新しいアドレスに確認リンクを送ります。リンクを開くまでメールアドレスは変わりません。",
     "newEmailLabel": "新しいメールアドレス",
     "currentPasswordLabel": "現在のパスワード",
-    "changeEmailSuccess": "メールアドレスを変更しました。{email} に届く確認リンクを開いてください。",
-    "emailInUseHint": "このメールアドレスは登録済みです。ご自身のものであれば、ログイン画面の「パスワードをお忘れですか？」から再設定してください。",
+    "changeEmailSuccess": "{email} に届く確認リンクを開いてください。開くとメールアドレスが変更されます。",
     "emailInvalid": "有効なメールアドレスを入力してください",
-    "passwordRequired": "パスワードを入力してください"
+    "passwordRequired": "パスワードを入力してください",
+    "usernameOrEmailLabel": "ユーザー名またはメールアドレス",
+    "usernameOrEmailPlaceholder": "ユーザー名またはメールアドレスを入力",
+    "registerCheckEmail": "{email} に届くメールで登録を完了してください。メール内のリンクを開くとアカウントが作成されます。",
+    "verifyEmailUsernameTaken": "リンクを開く前に、そのユーザー名は他の人に使われました。別のユーザー名で登録し直してください。",
+    "verifyEmailAccountExists": "このメールアドレスのアカウントは既にあります。ログインするか、ログイン画面の「パスワードをお忘れですか？」をご利用ください。"
   },
   "tags": {
     "select-placeholder": "タグを選択",
