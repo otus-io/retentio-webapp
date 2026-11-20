@@ -30,7 +30,7 @@ describe('useAppNavMenu', () => {
 
     const { result } = renderHook(() => useAppNavMenu({ isLoggedIn: true }))
 
-    expect(result.current.navMenu).toHaveLength(3)
+    expect(result.current.navMenu).toHaveLength(4)
     expect(result.current.navMenu[0]).toMatchObject({
       title: 'nav.guide',
       href: '/guide',
@@ -42,6 +42,10 @@ describe('useAppNavMenu', () => {
     expect(result.current.navMenu[2]).toMatchObject({
       title: 'term.tags',
       href: '/tags',
+    })
+    expect(result.current.navMenu[3]).toMatchObject({
+      title: 'statistics.title',
+      href: '/statistics',
     })
   })
 

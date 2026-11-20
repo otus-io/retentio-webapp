@@ -33,6 +33,11 @@ export default function useAppNavMenu({ isLoggedIn = false }: { isLoggedIn?: boo
           href: '/tags',
           isActive: pathname.startsWith('/tags'),
         },
+        {
+          title: t('statistics.title'),
+          href: '/statistics',
+          isActive: pathname.startsWith('/statistics'),
+        },
       )
     }
 
