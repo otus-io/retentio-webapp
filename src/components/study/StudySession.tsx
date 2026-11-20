@@ -5,6 +5,8 @@ import AppError from '@/components/app/AppError'
 import AppSelect from '@/components/app/AppSelect'
 import LayoutPage from '@/components/layout/LayoutPage'
 import StudyCardSide from '@/components/study/StudyCardSide'
+import StudyFlipCard from '@/components/study/StudyFlipCard'
+import StudyIntervalSlider from '@/components/study/StudyIntervalSlider'
 import StudyReportModal from '@/components/study/StudyReportModal'
 import { showSuccessToast } from '@/lib/ui'
 import {
@@ -17,7 +19,7 @@ import {
 import { computeIntervalRange, type IntervalRange, intervalToUnit } from '@/modules/cards/cards.schema'
 import type { Deck } from '@/modules/decks/decks.schema'
 import type { Tag } from '@/modules/tags/tags.schema'
-import { AlertDialog, Card, Dropdown, Label, Slider, Spinner } from '@heroui/react'
+import { AlertDialog, Card, Dropdown, Label, Spinner } from '@heroui/react'
 import { EllipsisVertical, EyeOff, Flag, PartyPopper, Pencil, Trash2 } from 'lucide-react'
 import { useFormatter, useTranslations } from 'next-intl'
 import { useRouter } from 'next/navigation'
@@ -25,6 +27,9 @@ import type { Key } from 'react'
 import { useCallback, useEffect, useState, useTransition } from 'react'
 
 const ALL_TAGS = '__all__'
+
+/** Same rounding as the mobile app: whole percent, or two decimals below 1%. */
+const formatPercent = (percent: number) => `${percent >= 1 || percent === 0 ? percent.toFixed(0) : percent.toFixed(2)}%`
 
 interface StudySessionProps {
   deck: Deck
@@ -44,6 +49,9 @@ export default function StudySession({ deck, tags }: StudySessionProps) {
   const [revealed, setRevealed] = useState(false)
   const [interval, setIntervalSec] = useState(0)
   const [studied, setStudied] = useState(0)
+  const [due, setDue] = useState<number | null>(null)
+  /** Due count when the session started; progress is measured against it, as in the mobile app. */
+  const [dueTarget, setDueTarget] = useState<number | null>(null)
   const [isPending, startTransition] = useTransition()
   const [deleteCardId, setDeleteCardId] = useState<string | null>(null)
   const [isReportOpen, setIsReportOpen] = useState(false)
@@ -61,6 +69,11 @@ export default function StudySession({ deck, tags }: StudySessionProps) {
       setError(null)
       setRevealed(false)
       setResult(res.data)
+      const liveDue = res.data.stats?.due_cards
+      if (liveDue != null) {
+        setDue(liveDue)
+        setDueTarget((prev) => prev ?? liveDue)
+      }
       const next = res.data.card?.card
       const nextRange = next
         ? computeIntervalRange(Math.floor(Date.now() / 1000), next.last_review, next.due_date)
@@ -111,11 +124,15 @@ export default function StudySession({ deck, tags }: StudySessionProps) {
 
   const formatInterval = (seconds: number) => {
     const { value, unit } = intervalToUnit(seconds)
-    return format.number(value, { style: 'unit', unit, unitDisplay: 'long' })
+    return format.number(value, { style: 'unit', unit, unitDisplay: 'short' })
   }
 
   const tagItems = [{ id: ALL_TAGS, name: t('all-tags') }, ...tags.map((e) => ({ id: e.id, name: e.name }))]
-  const due = result?.stats?.due_cards
+  const target = dueTarget ?? 0
+  // Live progress toward the frozen target, with this session's reviews as a floor when new cards fall due.
+  const liveCleared = due != null && due < target ? target - due : 0
+  const cleared = Math.max(liveCleared, Math.min(studied, target))
+  const percent = target > 0 ? Math.min(cleared / target, 1) * 100 : 100
 
   return (
     <LayoutPage
@@ -136,10 +153,52 @@ export default function StudySession({ deck, tags }: StudySessionProps) {
               onChange={(key) => setTagId(String(key ?? ALL_TAGS))}
             />
           )}
-          <span className="text-sm text-muted tabular-nums">
-            {t('progress', { studied, due: due ?? 0 })}
-          </span>
+          {card && (
+            <Dropdown>
+              <Dropdown.Trigger aria-label={t('card-options')} isDisabled={isPending} className="ml-auto">
+                <EllipsisVertical className="size-4 text-muted" />
+              </Dropdown.Trigger>
+              <Dropdown.Popover>
+                <Dropdown.Menu onAction={handleMenu(card.id)}>
+                  <Dropdown.Item id="hide" textValue={t('hide-card')}>
+                    <EyeOff className="size-3.5 text-muted-foreground" />
+                    <Label>{t('hide-card')}</Label>
+                  </Dropdown.Item>
+                  <Dropdown.Item id="edit" textValue={t('edit-fact')}>
+                    <Pencil className="size-3.5 text-muted-foreground" />
+                    <Label>{t('edit-fact')}</Label>
+                  </Dropdown.Item>
+                  {imported
+                    ? (
+                      <Dropdown.Item id="report" textValue={t('report-issue')}>
+                        <Flag className="size-3.5 text-muted-foreground" />
+                        <Label>{t('report-issue')}</Label>
+                      </Dropdown.Item>
+                    )
+                    : null}
+                  <Dropdown.Item id="delete" textValue={t('delete-card')} variant="danger">
+                    <Trash2 className="size-3.5 text-danger" />
+                    <Label>{t('delete-card')}</Label>
+                  </Dropdown.Item>
+                </Dropdown.Menu>
+              </Dropdown.Popover>
+            </Dropdown>
+          )}
         </div>
+
+        {dueTarget !== null && (
+          <div className="flex flex-col gap-1.5">
+            <div className="h-1.5 overflow-hidden rounded-full bg-default">
+              <div className="h-full rounded-full bg-accent transition-[width]" style={{ width: `${percent}%` }} />
+            </div>
+            <div className="flex justify-between text-xs text-muted">
+              <span>{t('todays-due')}</span>
+              <span className="tabular-nums">
+                {t('due-progress', { cleared, target, percent: formatPercent(percent) })}
+              </span>
+            </div>
+          </div>
+        )}
 
         <AppError error={error} />
 
@@ -165,81 +224,35 @@ export default function StudySession({ deck, tags }: StudySessionProps) {
         )}
 
         {card && range && (
-          <Card key={card.id} className="min-h-80">
-            <Card.Header className="flex-row items-center justify-end">
-              <Dropdown>
-                <Dropdown.Trigger aria-label={t('card-options')}>
-                  <EllipsisVertical className="size-4 text-muted" />
-                </Dropdown.Trigger>
-                <Dropdown.Popover>
-                  <Dropdown.Menu onAction={handleMenu(card.id)}>
-                    <Dropdown.Item id="hide" textValue={t('hide-card')}>
-                      <EyeOff className="size-3.5 text-muted-foreground" />
-                      <Label>{t('hide-card')}</Label>
-                    </Dropdown.Item>
-                    <Dropdown.Item id="edit" textValue={t('edit-fact')}>
-                      <Pencil className="size-3.5 text-muted-foreground" />
-                      <Label>{t('edit-fact')}</Label>
-                    </Dropdown.Item>
-                    {imported
-                      ? (
-                        <Dropdown.Item id="report" textValue={t('report-issue')}>
-                          <Flag className="size-3.5 text-muted-foreground" />
-                          <Label>{t('report-issue')}</Label>
-                        </Dropdown.Item>
-                      )
-                      : null}
-                    <Dropdown.Item id="delete" textValue={t('delete-card')} variant="danger">
-                      <Trash2 className="size-3.5 text-danger" />
-                      <Label>{t('delete-card')}</Label>
-                    </Dropdown.Item>
-                  </Dropdown.Menu>
-                </Dropdown.Popover>
-              </Dropdown>
-            </Card.Header>
-            <Card.Content className="gap-6 py-6">
-              <StudyCardSide entries={card.front} deckId={deck.id} factId={card.fact_id} imported={imported} />
-              {revealed && card.back.length > 0 && (
-                <>
-                  <hr className="border-border" />
-                  <StudyCardSide entries={card.back} deckId={deck.id} factId={card.fact_id} imported={imported} />
-                </>
-              )}
-            </Card.Content>
-            <Card.Footer className="flex-col items-stretch gap-4">
+          <>
+            <StudyFlipCard
+              key={card.id}
+              revealed={revealed}
+              onFlip={() => setRevealed((r) => !r)}
+              label={t('flip-card')}
+              front={<StudyCardSide entries={card.front} deckId={deck.id} factId={card.fact_id} imported={imported} />}
+              back={<StudyCardSide entries={card.back} deckId={deck.id} factId={card.fact_id} imported={imported} />}
+            />
+
+            <div className="flex flex-col gap-4">
               {revealed
                 ? (
                   <>
-                    <Slider
-                      aria-label={t('next-review')}
-                      minValue={range.min}
-                      maxValue={range.max}
-                      step={1}
+                    <StudyIntervalSlider
+                      range={range}
                       value={interval}
-                      onChange={(v) => setIntervalSec(v as number)}
+                      onChange={setIntervalSec}
                       isDisabled={isPending}
-                    >
-                      <div className="flex justify-between text-sm">
-                        <Label>{t('next-review')}</Label>
-                        <span className="font-medium tabular-nums">{formatInterval(interval)}</span>
-                      </div>
-                      <Slider.Track>
-                        <Slider.Fill />
-                        <Slider.Thumb />
-                      </Slider.Track>
-                      <div className="flex justify-between text-xs text-muted">
-                        <span>{formatInterval(range.min)}</span>
-                        <span>{formatInterval(range.max)}</span>
-                      </div>
-                    </Slider>
+                      format={formatInterval}
+                    />
                     <AppButton isPending={isPending} onPress={() => handleNext(card.id)}>{t('next')}</AppButton>
                   </>
                 )
                 : (
                   <AppButton onPress={() => setRevealed(true)} isDisabled={isPending}>{t('show-answer')}</AppButton>
                 )}
-            </Card.Footer>
-          </Card>
+            </div>
+          </>
         )}
       </div>
 

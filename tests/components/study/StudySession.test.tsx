@@ -35,7 +35,7 @@ vi.mock('@/components/app/AppError', () => ({
 }))
 vi.mock('@/components/layout/LayoutPage', () => ({ default: ({ children }: { children: ReactNode }) => <main>{children}</main> }))
 vi.mock('@/components/facts/FactsAudioPlayButton', () => ({
-  default: ({ mediaId }: { mediaId: string }) => <span data-testid="audio">{mediaId}</span>,
+  default: ({ mediaId }: { mediaId: string }) => <button type="button" data-testid="audio">{mediaId}</button>,
 }))
 vi.mock('@/components/study/StudyCardMedia', () => ({
   default: ({ kind, url }: { kind: string, url: string }) => <span data-testid={kind}>{url}</span>,
@@ -92,7 +92,7 @@ describe('StudySession', () => {
     expect(await screen.findByText('hola')).toBeTruthy()
     expect(screen.getByTestId('audio').textContent).toBe('a1')
     expect(screen.queryByText('hello')).toBeNull()
-    expect(screen.getByText('progress:{"studied":0,"due":5}')).toBeTruthy()
+    expect(screen.getByText('due-progress:{"cleared":0,"target":5,"percent":"0%"}')).toBeTruthy()
 
     await clickWhenEnabled('show-answer')
     expect(screen.getByText('hello')).toBeTruthy()
@@ -109,7 +109,7 @@ describe('StudySession', () => {
     await clickWhenEnabled('next')
     await waitFor(() => expect(actions.reviewCardAction).toHaveBeenCalledWith({ deckId: 'd1', cardId: 'c1', interval: 3000 }))
     expect(await screen.findByText('caught-up-title')).toBeTruthy()
-    expect(screen.getByText('progress:{"studied":1,"due":5}')).toBeTruthy()
+    expect(screen.getByText('due-progress:{"cleared":1,"target":5,"percent":"20%"}')).toBeTruthy()
   })
 
   it('filters by tag and reloads when caught up', async () => {
@@ -117,7 +117,7 @@ describe('StudySession', () => {
     render(<StudySession deck={deck} tags={tags} />)
     expect(await screen.findByText('caught-up-title')).toBeTruthy()
     expect(actions.getNextCardAction).toHaveBeenLastCalledWith('d1', undefined)
-    expect(screen.getByText('progress:{"studied":0,"due":0}')).toBeTruthy()
+    expect(screen.queryByText('todays-due')).toBeNull()
 
     fireEvent.change(screen.getByRole('combobox'), { target: { value: 't1' } })
     await waitFor(() => expect(actions.getNextCardAction).toHaveBeenLastCalledWith('d1', 't1'))
@@ -153,7 +153,7 @@ describe('StudySession', () => {
     fireEvent.click(screen.getByText('hide-card'))
     await waitFor(() => expect(actions.hideCardAction).toHaveBeenCalledWith({ deckId: 'd1', cardId: 'c1' }))
     expect(await screen.findByText('caught-up-title')).toBeTruthy()
-    expect(screen.getByText('progress:{"studied":0,"due":5}')).toBeTruthy()
+    expect(screen.getByText('due-progress:{"cleared":0,"target":5,"percent":"0%"}')).toBeTruthy()
   })
 
   it('reports a failed mutation and keeps the card', async () => {
@@ -196,6 +196,54 @@ describe('StudySession', () => {
     await clickWhenEnabled('common.retry')
     expect(await screen.findByText('caught-up-title')).toBeTruthy()
     expect(actions.reviewCardAction).toHaveBeenCalledTimes(1)
+  })
+
+  it('flips the card by click or keyboard, but not from controls inside it', async () => {
+    actions.getNextCardAction.mockResolvedValue(withCard())
+    render(<StudySession deck={deck} tags={tags} />)
+    await screen.findByText('hola')
+    const cardEl = screen.getByRole('button', { name: 'flip-card' })
+
+    fireEvent.click(screen.getByTestId('audio'))
+    expect(screen.queryByText('hello')).toBeNull()
+    fireEvent.click(screen.getByText('hola'))
+    expect(screen.getByText('hello')).toBeTruthy()
+    expect(cardEl.getAttribute('aria-pressed')).toBe('true')
+    expect(screen.getByText('hard')).toBeTruthy()
+    expect(screen.queryByText('show-answer')).toBeNull()
+
+    fireEvent.keyDown(cardEl, { key: 'Enter' })
+    expect(screen.queryByText('hello')).toBeNull()
+    expect(screen.getByText('show-answer')).toBeTruthy()
+    fireEvent.keyDown(screen.getByText('hola'), { key: ' ' })
+    fireEvent.keyDown(cardEl, { key: 'a' })
+    expect(screen.queryByText('hello')).toBeNull()
+    fireEvent.keyDown(cardEl, { key: ' ' })
+    expect(screen.getByText('hello')).toBeTruthy()
+  })
+
+  it('measures progress against the due count at session start', async () => {
+    actions.getNextCardAction
+      .mockResolvedValueOnce(withCard(card, { due_cards: 300 }))
+      .mockResolvedValueOnce(withCard({ ...card, id: 'c2' }, { due_cards: 297 }))
+    actions.reviewCardAction.mockResolvedValue({ success: true })
+    render(<StudySession deck={deck} tags={tags} />)
+    await screen.findByText('hola')
+    await clickWhenEnabled('show-answer')
+    await clickWhenEnabled('next')
+    expect(await screen.findByText('due-progress:{"cleared":3,"target":300,"percent":"1%"}')).toBeTruthy()
+  })
+
+  it('shows two decimals below one percent', async () => {
+    actions.getNextCardAction
+      .mockResolvedValueOnce(withCard(card, { due_cards: 400 }))
+      .mockResolvedValueOnce(withCard({ ...card, id: 'c2' }, { due_cards: 401 }))
+    actions.reviewCardAction.mockResolvedValue({ success: true })
+    render(<StudySession deck={deck} tags={tags} />)
+    await screen.findByText('hola')
+    await clickWhenEnabled('show-answer')
+    await clickWhenEnabled('next')
+    expect(await screen.findByText('due-progress:{"cleared":1,"target":400,"percent":"0.25%"}')).toBeTruthy()
   })
 
   it('opens the facts editor', async () => {
