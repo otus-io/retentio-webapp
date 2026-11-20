@@ -149,9 +149,13 @@ export default function DeckContributionsInbox({ sourceDeckId }: { sourceDeckId:
     showSuccessToast(op === 'accept' ? t('accepted') : t('updated'))
     // Drop the handled card in place, keeping any pages already loaded.
     const remaining = (items ?? []).filter((item) => item.id !== c.id)
-    setItems(remaining)
-    // Everything loaded is handled but more are open: fetch them instead of showing "empty".
-    if (remaining.length === 0 && hasMore) reload()
+    // Everything loaded is handled but more are open: show the spinner and fetch them instead of "empty".
+    if (remaining.length === 0 && hasMore) {
+      setItems(null)
+      reload()
+    } else {
+      setItems(remaining)
+    }
   }
 
   const acceptAll = async (toAccept: Contribution[]) => {
@@ -192,7 +196,8 @@ export default function DeckContributionsInbox({ sourceDeckId }: { sourceDeckId:
   }
 
   const acceptable = items.filter(canAccept)
-  const busy = busyId !== null || progress !== null
+  // Card actions and Load more never overlap, so neither works from a stale list.
+  const busy = busyId !== null || progress !== null || loadingMore
 
   return (
     <div className="flex flex-col gap-3 px-1">
@@ -260,7 +265,7 @@ export default function DeckContributionsInbox({ sourceDeckId }: { sourceDeckId:
           size="sm"
           variant="secondary"
           isPending={loadingMore}
-          isDisabled={progress !== null}
+          isDisabled={busy}
           onPress={() => loadMore(items)}
         >
           {t('load-more')}

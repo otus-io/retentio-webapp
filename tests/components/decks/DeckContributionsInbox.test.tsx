@@ -1,4 +1,4 @@
-import { act, fireEvent, render, screen } from '@testing-library/react'
+import { act, fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 const actions = vi.hoisted(() => ({
@@ -102,9 +102,27 @@ describe('DeckContributionsInbox', () => {
     actions.updateContributionStatusAction.mockResolvedValue({ success: true })
     render(<DeckContributionsInbox sourceDeckId="s1" />)
     await screen.findByText('types.fact_edit')
+    let next!: (v: unknown) => void
+    actions.getOpenContributionsAction.mockReset().mockReturnValueOnce(new Promise((r) => { next = r }))
     await act(async () => fireEvent.click(screen.getByText('dismiss')))
-    expect(await screen.findByText('types.fact_add')).toBeTruthy()
+    // A spinner, not the empty state, while the next page loads.
     expect(screen.queryByText('empty')).toBeNull()
+    expect(screen.getByRole('status')).toBeTruthy()
+    await act(async () => next(page([add])))
+    expect(await screen.findByText('types.fact_add')).toBeTruthy()
+  })
+
+  it('locks card actions while more contributions load', async () => {
+    let more!: (v: unknown) => void
+    actions.getOpenContributionsAction
+      .mockResolvedValueOnce(page([edit], true))
+      .mockReturnValueOnce(new Promise((r) => { more = r }))
+    render(<DeckContributionsInbox sourceDeckId="s1" />)
+    await screen.findByText('types.fact_edit')
+    act(() => { fireEvent.click(screen.getByText('load-more')) })
+    await waitFor(() => expect((screen.getByText('dismiss') as HTMLButtonElement).disabled).toBe(true))
+    await act(async () => more(page([add])))
+    expect(screen.queryByText('load-more')).toBeNull()
   })
 
   it('reports failed actions, with a fallback message', async () => {

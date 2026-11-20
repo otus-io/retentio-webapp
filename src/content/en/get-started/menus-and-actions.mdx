@@ -11,17 +11,19 @@ This page explains the main **menus and buttons** in the app. For concepts, see 
 
 ## Bottom tabs
 
-| Tab          | What it is                                                     |
-| ------------ | -------------------------------------------------------------- |
-| **Decks**    | Your library — open a deck to study, create decks, manage tags |
-| **Discover** | Public catalog — search, favorite, import shared decks         |
-| **Profile**  | Account settings (language, theme, logout, email verification) |
+| Tab          | What it is                                                       |
+| ------------ | ---------------------------------------------------------------- |
+| **Decks**    | Your library — open a deck to study, create decks, manage tags   |
+| **Discover** | Public catalog — search, favorite, import shared decks           |
+| **Profile**  | Language, theme, statistics, tags, email, logout, delete account |
+
+On the website, **My Decks**, **Shared Decks**, and **Statistics** sit in the top bar. **Shared Decks** is the same catalog as **Discover**.
 
 ## Decks list
 
 On **Decks**:
 
-- **Create Deck** (floating button) — opens the create sheet (name, fields, tags, new cards per day)
+- **Create Deck** (floating button) — opens the create sheet (name, description, fields, tags, new cards per day)
 - **Tags** (app bar) — opens your tag library (**Manage tags**)
 - Tap a **deck card** — opens study for that deck
 - **Publish Deck** (deck ⋯) and **Update Published Version** (deck ⋯, or the share icon when changes are unpublished) — publish to Discover
@@ -31,27 +33,28 @@ On **Decks**:
 
 Open a deck, then use the deck **⋯** menu (**Deck options**):
 
-| Action                   | What it does                                                                    | Owned                   | Imported                                            |
-| ------------------------ | ------------------------------------------------------------------------------- | ----------------------- | --------------------------------------------------- |
-| **Font**                 | Adjust front/back text and ruby size for this deck                              | Yes                     | Yes                                                 |
-| **Add fact**             | Open **Add fact** to create a new learning item (entries + optional media/tags) | Saves to the deck       | Saves locally and stages an **Unsent contribution** |
-| **Edit Deck**            | Change rate, tags; on owned decks also name and fields                          | Full edit               | Name/fields locked; rate and tags only              |
-| **Publish Deck**         | Publish the deck to Discover                                                    | Yes                     | Hidden                                              |
-| **Contributions**        | Review suggested edits and reports from importers                               | Yes (published sources) | Hidden                                              |
-| **Unsent contributions** | Review local changes ready to send to the author                                | Hidden                  | Yes                                                 |
-| **Check updates**        | Compare your import to the latest publish                                       | Hidden                  | Yes                                                 |
-| **Delete Deck**          | Permanently delete the deck and all of its cards and facts                      | Yes                     | Yes                                                 |
+| Action                   | What it does                                                                          | Owned                  | Imported                                                                                             |
+| ------------------------ | ------------------------------------------------------------------------------------- | ---------------------- | ---------------------------------------------------------------------------------------------------- |
+| **Font**                 | Adjust front/back text and ruby size for this deck                                    | Yes                    | Yes                                                                                                  |
+| **Add fact**             | Open **Add fact** to create a new learning item (entries + optional media/tags)       | Saves to the deck      | Saves on your copy and sends a contribution. If the send fails, it stays in **Unsent contributions** |
+| **Edit Deck**            | Change rate and tags. Owned decks can also change name, description, and fields       | Full edit              | Name, description, and fields locked; rate and tags only                                             |
+| **Publish Deck**         | Publish the deck to Discover. Later publishes are titled **Update Published Version** | Yes                    | Hidden                                                                                               |
+| **Contributions**        | Review suggested edits and reports from importers                                     | Yes, once published    | Hidden                                                                                               |
+| **Unsent contributions** | Retry or dismiss contributions that could not be sent                                 | Hidden                 | Yes                                                                                                  |
+| **Check updates**        | Compare your import to the latest publish                                             | Hidden                 | Yes                                                                                                  |
+| **QA mode**              | Check facts column by column and mark fields verified                                 | Yes                    | Yes. Sign-offs go to the author when you leave                                                       |
+| **Delete Deck**          | Permanently delete the deck and all of its cards and facts                            | Yes, until you publish | Yes                                                                                                  |
 
 ## Card options (⋯ on a card)
 
 While studying, open the card **⋯** menu:
 
-| Action           | What it does                                                        | Owned             | Imported                                            |
-| ---------------- | ------------------------------------------------------------------- | ----------------- | --------------------------------------------------- |
-| **Hide Card**    | Skip this card in the queue without deleting the fact               | Yes               | Yes                                                 |
-| **Edit Fact**    | Open **Edit Fact** to change entries, media, and tags               | Saves to the deck | Saves locally and stages an **Unsent contribution** |
-| **Report issue** | Flag a problem (audio, content, or other) to the author             | Hidden            | Sent immediately                                    |
-| **Delete Card**  | Remove **only this card**; the fact and any other cards for it stay | Yes               | Yes                                                 |
+| Action           | What it does                                                        | Owned             | Imported                                                                                             |
+| ---------------- | ------------------------------------------------------------------- | ----------------- | ---------------------------------------------------------------------------------------------------- |
+| **Hide Card**    | Skip this card in the queue without deleting the fact               | Yes               | Yes                                                                                                  |
+| **Edit Fact**    | Open **Edit Fact** to change entries, media, and tags               | Saves to the deck | Saves on your copy and sends a contribution. If the send fails, it stays in **Unsent contributions** |
+| **Report issue** | Flag a problem (audio, content, or other) to the author             | Hidden            | Sent immediately                                                                                     |
+| **Delete Card**  | Remove **only this card**; the fact and any other cards for it stay | Yes               | Yes                                                                                                  |
 
 ### Edit Fact
 
@@ -59,7 +62,7 @@ While studying, open the card **⋯** menu:
 
 - Edit each **entry** (text and media: image, video, audio)
 - **Add tag** / remove tags on the fact
-- **Save fact** — on owned decks this updates the source; on imported decks it updates your local copy and adds a pending contribution you can send later
+- **Save fact** — on owned decks this updates the source; on imported decks it updates your copy and sends the change to the author. If the send fails, retry it from **Unsent contributions**
 
 **Add fact** (from the deck menu) uses the same kind of sheet for a **new** row.
 
@@ -102,6 +105,31 @@ On **Discover**:
 
 See [Import an existing deck](/guide/get-started/import-an-existing-deck).
 
+## QA mode
+
+**QA mode** is on the deck **⋯** menu. It walks the deck so you can check facts before they stay wrong.
+
+1. **Choose columns**. Only those columns appear, and the choice is remembered for this deck.
+2. Tap **Start QA**.
+3. Tick the columns that look right. Use the pencil to **Edit Fact** when something is wrong. **Skip** moves on without signing off (that fact comes back in a later walk). **Previous** goes back. **Verified** signs off the ticked columns and moves to the next fact.
+4. At the end: **You're done with these columns. Thank you.**
+
+On a deck you own, those sign-offs already count. On an imported deck, leaving QA mode sends them to the author — only fields you verified that still match the author's version.
+
+## Profile
+
+Open the **Profile** tab:
+
+- **Change language** — English, 中文, or 日本語
+- **Change theme** — **Light**, **Dark**, **Sepia**, or **System**
+- **Statistics** — reviews for **7**, **30**, **90**, or **365** days, for one deck or **All decks**. Day boundaries use UTC
+- **Tags** — the same library as **Manage tags**
+- **Change email** — confirm with your password
+- **Logout**
+- **Delete account** — permanently deletes the account, private decks, and study progress. Confirm with your password. Published decks stay available to people who imported them, without your name
+
+If your email is not verified yet, Profile also shows a reminder and **Resend verification email**. Publishing and sending contributions need that verification. See [Login / Registration](/guide/get-started/login-registration#email-verification).
+
 ## Summary
 
-Use the **deck ⋯** menu for add/edit deck, publish, sync, and contributions; use the **card ⋯** menu for **Edit Fact**, hide, delete, and report. Owned decks save changes directly; imported decks stage most content edits as contributions to the author.
+Use the **deck ⋯** menu for add/edit deck, publish, sync, QA, and contributions; use the **card ⋯** menu for **Edit Fact**, hide, delete, and report. Owned decks save changes directly. On an imported deck, saving a fact updates your copy and sends the change to the author.
