@@ -174,6 +174,7 @@ describe('DeckContributionsOutbox', () => {
   })
 
   it('proposes a field rename or deck tags from the sheet', async () => {
+    submitDeckContributionsBatchAction.mockResolvedValue(undefined)
     const { container } = render(<DeckContributionsOutbox deck={deck} />)
     // The shared button mock drops aria-label, so find the icon buttons by their icons.
     const iconButton = (icon: string) => container.querySelector(`.lucide-${icon}`)!.closest('button')!
@@ -185,8 +186,25 @@ describe('DeckContributionsOutbox', () => {
 
     fireEvent.click(screen.getByText('tab-sent:{"count":0}'))
     fireEvent.click(iconButton('pencil-line'))
-    fireEvent.click(screen.getByText('save-form'))
-    expect(screen.getByText('Word → Term')).toBeTruthy()
+    // Sending fails (no result), so the proposal stays pending for a retry.
+    await act(async () => fireEvent.click(screen.getByText('save-form')))
+    expect(await screen.findByText('Word → Term')).toBeTruthy()
     expect(stored('retentio_pending_contribs_v2')).toHaveLength(1)
+    expect(toast.showFailToast).toHaveBeenLastCalledWith('unsent')
+  })
+
+  it('sends a saved proposal to the author right away', async () => {
+    submitDeckContributionsBatchAction.mockResolvedValue({
+      success: true,
+      data: { submitted: [{ localId: 'field_rename', kind: 'field_rename', contributionId: 'c7' }], failed: [] },
+    })
+    const { container } = render(<DeckContributionsOutbox deck={deck} />)
+    await screen.findByText('empty')
+    fireEvent.click(container.querySelector('.lucide-pencil-line')!.closest('button')!)
+    await act(async () => fireEvent.click(screen.getByText('save-form')))
+    expect(toast.showSuccessToast).toHaveBeenLastCalledWith('sent')
+    expect(await screen.findByText('Word → Term')).toBeTruthy()
+    expect(stored('retentio_pending_contribs_v2')).toEqual([])
+    expect(stored('retentio_sent_contribs_v1')).toHaveLength(1)
   })
 })

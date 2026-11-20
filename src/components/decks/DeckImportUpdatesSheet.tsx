@@ -72,7 +72,11 @@ function FactTile({ importId, factId, decision, onDecision }: FactTileProps) {
   }
 
   const hints = [detail?.aligned && t('aligned'), detail?.has_local_overlay && t('local-overlay')].filter(Boolean)
-  const decides = detail && (detail.kind === 'edited' || detail.kind === 'removed')
+  // A local copy that differs from the author's is kept unless the user takes the update (the server's rule).
+  const keepsLocal = !!detail?.has_local_overlay && !detail.aligned
+  const decides = detail
+    && (detail.kind === 'edited' || detail.kind === 'removed' || (detail.kind === 'added' && keepsLocal))
+  const serverDefault = detail?.default_action ?? (keepsLocal ? 'keep' : 'accept')
 
   return (
     <div className="flex flex-col gap-2 rounded-lg border border-border/60 p-2.5">
@@ -101,7 +105,7 @@ function FactTile({ importId, factId, decision, onDecision }: FactTileProps) {
                   size="sm"
                   className="flex-1"
                   // Until the user picks, show what the server will do by default.
-                  variant={(decision ?? detail.default_action ?? 'accept') === action ? 'primary' : 'secondary'}
+                  variant={(decision ?? serverDefault) === action ? 'primary' : 'secondary'}
                   onPress={() => onDecision(factId, action)}
                 >
                   {action === 'accept' ? t('accept') : t('keep-local')}

@@ -3,7 +3,9 @@
 import AppButton from '@/components/app/AppButton'
 import AppError from '@/components/app/AppError'
 import AppTextarea from '@/components/app/AppTextarea'
-import { showSuccessToast } from '@/lib/ui'
+import { showFailToast, showSuccessToast } from '@/lib/ui'
+import { factContribution, sendToAuthor } from '@/modules/contributions/auto-send'
+import { previewFromEntries } from '@/modules/contributions/pending-contributions'
 import type { Deck } from '@/modules/decks/decks.schema'
 import { addFactAction } from '@/modules/facts/facts.action'
 import { Checkbox, Label } from '@heroui/react'
@@ -16,6 +18,7 @@ import { useState, useTransition } from 'react'
  */
 export default function DeckAddFact({ deck }: { deck: Deck }) {
   const t = useTranslations('add-fact')
+  const tSend = useTranslations('auto-send')
   const fields = deck.fields.length ? deck.fields : ['#1']
   const imported = !!deck.source_deck_id
   const [texts, setTexts] = useState<string[]>(() => fields.map(() => ''))
@@ -30,14 +33,24 @@ export default function DeckAddFact({ deck }: { deck: Deck }) {
     }
     setError(null)
     startTransition(async () => {
-      const res = await addFactAction(deck.id, texts.map((text) => ({ text })), verified && !imported)
+      const entries = texts.map((text) => ({ text: text.trim() }))
+      const res = await addFactAction(deck.id, entries, verified && !imported, imported)
       if (!res.success) {
         setError(String(res.error ?? '') || t('failed'))
         return
       }
       setTexts(fields.map(() => ''))
       setVerified(false)
-      showSuccessToast(t('success'))
+      const newFactIds = res.data?.newFactIds ?? []
+      if (!imported || newFactIds.length === 0) {
+        showSuccessToast(t('success'))
+        return
+      }
+      // A new fact on an imported deck goes to the author right away, as on mobile.
+      const preview = previewFromEntries(entries)
+      const { unsent } = await sendToAuthor(deck.id, newFactIds.map((id) => factContribution('fact_add', id, preview)))
+      if (unsent > 0) showFailToast(tSend('fact-added-unsent'))
+      else showSuccessToast(tSend('fact-added-sent'))
     })
   }
 
@@ -47,6 +60,7 @@ export default function DeckAddFact({ deck }: { deck: Deck }) {
         <AppTextarea
           key={i}
           label={field}
+          isDisabled={isPending}
           value={texts[i]}
           onChange={(value) => setTexts((prev) => prev.map((v, j) => (j === i ? value : v)))}
         />

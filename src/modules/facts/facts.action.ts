@@ -9,6 +9,7 @@ import {
   createFactsService,
   deleteFactService,
   deleteFactsService,
+  getFactIdsService,
   getFactService,
   updateFactService,
 } from '@/modules/facts/facts.service'
@@ -160,17 +161,31 @@ export async function updateFactEntriesAction(deckId: string, factId: string, en
   return { success: true }
 }
 
-/** 逐条添加一个词条（卡组菜单的“添加词条”，同移动端）；verified 记录作者已核验 */
-export async function addFactAction(deckId: string, entries: Entry[], verified: boolean): Promise<ActionState> {
+/**
+ * 逐条添加一个词条（卡组菜单的“添加词条”，同移动端）；verified 记录作者已核验。
+ * 导入卡组返回新词条的 ID，供浏览器立即作为贡献发送给作者。
+ */
+export async function addFactAction(
+  deckId: string,
+  entries: Entry[],
+  verified: boolean,
+  imported = false,
+): Promise<ActionState<{ newFactIds: string[] }>> {
   const result = createFactsSchema.safeParse({
     facts: [{ entries }],
     operation: 'append',
     verified: verified || undefined,
   })
   if (!result.success) return { success: false, error: z.prettifyError(result.error) }
+  const before = imported ? await getFactIdsService(deckId) : null
   const res = await createFactsService(deckId, result.data)
   if (!res.success) return { success: false, error: res.message }
   revalidatePath(`/decks/${deckId}/facts`)
   revalidatePath(`/decks/${deckId}`)
-  return { success: true }
+  if (!before?.success) return { success: true, data: { newFactIds: [] } }
+  // The add response has no ids, so the new fact is the one that was not there before (as on mobile).
+  const after = await getFactIdsService(deckId)
+  const known = new Set(before.data.fact_ids)
+  const newFactIds = after.success ? after.data.fact_ids.filter((id) => !known.has(id)) : []
+  return { success: true, data: { newFactIds } }
 }

@@ -1,4 +1,5 @@
 import type { PendingDeckContribution, SentDeckContribution } from '@/modules/contributions/contributions.schema'
+import type { Entry } from '@/modules/facts/facts.schema'
 
 /** Imported decks keep unsent and sent contributions in this browser, like the mobile app does per device. */
 export const pendingStorageKey = (deckId: string) => `retentio_pending_contribs_v2:${deckId}`
@@ -17,13 +18,16 @@ export function isPendingContribution(value: unknown): value is PendingDeckContr
   if (value.id === 'deck_tags' && value.kind === 'deck_tags') {
     return isStringArray(value.addTags) && isStringArray(value.removeTags)
   }
+  if ((value.kind === 'fact_edit' || value.kind === 'fact_add') && typeof value.factId === 'string') {
+    return value.id === `${value.kind}:${value.factId}`
+  }
   return value.id === 'field_rename' && value.kind === 'field_rename' && isStringArray(value.proposedFields)
 }
 
 export function isSentContribution(value: unknown): value is SentDeckContribution {
   return isRecord(value)
     && typeof value.id === 'string'
-    && (value.kind === 'deck_tags' || value.kind === 'field_rename')
+    && typeof value.kind === 'string' && ['deck_tags', 'field_rename', 'fact_edit', 'fact_add'].includes(value.kind)
     && typeof value.preview === 'string'
     && typeof value.contributionId === 'string'
     && typeof value.sentAt === 'string'
@@ -40,4 +44,10 @@ export function readContributions<T>(key: string, guard: (value: unknown) => val
 
 export function writeContributions(key: string, value: PendingDeckContribution[] | SentDeckContribution[]) {
   localStorage.setItem(key, JSON.stringify(value))
+}
+
+/** Short preview of a fact for the outbox, from its entry texts. */
+export function previewFromEntries(entries: Entry[]) {
+  const text = entries.map((e) => e.text?.trim()).filter(Boolean).join(' · ')
+  return text.length > 80 ? `${text.slice(0, 79)}…` : text
 }

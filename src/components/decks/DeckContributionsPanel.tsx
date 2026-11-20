@@ -9,6 +9,7 @@ import AppButton from '@/components/app/AppButton'
 import AppInput from '@/components/app/AppInput'
 import { showFailToast, showSuccessToast } from '@/lib/ui'
 import { EMAIL_NOT_VERIFIED_CODE } from '@/modules/auth/auth.schema'
+import { sendToAuthor } from '@/modules/contributions/auto-send'
 import { submitDeckContributionsBatchAction } from '@/modules/contributions/contributions.action'
 import type { PendingDeckContribution, SentDeckContribution } from '@/modules/contributions/contributions.schema'
 import type { Deck } from '@/modules/decks/decks.schema'
@@ -259,6 +260,7 @@ export function ContributionFormModal({ deck, kind, existing, onClose, onSave }:
 export default function DeckContributionsPanel({ deck }: DeckContributionsPanelProps) {
   const t = useTranslations('contributions')
   const tAuth = useTranslations('auth')
+  const tSend = useTranslations('auto-send')
   const pendingKey = pendingStorageKey(deck.id)
   const sentKey = sentStorageKey(deck.id)
   const [selectedTab, setSelectedTab] = useState('pending')
@@ -277,11 +279,16 @@ export default function DeckContributionsPanel({ deck }: DeckContributionsPanelP
   }, [pendingKey, sentKey])
 
   const saveContribution = (contribution: PendingDeckContribution) => {
-    const next = [...pendingContributions.filter((item) => item.id !== contribution.id), contribution]
-    setPendingContributions(next)
-    writeContributions(pendingKey, next)
     setForm(null)
-    setSelectedTab('pending')
+    startTransition(async () => {
+      // Sent to the author right away, as on mobile; it stays pending only if sending fails.
+      const { unsent } = await sendToAuthor(deck.id, [contribution])
+      setPendingContributions(readContributions(pendingKey, isPendingContribution))
+      setSentContributions(readContributions(sentKey, isSentContribution))
+      setSelectedTab(unsent > 0 ? 'pending' : 'sent')
+      if (unsent > 0) showFailToast(tSend('unsent'))
+      else showSuccessToast(tSend('sent'))
+    })
   }
 
   const submitSelected = () => {

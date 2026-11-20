@@ -86,16 +86,21 @@ export async function submitDeckContributionsBatchService(
     const result: SubmitDeckContributionsBatchResult = { submitted: [], failed: [] }
 
     for (const contribution of contributions) {
+      const note = message ? { message } : undefined
       const response = contribution.kind === 'deck_tags'
         ? await submitDeckTagContributionService(importDeckId, {
           add_tags: contribution.addTags,
           remove_tags: contribution.removeTags,
-          ...(message ? { message } : {}),
+          ...note,
         })
-        : await submitFieldRenameContributionService(importDeckId, {
-          proposed_fields: contribution.proposedFields,
-          ...(message ? { message } : {}),
-        })
+        : contribution.kind === 'field_rename'
+          ? await submitFieldRenameContributionService(importDeckId, {
+            proposed_fields: contribution.proposedFields,
+            ...note,
+          })
+          : contribution.kind === 'fact_edit'
+            ? await submitFactEditContributionService(importDeckId, contribution.factId, note)
+            : await submitFactAddContributionService(importDeckId, contribution.factId, note)
 
       if (response.success) {
         result.submitted.push({

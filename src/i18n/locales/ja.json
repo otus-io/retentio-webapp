@@ -347,6 +347,8 @@
     "sent-empty": "送信済みの提案はありません",
     "field_rename": "フィールド名",
     "deck_tags": "デッキタグ",
+    "fact_edit": "項目編集",
+    "fact_add": "新規項目",
     "submit-selected": "送信（{count}）",
     "batch-submit-success": "{count} 件の提案を送信しました",
     "batch-submit-failed": "{count} 件の送信に失敗し、保留中に残しました",
@@ -629,5 +631,11 @@
     "failed": "項目を追加できませんでした",
     "needs-content": "各フィールドにテキストが必要です。",
     "mark-verified": "この項目を確認しました（確認済みにする）"
+  },
+  "auto-send": {
+    "sent": "作成者に送りました",
+    "unsent": "保存しましたが、作成者に送れませんでした。未送信の貢献から再送できます。",
+    "fact-added-sent": "項目を追加し、作成者に送りました",
+    "fact-added-unsent": "項目を追加しましたが、作成者に送れませんでした。未送信の貢献から再送できます。"
   }
 }

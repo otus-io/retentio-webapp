@@ -1,4 +1,4 @@
-import { act, fireEvent, render, screen, waitFor } from '@testing-library/react'
+import { act, fireEvent, render, screen } from '@testing-library/react'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 const actions = vi.hoisted(() => ({
@@ -68,31 +68,31 @@ describe('DeckContributionsInbox', () => {
     expect(screen.getByText('types.template_add')).toBeTruthy()
   })
 
-  it('accepts, dismisses and resolves a contribution, then reloads', async () => {
-    actions.getOpenContributionsAction.mockResolvedValue(page([edit]))
+  it('accepts, dismisses and resolves contributions, removing each in place', async () => {
+    const second = { ...edit, id: 'c8' }
+    const third = { ...edit, id: 'c9' }
+    actions.getOpenContributionsAction.mockResolvedValue(page([edit, second, third]))
     actions.acceptContributionAction.mockResolvedValue({ success: true })
     actions.updateContributionStatusAction.mockResolvedValue({ success: true })
     render(<DeckContributionsInbox sourceDeckId="s1" />)
-    await screen.findByText('types.fact_edit')
+    await screen.findAllByText('types.fact_edit')
 
-    let reload!: (v: unknown) => void
-    actions.getOpenContributionsAction.mockReturnValueOnce(new Promise((r) => { reload = r }))
-    await act(async () => fireEvent.click(screen.getByText('accept')))
+    await act(async () => fireEvent.click(screen.getAllByText('accept')[0]))
     expect(actions.acceptContributionAction)
       .toHaveBeenCalledWith({ sourceDeckId: 's1', contributionId: 'c1' }, null, expect.any(FormData))
-    // The handled card leaves the list at once, before the reload finishes.
-    expect(screen.queryByText('types.fact_edit')).toBeNull()
-    await act(async () => reload(page([edit])))
+    // The handled card leaves the list in place, without reloading (which would drop loaded pages).
+    expect(screen.getAllByText('types.fact_edit')).toHaveLength(2)
     expect(toast.showSuccessToast).toHaveBeenLastCalledWith('accepted')
 
-    await act(async () => fireEvent.click(screen.getByText('dismiss')))
+    await act(async () => fireEvent.click(screen.getAllByText('dismiss')[0]))
     expect(actions.updateContributionStatusAction).toHaveBeenLastCalledWith(
-      { sourceDeckId: 's1', contributionId: 'c1', data: { status: 'dismissed' } }, null, expect.any(FormData),
+      { sourceDeckId: 's1', contributionId: 'c8', data: { status: 'dismissed' } }, null, expect.any(FormData),
     )
     await act(async () => fireEvent.click(screen.getByText('resolve')))
     expect(actions.updateContributionStatusAction.mock.lastCall?.[0].data).toEqual({ status: 'resolved' })
     expect(toast.showSuccessToast).toHaveBeenLastCalledWith('updated')
-    await waitFor(() => expect(actions.getOpenContributionsAction).toHaveBeenCalledTimes(4))
+    expect(screen.getByText('empty')).toBeTruthy()
+    expect(actions.getOpenContributionsAction).toHaveBeenCalledTimes(1)
   })
 
   it('reports failed actions, with a fallback message', async () => {

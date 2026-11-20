@@ -3,10 +3,16 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 const addFactAction = vi.hoisted(() => vi.fn())
 const toast = vi.hoisted(() => vi.fn())
+const failToast = vi.hoisted(() => vi.fn())
+const sendToAuthor = vi.hoisted(() => vi.fn())
 
 vi.mock('@heroui/react', async () => (await import('../../helpers/heroui')).herouiMock())
 vi.mock('next-intl', () => ({ useTranslations: () => (key: string) => key }))
-vi.mock('@/lib/ui', () => ({ showSuccessToast: toast }))
+vi.mock('@/lib/ui', () => ({ showSuccessToast: toast, showFailToast: failToast }))
+vi.mock('@/modules/contributions/auto-send', async (importOriginal) => ({
+  ...(await importOriginal<object>()),
+  sendToAuthor,
+}))
 vi.mock('@/modules/facts/facts.action', () => ({ addFactAction }))
 vi.mock('@/components/app/AppButton', async () => ({ default: (await import('../../helpers/heroui')).AppButtonMock }))
 vi.mock('@/components/app/AppTextarea', () => ({
@@ -33,11 +39,11 @@ describe('DeckAddFact', () => {
   it('saves a fact with the sign-off and clears the form for the next one', async () => {
     addFactAction.mockResolvedValue({ success: true })
     render(<DeckAddFact deck={deck()} />)
-    type('Word', 'hola')
+    type('Word', ' hola ')
     type('Meaning', 'hello')
     fireEvent.click(screen.getByText('mark-verified').closest('label')!.querySelector('input')!)
     await act(async () => fireEvent.click(screen.getByText('submit')))
-    expect(addFactAction).toHaveBeenCalledWith('d1', [{ text: 'hola' }, { text: 'hello' }], true)
+    expect(addFactAction).toHaveBeenCalledWith('d1', [{ text: 'hola' }, { text: 'hello' }], true, false)
     expect(toast).toHaveBeenCalledWith('success')
     expect((screen.getByLabelText('Word') as HTMLTextAreaElement).value).toBe('')
     expect((screen.getByText('mark-verified').closest('label')!.querySelector('input') as HTMLInputElement).checked)
@@ -66,12 +72,29 @@ describe('DeckAddFact', () => {
     expect((screen.getByLabelText('Word') as HTMLTextAreaElement).value).toBe('a')
   })
 
-  it('has no sign-off on imported decks and a single box for decks without fields', async () => {
-    addFactAction.mockResolvedValue({ success: true })
+  it('sends a new fact on an imported deck to the author, and says when it could not', async () => {
+    addFactAction.mockResolvedValue({ success: true, data: { newFactIds: ['f9'] } })
+    sendToAuthor.mockResolvedValueOnce({ sent: 1, unsent: 0 }).mockResolvedValueOnce({ sent: 0, unsent: 1 })
     render(<DeckAddFact deck={deck({ fields: [], source_deck_id: 'src' })} />)
     expect(screen.queryByText('mark-verified')).toBeNull()
     type('#1', 'solo')
     await act(async () => fireEvent.click(screen.getByText('submit')))
-    expect(addFactAction).toHaveBeenCalledWith('d1', [{ text: 'solo' }], false)
+    expect(addFactAction).toHaveBeenCalledWith('d1', [{ text: 'solo' }], false, true)
+    expect(sendToAuthor)
+      .toHaveBeenCalledWith('d1', [expect.objectContaining({ id: 'fact_add:f9', kind: 'fact_add', preview: 'solo' })])
+    expect(toast).toHaveBeenLastCalledWith('fact-added-sent')
+
+    type('#1', 'again')
+    await act(async () => fireEvent.click(screen.getByText('submit')))
+    expect(failToast).toHaveBeenLastCalledWith('fact-added-unsent')
+  })
+
+  it('just confirms the add when an imported deck reports no new fact id', async () => {
+    addFactAction.mockResolvedValue({ success: true, data: { newFactIds: [] } })
+    render(<DeckAddFact deck={deck({ fields: [], source_deck_id: 'src' })} />)
+    type('#1', 'solo')
+    await act(async () => fireEvent.click(screen.getByText('submit')))
+    expect(sendToAuthor).not.toHaveBeenCalled()
+    expect(toast).toHaveBeenLastCalledWith('success')
   })
 })

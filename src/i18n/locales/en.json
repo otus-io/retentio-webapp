@@ -353,6 +353,8 @@
     "sent-empty": "No sent suggestions",
     "field_rename": "Field rename",
     "deck_tags": "Deck tags",
+    "fact_edit": "Fact edit",
+    "fact_add": "New fact",
     "submit-selected": "Submit ({count})",
     "batch-submit-success": "Sent {count} suggestion(s)",
     "batch-submit-failed": "{count} suggestion(s) failed and remain pending",
@@ -635,5 +637,11 @@
     "failed": "Could not add fact",
     "needs-content": "Each field needs text.",
     "mark-verified": "I've checked this fact (mark as verified)"
+  },
+  "auto-send": {
+    "sent": "Sent to the author",
+    "unsent": "Saved. Couldn't send it to the author yet; retry from Unsent contributions.",
+    "fact-added-sent": "Fact added and sent to the author",
+    "fact-added-unsent": "Fact added. Couldn't send it to the author yet; retry from Unsent contributions."
   }
 }

@@ -5,6 +5,7 @@ const services = vi.hoisted(() => ({
   deleteFactService: vi.fn(),
   deleteFactsService: vi.fn(),
   getFactService: vi.fn(),
+  getFactIdsService: vi.fn(),
   updateFactService: vi.fn(),
 }))
 const revalidatePath = vi.hoisted(() => vi.fn())
@@ -69,7 +70,9 @@ describe('addFactAction', () => {
 
   it('appends one fact, with the sign-off only when checked', async () => {
     services.createFactsService.mockResolvedValue({ success: true, data: { fact_length: 1 } })
-    expect(await addFactAction('d1', [{ text: 'hola' }, { text: 'hello' }], true)).toEqual({ success: true })
+    expect(await addFactAction('d1', [{ text: 'hola' }, { text: 'hello' }], true))
+      .toEqual({ success: true, data: { newFactIds: [] } })
+    expect(services.getFactIdsService).not.toHaveBeenCalled()
     expect(services.createFactsService).toHaveBeenLastCalledWith('d1', {
       facts: [{ entries: [{ text: 'hola' }, { text: 'hello' }] }],
       operation: 'append',
@@ -78,6 +81,25 @@ describe('addFactAction', () => {
     expect(revalidatePath).toHaveBeenCalledWith('/decks/d1/facts')
     await addFactAction('d1', [{ text: 'hola' }], false)
     expect(services.createFactsService.mock.lastCall?.[1]).not.toHaveProperty('verified', false)
+  })
+
+  it('finds the new fact on an imported deck by comparing ids', async () => {
+    services.createFactsService.mockResolvedValue({ success: true, data: { fact_length: 3 } })
+    services.getFactIdsService
+      .mockResolvedValueOnce({ success: true, data: { fact_ids: ['a', 'b'] } })
+      .mockResolvedValueOnce({ success: true, data: { fact_ids: ['a', 'b', 'c'] } })
+    expect(await addFactAction('i1', [{ text: 'hola' }], false, true))
+      .toEqual({ success: true, data: { newFactIds: ['c'] } })
+
+    services.getFactIdsService
+      .mockResolvedValueOnce({ success: true, data: { fact_ids: ['a'] } })
+      .mockResolvedValueOnce({ success: false, message: 'x' })
+    expect(await addFactAction('i1', [{ text: 'hola' }], false, true))
+      .toEqual({ success: true, data: { newFactIds: [] } })
+
+    services.getFactIdsService.mockResolvedValueOnce({ success: false, message: 'x' })
+    expect(await addFactAction('i1', [{ text: 'hola' }], false, true))
+      .toEqual({ success: true, data: { newFactIds: [] } })
   })
 
   it('returns validation and backend errors', async () => {

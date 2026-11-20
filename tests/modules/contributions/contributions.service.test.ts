@@ -7,6 +7,8 @@ import { RequestError } from '@/utils/request'
 vi.mock('@/api/contributions', () => ({
   submitDeckTagContribution: vi.fn(),
   submitFieldRenameContribution: vi.fn(),
+  submitFactEditContribution: vi.fn(),
+  submitFactAddContribution: vi.fn(),
 }))
 
 describe('submitDeckContributionsBatchService', () => {
@@ -52,5 +54,17 @@ describe('submitDeckContributionsBatchService', () => {
     await submitDeckContributionsBatchService('import-1', [rename])
     expect(vi.mocked(contributionsApi.submitFieldRenameContribution).mock.lastCall?.[1])
       .toEqual({ proposed_fields: ['Word'] })
+  })
+
+  it('sends queued fact edits and new facts to their endpoints', async () => {
+    const made = (id: string) => ({ data: { contribution_id: id } }) as never
+    vi.mocked(contributionsApi.submitFactEditContribution).mockResolvedValue(made('e1'))
+    vi.mocked(contributionsApi.submitFactAddContribution).mockResolvedValue(made('a1'))
+    const edit = { id: 'fact_edit:f1', kind: 'fact_edit', factId: 'f1' } as unknown as PendingDeckContribution
+    const add = { id: 'fact_add:f2', kind: 'fact_add', factId: 'f2' } as unknown as PendingDeckContribution
+    const res = await submitDeckContributionsBatchService('import-1', [edit, add], 'note')
+    expect(res.success && res.data.submitted.map((s) => s.contributionId)).toEqual(['e1', 'a1'])
+    expect(contributionsApi.submitFactEditContribution).toHaveBeenCalledWith('import-1', 'f1', { message: 'note' })
+    expect(contributionsApi.submitFactAddContribution).toHaveBeenCalledWith('import-1', 'f2', { message: 'note' })
   })
 })

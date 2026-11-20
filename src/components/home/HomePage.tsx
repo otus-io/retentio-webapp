@@ -215,10 +215,10 @@ export default function HomePage({ children }:{ children?: ReactNode }) {
           <h2 className="text-3xl md:text-4xl font-bold mb-4">{t('home.collaborate.sectionTitle')}</h2>
           <p className="text-gray-600 dark:text-gray-400 leading-relaxed text-lg">{t('home.collaborate.subtitle')}</p>
         </AnimatedSection>
-        <ol className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
           {flow.map((item, i) => (
             <AnimatedSection key={item.key} delay={i * 120}>
-              <li className="h-full flex flex-col gap-3 p-5 rounded-2xl border border-gray-200 dark:border-gray-700">
+              <div className="h-full flex flex-col gap-3 p-5 rounded-2xl border border-gray-200 dark:border-gray-700">
                 <div className="flex items-center justify-between">
                   <div className="w-11 h-11 rounded-xl bg-accent/10 text-accent flex items-center justify-center">
                     <item.icon className="size-5" />
@@ -233,10 +233,10 @@ export default function HomePage({ children }:{ children?: ReactNode }) {
                 <p className="text-sm text-gray-600 dark:text-gray-400 leading-relaxed">
                   {t(`home.collaborate.${item.key}.description` as 'home.collaborate.import.description')}
                 </p>
-              </li>
+              </div>
             </AnimatedSection>
           ))}
-        </ol>
+        </div>
       </section>
 
       {/* How It Works Section */}

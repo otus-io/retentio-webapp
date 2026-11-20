@@ -3,6 +3,8 @@
 import AppButton from '@/components/app/AppButton'
 import AppError from '@/components/app/AppError'
 import AppTextarea from '@/components/app/AppTextarea'
+import { showFailToast, showSuccessToast } from '@/lib/ui'
+import { sendFactEdits } from '@/modules/contributions/auto-send'
 import { getFactAction, updateFactEntriesAction } from '@/modules/facts/facts.action'
 import type { Entry } from '@/modules/facts/facts.schema'
 import { Modal, Spinner } from '@heroui/react'
@@ -16,14 +18,17 @@ interface StudyEditFactModalProps {
   isOpen: boolean
   setIsOpen: (open: boolean) => void
   onSaved: () => void
+  /** Imported deck: the edit is also sent to the author */
+  imported?: boolean
 }
 
 /** Edits the text of the studied card's fact; media in each entry is kept as is. */
 export default function StudyEditFactModal(
-  { deckId, fields, factId, isOpen, setIsOpen, onSaved }: StudyEditFactModalProps,
+  { deckId, fields, factId, isOpen, setIsOpen, onSaved, imported = false }: StudyEditFactModalProps,
 ) {
   const t = useTranslations('study')
   const tCommon = useTranslations('common')
+  const tSend = useTranslations('auto-send')
   const [entries, setEntries] = useState<Entry[] | null>(null)
   const [texts, setTexts] = useState<string[]>([])
   /** Entries the fact had when loaded; fields past it are only added when filled in. */
@@ -65,6 +70,11 @@ export default function StudyEditFactModal(
       }
       setIsOpen(false)
       onSaved()
+      if (!imported) return
+      // An edit on an imported deck goes to the author right away, as on mobile.
+      const { unsent } = await sendFactEdits(deckId, [{ factId, entries: next }])
+      if (unsent > 0) showFailToast(tSend('unsent'))
+      else showSuccessToast(tSend('sent'))
     })
   }
 

@@ -191,4 +191,27 @@ describe('DeckImportUpdatesSheet', () => {
     await act(async () => resolve(ok(summary)))
     expect(screen.queryByText('sync-now')).toBeNull()
   })
+
+  it('shows Reject as the default for an edited fact the learner changed, as the server will keep it', async () => {
+    actions.getDeckUpdatesSummaryAction.mockResolvedValue(ok(summary))
+    actions.getDeckUpdateFactAction.mockResolvedValue(ok({
+      fact_id: 'e1', kind: 'edited', has_local_overlay: true, aligned: false, before: null, after: null,
+    }))
+    await openReview()
+    await act(async () => fireEvent.click(screen.getByText('e1')))
+    expect(screen.getByText('keep-local').getAttribute('data-variant')).toBe('primary')
+  })
+
+  it('lets the learner take the author\'s version of an added fact they already have', async () => {
+    actions.getDeckUpdatesSummaryAction.mockResolvedValue(ok(summary))
+    actions.getDeckUpdateFactAction.mockResolvedValue(ok({
+      fact_id: 'a1', kind: 'added', has_local_overlay: true, aligned: false, fact: { entries: [{ text: 'x' }] },
+    }))
+    actions.syncDeckWithDecisionsAction.mockResolvedValue({ success: true })
+    await openReview()
+    await act(async () => fireEvent.click(screen.getByText('a1')))
+    fireEvent.click(screen.getByText('accept'))
+    await act(async () => fireEvent.click(screen.getByText('sync-now')))
+    expect(actions.syncDeckWithDecisionsAction.mock.calls[0][2]).toEqual([{ fact_id: 'a1', action: 'accept' }])
+  })
 })

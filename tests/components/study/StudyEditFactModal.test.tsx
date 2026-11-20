@@ -2,10 +2,14 @@ import { act, fireEvent, render, screen } from '@testing-library/react'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 const actions = vi.hoisted(() => ({ getFactAction: vi.fn(), updateFactEntriesAction: vi.fn() }))
+const sendFactEdits = vi.hoisted(() => vi.fn())
+const toast = vi.hoisted(() => ({ showSuccessToast: vi.fn(), showFailToast: vi.fn() }))
 
 vi.mock('@heroui/react', async () => (await import('../../helpers/heroui')).herouiMock())
 vi.mock('next-intl', () => ({ useTranslations: () => (key: string) => key }))
 vi.mock('@/modules/facts/facts.action', () => actions)
+vi.mock('@/modules/contributions/auto-send', () => ({ sendFactEdits }))
+vi.mock('@/lib/ui', () => toast)
 vi.mock('@/components/app/AppButton', async () => ({ default: (await import('../../helpers/heroui')).AppButtonMock }))
 vi.mock('@/components/app/AppTextarea', () => ({
   default: ({ label, value, onChange }: { label: string, value: string, onChange: (v: string) => void }) => (
@@ -18,11 +22,19 @@ vi.mock('@/components/app/AppError', () => ({
 
 import StudyEditFactModal from '@/components/study/StudyEditFactModal'
 
-function setup(fields = ['Word', 'Meaning', 'Note']) {
+function setup(fields = ['Word', 'Meaning', 'Note'], imported = false) {
   const setIsOpen = vi.fn()
   const onSaved = vi.fn()
   const view = render(
-    <StudyEditFactModal deckId="d1" fields={fields} factId="f1" isOpen setIsOpen={setIsOpen} onSaved={onSaved} />,
+    <StudyEditFactModal
+      deckId="d1"
+      fields={fields}
+      factId="f1"
+      isOpen
+      setIsOpen={setIsOpen}
+      onSaved={onSaved}
+      imported={imported}
+    />,
   )
   return { setIsOpen, onSaved, ...view }
 }
@@ -104,5 +116,31 @@ describe('StudyEditFactModal', () => {
     unmount()
     await act(async () => resolve({ success: true, data: { id: 'f1', entries: [] } }))
     expect(screen.queryByLabelText('Word')).toBeNull()
+  })
+
+  it('sends an edit on an imported deck to the author, and says when it could not', async () => {
+    actions.getFactAction.mockResolvedValue({ success: true, data: { id: 'f1', entries: [{ text: 'hola' }] } })
+    actions.updateFactEntriesAction.mockResolvedValue({ success: true })
+    sendFactEdits.mockResolvedValueOnce({ sent: 1, unsent: 0 }).mockResolvedValueOnce({ sent: 0, unsent: 1 })
+    const { unmount } = setup(['Word'], true)
+    fireEvent.change(await screen.findByLabelText('Word'), { target: { value: 'hola!' } })
+    await act(async () => fireEvent.click(screen.getByText('save')))
+    expect(sendFactEdits).toHaveBeenCalledWith('d1', [{ factId: 'f1', entries: [{ text: 'hola!' }] }])
+    expect(toast.showSuccessToast).toHaveBeenCalledWith('sent')
+    unmount()
+
+    setup(['Word'], true)
+    const save = await screen.findByText('save')
+    await act(async () => fireEvent.click(save))
+    expect(toast.showFailToast).toHaveBeenCalledWith('unsent')
+  })
+
+  it('does not send edits on your own deck', async () => {
+    actions.getFactAction.mockResolvedValue({ success: true, data: { id: 'f1', entries: [{ text: 'hola' }] } })
+    actions.updateFactEntriesAction.mockResolvedValue({ success: true })
+    setup(['Word'])
+    const save = await screen.findByText('save')
+    await act(async () => fireEvent.click(save))
+    expect(sendFactEdits).not.toHaveBeenCalled()
   })
 })

@@ -232,6 +232,7 @@ export default function StudySession({ deck, tags }: StudySessionProps) {
           isOpen={isEditOpen}
           setIsOpen={setIsEditOpen}
           onSaved={() => load(tagId)}
+          imported={imported}
         />
       )}
 

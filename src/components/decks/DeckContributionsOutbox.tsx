@@ -5,6 +5,7 @@ import AppInput from '@/components/app/AppInput'
 import { type ContributionForm, ContributionFormModal } from '@/components/decks/DeckContributionsPanel'
 import { showFailToast, showSuccessToast } from '@/lib/ui'
 import { EMAIL_NOT_VERIFIED_CODE } from '@/modules/auth/auth.schema'
+import { sendToAuthor } from '@/modules/contributions/auto-send'
 import { submitDeckContributionsBatchAction } from '@/modules/contributions/contributions.action'
 import type { PendingDeckContribution, SentDeckContribution } from '@/modules/contributions/contributions.schema'
 import {
@@ -38,6 +39,7 @@ export default function DeckContributionsOutbox({ deck }: { deck: Deck }) {
   const t = useTranslations('outbox')
   const tKinds = useTranslations('contributions')
   const tAuth = useTranslations('auth')
+  const tSend = useTranslations('auto-send')
   const pendingKey = pendingStorageKey(deck.id)
   const sentKey = sentStorageKey(deck.id)
   const [tab, setTab] = useState<'pending' | 'sent'>('pending')
@@ -117,9 +119,16 @@ export default function DeckContributionsOutbox({ deck }: { deck: Deck }) {
   }
 
   const saveForm = (contribution: PendingDeckContribution) => {
-    savePending([...pending.filter((item) => item.id !== contribution.id), contribution])
     setForm(null)
-    setTab('pending')
+    startTransition(async () => {
+      // Sent to the author right away, as on mobile; it stays pending only if sending fails.
+      const { unsent } = await sendToAuthor(deck.id, [contribution])
+      setPending(readContributions(pendingKey, isPendingContribution))
+      setSent(readContributions(sentKey, isSentContribution))
+      setTab(unsent > 0 ? 'pending' : 'sent')
+      if (unsent > 0) showFailToast(tSend('unsent'))
+      else showSuccessToast(tSend('sent'))
+    })
   }
 
   const allSelected = pending.length > 0 && pending.every((item) => selected.has(item.id))

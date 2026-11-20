@@ -353,6 +353,8 @@
     "sent-empty": "暂无已发送建议",
     "field_rename": "字段重命名",
     "deck_tags": "卡组标签",
+    "fact_edit": "词条修改",
+    "fact_add": "新增词条",
     "submit-selected": "提交（{count}）",
     "batch-submit-success": "已发送 {count} 条建议",
     "batch-submit-failed": "{count} 条建议发送失败，已保留在待发送列表",
@@ -635,5 +637,11 @@
     "failed": "无法添加词条",
     "needs-content": "每个字段都需要填写文本。",
     "mark-verified": "我已检查此词条（标记为已核验）"
+  },
+  "auto-send": {
+    "sent": "已发送给作者",
+    "unsent": "已保存，但暂未发送给作者，可在未发送贡献中重试。",
+    "fact-added-sent": "词条已添加并发送给作者",
+    "fact-added-unsent": "词条已添加，但暂未发送给作者，可在未发送贡献中重试。"
   }
 }
