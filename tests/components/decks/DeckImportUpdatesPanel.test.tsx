@@ -29,14 +29,17 @@ describe('DeckImportUpdatesPanel', () => {
     vi.clearAllMocks()
   })
 
-  it('reports a finished sync to the modal', async () => {
-    syncImportedDeckAction.mockResolvedValue({ success: true, data: { sourceVersion: 2 } })
+  it('reports each finished sync to the modal once', async () => {
+    // A server action returns a fresh result object on every call.
+    syncImportedDeckAction.mockImplementation(async () => ({ success: true, data: { sourceVersion: 2 } }))
     const onSynced = vi.fn()
     render(<DeckImportUpdatesPanel deckId="i1" updates={updates} onSynced={onSynced} />)
     await act(async () => fireEvent.submit(document.querySelector('form')!))
     expect(syncImportedDeckAction).toHaveBeenCalled()
     expect(toast).toHaveBeenCalledWith('sync-success')
-    expect(onSynced).toHaveBeenCalled()
+    expect(onSynced).toHaveBeenCalledTimes(1)
+    await act(async () => fireEvent.submit(document.querySelector('form')!))
+    expect(onSynced).toHaveBeenCalledTimes(2)
   })
 
   it('syncs on the deck page without a callback', async () => {

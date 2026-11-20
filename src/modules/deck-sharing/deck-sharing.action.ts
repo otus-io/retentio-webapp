@@ -5,8 +5,10 @@ import { getTranslations } from 'next-intl/server'
 import { redirect } from 'next/navigation'
 import z from 'zod'
 import { EMAIL_NOT_VERIFIED_CODE } from '@/modules/auth/auth.schema'
+import type { Deck } from '@/modules/decks/decks.schema'
 import type {
   DeckImportUpdatesResponseDTO,
+  DeckSharingStatus,
   PublishDeckDTO,
   PublishPreview,
 } from '@/modules/deck-sharing/deck-sharing.schema'
@@ -17,6 +19,7 @@ import {
 } from '@/modules/deck-sharing/deck-sharing.schema'
 import {
   getDeckImportUpdatesService,
+  getDeckSharingStatusesService,
   getPublishPreviewService,
   importDeckService,
   publishDeckService,
@@ -128,4 +131,9 @@ export async function getDeckImportUpdatesAction(
 ): Promise<ActionState<DeckImportUpdatesResponseDTO['data']>> {
   const res = await getDeckImportUpdatesService(importId)
   return res.success ? { success: true, data: res.data } : { success: false, error: res.message }
+}
+
+/** My Decks 卡片提醒（页面渲染后在浏览器里加载，并定时刷新） */
+export async function getDeckSharingStatusesAction(decks: Deck[]): Promise<Record<string, DeckSharingStatus>> {
+  return getDeckSharingStatusesService(decks)
 }

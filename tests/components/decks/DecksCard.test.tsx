@@ -72,7 +72,7 @@ describe('DecksCard', () => {
 
   it('gives each kind of deck the mobile app menu', () => {
     const { unmount } = render(<DecksCard deck={makeDeck({ source_deck_id: 'src' })} />)
-    expect(screen.getByText('details,facts,outbox,updates,qa,delete')).toBeTruthy()
+    expect(screen.getByText('details,facts,edit,outbox,updates,qa,delete')).toBeTruthy()
     unmount()
     render(<DecksCard deck={makeDeck({ published_version: 2 })} />)
     expect(screen.getByText('details,facts,edit,publish,inbox,qa,delete')).toBeTruthy()

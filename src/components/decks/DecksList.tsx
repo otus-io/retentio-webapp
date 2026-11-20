@@ -2,29 +2,48 @@
 
 import type { DeckSharingStatus } from '@/modules/deck-sharing/deck-sharing.schema'
 import type { Deck } from '@/modules/decks/decks.schema'
-import useAutoRefresh from '@/hooks/useAutoRefresh'
+import { getDeckSharingStatusesAction } from '@/modules/deck-sharing/deck-sharing.action'
 import { useTranslations } from 'next-intl'
 import { FolderOpen, CircleQuestionMark } from 'lucide-react'
 import DecksCard from '@/components/decks/DecksCard'
 import AppLink from '@/components/app/AppLink'
 import { DecksSearch } from '@/components/decks/DecksSearch'
-import { useDeferredValue, useMemo, useState } from 'react'
+import { useDeferredValue, useEffect, useMemo, useState } from 'react'
 import Fuse from 'fuse.js'
 import DeckCreateButton from '@/components/decks/DeckCreateButton'
 import DeckImportButton from '@/components/decks/DeckImportButton'
 import LayoutPage from '@/components/layout/LayoutPage'
 import AppTooltip from '@/components/app/AppTooltip'
 
+/** How often the sharing badges are re-checked, as in the mobile app */
+const SHARING_POLL_MS = 60_000
+
 export default function DecksList({
   data,
-  sharing = {},
 }: {
   data: Deck[]
-  sharing?: Record<string, DeckSharingStatus>
 }) {
   const t = useTranslations()
-  // Re-check sharing badges every 60s, like the mobile app.
-  useAutoRefresh({ interval: 60_000 })
+  const [sharing, setSharing] = useState<Record<string, DeckSharingStatus>>({})
+
+  // Badges load after the list renders and re-check every minute while the tab is visible.
+  useEffect(() => {
+    let cancelled = false
+    const check = () => {
+      if (document.visibilityState === 'hidden') return
+      void getDeckSharingStatusesAction(data).then((next) => {
+        if (!cancelled) setSharing(next)
+      })
+    }
+    check()
+    const timer = window.setInterval(check, SHARING_POLL_MS)
+    document.addEventListener('visibilitychange', check)
+    return () => {
+      cancelled = true
+      window.clearInterval(timer)
+      document.removeEventListener('visibilitychange', check)
+    }
+  }, [data])
   const [keywords, setKeywords] = useState('')
   const deferredQuery = useDeferredValue(keywords)
 

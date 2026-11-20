@@ -3,6 +3,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 const publishDeckServiceMock = vi.fn()
 const getPublishPreviewServiceMock = vi.fn()
 const getDeckImportUpdatesServiceMock = vi.fn()
+const getDeckSharingStatusesServiceMock = vi.fn()
 
 vi.mock('next/cache', () => ({ revalidatePath: vi.fn() }))
 vi.mock('next/navigation', () => ({ redirect: vi.fn() }))
@@ -15,10 +16,12 @@ vi.mock('@/modules/deck-sharing/deck-sharing.service', () => ({
   syncImportedDeckService: vi.fn(),
   getPublishPreviewService: (...args: unknown[]) => getPublishPreviewServiceMock(...args),
   getDeckImportUpdatesService: (...args: unknown[]) => getDeckImportUpdatesServiceMock(...args),
+  getDeckSharingStatusesService: (...args: unknown[]) => getDeckSharingStatusesServiceMock(...args),
 }))
 
 import {
   getDeckImportUpdatesAction,
+  getDeckSharingStatusesAction,
   getPublishPreviewAction,
   publishDeckAction,
 } from '@/modules/deck-sharing/deck-sharing.action'
@@ -29,6 +32,13 @@ describe('sharing sheet loaders', () => {
     expect(await getPublishPreviewAction('d1')).toEqual({ success: true, data: { has_unpublished_changes: true } })
     getPublishPreviewServiceMock.mockResolvedValueOnce({ success: false, message: 'nope' })
     expect(await getPublishPreviewAction('d1')).toEqual({ success: false, error: 'nope' })
+  })
+
+  it('getDeckSharingStatusesAction returns the badges for the given decks', async () => {
+    getDeckSharingStatusesServiceMock.mockResolvedValueOnce({ d1: { flash: true, openContributions: false } })
+    const decks = [{ id: 'd1' }] as never
+    expect(await getDeckSharingStatusesAction(decks)).toEqual({ d1: { flash: true, openContributions: false } })
+    expect(getDeckSharingStatusesServiceMock).toHaveBeenCalledWith(decks)
   })
 
   it('getDeckImportUpdatesAction returns the updates or the error', async () => {

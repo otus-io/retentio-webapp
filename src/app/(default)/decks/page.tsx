@@ -1,5 +1,4 @@
 import AppError from '@/components/app/AppError'
-import { getDeckSharingStatusesService } from '@/modules/deck-sharing/deck-sharing.service'
 import { getAllDecksService } from '@/modules/decks/decks.service'
 import DecksList from '@/components/decks/DecksList'
 import { getTranslations } from 'next-intl/server'
@@ -10,8 +9,7 @@ export default async function Page() {
   if(!success){
     return <AppError error={message} page />
   }
-  const decks = data?.decks || []
-  return <DecksList data={decks} sharing={await getDeckSharingStatusesService(decks)} />
+  return <DecksList data={data?.decks || []} />
 }
 
 export async function generateMetadata() {

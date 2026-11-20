@@ -2,13 +2,10 @@ import { render } from '@testing-library/react'
 import { describe, expect, it, vi } from 'vitest'
 
 const list = vi.fn()
-const services = vi.hoisted(() => ({ getAllDecksService: vi.fn(), getDeckSharingStatusesService: vi.fn() }))
+const getAllDecksService = vi.hoisted(() => vi.fn())
 
 vi.mock('next-intl/server', () => ({ getTranslations: async () => (key: string) => key }))
-vi.mock('@/modules/decks/decks.service', () => ({ getAllDecksService: services.getAllDecksService }))
-vi.mock('@/modules/deck-sharing/deck-sharing.service', () => ({
-  getDeckSharingStatusesService: services.getDeckSharingStatusesService,
-}))
+vi.mock('@/modules/decks/decks.service', () => ({ getAllDecksService }))
 vi.mock('@/components/app/AppError', () => ({
   default: ({ error }: { error: string }) => <div data-testid="error">{error}</div>,
 }))
@@ -22,23 +19,18 @@ vi.mock('@/components/decks/DecksList', () => ({
 import Page from '@/app/(default)/decks/page'
 
 describe('My Decks page', () => {
-  it('passes each deck its sharing badges', async () => {
-    const decks = [{ id: 'd1' }]
-    const sharing = { d1: { flash: true, openContributions: false } }
-    services.getAllDecksService.mockResolvedValueOnce({ success: true, data: { decks } })
-    services.getDeckSharingStatusesService.mockResolvedValueOnce(sharing)
+  it('renders the decks without waiting for sharing badges', async () => {
+    getAllDecksService.mockResolvedValueOnce({ success: true, data: { decks: [{ id: 'd1' }] } })
     render(await Page())
-    expect(services.getDeckSharingStatusesService).toHaveBeenCalledWith(decks)
-    expect(list).toHaveBeenLastCalledWith({ data: decks, sharing })
+    expect(list).toHaveBeenLastCalledWith({ data: [{ id: 'd1' }] })
+
+    getAllDecksService.mockResolvedValueOnce({ success: true, data: {} })
+    render(await Page())
+    expect(list).toHaveBeenLastCalledWith({ data: [] })
   })
 
-  it('handles a missing deck list and load errors', async () => {
-    services.getAllDecksService.mockResolvedValueOnce({ success: true, data: {} })
-    services.getDeckSharingStatusesService.mockResolvedValueOnce({})
-    render(await Page())
-    expect(list).toHaveBeenLastCalledWith({ data: [], sharing: {} })
-
-    services.getAllDecksService.mockResolvedValueOnce({ success: false, message: 'boom' })
+  it('shows load errors', async () => {
+    getAllDecksService.mockResolvedValueOnce({ success: false, message: 'boom' })
     const { getByTestId } = render(await Page())
     expect(getByTestId('error').textContent).toBe('boom')
   })

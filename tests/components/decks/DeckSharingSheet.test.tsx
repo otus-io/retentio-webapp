@@ -84,9 +84,10 @@ describe('DeckSharingSheet', () => {
     expect((await screen.findByTestId('publish')).textContent).toBe('null')
     expect(actions.getPublishPreviewAction).not.toHaveBeenCalled()
     unmount()
-    actions.getPublishPreviewAction.mockResolvedValueOnce({ success: false, error: 'x' })
+    actions.getPublishPreviewAction.mockResolvedValueOnce({ success: false, error: 'Preview failed' })
     render(<DeckSharingSheet deck={deck()} kind="publish" onClose={vi.fn()} />)
     expect((await screen.findByTestId('publish')).textContent).toBe('null')
+    expect(screen.getByTestId('error').textContent).toBe('Preview failed')
   })
 
   it('loads updates and reloads them after a sync', async () => {
@@ -125,6 +126,8 @@ describe('DeckSharingSheet', () => {
     expect((await screen.findByTestId('inbox')).textContent).toContain('open:4:false')
     expect(actions.getContributionsAction).toHaveBeenLastCalledWith('d1', 'open')
     fireEvent.click(screen.getByText('tab-all'))
+    // The old tab's list is replaced by a spinner until the new tab loads.
+    expect(screen.queryByTestId('inbox')).toBeNull()
     await waitFor(() => expect(screen.getByTestId('inbox').textContent).toContain('all:0:true'))
     expect(actions.getContributionsAction).toHaveBeenLastCalledWith('d1', undefined)
     fireEvent.click(screen.getByText('changed'))

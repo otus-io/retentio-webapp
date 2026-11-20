@@ -6,7 +6,7 @@ import DeckSharingSheet, { type DeckSheetKind } from '@/components/decks/DeckSha
 import type { DeckSharingStatus } from '@/modules/deck-sharing/deck-sharing.schema'
 import type { Deck } from '@/modules/decks/decks.schema'
 import { formatPercent } from '@/utils/format'
-import { Card, Chip, Tooltip } from '@heroui/react'
+import { Card, Chip } from '@heroui/react'
 import clsx from 'clsx'
 import { Inbox, RefreshCw, Share2 } from 'lucide-react'
 import { useFormatter, useTranslations } from 'next-intl'
@@ -22,20 +22,16 @@ interface DecksCardProps {
 /** Icon that only shows when there is something to act on, with a dot like the mobile app's badge. */
 function DeckBadge({ label, onPress, children }: { label: string, onPress: () => void, children: ReactNode }) {
   return (
-    <Tooltip delay={300}>
-      <Tooltip.Trigger>
-        <button
-          type="button"
-          aria-label={label}
-          className="relative rounded-full p-1.5 text-muted transition-colors hover:bg-default hover:text-foreground"
-          onClick={onPress}
-        >
-          {children}
-          <span className="absolute right-1 top-1 size-1.5 rounded-full bg-danger" />
-        </button>
-      </Tooltip.Trigger>
-      <Tooltip.Content>{label}</Tooltip.Content>
-    </Tooltip>
+    <button
+      type="button"
+      aria-label={label}
+      title={label}
+      className="relative rounded-full p-1.5 text-muted transition-colors hover:bg-default hover:text-foreground"
+      onClick={onPress}
+    >
+      {children}
+      <span className="absolute right-1 top-1 size-1.5 rounded-full bg-danger" />
+    </button>
   )
 }
 
@@ -78,7 +74,7 @@ export default function DecksCard({
   const publishedSource = !imported && deck.published_version > 0
   // Same menu as the mobile app: own decks publish and review contributions; imports send and sync.
   const actions = imported
-    ? ['details', 'facts', 'outbox', 'updates', 'qa', 'delete'] as const
+    ? ['details', 'facts', 'edit', 'outbox', 'updates', 'qa', 'delete'] as const
     : ['details', 'facts', 'edit', 'publish', ...(publishedSource ? ['inbox'] as const : []), 'qa', 'delete'] as const
 
   return (

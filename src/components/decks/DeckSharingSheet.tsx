@@ -52,7 +52,19 @@ export default function DeckSharingSheet({ deck, kind, onClose }: DeckSharingShe
   const [error, setError] = useState<string | null>(null)
   const [loaded, setLoaded] = useState(kind === 'outbox')
   const [version, setVersion] = useState(0)
-  const reload = useCallback(() => setVersion((v) => v + 1), [])
+  // Clear what is shown before a new load, so a tab or reload never shows the previous data or error.
+  const restart = useCallback(() => {
+    setLoaded(false)
+    setError(null)
+  }, [])
+  const reload = useCallback(() => {
+    restart()
+    setVersion((v) => v + 1)
+  }, [restart])
+  const selectTab = useCallback((next: ContributionInboxTab) => {
+    restart()
+    setTab(next)
+  }, [restart])
 
   useEffect(() => {
     let cancelled = false
@@ -70,7 +82,7 @@ export default function DeckSharingSheet({ deck, kind, onClose }: DeckSharingShe
       }
       void getPublishPreviewAction(deck.id).then((res) => {
         if (!cancelled && res.success && res.data) setPreview(res.data)
-        done()
+        done(res.success ? undefined : res.error ?? '')
       })
     } else if (kind === 'updates') {
       void getDeckImportUpdatesAction(deck.id).then((res) => {
@@ -120,7 +132,7 @@ export default function DeckSharingSheet({ deck, kind, onClose }: DeckSharingShe
                 selectedTab={tab}
                 total={inbox.total}
                 loadFailed={inbox.loadFailed}
-                onSelectTab={setTab}
+                onSelectTab={selectTab}
                 onChanged={reload}
               />
             )}
