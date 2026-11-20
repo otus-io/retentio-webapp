@@ -1,6 +1,7 @@
 import * as authApi from '@/api/auth'
 import type {
   ChangeEmailDTO,
+  DeleteAccountDTO,
   ForgotPasswordDTO,
   LoginDTO,
   RegisterDTO,
@@ -80,6 +81,16 @@ export async function changeEmailService(params: ChangeEmailDTO) {
     return ServiceResponse.success(await authApi.changeEmail(params))
   } catch (e) {
     return ServiceResponse.error('changeEmail failed', e)
+  }
+}
+
+export async function deleteAccountService(params: DeleteAccountDTO) {
+  try {
+    const res = await authApi.deleteAccount(params)
+    await removeToken()
+    return ServiceResponse.success(res)
+  } catch (e) {
+    return ServiceResponse.error('deleteAccount failed', e)
   }
 }
 

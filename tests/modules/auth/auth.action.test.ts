@@ -8,6 +8,7 @@ const verifyEmailServiceMock = vi.fn()
 const logoutServiceMock = vi.fn()
 const resendVerificationServiceMock = vi.fn()
 const changeEmailServiceMock = vi.fn()
+const deleteAccountServiceMock = vi.fn()
 const getTranslationsMock = vi.fn(async () => (key: string) => key)
 
 const flattenOverride = vi.hoisted(() => ({
@@ -54,6 +55,7 @@ vi.mock('@/modules/auth/auth.service', () => ({
   logoutService: (...args: unknown[]) => logoutServiceMock(...args),
   resendVerificationService: (...args: unknown[]) => resendVerificationServiceMock(...args),
   changeEmailService: (...args: unknown[]) => changeEmailServiceMock(...args),
+  deleteAccountService: (...args: unknown[]) => deleteAccountServiceMock(...args),
 }))
 
 import { revalidatePath } from 'next/cache'
@@ -61,6 +63,7 @@ import { redirect } from 'next/navigation'
 import { LOGIN_PATH } from '@/config'
 import {
   changeEmailAction,
+  deleteAccountAction,
   forgotPasswordAction,
   loginAction,
   logoutAction,
@@ -686,5 +689,34 @@ describe('logoutAction', () => {
     expect(vi.mocked(revalidatePath).mock.invocationCallOrder[0]).toBeLessThan(
       vi.mocked(redirect).mock.invocationCallOrder[0],
     )
+  })
+})
+
+describe('deleteAccountAction', () => {
+  beforeEach(() => {
+    deleteAccountServiceMock.mockReset()
+    vi.mocked(redirect).mockClear()
+    vi.mocked(revalidatePath).mockClear()
+  })
+
+  it('requires a password without calling the API', async () => {
+    const state = await deleteAccountAction(null, formData({ password: '' }))
+    expect(state?.validationErrors?.password).toEqual(['passwordRequired'])
+    expect(deleteAccountServiceMock).not.toHaveBeenCalled()
+  })
+
+  it('returns the backend message on failure', async () => {
+    deleteAccountServiceMock.mockResolvedValue({ success: false, message: 'Invalid credentials' })
+    const state = await deleteAccountAction(null, formData({ password: 'wrong' }))
+    expect(state).toEqual({ error: 'Invalid credentials', success: false })
+    expect(redirect).not.toHaveBeenCalled()
+  })
+
+  it('redirects home after deleting', async () => {
+    deleteAccountServiceMock.mockResolvedValue({ success: true })
+    await deleteAccountAction(null, formData({ password: 'secret' }))
+    expect(deleteAccountServiceMock).toHaveBeenCalledWith({ password: 'secret' })
+    expect(revalidatePath).toHaveBeenCalledWith('/', 'layout')
+    expect(redirect).toHaveBeenCalledWith('/')
   })
 })

@@ -2,6 +2,7 @@ import { Card, Separator } from '@heroui/react'
 import { Calendar, Mail, User } from 'lucide-react'
 import { getTranslations } from 'next-intl/server'
 import AppAvatar from '@/components/app/AppAvatar'
+import ProfileActions from '@/components/auth/ProfileActions'
 import type { ProfileResponseDTO } from '@/modules/auth/auth.schema'
 
 interface ProfileProps {
@@ -69,6 +70,10 @@ export default async function Profile({ user }: ProfileProps) {
               </div>
             ))}
           </div>
+
+          <Separator className="my-4" />
+
+          <ProfileActions email={user.data.email} />
         </Card.Content>
       </Card>
     </div>

@@ -18,6 +18,7 @@ import {
   USERNAME_LENGTH,
   USERNAME_SPACES,
   changeEmailSchema,
+  deleteAccountSchema,
   forgotPasswordSchema,
   loginSchema,
   registerSchema,
@@ -26,6 +27,7 @@ import {
 } from './auth.schema'
 import {
   changeEmailService,
+  deleteAccountService,
   forgotPasswordService,
   loginService,
   registerService,
@@ -203,6 +205,19 @@ export const changeEmailAction: ActionFunction = async (_, formData) => {
   }
   revalidatePath('/', 'layout')
   return { data: { email: res.data.email }, success: true }
+}
+
+export const deleteAccountAction: ActionFunction = async (_, formData) => {
+  const result = deleteAccountSchema.safeParse(formDataToObject(formData))
+  if (!result.success) {
+    return { validationErrors: await localizeAuthFieldErrors(z.flattenError(result.error).fieldErrors) }
+  }
+  const res = await deleteAccountService(result.data)
+  if (!res.success) {
+    return { error: res.message, success: false }
+  }
+  revalidatePath('/', 'layout')
+  redirect('/')
 }
 
 export async function logoutAction() {

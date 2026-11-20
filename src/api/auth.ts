@@ -2,6 +2,7 @@ import { request } from '@/utils/request'
 import type {
   ChangeEmailDTO,
   ChangeEmailResponseDTO,
+  DeleteAccountDTO,
   ForgotPasswordDTO,
   LoginDTO,
   LoginResponseDTO,
@@ -82,6 +83,16 @@ export function changeEmail(params: ChangeEmailDTO) {
   return request<ChangeEmailResponseDTO>('/api/profile/email', {
     method: 'PATCH',
     body: JSON.stringify({ email: params.email, password: params.password }),
+  })
+}
+
+/**
+ * 删除账号（需确认密码）
+ */
+export function deleteAccount(params: DeleteAccountDTO) {
+  return request<BaseApiResult<{ msg: string, username: string }>>('/api/profile', {
+    method: 'DELETE',
+    body: JSON.stringify({ password: params.password }),
   })
 }
 

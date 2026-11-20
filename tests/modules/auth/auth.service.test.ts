@@ -1,11 +1,13 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import * as authApi from '@/api/auth'
-import { changeEmailService, resendVerificationService } from '@/modules/auth/auth.service'
+import { changeEmailService, deleteAccountService, resendVerificationService } from '@/modules/auth/auth.service'
+import { removeToken } from '@/lib/token'
 import { RequestError } from '@/utils/request'
 
 vi.mock('@/api/auth', () => ({
   resendVerification: vi.fn(),
   changeEmail: vi.fn(),
+  deleteAccount: vi.fn(),
 }))
 
 vi.mock('@/lib/token', () => ({
@@ -43,5 +45,26 @@ describe('email verification services', () => {
     vi.mocked(authApi.changeEmail).mockRejectedValue(new RequestError('Email already in use', 409))
     expect(await changeEmailService({ email: 'taken@b.com', password: 'x' }))
       .toMatchObject({ success: false, status: 409, message: 'Email already in use' })
+  })
+})
+
+describe('deleteAccountService', () => {
+  beforeEach(() => {
+    vi.clearAllMocks()
+  })
+
+  it('deletes the account and clears the token', async () => {
+    vi.mocked(authApi.deleteAccount).mockResolvedValue({ data: { msg: 'ok', username: 'alice' }, meta: { msg: 'ok' } })
+    const res = await deleteAccountService({ password: 'secret' })
+    expect(authApi.deleteAccount).toHaveBeenCalledWith({ password: 'secret' })
+    expect(removeToken).toHaveBeenCalled()
+    expect(res).toMatchObject({ success: true })
+  })
+
+  it('keeps the token when deletion fails', async () => {
+    vi.mocked(authApi.deleteAccount).mockRejectedValue(new RequestError('Invalid credentials', 401))
+    expect(await deleteAccountService({ password: 'x' }))
+      .toMatchObject({ success: false, status: 401, message: 'Invalid credentials' })
+    expect(removeToken).not.toHaveBeenCalled()
   })
 })

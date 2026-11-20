@@ -153,6 +153,12 @@ export const changeEmailSchema = z.object({
 
 export type ChangeEmailDTO = z.infer<typeof changeEmailSchema>
 
+export const deleteAccountSchema = z.object({
+  password: z.string().min(1, PASSWORD_REQUIRED),
+})
+
+export type DeleteAccountDTO = z.infer<typeof deleteAccountSchema>
+
 export type ChangeEmailResponseDTO = BaseApiResult<{ email: string; username: string; email_verified: boolean }>
 
 export type LoginResponseDTO = BaseApiResult<
