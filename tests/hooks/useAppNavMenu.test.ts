@@ -28,13 +28,13 @@ describe('useAppNavMenu', () => {
     })
   })
 
-  it('登录后返回 Guide、我的卡组、共享卡组等菜单项', async () => {
+  it('登录后返回 Guide、我的卡组、共享卡组和统计菜单项', async () => {
     const { usePathname } = await import('next/navigation')
     vi.mocked(usePathname).mockReturnValue('/decks')
 
     const { result } = renderHook(() => useAppNavMenu({ isLoggedIn: true }))
 
-    expect(result.current.navMenu).toHaveLength(5)
+    expect(result.current.navMenu).toHaveLength(4)
     expect(result.current.navMenu[0]).toMatchObject({
       title: 'nav.guide',
       href: '/guide',
@@ -50,10 +50,6 @@ describe('useAppNavMenu', () => {
       isActive: false,
     })
     expect(result.current.navMenu[3]).toMatchObject({
-      title: 'term.tags',
-      href: '/tags',
-    })
-    expect(result.current.navMenu[4]).toMatchObject({
       title: 'statistics.title',
       href: '/statistics',
     })

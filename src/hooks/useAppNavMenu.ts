@@ -39,18 +39,11 @@ export default function useAppNavMenu({ isLoggedIn = false }: { isLoggedIn?: boo
     })
 
     if (isLoggedIn) {
-      items.push(
-        {
-          title: t('term.tags'),
-          href: '/tags',
-          isActive: pathname.startsWith('/tags'),
-        },
-        {
-          title: t('statistics.title'),
-          href: '/statistics',
-          isActive: pathname.startsWith('/statistics'),
-        },
-      )
+      items.push({
+        title: t('statistics.title'),
+        href: '/statistics',
+        isActive: pathname.startsWith('/statistics'),
+      })
     }
 
     return items
