@@ -23,7 +23,20 @@ vi.mock('@/components/app/AppLink', () => ({
   ),
 }))
 vi.mock('@/components/decks/DecksAction', () => ({
-  default: ({ actions }: { actions: string[] }) => <button type="button">{actions.join(',')}</button>,
+  default: ({ actions, onOpenSheet }: { actions: string[], onOpenSheet: (k: string) => void }) => (
+    <>
+      <button type="button">{actions.join(',')}</button>
+      <button type="button" onClick={() => onOpenSheet('outbox')}>open-outbox</button>
+    </>
+  ),
+}))
+vi.mock('@/components/decks/DeckSharingSheet', () => ({
+  default: ({ kind, onClose }: { kind: string, onClose: () => void }) => (
+    <div data-testid="sheet">
+      {kind}
+      <button type="button" onClick={onClose}>close-sheet</button>
+    </div>
+  ),
 }))
 
 import DecksCard from '@/components/decks/DecksCard'
@@ -49,8 +62,43 @@ describe('DecksCard', () => {
 
   it('keeps menu clicks from starting a study session', () => {
     render(<DecksCard deck={makeDeck()} />)
-    fireEvent.click(screen.getByText('details,facts,qa,edit,delete'))
+    fireEvent.click(screen.getByText('details,facts,edit,publish,qa,delete'))
+    fireEvent.click(screen.getByText('open-outbox'))
+    expect(screen.getByTestId('sheet').textContent).toContain('outbox')
+    fireEvent.click(screen.getByText('close-sheet'))
+    expect(screen.queryByTestId('sheet')).toBeNull()
     expect(push).not.toHaveBeenCalled()
+  })
+
+  it('gives each kind of deck the mobile app menu', () => {
+    const { unmount } = render(<DecksCard deck={makeDeck({ source_deck_id: 'src' })} />)
+    expect(screen.getByText('details,facts,outbox,updates,qa,delete')).toBeTruthy()
+    unmount()
+    render(<DecksCard deck={makeDeck({ published_version: 2 })} />)
+    expect(screen.getByText('details,facts,edit,publish,inbox,qa,delete')).toBeTruthy()
+  })
+
+  it('shows sharing badges only when there is something to act on, and opens their sheets', () => {
+    const { unmount } = render(
+      <DecksCard deck={makeDeck({ published_version: 2 })} sharing={{ flash: true, openContributions: true }} />,
+    )
+    fireEvent.click(screen.getByRole('button', { name: 'deck-menu.contributions-inbox' }))
+    expect(screen.getByTestId('sheet').textContent).toContain('inbox')
+    fireEvent.click(screen.getByRole('button', { name: 'deck-menu.publish-update' }))
+    expect(screen.getByTestId('sheet').textContent).toContain('publish')
+    expect(screen.queryByRole('button', { name: 'deck-menu.check-updates' })).toBeNull()
+    expect(push).not.toHaveBeenCalled()
+    unmount()
+
+    const { unmount: unmountImport } = render(
+      <DecksCard deck={makeDeck({ source_deck_id: 'src' })} sharing={{ flash: true, openContributions: false }} />,
+    )
+    fireEvent.click(screen.getByRole('button', { name: 'deck-menu.check-updates' }))
+    expect(screen.getByTestId('sheet').textContent).toContain('updates')
+    unmountImport()
+
+    render(<DecksCard deck={makeDeck()} sharing={{ flash: true, openContributions: true }} />)
+    expect(screen.queryByRole('button', { name: /deck-menu/ })).toBeNull()
   })
 
   it('shows stats and learned progress like the mobile app', () => {

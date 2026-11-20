@@ -334,3 +334,25 @@ export interface PublishPreview {
 }
 
 export type PublishPreviewResponseDTO = BaseApiResult<PublishPreview>
+
+/**
+ * 导入卡组更新摘要（`GET /api/decks/{id}/updates?summary=1`）
+ */
+export type DeckUpdatesSummaryResponseDTO = BaseApiResult<{
+  source_version: number
+  latest_version: number
+  added_fact_ids?: string[]
+  removed_fact_ids?: string[]
+  edited_fact_ids?: string[]
+  media_change_count?: number
+  card_template_change_count?: number
+  description_changed?: boolean
+}>
+
+/** My Decks 卡片上的共享提醒（与移动端一致） */
+export interface DeckSharingStatus {
+  /** 源卡组有未发布更改，或导入卡组有可同步的更新 */
+  flash: boolean
+  /** 源卡组有待处理的导入者贡献 */
+  openContributions: boolean
+}

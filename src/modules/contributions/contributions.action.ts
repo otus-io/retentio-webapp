@@ -3,6 +3,7 @@
 import { revalidatePath } from 'next/cache'
 import type {
   Contribution,
+  ContributionStatus,
   ContributionSubmission,
   SubmitDeckContributionsBatchDTO,
   SubmitDeckContributionsBatchResult,
@@ -16,6 +17,7 @@ import type {
 } from '@/modules/contributions/contributions.schema'
 import {
   acceptContributionService,
+  getContributionsService,
   submitDeckContributionsBatchService,
   submitDeckTagContributionService,
   submitFactAddContributionService,
@@ -140,4 +142,15 @@ export const acceptContributionAction: ActionFunctionPayload<
   revalidatePath(`/decks/${sourceDeckId}/facts`)
   revalidatePath('/decks')
   return { success: true, data: response.data }
+}
+
+/** 作者收件箱的一页贡献（在卡组菜单的贡献弹窗中加载） */
+export async function getContributionsAction(
+  sourceDeckId: string,
+  status?: ContributionStatus,
+): Promise<ActionState<{ contributions: Contribution[], total: number }>> {
+  const res = await getContributionsService(sourceDeckId, { status, limit: 20, offset: 0 })
+  return res.success
+    ? { success: true, data: { contributions: res.data.contributions, total: res.meta.total } }
+    : { success: false, error: res.message }
 }

@@ -4,21 +4,33 @@ import { Dropdown, Label } from '@heroui/react'
 import { useRouter } from 'next/navigation'
 import type { Key } from 'react'
 import { useCallback, useMemo, useState } from 'react'
-import { BookA, EllipsisVertical, Info, Pencil, ShieldCheck, Trash2 } from 'lucide-react'
+import {
+  BookA, EllipsisVertical, Inbox, Info, Pencil, RefreshCw, Send, Share2, ShieldCheck, Trash2,
+} from 'lucide-react'
 import { useTranslations } from 'next-intl'
 import DeleteModal from '@/components/common/DeleteModal'
 import { deleteDeckAction } from '@/modules/decks/decks.action'
+import type { DeckSheetKind } from '@/components/decks/DeckSharingSheet'
 
-type DecksActionItem = 'details' | 'edit' | 'facts' | 'qa' | 'delete'
+type DecksActionItem = 'details' | 'edit' | 'facts' | 'qa' | 'delete' | DeckSheetKind
+
+const sheetItems = [
+  { id: 'publish', label: 'deck-menu.publish-deck', Icon: Share2 },
+  { id: 'inbox', label: 'deck-menu.contributions-inbox', Icon: Inbox },
+  { id: 'outbox', label: 'deck-menu.pending-outbox', Icon: Send },
+  { id: 'updates', label: 'deck-menu.check-updates', Icon: RefreshCw },
+] as const
 
 interface DecksActionProps {
   deck: Deck,
   actions: DecksActionItem[]
+  /** Opens a sharing sheet (publish, inbox, outbox, updates) */
+  onOpenSheet?: (kind: DeckSheetKind) => void
 }
 
 
 
-export default function DecksAction({ deck, actions }: DecksActionProps) {
+export default function DecksAction({ deck, actions, onOpenSheet }: DecksActionProps) {
   const t = useTranslations()
   const router = useRouter()
   const [isOpen, setIsOpen] = useState(false)
@@ -41,9 +53,15 @@ export default function DecksAction({ deck, actions }: DecksActionProps) {
       case 'delete':
         setIsOpen(true)
         break
+      case 'publish':
+      case 'inbox':
+      case 'outbox':
+      case 'updates':
+        onOpenSheet?.(id)
+        break
       default:
     }
-  }, [deck.id, router])
+  }, [deck.id, router, onOpenSheet])
 
   return (
     <>
@@ -80,6 +98,14 @@ export default function DecksAction({ deck, actions }: DecksActionProps) {
                 </Dropdown.Item>
               )
             }
+            {sheetItems.filter((item) => actions.includes(item.id)).map(({ id, label, Icon }) => (
+              <Dropdown.Item key={id} id={id} textValue={id}>
+                <div className="flex items-center gap-1">
+                  <Icon className="size-3.5 text-muted-foreground" />
+                  <Label>{t(label)}</Label>
+                </div>
+              </Dropdown.Item>
+            ))}
             {
               actions.includes('qa') && (
                 <Dropdown.Item id="qa" textValue="qa" variant="default">

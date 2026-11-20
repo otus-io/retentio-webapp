@@ -2,16 +2,41 @@
 import AppLink from '@/components/app/AppLink'
 import HighlightedText from '@/components/common/HighlightedText'
 import DecksAction from '@/components/decks/DecksAction'
+import DeckSharingSheet, { type DeckSheetKind } from '@/components/decks/DeckSharingSheet'
+import type { DeckSharingStatus } from '@/modules/deck-sharing/deck-sharing.schema'
 import type { Deck } from '@/modules/decks/decks.schema'
 import { formatPercent } from '@/utils/format'
-import { Card, Chip } from '@heroui/react'
+import { Card, Chip, Tooltip } from '@heroui/react'
 import clsx from 'clsx'
+import { Inbox, RefreshCw, Share2 } from 'lucide-react'
 import { useFormatter, useTranslations } from 'next-intl'
 import { useRouter } from 'next/navigation'
+import { type ReactNode, useState } from 'react'
 
 interface DecksCardProps {
   deck: Deck,
   highlight?: string,
+  sharing?: DeckSharingStatus,
+}
+
+/** Icon that only shows when there is something to act on, with a dot like the mobile app's badge. */
+function DeckBadge({ label, onPress, children }: { label: string, onPress: () => void, children: ReactNode }) {
+  return (
+    <Tooltip delay={300}>
+      <Tooltip.Trigger>
+        <button
+          type="button"
+          aria-label={label}
+          className="relative rounded-full p-1.5 text-muted transition-colors hover:bg-default hover:text-foreground"
+          onClick={onPress}
+        >
+          {children}
+          <span className="absolute right-1 top-1 size-1.5 rounded-full bg-danger" />
+        </button>
+      </Tooltip.Trigger>
+      <Tooltip.Content>{label}</Tooltip.Content>
+    </Tooltip>
+  )
 }
 
 function DeckStat({ value, label, emphasis = false }: { value: number, label: string, emphasis?: boolean }) {
@@ -40,6 +65,7 @@ function DeckStat({ value, label, emphasis = false }: { value: number, label: st
 export default function DecksCard({
   deck,
   highlight = '',
+  sharing,
 }: DecksCardProps) {
   const router = useRouter()
   const t = useTranslations()
@@ -47,6 +73,13 @@ export default function DecksCard({
   const studyHref = `/decks/${deck.id}/study`
   const learned = stats.cards_count - stats.unseen_cards
   const percent = stats.cards_count > 0 ? Math.min(Math.max(learned / stats.cards_count, 0), 1) * 100 : 0
+  const [sheet, setSheet] = useState<DeckSheetKind | null>(null)
+  const imported = !!deck.source_deck_id
+  const publishedSource = !imported && deck.published_version > 0
+  // Same menu as the mobile app: own decks publish and review contributions; imports send and sync.
+  const actions = imported
+    ? ['details', 'facts', 'outbox', 'updates', 'qa', 'delete'] as const
+    : ['details', 'facts', 'edit', 'publish', ...(publishedSource ? ['inbox'] as const : []), 'qa', 'delete'] as const
 
   return (
     <Card
@@ -65,9 +98,25 @@ export default function DecksCard({
         {deck.visibility === 'public' && (
           <Chip size="sm" variant="primary" color="accent">{t('term.public')}</Chip>
         )}
-        {/* Menu clicks (and its delete dialog) must not start studying. */}
-        <span onClick={(e) => e.stopPropagation()}>
-          <DecksAction deck={deck} actions={['details', 'facts', 'qa', 'edit', 'delete']} />
+        {/* Badge, menu and sheet clicks must not start studying. */}
+        <span className="flex items-center" onClick={(e) => e.stopPropagation()}>
+          {publishedSource && sharing?.openContributions && (
+            <DeckBadge label={t('deck-menu.contributions-inbox')} onPress={() => setSheet('inbox')}>
+              <Inbox className="size-4" />
+            </DeckBadge>
+          )}
+          {publishedSource && sharing?.flash && (
+            <DeckBadge label={t('deck-menu.publish-update')} onPress={() => setSheet('publish')}>
+              <Share2 className="size-4" />
+            </DeckBadge>
+          )}
+          {imported && sharing?.flash && (
+            <DeckBadge label={t('deck-menu.check-updates')} onPress={() => setSheet('updates')}>
+              <RefreshCw className="size-4" />
+            </DeckBadge>
+          )}
+          <DecksAction deck={deck} actions={[...actions]} onOpenSheet={setSheet} />
+          {sheet && <DeckSharingSheet deck={deck} kind={sheet} onClose={() => setSheet(null)} />}
         </span>
       </div>
 

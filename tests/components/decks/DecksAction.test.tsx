@@ -31,6 +31,27 @@ describe('DecksAction', () => {
     expect(push).toHaveBeenLastCalledWith('/decks/d1/facts')
   })
 
+  it('opens sharing sheets through the callback', () => {
+    const onOpenSheet = vi.fn()
+    render(<DecksAction deck={deck} actions={['publish', 'inbox', 'outbox', 'updates']} onOpenSheet={onOpenSheet} />)
+    for (const [label, kind] of [
+      ['deck-menu.publish-deck', 'publish'],
+      ['deck-menu.contributions-inbox', 'inbox'],
+      ['deck-menu.pending-outbox', 'outbox'],
+      ['deck-menu.check-updates', 'updates'],
+    ]) {
+      fireEvent.click(screen.getByText(label))
+      expect(onOpenSheet).toHaveBeenLastCalledWith(kind)
+    }
+    expect(push).not.toHaveBeenCalled()
+  })
+
+  it('ignores sheet items without a callback', () => {
+    render(<DecksAction deck={deck} actions={['publish']} />)
+    fireEvent.click(screen.getByText('deck-menu.publish-deck'))
+    expect(push).not.toHaveBeenCalled()
+  })
+
   it('opens the deck details page', () => {
     render(<DecksAction deck={deck} actions={['details']} />)
     fireEvent.click(screen.getByText('common.deck-details'))

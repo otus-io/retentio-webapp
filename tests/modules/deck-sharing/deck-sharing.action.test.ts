@@ -1,6 +1,8 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 const publishDeckServiceMock = vi.fn()
+const getPublishPreviewServiceMock = vi.fn()
+const getDeckImportUpdatesServiceMock = vi.fn()
 
 vi.mock('next/cache', () => ({ revalidatePath: vi.fn() }))
 vi.mock('next/navigation', () => ({ redirect: vi.fn() }))
@@ -11,9 +13,31 @@ vi.mock('@/modules/deck-sharing/deck-sharing.service', () => ({
   importDeckService: vi.fn(),
   publishDeckService: (...args: unknown[]) => publishDeckServiceMock(...args),
   syncImportedDeckService: vi.fn(),
+  getPublishPreviewService: (...args: unknown[]) => getPublishPreviewServiceMock(...args),
+  getDeckImportUpdatesService: (...args: unknown[]) => getDeckImportUpdatesServiceMock(...args),
 }))
 
-import { publishDeckAction } from '@/modules/deck-sharing/deck-sharing.action'
+import {
+  getDeckImportUpdatesAction,
+  getPublishPreviewAction,
+  publishDeckAction,
+} from '@/modules/deck-sharing/deck-sharing.action'
+
+describe('sharing sheet loaders', () => {
+  it('getPublishPreviewAction returns the preview or the error', async () => {
+    getPublishPreviewServiceMock.mockResolvedValueOnce({ success: true, data: { has_unpublished_changes: true } })
+    expect(await getPublishPreviewAction('d1')).toEqual({ success: true, data: { has_unpublished_changes: true } })
+    getPublishPreviewServiceMock.mockResolvedValueOnce({ success: false, message: 'nope' })
+    expect(await getPublishPreviewAction('d1')).toEqual({ success: false, error: 'nope' })
+  })
+
+  it('getDeckImportUpdatesAction returns the updates or the error', async () => {
+    getDeckImportUpdatesServiceMock.mockResolvedValueOnce({ success: true, data: { latest_version: 2 } })
+    expect(await getDeckImportUpdatesAction('i1')).toEqual({ success: true, data: { latest_version: 2 } })
+    getDeckImportUpdatesServiceMock.mockResolvedValueOnce({ success: false, message: 'gone' })
+    expect(await getDeckImportUpdatesAction('i1')).toEqual({ success: false, error: 'gone' })
+  })
+})
 
 describe('publishDeckAction errors', () => {
   beforeEach(() => {

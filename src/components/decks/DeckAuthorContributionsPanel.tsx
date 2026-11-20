@@ -26,6 +26,10 @@ interface DeckAuthorContributionsPanelProps {
   selectedTab: ContributionInboxTab
   total: number
   loadFailed: boolean
+  /** In a modal: switch tabs locally instead of through the page URL */
+  onSelectTab?: (tab: ContributionInboxTab) => void
+  /** In a modal: reload after accept/resolve/dismiss instead of refreshing the page */
+  onChanged?: () => void
 }
 
 const tabs: ContributionInboxTab[] = ['all', 'open', 'accepted', 'resolved', 'dismissed']
@@ -53,6 +57,8 @@ export default function DeckAuthorContributionsPanel({
   selectedTab,
   total,
   loadFailed,
+  onSelectTab,
+  onChanged,
 }: DeckAuthorContributionsPanelProps) {
   const t = useTranslations('author-contributions')
   const pathname = usePathname()
@@ -65,6 +71,10 @@ export default function DeckAuthorContributionsPanel({
   const selectTab = (key: Key) => {
     const nextTab = String(key) as ContributionInboxTab
     if (nextTab === selectedTab) return
+    if (onSelectTab) {
+      onSelectTab(nextTab)
+      return
+    }
 
     const params = new URLSearchParams(searchParams.toString())
     if (nextTab === 'open') params.delete('contributionStatus')
@@ -97,7 +107,8 @@ export default function DeckAuthorContributionsPanel({
       }
 
       showSuccessToast(t(`operation-success.${operation}`))
-      router.refresh()
+      if (onChanged) onChanged()
+      else router.refresh()
     })
   }
 

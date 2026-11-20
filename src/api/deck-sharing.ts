@@ -7,6 +7,7 @@ import type {
   DeckFeedbackListResponseDTO,
   DeckFeedbackResponseDTO,
   DeckImportUpdatesResponseDTO,
+  DeckUpdatesSummaryResponseDTO,
   GetDeckCatalogDTO,
   GetDeckFeedbackDTO,
   ImportDeckDTO,
@@ -63,6 +64,13 @@ export function importDeck(data: ImportDeckDTO) {
  */
 export function getDeckImportUpdates(importId: string) {
   return request<DeckImportUpdatesResponseDTO>(`/api/decks/${importId}/updates`)
+}
+
+/**
+ * 导入卡组是否有更新（只返回 ID 与计数）
+ */
+export function getDeckUpdatesSummary(importId: string) {
+  return request<DeckUpdatesSummaryResponseDTO>(`/api/decks/${importId}/updates?summary=1`)
 }
 
 /**

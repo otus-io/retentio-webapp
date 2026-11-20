@@ -516,5 +516,13 @@
     "edit": "項目を編集",
     "verify-next": "確認して次へ",
     "verify-finish": "確認して完了"
+  },
+  "deck-menu": {
+    "publish-deck": "デッキを公開",
+    "publish-update": "公開バージョンを更新",
+    "contributions-inbox": "貢献受信箱",
+    "pending-outbox": "未送信の貢献",
+    "check-updates": "更新を確認",
+    "load-failed": "読み込めませんでした"
   }
 }

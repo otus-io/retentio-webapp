@@ -19,6 +19,8 @@ type Updates = DeckImportUpdatesResponseDTO['data']
 interface DeckImportUpdatesPanelProps {
   deckId: string
   updates: Updates
+  /** In a modal: reload the updates once a sync succeeds */
+  onSynced?: () => void
 }
 
 function FactSnapshot({ snapshot }: { snapshot?: DeckUpdateFactSnapshot }) {
@@ -60,7 +62,7 @@ function FactSummary({ item }: { item: DeckUpdateFactSummary }) {
   )
 }
 
-export default function DeckImportUpdatesPanel({ deckId, updates }: DeckImportUpdatesPanelProps) {
+export default function DeckImportUpdatesPanel({ deckId, updates, onSynced }: DeckImportUpdatesPanelProps) {
   const t = useTranslations('deck-sharing')
   const [state, action, isPending] = useActionState(
     syncImportedDeckAction.bind(null, deckId),
@@ -76,8 +78,10 @@ export default function DeckImportUpdatesPanel({ deckId, updates }: DeckImportUp
   ].filter((section) => section.count > 0)
 
   useEffect(() => {
-    if (state?.success) showSuccessToast(t('sync-success'))
-  }, [state?.success, t])
+    if (!state?.success) return
+    showSuccessToast(t('sync-success'))
+    onSynced?.()
+  }, [state?.success, t, onSynced])
 
   return (
     <Card className="border-border/50" variant="default">

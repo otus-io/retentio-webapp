@@ -1,6 +1,8 @@
 'use client'
 
+import type { DeckSharingStatus } from '@/modules/deck-sharing/deck-sharing.schema'
 import type { Deck } from '@/modules/decks/decks.schema'
+import useAutoRefresh from '@/hooks/useAutoRefresh'
 import { useTranslations } from 'next-intl'
 import { FolderOpen, CircleQuestionMark } from 'lucide-react'
 import DecksCard from '@/components/decks/DecksCard'
@@ -15,10 +17,14 @@ import AppTooltip from '@/components/app/AppTooltip'
 
 export default function DecksList({
   data,
+  sharing = {},
 }: {
   data: Deck[]
+  sharing?: Record<string, DeckSharingStatus>
 }) {
   const t = useTranslations()
+  // Re-check sharing badges every 60s, like the mobile app.
+  useAutoRefresh({ interval: 60_000 })
   const [keywords, setKeywords] = useState('')
   const deferredQuery = useDeferredValue(keywords)
 
@@ -79,6 +85,7 @@ export default function DecksList({
                       highlight={deferredQuery}
                       key={item.id}
                       deck={item}
+                      sharing={sharing[item.id]}
                     />
                   )
                 })

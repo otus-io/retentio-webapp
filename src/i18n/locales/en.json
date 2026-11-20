@@ -522,5 +522,13 @@
     "edit": "Edit facts",
     "verify-next": "Verify & next",
     "verify-finish": "Verify & finish"
+  },
+  "deck-menu": {
+    "publish-deck": "Publish Deck",
+    "publish-update": "Update Published Version",
+    "contributions-inbox": "Contributions",
+    "pending-outbox": "Unsent contributions",
+    "check-updates": "Check updates",
+    "load-failed": "Couldn't load this"
   }
 }

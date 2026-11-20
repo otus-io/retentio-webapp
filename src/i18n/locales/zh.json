@@ -522,5 +522,13 @@
     "edit": "编辑词条",
     "verify-next": "核验并继续",
     "verify-finish": "核验并完成"
+  },
+  "deck-menu": {
+    "publish-deck": "发布卡组",
+    "publish-update": "更新已发布版本",
+    "contributions-inbox": "贡献收件箱",
+    "pending-outbox": "未发送贡献",
+    "check-updates": "检查更新",
+    "load-failed": "加载失败"
   }
 }

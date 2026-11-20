@@ -5,13 +5,23 @@ import { getTranslations } from 'next-intl/server'
 import { redirect } from 'next/navigation'
 import z from 'zod'
 import { EMAIL_NOT_VERIFIED_CODE } from '@/modules/auth/auth.schema'
-import type { PublishDeckDTO } from '@/modules/deck-sharing/deck-sharing.schema'
+import type {
+  DeckImportUpdatesResponseDTO,
+  PublishDeckDTO,
+  PublishPreview,
+} from '@/modules/deck-sharing/deck-sharing.schema'
 import {
   createPublishDeckVersionSchema,
   type PublishDeckActionData,
   type PublishDeckActionPayload,
 } from '@/modules/deck-sharing/deck-sharing.schema'
-import { importDeckService, publishDeckService, syncImportedDeckService } from '@/modules/deck-sharing/deck-sharing.service'
+import {
+  getDeckImportUpdatesService,
+  getPublishPreviewService,
+  importDeckService,
+  publishDeckService,
+  syncImportedDeckService,
+} from '@/modules/deck-sharing/deck-sharing.service'
 
 export const importDeckAction: ActionFunctionPayload<string, never> = async (sourceDeckId) => {
   const response = await importDeckService({ source_deck_id: sourceDeckId })
@@ -104,4 +114,18 @@ export const syncImportedDeckAction: ActionFunctionPayload<string, { sourceVersi
       sourceVersion: response.data.source_version,
     },
   }
+}
+
+/** 发布预览（在卡组菜单的发布弹窗中加载） */
+export async function getPublishPreviewAction(deckId: string): Promise<ActionState<PublishPreview>> {
+  const res = await getPublishPreviewService(deckId)
+  return res.success ? { success: true, data: res.data } : { success: false, error: res.message }
+}
+
+/** 导入卡组的更新详情（在卡组菜单的检查更新弹窗中加载） */
+export async function getDeckImportUpdatesAction(
+  importId: string,
+): Promise<ActionState<DeckImportUpdatesResponseDTO['data']>> {
+  const res = await getDeckImportUpdatesService(importId)
+  return res.success ? { success: true, data: res.data } : { success: false, error: res.message }
 }
