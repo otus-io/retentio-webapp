@@ -93,7 +93,7 @@ export default function DeckPublishPanel({ deck, preview }: DeckPublishPanelProp
   )
 }
 
-function PublishPreviewSummary({ preview }: { preview: PublishPreview }) {
+export function PublishPreviewSummary({ preview }: { preview: PublishPreview }) {
   const t = useTranslations('deck-sharing')
   if (!preview.has_unpublished_changes) {
     return <p className="mt-3 text-sm text-muted">{t('preview-no-changes')}</p>

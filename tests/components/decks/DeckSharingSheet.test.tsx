@@ -36,7 +36,7 @@ vi.mock('@/modules/contributions/contributions.action', () => ({
 vi.mock('@/components/app/AppError', () => ({
   default: ({ error }: { error?: string | null }) => (error ? <div data-testid="error">{error}</div> : null),
 }))
-vi.mock('@/components/decks/DeckPublishPanel', () => ({
+vi.mock('@/components/decks/DeckPublishSheet', () => ({
   default: ({ preview }: { preview: unknown }) => <div data-testid="publish">{JSON.stringify(preview)}</div>,
 }))
 vi.mock('@/components/decks/DeckImportUpdatesPanel', () => ({

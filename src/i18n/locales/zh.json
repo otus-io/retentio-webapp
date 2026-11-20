@@ -525,6 +525,8 @@
     "verify-finish": "核验并完成"
   },
   "deck-menu": {
+    "published": "已发布！",
+    "publish-failed": "发布失败",
     "publish-deck": "发布卡组",
     "publish-update": "更新已发布版本",
     "contributions-inbox": "贡献收件箱",

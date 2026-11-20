@@ -6,7 +6,7 @@ import DeckAuthorContributionsPanel, {
 } from '@/components/decks/DeckAuthorContributionsPanel'
 import DeckContributionsPanel from '@/components/decks/DeckContributionsPanel'
 import DeckImportUpdatesPanel from '@/components/decks/DeckImportUpdatesPanel'
-import DeckPublishPanel from '@/components/decks/DeckPublishPanel'
+import DeckPublishSheet from '@/components/decks/DeckPublishSheet'
 import { getContributionsAction } from '@/modules/contributions/contributions.action'
 import type { Contribution } from '@/modules/contributions/contributions.schema'
 import { getDeckImportUpdatesAction, getPublishPreviewAction } from '@/modules/deck-sharing/deck-sharing.action'
@@ -121,7 +121,7 @@ export default function DeckSharingSheet({ deck, kind, onClose }: DeckSharingShe
             {!loaded && <div className="flex justify-center py-10"><Spinner /></div>}
             <AppError error={error === '' ? t('load-failed') : error} />
             {/* Without its preview, a published deck must not offer Publish next to the error. */}
-            {loaded && kind === 'publish' && error === null && <DeckPublishPanel deck={deck} preview={preview} />}
+            {loaded && kind === 'publish' && error === null && <DeckPublishSheet deck={deck} preview={preview} />}
             {loaded && kind === 'updates' && updates && (
               <DeckImportUpdatesPanel deckId={deck.id} updates={updates} onSynced={reload} />
             )}

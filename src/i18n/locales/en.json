@@ -525,6 +525,8 @@
     "verify-finish": "Verify & finish"
   },
   "deck-menu": {
+    "published": "Published!",
+    "publish-failed": "Couldn't publish the deck",
     "publish-deck": "Publish Deck",
     "publish-update": "Update Published Version",
     "contributions-inbox": "Contributions",
