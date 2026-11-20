@@ -148,7 +148,10 @@ export default function DeckContributionsInbox({ sourceDeckId }: { sourceDeckId:
     }
     showSuccessToast(op === 'accept' ? t('accepted') : t('updated'))
     // Drop the handled card in place, keeping any pages already loaded.
-    setItems((prev) => prev && prev.filter((item) => item.id !== c.id))
+    const remaining = (items ?? []).filter((item) => item.id !== c.id)
+    setItems(remaining)
+    // Everything loaded is handled but more are open: fetch them instead of showing "empty".
+    if (remaining.length === 0 && hasMore) reload()
   }
 
   const acceptAll = async (toAccept: Contribution[]) => {

@@ -23,7 +23,7 @@ import {
 } from '@/modules/contributions/pending-contributions'
 
 interface DeckContributionsPanelProps { deck: Deck }
-export type ContributionForm = PendingDeckContribution['kind'] | null
+export type ContributionForm = 'field_rename' | 'deck_tags' | null
 
 function parseTags(value: string) {
   return [...new Set(value.split(/[,，\n]/).map((tag) => tag.trim()).filter(Boolean))]

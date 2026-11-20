@@ -639,6 +639,7 @@
     "mark-verified": "I've checked this fact (mark as verified)"
   },
   "auto-send": {
+    "fact-added-not-sent": "Fact added, but it couldn't be sent to the author.",
     "sent": "Sent to the author",
     "unsent": "Saved. Couldn't send it to the author yet; retry from Unsent contributions.",
     "fact-added-sent": "Fact added and sent to the author",

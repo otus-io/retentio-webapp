@@ -95,11 +95,11 @@ describe('addFactAction', () => {
       .mockResolvedValueOnce({ success: true, data: { fact_ids: ['a'] } })
       .mockResolvedValueOnce({ success: false, message: 'x' })
     expect(await addFactAction('i1', [{ text: 'hola' }], false, true))
-      .toEqual({ success: true, data: { newFactIds: [] } })
+      .toEqual({ success: true, data: { newFactIds: [], idsUnknown: true } })
 
     services.getFactIdsService.mockResolvedValueOnce({ success: false, message: 'x' })
     expect(await addFactAction('i1', [{ text: 'hola' }], false, true))
-      .toEqual({ success: true, data: { newFactIds: [] } })
+      .toEqual({ success: true, data: { newFactIds: [], idsUnknown: true } })
   })
 
   it('returns validation and backend errors', async () => {

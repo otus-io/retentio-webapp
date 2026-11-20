@@ -194,17 +194,22 @@ describe('DeckContributionsOutbox', () => {
   })
 
   it('sends a saved proposal to the author right away', async () => {
+    seed([rename])
     submitDeckContributionsBatchAction.mockResolvedValue({
       success: true,
       data: { submitted: [{ localId: 'field_rename', kind: 'field_rename', contributionId: 'c7' }], failed: [] },
     })
     const { container } = render(<DeckContributionsOutbox deck={deck} />)
-    await screen.findByText('empty')
+    // A selected pending proposal that gets sent must leave the selection too.
+    fireEvent.click((await screen.findByText('Word → Term')).closest('label')!.querySelector('input')!)
+    expect(screen.getByText('send-selected-count:{"count":1}')).toBeTruthy()
     fireEvent.click(container.querySelector('.lucide-pencil-line')!.closest('button')!)
     await act(async () => fireEvent.click(screen.getByText('save-form')))
     expect(toast.showSuccessToast).toHaveBeenLastCalledWith('sent')
     expect(await screen.findByText('Word → Term')).toBeTruthy()
     expect(stored('retentio_pending_contribs_v2')).toEqual([])
     expect(stored('retentio_sent_contribs_v1')).toHaveLength(1)
+    fireEvent.click(screen.getByText('tab-pending:{"count":0}'))
+    expect(screen.getByText('empty')).toBeTruthy()
   })
 })

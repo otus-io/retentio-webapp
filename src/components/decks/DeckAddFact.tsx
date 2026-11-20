@@ -42,6 +42,11 @@ export default function DeckAddFact({ deck }: { deck: Deck }) {
       setTexts(fields.map(() => ''))
       setVerified(false)
       const newFactIds = res.data?.newFactIds ?? []
+      if (res.data?.idsUnknown) {
+        // Saved, but the new fact could not be identified, so it cannot be sent or queued.
+        showFailToast(tSend('fact-added-not-sent'))
+        return
+      }
       if (!imported || newFactIds.length === 0) {
         showSuccessToast(t('success'))
         return

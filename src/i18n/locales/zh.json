@@ -639,6 +639,7 @@
     "mark-verified": "我已检查此词条（标记为已核验）"
   },
   "auto-send": {
+    "fact-added-not-sent": "词条已添加，但未能发送给作者。",
     "sent": "已发送给作者",
     "unsent": "已保存，但暂未发送给作者，可在未发送贡献中重试。",
     "fact-added-sent": "词条已添加并发送给作者",

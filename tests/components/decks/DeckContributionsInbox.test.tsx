@@ -95,6 +95,18 @@ describe('DeckContributionsInbox', () => {
     expect(actions.getOpenContributionsAction).toHaveBeenCalledTimes(1)
   })
 
+  it('fetches more when every loaded contribution has been handled', async () => {
+    actions.getOpenContributionsAction
+      .mockResolvedValueOnce(page([edit], true))
+      .mockResolvedValueOnce(page([add]))
+    actions.updateContributionStatusAction.mockResolvedValue({ success: true })
+    render(<DeckContributionsInbox sourceDeckId="s1" />)
+    await screen.findByText('types.fact_edit')
+    await act(async () => fireEvent.click(screen.getByText('dismiss')))
+    expect(await screen.findByText('types.fact_add')).toBeTruthy()
+    expect(screen.queryByText('empty')).toBeNull()
+  })
+
   it('reports failed actions, with a fallback message', async () => {
     actions.getOpenContributionsAction.mockResolvedValue(page([edit]))
     actions.acceptContributionAction

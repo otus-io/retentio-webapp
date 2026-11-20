@@ -170,7 +170,7 @@ export async function addFactAction(
   entries: Entry[],
   verified: boolean,
   imported = false,
-): Promise<ActionState<{ newFactIds: string[] }>> {
+): Promise<ActionState<{ newFactIds: string[], idsUnknown?: boolean }>> {
   const result = createFactsSchema.safeParse({
     facts: [{ entries }],
     operation: 'append',
@@ -182,10 +182,11 @@ export async function addFactAction(
   if (!res.success) return { success: false, error: res.message }
   revalidatePath(`/decks/${deckId}/facts`)
   revalidatePath(`/decks/${deckId}`)
-  if (!before?.success) return { success: true, data: { newFactIds: [] } }
+  if (!imported) return { success: true, data: { newFactIds: [] } }
+  if (!before?.success) return { success: true, data: { newFactIds: [], idsUnknown: true } }
   // The add response has no ids, so the new fact is the one that was not there before (as on mobile).
   const after = await getFactIdsService(deckId)
   const known = new Set(before.data.fact_ids)
-  const newFactIds = after.success ? after.data.fact_ids.filter((id) => !known.has(id)) : []
-  return { success: true, data: { newFactIds } }
+  if (!after.success) return { success: true, data: { newFactIds: [], idsUnknown: true } }
+  return { success: true, data: { newFactIds: after.data.fact_ids.filter((id) => !known.has(id)) } }
 }

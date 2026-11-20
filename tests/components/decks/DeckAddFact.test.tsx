@@ -89,6 +89,15 @@ describe('DeckAddFact', () => {
     expect(failToast).toHaveBeenLastCalledWith('fact-added-unsent')
   })
 
+  it('says so when the new fact could not be identified and sent', async () => {
+    addFactAction.mockResolvedValue({ success: true, data: { newFactIds: [], idsUnknown: true } })
+    render(<DeckAddFact deck={deck({ fields: [], source_deck_id: 'src' })} />)
+    type('#1', 'solo')
+    await act(async () => fireEvent.click(screen.getByText('submit')))
+    expect(sendToAuthor).not.toHaveBeenCalled()
+    expect(failToast).toHaveBeenLastCalledWith('fact-added-not-sent')
+  })
+
   it('just confirms the add when an imported deck reports no new fact id', async () => {
     addFactAction.mockResolvedValue({ success: true, data: { newFactIds: [] } })
     render(<DeckAddFact deck={deck({ fields: [], source_deck_id: 'src' })} />)

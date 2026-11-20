@@ -123,7 +123,9 @@ export default function DeckContributionsOutbox({ deck }: { deck: Deck }) {
     startTransition(async () => {
       // Sent to the author right away, as on mobile; it stays pending only if sending fails.
       const { unsent } = await sendToAuthor(deck.id, [contribution])
-      setPending(readContributions(pendingKey, isPendingContribution))
+      const next = readContributions(pendingKey, isPendingContribution)
+      setPending(next)
+      setSelected((prev) => new Set([...prev].filter((id) => next.some((item) => item.id === id))))
       setSent(readContributions(sentKey, isSentContribution))
       setTab(unsent > 0 ? 'pending' : 'sent')
       if (unsent > 0) showFailToast(tSend('unsent'))
