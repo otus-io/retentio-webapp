@@ -35,5 +35,9 @@ describe('DeckImportUpdatesPanel', () => {
     await act(async () => fireEvent.submit(document.querySelector('form')!))
     expect(toast).toHaveBeenCalledWith('sync-success')
     expect(screen.getByText('updates-title')).toBeTruthy()
+    // A second sync (a fresh result) shows its toast too.
+    syncImportedDeckAction.mockImplementation(async () => ({ success: true, data: { sourceVersion: 3 } }))
+    await act(async () => fireEvent.submit(document.querySelector('form')!))
+    expect(toast).toHaveBeenCalledTimes(2)
   })
 })

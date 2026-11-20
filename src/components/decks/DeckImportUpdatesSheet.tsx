@@ -41,11 +41,10 @@ interface FactTileProps {
   factId: string
   decision?: Action
   onDecision: (factId: string, action: Action) => void
-  onDetail: (detail: DeckUpdateFactDetail) => void
 }
 
 /** One changed fact: tap to load its before/after; edited and removed facts get Accept / Reject. */
-function FactTile({ importId, factId, decision, onDecision, onDetail }: FactTileProps) {
+function FactTile({ importId, factId, decision, onDecision }: FactTileProps) {
   const t = useTranslations('updates')
   const [expanded, setExpanded] = useState(false)
   const [loading, setLoading] = useState(false)
@@ -60,7 +59,6 @@ function FactTile({ importId, factId, decision, onDecision, onDetail }: FactTile
       return
     }
     setDetail(res.data)
-    onDetail(res.data)
   }
 
   const toggle = () => {
@@ -102,7 +100,8 @@ function FactTile({ importId, factId, decision, onDecision, onDetail }: FactTile
                   key={action}
                   size="sm"
                   className="flex-1"
-                  variant={(decision ?? 'accept') === action ? 'primary' : 'secondary'}
+                  // Until the user picks, show what the server will do by default.
+                  variant={(decision ?? detail.default_action ?? 'accept') === action ? 'primary' : 'secondary'}
                   onPress={() => onDecision(factId, action)}
                 >
                   {action === 'accept' ? t('accept') : t('keep-local')}
@@ -143,10 +142,9 @@ export default function DeckImportUpdatesSheet({ importId }: { importId: string 
       }
       setError(null)
       setSummary(res.data)
-      // Edited and removed facts default to taking the author's change.
-      setDecisions(Object.fromEntries(
-        [...(res.data.removed_fact_ids ?? []), ...(res.data.edited_fact_ids ?? [])].map((id) => [id, 'accept']),
-      ))
+      // Only facts the user explicitly decides are sent; the server applies its own defaults to the rest
+      // (aligned → accept, removed with a local copy → keep), so local work is never discarded by default.
+      setDecisions({})
       setReviewOpen(false)
     })
     return () => {
@@ -155,12 +153,6 @@ export default function DeckImportUpdatesSheet({ importId }: { importId: string 
   }, [importId, version])
 
   const decide = (factId: string, action: Action) => setDecisions((prev) => ({ ...prev, [factId]: action }))
-
-  // A removed fact the server suggests keeping switches to Reject, unless the user already chose.
-  const applyDefault = (detail: DeckUpdateFactDetail) => {
-    if (detail.kind !== 'removed' || detail.default_action !== 'keep') return
-    setDecisions((prev) => (prev[detail.fact_id] === 'accept' ? { ...prev, [detail.fact_id]: 'keep' } : prev))
-  }
 
   const sync = async (current: Summary) => {
     setSyncing(true)
@@ -200,7 +192,6 @@ export default function DeckImportUpdatesSheet({ importId }: { importId: string 
       factId={factId}
       decision={decisions[factId]}
       onDecision={decide}
-      onDetail={applyDefault}
     />
   )
   const section = (title: string, ids: string[], tone: string) => ids.length > 0 && (

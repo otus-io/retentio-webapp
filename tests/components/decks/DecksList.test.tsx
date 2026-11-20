@@ -97,6 +97,9 @@ describe('DecksList', () => {
     expect(getDeckSharingStatusesAction).toHaveBeenCalledTimes(1)
     rerender(<DecksList data={[decks[0]]} />)
     expect(getDeckSharingStatusesAction).toHaveBeenCalledTimes(2)
+    // Publishing or syncing changes the deck's versions, which re-checks its badges.
+    rerender(<DecksList data={[{ ...decks[0], published_version: 2 } as Deck]} />)
+    expect(getDeckSharingStatusesAction).toHaveBeenCalledTimes(3)
   })
 
   it('ignores badges that arrive after leaving the page', async () => {

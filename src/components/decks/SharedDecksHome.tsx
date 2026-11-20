@@ -75,7 +75,8 @@ export default function SharedDecksHome({
           ))
         }
       </div>
-      {totalPages > 1 && <TablePagination className="mt-4" totalPages={totalPages} />}
+      {/* Stay on the catalog when changing pages instead of jumping to the top of the home page. */}
+      {totalPages > 1 && <TablePagination className="mt-4" totalPages={totalPages} scroll={false} />}
     </div>
   )
 }

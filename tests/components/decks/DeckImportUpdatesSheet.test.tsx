@@ -15,7 +15,16 @@ vi.mock('next-intl', () => ({
 }))
 vi.mock('@/lib/ui', () => toast)
 vi.mock('@/modules/deck-sharing/deck-sharing.action', () => actions)
-vi.mock('@/components/app/AppButton', async () => ({ default: (await import('../../helpers/heroui')).AppButtonMock }))
+// Expose the variant so the selected decision can be checked.
+vi.mock('@/components/app/AppButton', () => ({
+  default: ({ children, onPress, isDisabled, variant }: {
+    children: React.ReactNode, onPress?: () => void, isDisabled?: boolean, variant?: string
+  }) => (
+    <button type="button" data-variant={variant ?? 'primary'} disabled={!!isDisabled} onClick={onPress}>
+      {children}
+    </button>
+  ),
+}))
 
 import DeckImportUpdatesSheet from '@/components/decks/DeckImportUpdatesSheet'
 
@@ -96,16 +105,14 @@ describe('DeckImportUpdatesSheet', () => {
     fireEvent.click(screen.getByText('keep-local'))
 
     await act(async () => fireEvent.click(screen.getByText('sync-now')))
-    expect(actions.syncDeckWithDecisionsAction).toHaveBeenCalledWith('i1', 3, [
-      { fact_id: 'r1', action: 'accept' },
-      { fact_id: 'e1', action: 'keep' },
-    ])
+    // Only the fact the user decided is sent; the server applies its defaults to the rest.
+    expect(actions.syncDeckWithDecisionsAction).toHaveBeenCalledWith('i1', 3, [{ fact_id: 'e1', action: 'keep' }])
     expect(toast.showSuccessToast).toHaveBeenCalledWith('sync-success')
     expect(screen.getByText('version:{"source":3,"latest":3}')).toBeTruthy()
     expect(screen.getByText('up-to-date')).toBeTruthy()
   })
 
-  it('switches a removed fact to Reject when the server suggests keeping it, unless already chosen', async () => {
+  it('shows the server default for an undecided fact and leaves it to the server on sync', async () => {
     actions.getDeckUpdatesSummaryAction.mockResolvedValue(ok(summary))
     actions.getDeckUpdateFactAction
       .mockResolvedValue(ok({ fact_id: 'r1', kind: 'removed', default_action: 'keep', fact: null }))
@@ -113,21 +120,11 @@ describe('DeckImportUpdatesSheet', () => {
     await openReview()
     await act(async () => fireEvent.click(screen.getByText('r1')))
     expect(screen.getByText('before: —')).toBeTruthy()
+    // The server will keep the learner's copy, so Reject shows as selected.
+    expect(screen.getByText('keep-local').getAttribute('data-variant')).toBe('primary')
+    expect(screen.getByText('accept').getAttribute('data-variant')).toBe('secondary')
     await act(async () => fireEvent.click(screen.getByText('sync-now')))
-    expect(actions.syncDeckWithDecisionsAction.mock.calls[0][2]).toContainEqual({ fact_id: 'r1', action: 'keep' })
-  })
-
-  it('keeps the user choice when a late default arrives', async () => {
-    actions.getDeckUpdatesSummaryAction.mockResolvedValue(ok({ ...summary, removed_fact_ids: ['r1'] }))
-    actions.getDeckUpdateFactAction
-      .mockResolvedValueOnce(ok({ fact_id: 'r1', kind: 'removed', default_action: 'accept', fact: { entries: [] } }))
-    await openReview()
-    await act(async () => fireEvent.click(screen.getByText('r1')))
-    fireEvent.click(screen.getByText('keep-local'))
-    // The removed fact's default is accept, so the user's Reject stands.
-    actions.syncDeckWithDecisionsAction.mockResolvedValue({ success: true })
-    await act(async () => fireEvent.click(screen.getByText('sync-now')))
-    expect(actions.syncDeckWithDecisionsAction.mock.calls[0][2]).toContainEqual({ fact_id: 'r1', action: 'keep' })
+    expect(actions.syncDeckWithDecisionsAction.mock.calls[0][2]).toEqual([])
   })
 
   it('shows an added fact without decisions, and collapses it', async () => {

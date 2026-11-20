@@ -121,7 +121,10 @@ export default function DeckContributionsInbox({ sourceDeckId }: { sourceDeckId:
     setLoadingMore(true)
     const res = await getOpenContributionsAction(sourceDeckId, current.length)
     setLoadingMore(false)
-    if (!res.success || !res.data) return
+    if (!res.success || !res.data) {
+      showFailToast(String(res.error ?? '') || t('load-failed'))
+      return
+    }
     setItems([...current, ...res.data.contributions])
     setHasMore(res.data.hasMore)
   }
@@ -144,6 +147,8 @@ export default function DeckContributionsInbox({ sourceDeckId }: { sourceDeckId:
       return
     }
     showSuccessToast(op === 'accept' ? t('accepted') : t('updated'))
+    // Drop the handled card right away so it cannot be acted on again while the list reloads.
+    setItems((prev) => prev && prev.filter((item) => item.id !== c.id))
     reload()
   }
 

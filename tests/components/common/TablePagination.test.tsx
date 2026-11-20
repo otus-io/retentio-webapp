@@ -131,4 +131,12 @@ describe('TablePagination', () => {
     expect(mockSetParam).toHaveBeenCalledWith('page', '4')
     mockGetParam.mockReset()
   })
+
+  it('把是否滚动到顶部传给参数 Hook', async () => {
+    const hook = vi.mocked((await import('@/hooks/useSearchParamsQuery')).default)
+    render(<TablePagination totalPages={3} scroll={false} />)
+    expect(hook).toHaveBeenLastCalledWith(['page'], undefined, { scroll: false })
+    render(<TablePagination totalPages={3} />)
+    expect(hook).toHaveBeenLastCalledWith(['page'], undefined, { scroll: true })
+  })
 })

@@ -2,7 +2,7 @@
 
 import { Accordion, Card, Chip } from '@heroui/react'
 import { ArrowRight, CheckCircle2, FilePenLine, FilePlus2, FileX2, Image, LayoutTemplate, RefreshCw } from 'lucide-react'
-import { useActionState, useEffect } from 'react'
+import { useActionState, useEffect, useRef } from 'react'
 import { useTranslations } from 'next-intl'
 import AppButton from '@/components/app/AppButton'
 import AppError from '@/components/app/AppError'
@@ -75,9 +75,13 @@ export default function DeckImportUpdatesPanel({ deckId, updates }: DeckImportUp
     { id: 'templates', label: t('template-changes'), icon: LayoutTemplate, count: updates.card_template_changes?.length ?? 0 },
   ].filter((section) => section.count > 0)
 
+  // Each sync result is handled once, so every successful sync (not just the first) shows its toast.
+  const handled = useRef<typeof state>(null)
   useEffect(() => {
-    if (state?.success) showSuccessToast(t('sync-success'))
-  }, [state?.success, t])
+    if (!state?.success || handled.current === state) return
+    handled.current = state
+    showSuccessToast(t('sync-success'))
+  }, [state, t])
 
   return (
     <Card className="border-border/50" variant="default">

@@ -75,9 +75,14 @@ describe('DeckContributionsInbox', () => {
     render(<DeckContributionsInbox sourceDeckId="s1" />)
     await screen.findByText('types.fact_edit')
 
+    let reload!: (v: unknown) => void
+    actions.getOpenContributionsAction.mockReturnValueOnce(new Promise((r) => { reload = r }))
     await act(async () => fireEvent.click(screen.getByText('accept')))
     expect(actions.acceptContributionAction)
       .toHaveBeenCalledWith({ sourceDeckId: 's1', contributionId: 'c1' }, null, expect.any(FormData))
+    // The handled card leaves the list at once, before the reload finishes.
+    expect(screen.queryByText('types.fact_edit')).toBeNull()
+    await act(async () => reload(page([edit])))
     expect(toast.showSuccessToast).toHaveBeenLastCalledWith('accepted')
 
     await act(async () => fireEvent.click(screen.getByText('dismiss')))
@@ -155,6 +160,7 @@ describe('DeckContributionsInbox', () => {
     await screen.findByText('types.fact_edit')
     await act(async () => fireEvent.click(screen.getByText('load-more')))
     expect(screen.queryByText('types.fact_add')).toBeNull()
+    expect(toast.showFailToast).toHaveBeenLastCalledWith('load-failed')
     await act(async () => fireEvent.click(screen.getByText('load-more')))
     expect(actions.getOpenContributionsAction).toHaveBeenLastCalledWith('s1', 1)
     expect(screen.getByText('types.fact_add')).toBeTruthy()

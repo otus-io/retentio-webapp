@@ -26,8 +26,9 @@ export default function DecksList({
   const t = useTranslations()
   const [sharing, setSharing] = useState<Record<string, DeckSharingStatus>>({})
   const latestCheck = useRef(0)
-  // Re-poll when the set of decks changes, not on every page refresh.
-  const deckIds = data.map((deck) => deck.id).join(',')
+  // Re-check when decks change (added, removed, published, synced), not on every identical refresh.
+  const deckKey = data.map((d) => `${d.id}:${d.published_version}:${d.source_version ?? ''}:${d.updated_at}`)
+    .join(',')
 
   // Badges load after the list renders and re-check every minute while the tab is visible.
   useEffect(() => {
@@ -50,7 +51,7 @@ export default function DecksList({
       window.clearInterval(timer)
       document.removeEventListener('visibilitychange', check)
     }
-  }, [deckIds])
+  }, [deckKey])
   const [keywords, setKeywords] = useState('')
   const deferredQuery = useDeferredValue(keywords)
 
