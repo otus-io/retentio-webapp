@@ -4,12 +4,12 @@ import { Dropdown, Label } from '@heroui/react'
 import { useRouter } from 'next/navigation'
 import type { Key } from 'react'
 import { useCallback, useMemo, useState } from 'react'
-import { BookA, EllipsisVertical, Pencil, Trash2 } from 'lucide-react'
+import { BookA, EllipsisVertical, Pencil, ShieldCheck, Trash2 } from 'lucide-react'
 import { useTranslations } from 'next-intl'
 import DeleteModal from '@/components/common/DeleteModal'
 import { deleteDeckAction } from '@/modules/decks/decks.action'
 
-type DecksActionItem = 'edit' | 'facts' | 'delete'
+type DecksActionItem = 'edit' | 'facts' | 'qa' | 'delete'
 
 interface DecksActionProps {
   deck: Deck,
@@ -31,6 +31,9 @@ export default function DecksAction({ deck, actions }: DecksActionProps) {
         break
       case 'facts':
         router.push(`/decks/${deck.id}/facts`)
+        break
+      case 'qa':
+        router.push(`/decks/${deck.id}/qa`)
         break
       case 'delete':
         setIsOpen(true)
@@ -62,6 +65,16 @@ export default function DecksAction({ deck, actions }: DecksActionProps) {
                   <div className="flex items-center gap-1">
                     <BookA className="size-3.5 text-muted-foreground" />
                     <Label>{t('term.facts')}</Label>
+                  </div>
+                </Dropdown.Item>
+              )
+            }
+            {
+              actions.includes('qa') && (
+                <Dropdown.Item id="qa" textValue="qa" variant="default">
+                  <div className="flex items-center gap-1">
+                    <ShieldCheck className="size-3.5 text-muted-foreground" />
+                    <Label>{t('qa.title')}</Label>
                   </div>
                 </Dropdown.Item>
               )

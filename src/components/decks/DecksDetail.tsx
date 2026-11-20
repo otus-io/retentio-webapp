@@ -15,7 +15,6 @@ import {
   ListIcon,
   Tag,
   GraduationCap,
-  ShieldCheck,
 } from 'lucide-react'
 import { useFormatter, useTranslations } from 'next-intl'
 import DecksAction from '@/components/decks/DecksAction'
@@ -97,15 +96,11 @@ export default function DecksDetail({ deck, updates, publishPreview, authorContr
                 )}
               </div>
               <div className="flex items-center gap-2">
-                <AppButtonLink href={`/decks/${deck.id}/qa`} variant="secondary" size="sm">
-                  <ShieldCheck className="size-4" />
-                  {t('qa.title')}
-                </AppButtonLink>
                 <AppButtonLink href={`/decks/${deck.id}/study`} size="sm">
                   <GraduationCap className="size-4" />
                   {t('study.start')}
                 </AppButtonLink>
-                <DecksAction deck={deck} actions={['facts']} />
+                <DecksAction deck={deck} actions={['facts', 'qa']} />
               </div>
             </div>
           </Card.Header>

@@ -15,7 +15,9 @@ vi.mock('@/components/layout/LayoutPage', () => ({ default: ({ children }: { chi
 vi.mock('@/components/app/AppButtonLink', () => ({
   AppButtonLink: ({ href, children }: { href: string, children: ReactNode }) => <a href={href}>{children}</a>,
 }))
-vi.mock('@/components/decks/DecksAction', () => ({ default: () => null }))
+vi.mock('@/components/decks/DecksAction', () => ({
+  default: ({ actions }: { actions: string[] }) => <span data-testid="deck-actions">{actions.join(',')}</span>,
+}))
 vi.mock('@/components/decks/DecksLabel', () => ({ default: ({ children }: { children: ReactNode }) => <div>{children}</div> }))
 vi.mock('@/components/tags/TagItem', () => ({ default: () => null }))
 vi.mock('@/components/decks/DeckPublishPanel', () => ({
@@ -40,11 +42,12 @@ const deck = {
 } as unknown as Deck
 
 describe('DecksDetail', () => {
-  it('links to study and QA and passes the publish preview', () => {
+  it('links to study, offers QA in the menu and passes the publish preview', () => {
     const preview = { has_unpublished_changes: false } as never
     render(<DecksDetail deck={deck} updates={null} publishPreview={preview} authorContributions={null} />)
     expect(screen.getByText('study.start').closest('a')?.getAttribute('href')).toBe('/decks/d1/study')
-    expect(screen.getByText('qa.title').closest('a')?.getAttribute('href')).toBe('/decks/d1/qa')
+    expect(screen.queryByText('qa.title')).toBeNull()
+    expect(screen.getByTestId('deck-actions').textContent).toBe('facts,qa')
     expect(publishPanel.mock.calls[0][0]).toMatchObject({ preview })
   })
 })
