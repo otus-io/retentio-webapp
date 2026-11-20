@@ -1,14 +1,10 @@
 'use client'
 
 import AppError from '@/components/app/AppError'
-import DeckAuthorContributionsPanel, {
-  type ContributionInboxTab,
-} from '@/components/decks/DeckAuthorContributionsPanel'
+import DeckContributionsInbox from '@/components/decks/DeckContributionsInbox'
 import DeckContributionsPanel from '@/components/decks/DeckContributionsPanel'
 import DeckImportUpdatesPanel from '@/components/decks/DeckImportUpdatesPanel'
 import DeckPublishSheet from '@/components/decks/DeckPublishSheet'
-import { getContributionsAction } from '@/modules/contributions/contributions.action'
-import type { Contribution } from '@/modules/contributions/contributions.schema'
 import { getDeckImportUpdatesAction, getPublishPreviewAction } from '@/modules/deck-sharing/deck-sharing.action'
 import type { DeckImportUpdatesResponseDTO, PublishPreview } from '@/modules/deck-sharing/deck-sharing.schema'
 import type { Deck } from '@/modules/decks/decks.schema'
@@ -18,12 +14,6 @@ import { useRouter } from 'next/navigation'
 import { useCallback, useEffect, useState } from 'react'
 
 export type DeckSheetKind = 'publish' | 'inbox' | 'outbox' | 'updates'
-
-interface Inbox {
-  contributions: Contribution[]
-  total: number
-  loadFailed: boolean
-}
 
 interface DeckSharingSheetProps {
   deck: Deck
@@ -47,10 +37,9 @@ export default function DeckSharingSheet({ deck, kind, onClose }: DeckSharingShe
   const router = useRouter()
   const [preview, setPreview] = useState<PublishPreview | null>(null)
   const [updates, setUpdates] = useState<DeckImportUpdatesResponseDTO['data'] | null>(null)
-  const [tab, setTab] = useState<ContributionInboxTab>('open')
-  const [inbox, setInbox] = useState<Inbox | null>(null)
   const [error, setError] = useState<string | null>(null)
-  const [loaded, setLoaded] = useState(kind === 'outbox')
+  // The outbox and inbox load their own data.
+  const [loaded, setLoaded] = useState(kind === 'outbox' || kind === 'inbox')
   const [version, setVersion] = useState(0)
   // Clear what is shown before a new load, so a tab or reload never shows the previous data or error.
   const restart = useCallback(() => {
@@ -60,10 +49,6 @@ export default function DeckSharingSheet({ deck, kind, onClose }: DeckSharingShe
   const reload = useCallback(() => {
     restart()
     setVersion((v) => v + 1)
-  }, [restart])
-  const selectTab = useCallback((next: ContributionInboxTab) => {
-    restart()
-    setTab(next)
   }, [restart])
 
   useEffect(() => {
@@ -89,19 +74,11 @@ export default function DeckSharingSheet({ deck, kind, onClose }: DeckSharingShe
         if (!cancelled && res.success && res.data) setUpdates(res.data)
         done(res.success ? undefined : res.error ?? '')
       })
-    } else if (kind === 'inbox') {
-      void getContributionsAction(deck.id, tab === 'all' ? undefined : tab).then((res) => {
-        if (cancelled) return
-        setInbox(res.success && res.data
-          ? { ...res.data, loadFailed: false }
-          : { contributions: [], total: 0, loadFailed: true })
-        done()
-      })
     }
     return () => {
       cancelled = true
     }
-  }, [kind, deck.id, deck.published_version, tab, version])
+  }, [kind, deck.id, deck.published_version, version])
 
   const close = () => {
     onClose()
@@ -126,17 +103,7 @@ export default function DeckSharingSheet({ deck, kind, onClose }: DeckSharingShe
               <DeckImportUpdatesPanel deckId={deck.id} updates={updates} onSynced={reload} />
             )}
             {kind === 'outbox' && <DeckContributionsPanel deck={deck} />}
-            {loaded && kind === 'inbox' && inbox && (
-              <DeckAuthorContributionsPanel
-                deckId={deck.id}
-                contributions={inbox.contributions}
-                selectedTab={tab}
-                total={inbox.total}
-                loadFailed={inbox.loadFailed}
-                onSelectTab={selectTab}
-                onChanged={reload}
-              />
-            )}
+            {kind === 'inbox' && <DeckContributionsInbox sourceDeckId={deck.id} />}
           </Modal.Body>
         </Modal.Dialog>
       </Modal.Container>

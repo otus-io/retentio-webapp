@@ -5,24 +5,25 @@ const getContributionsService = vi.hoisted(() => vi.fn())
 vi.mock('next/cache', () => ({ revalidatePath: vi.fn() }))
 vi.mock('@/modules/contributions/contributions.service', () => ({ getContributionsService }))
 
-import { getContributionsAction } from '@/modules/contributions/contributions.action'
+import { getOpenContributionsAction } from '@/modules/contributions/contributions.action'
 
-describe('getContributionsAction', () => {
-  it('returns a page of the inbox with its total', async () => {
+describe('getOpenContributionsAction', () => {
+  it('returns a page of open contributions and whether more follow', async () => {
     getContributionsService.mockResolvedValueOnce({
       success: true,
       data: { contributions: [{ id: 'c1' }] },
-      meta: { total: 7 },
+      meta: { has_more: true },
     })
-    expect(await getContributionsAction('s1', 'open')).toEqual({
+    expect(await getOpenContributionsAction('s1', 50)).toEqual({
       success: true,
-      data: { contributions: [{ id: 'c1' }], total: 7 },
+      data: { contributions: [{ id: 'c1' }], hasMore: true },
     })
-    expect(getContributionsService).toHaveBeenCalledWith('s1', { status: 'open', limit: 20, offset: 0 })
+    expect(getContributionsService).toHaveBeenCalledWith('s1', { status: 'open', limit: 50, offset: 50 })
   })
 
-  it('returns the error', async () => {
+  it('starts at the first page and returns errors', async () => {
     getContributionsService.mockResolvedValueOnce({ success: false, message: 'Forbidden' })
-    expect(await getContributionsAction('s1')).toEqual({ success: false, error: 'Forbidden' })
+    expect(await getOpenContributionsAction('s1')).toEqual({ success: false, error: 'Forbidden' })
+    expect(getContributionsService).toHaveBeenLastCalledWith('s1', { status: 'open', limit: 50, offset: 0 })
   })
 })

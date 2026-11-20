@@ -527,5 +527,30 @@
     "pending-outbox": "未送信の貢献",
     "check-updates": "更新を確認",
     "load-failed": "読み込めませんでした"
+  },
+  "inbox": {
+    "accept": "承認",
+    "dismiss": "却下",
+    "resolve": "解決済みにする",
+    "accept-all": "すべて承認（{count}）",
+    "accept-all-confirm-title": "すべて承認しますか？",
+    "accept-all-confirm-message": "{count}件の貢献を作業コピーに反映しますか？報告はスキップされます。",
+    "accept-all-progress": "承認中 {done}/{total}…",
+    "accept-all-success": "{count, plural, =1 {1件の貢献を承認しました} other {#件の貢献を承認しました}}",
+    "accept-all-partial": "{sent}件を承認、{failed}件が失敗",
+    "load-more": "さらに読み込む",
+    "empty": "未処理の貢献はありません",
+    "before": "変更前",
+    "after": "変更後",
+    "proposed": "提案内容",
+    "reported": "報告内容",
+    "fields": "列名",
+    "tags": "タグ",
+    "accepted": "貢献を承認しました",
+    "updated": "貢献の状態を更新しました",
+    "operation-failed": "貢献を更新できませんでした",
+    "load-failed": "貢献を読み込めませんでした",
+    "retry": "再試行",
+    "cancel": "キャンセル"
   }
 }

@@ -62,21 +62,6 @@ describe('DeckAuthorContributionsPanel', () => {
     expect(router.replace).toHaveBeenCalledWith('/decks/s1?contributionStatus=all', { scroll: false })
   })
 
-  it('switches tabs locally and reloads through the callback inside a modal', async () => {
-    const onSelectTab = vi.fn()
-    const onChanged = vi.fn()
-    actions.updateContributionStatusAction.mockResolvedValue({ success: true })
-    render(<DeckAuthorContributionsPanel {...props} onSelectTab={onSelectTab} onChanged={onChanged} />)
-    fireEvent.click(screen.getByText('tab-all'))
-    expect(onSelectTab).toHaveBeenCalledWith('all')
-    expect(router.replace).not.toHaveBeenCalled()
-
-    await act(async () => fireEvent.click(screen.getAllByText('mark-resolved')[0]))
-    expect(actions.updateContributionStatusAction).toHaveBeenCalled()
-    expect(onChanged).toHaveBeenCalled()
-    expect(router.refresh).not.toHaveBeenCalled()
-  })
-
   it('refreshes the page after a change on the deck page', async () => {
     actions.acceptContributionAction.mockResolvedValue({ success: true })
     render(<DeckAuthorContributionsPanel {...props} />)

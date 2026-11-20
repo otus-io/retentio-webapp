@@ -6,7 +6,6 @@ const refresh = vi.fn()
 const actions = vi.hoisted(() => ({
   getPublishPreviewAction: vi.fn(),
   getDeckImportUpdatesAction: vi.fn(),
-  getContributionsAction: vi.fn(),
 }))
 
 vi.mock('next-intl', () => ({ useTranslations: () => (key: string) => key }))
@@ -30,9 +29,6 @@ vi.mock('@/modules/deck-sharing/deck-sharing.action', () => ({
   getPublishPreviewAction: actions.getPublishPreviewAction,
   getDeckImportUpdatesAction: actions.getDeckImportUpdatesAction,
 }))
-vi.mock('@/modules/contributions/contributions.action', () => ({
-  getContributionsAction: actions.getContributionsAction,
-}))
 vi.mock('@/components/app/AppError', () => ({
   default: ({ error }: { error?: string | null }) => (error ? <div data-testid="error">{error}</div> : null),
 }))
@@ -48,16 +44,8 @@ vi.mock('@/components/decks/DeckImportUpdatesPanel', () => ({
   ),
 }))
 vi.mock('@/components/decks/DeckContributionsPanel', () => ({ default: () => <div data-testid="outbox" /> }))
-vi.mock('@/components/decks/DeckAuthorContributionsPanel', () => ({
-  default: (p: {
-    selectedTab: string, total: number, loadFailed: boolean, onSelectTab: (t: string) => void, onChanged: () => void,
-  }) => (
-    <div data-testid="inbox">
-      {`${p.selectedTab}:${p.total}:${p.loadFailed}`}
-      <button type="button" onClick={() => p.onSelectTab('all')}>tab-all</button>
-      <button type="button" onClick={p.onChanged}>changed</button>
-    </div>
-  ),
+vi.mock('@/components/decks/DeckContributionsInbox', () => ({
+  default: ({ sourceDeckId }: { sourceDeckId: string }) => <div data-testid="inbox">{sourceDeckId}</div>,
 }))
 
 import DeckSharingSheet from '@/components/decks/DeckSharingSheet'
@@ -118,21 +106,10 @@ describe('DeckSharingSheet', () => {
     expect(screen.queryByRole('status')).toBeNull()
   })
 
-  it('loads inbox tabs locally and reloads after changes', async () => {
-    actions.getContributionsAction
-      .mockResolvedValueOnce({ success: true, data: { contributions: [], total: 4 } })
-      .mockResolvedValueOnce({ success: false, error: 'x' })
-      .mockResolvedValueOnce({ success: true, data: { contributions: [], total: 9 } })
+  it('shows the inbox straight away', () => {
     render(<DeckSharingSheet deck={deck()} kind="inbox" onClose={vi.fn()} />)
-    expect((await screen.findByTestId('inbox')).textContent).toContain('open:4:false')
-    expect(actions.getContributionsAction).toHaveBeenLastCalledWith('d1', 'open')
-    fireEvent.click(screen.getByText('tab-all'))
-    // The old tab's list is replaced by a spinner until the new tab loads.
-    expect(screen.queryByTestId('inbox')).toBeNull()
-    await waitFor(() => expect(screen.getByTestId('inbox').textContent).toContain('all:0:true'))
-    expect(actions.getContributionsAction).toHaveBeenLastCalledWith('d1', undefined)
-    fireEvent.click(screen.getByText('changed'))
-    await waitFor(() => expect(screen.getByTestId('inbox').textContent).toContain('all:9:false'))
+    expect(screen.getByTestId('inbox').textContent).toBe('d1')
+    expect(screen.queryByRole('status')).toBeNull()
   })
 
   it('refreshes the page when closed, and ignores loads that finish after closing', async () => {

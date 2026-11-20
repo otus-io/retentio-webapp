@@ -533,5 +533,30 @@
     "pending-outbox": "Unsent contributions",
     "check-updates": "Check updates",
     "load-failed": "Couldn't load this"
+  },
+  "inbox": {
+    "accept": "Accept",
+    "dismiss": "Dismiss",
+    "resolve": "Resolve",
+    "accept-all": "Accept all ({count})",
+    "accept-all-confirm-title": "Accept all?",
+    "accept-all-confirm-message": "Accept {count} contributions into your working copy? Reports are skipped.",
+    "accept-all-progress": "Accepting {done} of {total}…",
+    "accept-all-success": "{count, plural, =1 {Accepted 1 contribution} other {Accepted # contributions}}",
+    "accept-all-partial": "Accepted {sent}; {failed} failed",
+    "load-more": "Load more",
+    "empty": "No open contributions",
+    "before": "Before",
+    "after": "After",
+    "proposed": "Proposed",
+    "reported": "Reported",
+    "fields": "Fields",
+    "tags": "Tags",
+    "accepted": "Contribution accepted",
+    "updated": "Contribution updated",
+    "operation-failed": "Couldn't update the contribution",
+    "load-failed": "Couldn't load contributions",
+    "retry": "Retry",
+    "cancel": "Cancel"
   }
 }

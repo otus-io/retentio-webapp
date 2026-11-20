@@ -533,5 +533,30 @@
     "pending-outbox": "未发送贡献",
     "check-updates": "检查更新",
     "load-failed": "加载失败"
+  },
+  "inbox": {
+    "accept": "接受",
+    "dismiss": "忽略",
+    "resolve": "标为已解决",
+    "accept-all": "全部接受（{count}）",
+    "accept-all-confirm-title": "全部接受？",
+    "accept-all-confirm-message": "将 {count} 条贡献接受进工作副本？报告不会被接受。",
+    "accept-all-progress": "正在接受 {done}/{total}…",
+    "accept-all-success": "{count, plural, =1 {已接受 1 条贡献} other {已接受 # 条贡献}}",
+    "accept-all-partial": "已接受 {sent} 条；{failed} 条失败",
+    "load-more": "加载更多",
+    "empty": "暂无待处理贡献",
+    "before": "修改前",
+    "after": "修改后",
+    "proposed": "提议内容",
+    "reported": "报告内容",
+    "fields": "列名",
+    "tags": "标签",
+    "accepted": "已接受贡献",
+    "updated": "贡献状态已更新",
+    "operation-failed": "贡献更新失败",
+    "load-failed": "无法加载贡献",
+    "retry": "重试",
+    "cancel": "取消"
   }
 }
