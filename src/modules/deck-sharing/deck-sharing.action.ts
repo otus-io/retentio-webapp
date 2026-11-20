@@ -5,7 +5,7 @@ import { getTranslations } from 'next-intl/server'
 import { redirect } from 'next/navigation'
 import z from 'zod'
 import { EMAIL_NOT_VERIFIED_CODE } from '@/modules/auth/auth.schema'
-import type { Deck } from '@/modules/decks/decks.schema'
+import { getAllDecksService } from '@/modules/decks/decks.service'
 import type {
   DeckImportUpdatesResponseDTO,
   DeckSharingStatus,
@@ -133,7 +133,11 @@ export async function getDeckImportUpdatesAction(
   return res.success ? { success: true, data: res.data } : { success: false, error: res.message }
 }
 
-/** My Decks 卡片提醒（页面渲染后在浏览器里加载，并定时刷新） */
-export async function getDeckSharingStatusesAction(decks: Deck[]): Promise<Record<string, DeckSharingStatus>> {
-  return getDeckSharingStatusesService(decks)
+/**
+ * My Decks 卡片提醒（页面渲染后在浏览器里加载，并定时刷新）。
+ * 卡组在服务端按当前用户加载，不信任客户端输入。
+ */
+export async function getDeckSharingStatusesAction(): Promise<Record<string, DeckSharingStatus>> {
+  const decks = await getAllDecksService()
+  return decks.success ? getDeckSharingStatusesService(decks.data.decks ?? []) : {}
 }

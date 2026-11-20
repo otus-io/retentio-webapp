@@ -25,6 +25,15 @@ describe('LayoutPage', () => {
     expect(screen.getByText('首页 / 指南')).toBeDefined()
   })
 
+  it('在面包屑行末尾渲染页面操作', () => {
+    render(
+      <LayoutPage breadcrumbs={[{ href: '/', title: '首页' }]} actions={<button type="button">菜单</button>}>
+        <span>内容</span>
+      </LayoutPage>,
+    )
+    expect(screen.getByTestId('breadcrumbs').parentElement?.lastElementChild?.textContent).toBe('菜单')
+  })
+
   it('breadcrumbs 为空数组时不渲染面包屑', () => {
     render(<LayoutPage breadcrumbs={[]}><span>内容</span></LayoutPage>)
     expect(screen.queryByTestId('breadcrumbs')).toBeNull()

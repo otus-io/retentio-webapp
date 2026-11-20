@@ -4,11 +4,15 @@ const publishDeckServiceMock = vi.fn()
 const getPublishPreviewServiceMock = vi.fn()
 const getDeckImportUpdatesServiceMock = vi.fn()
 const getDeckSharingStatusesServiceMock = vi.fn()
+const getAllDecksServiceMock = vi.fn()
 
 vi.mock('next/cache', () => ({ revalidatePath: vi.fn() }))
 vi.mock('next/navigation', () => ({ redirect: vi.fn() }))
 vi.mock('next-intl/server', () => ({
   getTranslations: vi.fn(async (ns: string) => (key: string) => `${ns}.${key}`),
+}))
+vi.mock('@/modules/decks/decks.service', () => ({
+  getAllDecksService: (...args: unknown[]) => getAllDecksServiceMock(...args),
 }))
 vi.mock('@/modules/deck-sharing/deck-sharing.service', () => ({
   importDeckService: vi.fn(),
@@ -34,11 +38,19 @@ describe('sharing sheet loaders', () => {
     expect(await getPublishPreviewAction('d1')).toEqual({ success: false, error: 'nope' })
   })
 
-  it('getDeckSharingStatusesAction returns the badges for the given decks', async () => {
+  it('getDeckSharingStatusesAction checks the signed-in user\'s own decks', async () => {
+    getAllDecksServiceMock.mockResolvedValueOnce({ success: true, data: { decks: [{ id: 'd1' }] } })
     getDeckSharingStatusesServiceMock.mockResolvedValueOnce({ d1: { flash: true, openContributions: false } })
-    const decks = [{ id: 'd1' }] as never
-    expect(await getDeckSharingStatusesAction(decks)).toEqual({ d1: { flash: true, openContributions: false } })
-    expect(getDeckSharingStatusesServiceMock).toHaveBeenCalledWith(decks)
+    expect(await getDeckSharingStatusesAction()).toEqual({ d1: { flash: true, openContributions: false } })
+    expect(getDeckSharingStatusesServiceMock).toHaveBeenCalledWith([{ id: 'd1' }])
+
+    getAllDecksServiceMock.mockResolvedValueOnce({ success: true, data: {} })
+    getDeckSharingStatusesServiceMock.mockResolvedValueOnce({})
+    expect(await getDeckSharingStatusesAction()).toEqual({})
+    expect(getDeckSharingStatusesServiceMock).toHaveBeenLastCalledWith([])
+
+    getAllDecksServiceMock.mockResolvedValueOnce({ success: false, message: 'x' })
+    expect(await getDeckSharingStatusesAction()).toEqual({})
   })
 
   it('getDeckImportUpdatesAction returns the updates or the error', async () => {

@@ -6,6 +6,8 @@ const home = vi.fn()
 const getDeckCatalogService = vi.hoisted(() => vi.fn())
 
 vi.mock('next-intl/server', () => ({ getTranslations: async () => (key: string) => key }))
+const redirect = vi.hoisted(() => vi.fn(() => { throw new Error('NEXT_REDIRECT') }))
+vi.mock('next/navigation', () => ({ redirect }))
 vi.mock('@/modules/deck-sharing/deck-sharing.service', () => ({ getDeckCatalogService }))
 vi.mock('@/components/home/HomePage', () => ({
   default: ({ children }: { children: ReactNode }) => <main>{children}</main>,
@@ -44,6 +46,12 @@ describe('home page catalog', () => {
     await renderPage({})
     for (const call of getDeckCatalogService.mock.calls) expect(call[0]).toEqual({ limit: 6, offset: 0 })
     expect(home).toHaveBeenLastCalledWith({ data: [], totalPages: 0 })
+  })
+
+  it('sends pages past the end to the last page', async () => {
+    getDeckCatalogService.mockResolvedValue({ success: true, data: { decks: [] }, meta: { total: 14 } })
+    await expect(renderPage({ page: '50' })).rejects.toThrow('NEXT_REDIRECT')
+    expect(redirect).toHaveBeenCalledWith('/?page=3')
   })
 
   it('hides the catalog when it fails to load', async () => {

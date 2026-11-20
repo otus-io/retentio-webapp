@@ -45,7 +45,7 @@ describe('DecksList', () => {
     const badges = '{"flash":true,"openContributions":false}'
     await waitFor(() => expect(screen.getByTestId('card-d1').textContent).toBe(badges))
     expect(screen.getByTestId('card-d2').textContent).toBe('null')
-    expect(getDeckSharingStatusesAction).toHaveBeenCalledWith(decks)
+    expect(getDeckSharingStatusesAction).toHaveBeenCalledWith()
   })
 
   it('re-checks every minute and when the tab comes back, but not while hidden', async () => {
@@ -67,6 +67,36 @@ describe('DecksList', () => {
     unmount()
     await act(async () => { vi.advanceTimersByTime(60_000) })
     expect(getDeckSharingStatusesAction).toHaveBeenCalledTimes(3)
+  })
+
+  it('keeps the previous badges when a check fails, and lets only the newest check win', async () => {
+    let resolveOld!: (v: unknown) => void
+    getDeckSharingStatusesAction
+      .mockResolvedValueOnce({ d1: { flash: true, openContributions: false } })
+      .mockRejectedValueOnce(new Error('Failed to find Server Action'))
+      .mockReturnValueOnce(new Promise((r) => { resolveOld = r }))
+      .mockResolvedValueOnce({ d1: { flash: false, openContributions: true } })
+    const badges = (flash: boolean, open: boolean) => `{"flash":${flash},"openContributions":${open}}`
+    render(<DecksList data={decks} />)
+    await waitFor(() => expect(screen.getByTestId('card-d1').textContent).toBe(badges(true, false)))
+
+    await act(async () => { document.dispatchEvent(new Event('visibilitychange')) })
+    expect(screen.getByTestId('card-d1').textContent).toBe(badges(true, false))
+
+    await act(async () => { document.dispatchEvent(new Event('visibilitychange')) })
+    await act(async () => { document.dispatchEvent(new Event('visibilitychange')) })
+    await waitFor(() => expect(screen.getByTestId('card-d1').textContent).toBe(badges(false, true)))
+    await act(async () => resolveOld({ d1: { flash: true, openContributions: true } }))
+    expect(screen.getByTestId('card-d1').textContent).toBe(badges(false, true))
+  })
+
+  it('does not re-check when the page refreshes with the same decks', async () => {
+    getDeckSharingStatusesAction.mockResolvedValue({})
+    const { rerender } = render(<DecksList data={decks} />)
+    rerender(<DecksList data={[...decks]} />)
+    expect(getDeckSharingStatusesAction).toHaveBeenCalledTimes(1)
+    rerender(<DecksList data={[decks[0]]} />)
+    expect(getDeckSharingStatusesAction).toHaveBeenCalledTimes(2)
   })
 
   it('ignores badges that arrive after leaving the page', async () => {

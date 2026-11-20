@@ -86,8 +86,9 @@ describe('DeckSharingSheet', () => {
     unmount()
     actions.getPublishPreviewAction.mockResolvedValueOnce({ success: false, error: 'Preview failed' })
     render(<DeckSharingSheet deck={deck()} kind="publish" onClose={vi.fn()} />)
-    expect((await screen.findByTestId('publish')).textContent).toBe('null')
-    expect(screen.getByTestId('error').textContent).toBe('Preview failed')
+    // A published deck without its preview shows the error and no Publish button.
+    expect((await screen.findByTestId('error')).textContent).toBe('Preview failed')
+    expect(screen.queryByTestId('publish')).toBeNull()
   })
 
   it('loads updates and reloads them after a sync', async () => {

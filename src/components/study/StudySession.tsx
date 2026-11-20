@@ -3,6 +3,9 @@
 import AppButton from '@/components/app/AppButton'
 import AppError from '@/components/app/AppError'
 import AppSelect from '@/components/app/AppSelect'
+import DecksAction from '@/components/decks/DecksAction'
+import { deckMenuActions } from '@/components/decks/deckMenuActions'
+import DeckSharingSheet, { type DeckSheetKind } from '@/components/decks/DeckSharingSheet'
 import LayoutPage from '@/components/layout/LayoutPage'
 import StudyAnswerControls from '@/components/study/StudyAnswerControls'
 import StudyCardMenu from '@/components/study/StudyCardMenu'
@@ -54,6 +57,7 @@ export default function StudySession({ deck, tags }: StudySessionProps) {
   const [deleteCardId, setDeleteCardId] = useState<string | null>(null)
   const [isReportOpen, setIsReportOpen] = useState(false)
   const [isEditOpen, setIsEditOpen] = useState(false)
+  const [sheet, setSheet] = useState<DeckSheetKind | null>(null)
 
   const [range, setRange] = useState<IntervalRange | null>(null)
   const card = result?.card?.card ?? null
@@ -129,6 +133,8 @@ export default function StudySession({ deck, tags }: StudySessionProps) {
 
   return (
     <LayoutPage
+      // The deck menu sits in the header like the mobile study screen's app bar.
+      actions={<DecksAction deck={deck} actions={deckMenuActions(deck)} onOpenSheet={setSheet} />}
       breadcrumbs={[
         { href: '/decks', title: tRoot('term.decks') },
         { href: `/decks/${deck.id}`, title: deck.name },
@@ -215,6 +221,8 @@ export default function StudySession({ deck, tags }: StudySessionProps) {
           submit(() => deleteCardAction({ deckId: deck.id, cardId }), false)
         }}
       />
+
+      {sheet && <DeckSharingSheet deck={deck} kind={sheet} onClose={() => setSheet(null)} />}
 
       {card && isEditOpen && (
         <StudyEditFactModal

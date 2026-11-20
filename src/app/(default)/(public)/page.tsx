@@ -3,6 +3,7 @@ import HomePage from '@/components/home/HomePage'
 import { getDeckCatalogService } from '@/modules/deck-sharing/deck-sharing.service'
 import type { Metadata } from 'next'
 import { getTranslations } from 'next-intl/server'
+import { redirect } from 'next/navigation'
 import { Suspense } from 'react'
 
 /** 首页每页展示的公开卡组数 */
@@ -14,6 +15,7 @@ async function SharedDecksHomeSCP({ page }: { page: number }){
     return null
   }
   const totalPages = Math.ceil((homeDecks.meta.total ?? 0) / HOME_PAGE_SIZE)
+  if (totalPages > 0 && page > totalPages) redirect(`/?page=${totalPages}`)
   return <SharedDecksHome data={homeDecks.data.decks} totalPages={totalPages} />
 }
 

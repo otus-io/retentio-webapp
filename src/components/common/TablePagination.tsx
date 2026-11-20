@@ -72,7 +72,7 @@ export default function TablePagination({ totalPages, className }: TablePaginati
               ))}
           <Pagination.Item>
             <Pagination.Next
-              isDisabled={page === totalPages}
+              isDisabled={page >= totalPages}
               onClick={() => setParam('page', String(page + 1))}
             >
               <Pagination.NextIcon />

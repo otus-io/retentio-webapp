@@ -2,6 +2,7 @@
 import AppLink from '@/components/app/AppLink'
 import HighlightedText from '@/components/common/HighlightedText'
 import DecksAction from '@/components/decks/DecksAction'
+import { deckMenuActions } from '@/components/decks/deckMenuActions'
 import DeckSharingSheet, { type DeckSheetKind } from '@/components/decks/DeckSharingSheet'
 import type { DeckSharingStatus } from '@/modules/deck-sharing/deck-sharing.schema'
 import type { Deck } from '@/modules/decks/decks.schema'
@@ -72,10 +73,6 @@ export default function DecksCard({
   const [sheet, setSheet] = useState<DeckSheetKind | null>(null)
   const imported = !!deck.source_deck_id
   const publishedSource = !imported && deck.published_version > 0
-  // Same menu as the mobile app: own decks publish and review contributions; imports send and sync.
-  const actions = imported
-    ? ['details', 'facts', 'edit', 'outbox', 'updates', 'qa', 'delete'] as const
-    : ['details', 'facts', 'edit', 'publish', ...(publishedSource ? ['inbox'] as const : []), 'qa', 'delete'] as const
 
   return (
     <Card
@@ -111,7 +108,7 @@ export default function DecksCard({
               <RefreshCw className="size-4" />
             </DeckBadge>
           )}
-          <DecksAction deck={deck} actions={[...actions]} onOpenSheet={setSheet} />
+          <DecksAction deck={deck} actions={deckMenuActions(deck)} onOpenSheet={setSheet} />
           {sheet && <DeckSharingSheet deck={deck} kind={sheet} onClose={() => setSheet(null)} />}
         </span>
       </div>

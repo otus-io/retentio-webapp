@@ -8,7 +8,7 @@ import { FolderOpen, CircleQuestionMark } from 'lucide-react'
 import DecksCard from '@/components/decks/DecksCard'
 import AppLink from '@/components/app/AppLink'
 import { DecksSearch } from '@/components/decks/DecksSearch'
-import { useDeferredValue, useEffect, useMemo, useState } from 'react'
+import { useDeferredValue, useEffect, useMemo, useRef, useState } from 'react'
 import Fuse from 'fuse.js'
 import DeckCreateButton from '@/components/decks/DeckCreateButton'
 import DeckImportButton from '@/components/decks/DeckImportButton'
@@ -25,15 +25,22 @@ export default function DecksList({
 }) {
   const t = useTranslations()
   const [sharing, setSharing] = useState<Record<string, DeckSharingStatus>>({})
+  const latestCheck = useRef(0)
+  // Re-poll when the set of decks changes, not on every page refresh.
+  const deckIds = data.map((deck) => deck.id).join(',')
 
   // Badges load after the list renders and re-check every minute while the tab is visible.
   useEffect(() => {
     let cancelled = false
     const check = () => {
       if (document.visibilityState === 'hidden') return
-      void getDeckSharingStatusesAction(data).then((next) => {
-        if (!cancelled) setSharing(next)
-      })
+      const id = ++latestCheck.current
+      getDeckSharingStatusesAction()
+        // Only the newest check may update the badges; a failed one keeps the previous badges.
+        .then((next) => {
+          if (!cancelled && id === latestCheck.current) setSharing(next)
+        })
+        .catch(() => {})
     }
     check()
     const timer = window.setInterval(check, SHARING_POLL_MS)
@@ -43,7 +50,7 @@ export default function DecksList({
       window.clearInterval(timer)
       document.removeEventListener('visibilitychange', check)
     }
-  }, [data])
+  }, [deckIds])
   const [keywords, setKeywords] = useState('')
   const deferredQuery = useDeferredValue(keywords)
 

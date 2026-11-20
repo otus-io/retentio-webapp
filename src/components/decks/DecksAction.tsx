@@ -12,7 +12,7 @@ import DeleteModal from '@/components/common/DeleteModal'
 import { deleteDeckAction } from '@/modules/decks/decks.action'
 import type { DeckSheetKind } from '@/components/decks/DeckSharingSheet'
 
-type DecksActionItem = 'details' | 'edit' | 'facts' | 'qa' | 'delete' | DeckSheetKind
+export type DecksActionItem = 'details' | 'edit' | 'facts' | 'qa' | 'delete' | DeckSheetKind
 
 const sheetItems = [
   { id: 'publish', label: 'deck-menu.publish-deck', Icon: Share2 },
@@ -66,7 +66,7 @@ export default function DecksAction({ deck, actions, onOpenSheet }: DecksActionP
   return (
     <>
       <Dropdown>
-        <Dropdown.Trigger>
+        <Dropdown.Trigger aria-label={t('common.deck-options')}>
           <EllipsisVertical className="size-4 text-muted" />
         </Dropdown.Trigger>
         <Dropdown.Popover>

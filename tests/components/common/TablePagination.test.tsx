@@ -71,6 +71,13 @@ describe('TablePagination', () => {
     mockGetParam.mockReset()
   })
 
+  it('超出最后一页时下一页按钮也禁用', () => {
+    mockGetParam.mockReturnValue('9')
+    render(<TablePagination totalPages={5} />)
+    expect(screen.getByText('›').closest('button')?.getAttribute('disabled')).not.toBeNull()
+    mockGetParam.mockReset()
+  })
+
   it('totalPages 较大时显示省略号', () => {
     render(<TablePagination totalPages={10} />)
     expect(screen.getByText('...')).toBeDefined()

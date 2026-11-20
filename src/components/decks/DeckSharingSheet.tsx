@@ -120,7 +120,8 @@ export default function DeckSharingSheet({ deck, kind, onClose }: DeckSharingShe
           <Modal.Body className="px-1 py-2">
             {!loaded && <div className="flex justify-center py-10"><Spinner /></div>}
             <AppError error={error === '' ? t('load-failed') : error} />
-            {loaded && kind === 'publish' && <DeckPublishPanel deck={deck} preview={preview} />}
+            {/* Without its preview, a published deck must not offer Publish next to the error. */}
+            {loaded && kind === 'publish' && error === null && <DeckPublishPanel deck={deck} preview={preview} />}
             {loaded && kind === 'updates' && updates && (
               <DeckImportUpdatesPanel deckId={deck.id} updates={updates} onSynced={reload} />
             )}

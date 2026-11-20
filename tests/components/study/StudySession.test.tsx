@@ -33,7 +33,19 @@ vi.mock('@/components/app/AppTextarea', () => ({
 vi.mock('@/components/app/AppError', () => ({
   default: ({ error }: { error?: string | null }) => (error ? <div data-testid="error">{error}</div> : null),
 }))
-vi.mock('@/components/layout/LayoutPage', () => ({ default: ({ children }: { children: ReactNode }) => <main>{children}</main> }))
+vi.mock('@/components/layout/LayoutPage', () => ({
+  default: ({ children, actions }: { children: ReactNode, actions?: ReactNode }) => <main>{actions}{children}</main>,
+}))
+vi.mock('@/components/decks/DecksAction', () => ({
+  default: ({ actions, onOpenSheet }: { actions: string[], onOpenSheet: (k: string) => void }) => (
+    <button type="button" onClick={() => onOpenSheet('publish')}>{`deck-menu:${actions.join(',')}`}</button>
+  ),
+}))
+vi.mock('@/components/decks/DeckSharingSheet', () => ({
+  default: ({ kind, onClose }: { kind: string, onClose: () => void }) => (
+    <button type="button" data-testid="deck-sheet" onClick={onClose}>{kind}</button>
+  ),
+}))
 vi.mock('@/components/facts/FactsAudioPlayButton', () => ({
   default: ({ mediaId }: { mediaId: string }) => <button type="button" data-testid="audio">{mediaId}</button>,
 }))
@@ -252,6 +264,17 @@ describe('StudySession', () => {
     await waitFor(() => expect((screen.getByRole('combobox') as HTMLSelectElement).disabled).toBe(false))
     fireEvent.change(screen.getByRole('combobox'), { target: { value: 't1' } })
     expect(await screen.findByText('due-progress:{"cleared":0,"target":5,"percent":"0%"}')).toBeTruthy()
+  })
+
+  it('offers the deck menu in the header, like the mobile study app bar', async () => {
+    actions.getNextCardAction.mockResolvedValue(withCard())
+    render(<StudySession deck={deck} tags={tags} />)
+    await screen.findByText('hola')
+    const menu = screen.getByText('deck-menu:details,facts,edit,publish,qa,delete')
+    fireEvent.click(menu)
+    expect(screen.getByTestId('deck-sheet').textContent).toBe('publish')
+    fireEvent.click(screen.getByTestId('deck-sheet'))
+    expect(screen.queryByTestId('deck-sheet')).toBeNull()
   })
 
   it('measures progress against the due count at session start', async () => {
