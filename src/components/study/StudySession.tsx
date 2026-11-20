@@ -16,6 +16,7 @@ import {
 } from '@/modules/cards/cards.action'
 import { computeIntervalRange, type IntervalRange, intervalToUnit } from '@/modules/cards/cards.schema'
 import type { Deck } from '@/modules/decks/decks.schema'
+import type { Tag } from '@/modules/tags/tags.schema'
 import { AlertDialog, Card, Dropdown, Label, Slider, Spinner } from '@heroui/react'
 import { EllipsisVertical, EyeOff, Flag, PartyPopper, Pencil, Trash2 } from 'lucide-react'
 import { useFormatter, useTranslations } from 'next-intl'
@@ -27,9 +28,11 @@ const ALL_TAGS = '__all__'
 
 interface StudySessionProps {
   deck: Deck
+  /** Tags used on this deck's facts (what `tag_id` filters by) */
+  tags: Tag[]
 }
 
-export default function StudySession({ deck }: StudySessionProps) {
+export default function StudySession({ deck, tags }: StudySessionProps) {
   const t = useTranslations('study')
   const tRoot = useTranslations()
   const format = useFormatter()
@@ -109,7 +112,7 @@ export default function StudySession({ deck }: StudySessionProps) {
     return format.number(value, { style: 'unit', unit, unitDisplay: 'long' })
   }
 
-  const tagItems = [{ id: ALL_TAGS, name: t('all-tags') }, ...(deck.tags ?? []).map((e) => ({ id: e.id, name: e.name }))]
+  const tagItems = [{ id: ALL_TAGS, name: t('all-tags') }, ...tags.map((e) => ({ id: e.id, name: e.name }))]
   const due = result?.stats?.due_cards
 
   return (
@@ -153,7 +156,7 @@ export default function StudySession({ deck }: StudySessionProps) {
         )}
 
         {card && range && (
-          <Card className="min-h-80">
+          <Card key={card.id} className="min-h-80">
             <Card.Header className="flex-row items-center justify-end">
               <Dropdown>
                 <Dropdown.Trigger aria-label={t('card-options')}>

@@ -39,7 +39,7 @@ describe('statistics page', () => {
     render(await Page(props({ days: '12', deck: 'nope' })))
     expect(getReviewsByDayService).toHaveBeenCalledWith('d1', 30)
     expect(getReviewsByDayService).toHaveBeenCalledWith('d2', 30)
-    expect(panel.mock.calls[0][0]).toMatchObject({ deckId: null, days: 30, summary: { total: 5 } })
+    expect(panel.mock.calls[0][0]).toMatchObject({ deckId: null, days: 30, summary: { total: 5 }, partial: false })
   })
 
   it('loads one deck for a valid filter and range', async () => {
@@ -48,6 +48,12 @@ describe('statistics page', () => {
     expect(getReviewsByDayService).toHaveBeenCalledTimes(1)
     expect(getReviewsByDayService).toHaveBeenCalledWith('d2', 7)
     expect(panel.mock.calls[0][0]).toMatchObject({ deckId: 'd2', days: 7, summary: { total: 4 } })
+  })
+
+  it('flags partial data when some decks fail', async () => {
+    getReviewsByDayService.mockResolvedValueOnce(series(2)).mockResolvedValueOnce({ success: false })
+    render(await Page(props({})))
+    expect(panel.mock.calls[0][0]).toMatchObject({ summary: { total: 2 }, partial: true })
   })
 
   it('reports failure when no series loads', async () => {

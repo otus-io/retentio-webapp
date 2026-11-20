@@ -8,8 +8,14 @@ const notFound = vi.fn(() => {
 
 vi.mock('next-intl/server', () => ({ getTranslations: async () => (key: string) => key }))
 vi.mock('next/navigation', () => ({ notFound: () => notFound() }))
+const getStudyTagsService = vi.fn()
 vi.mock('@/modules/decks/decks.service', () => ({ getDeckService: (id: string) => getDeckService(id) }))
-vi.mock('@/components/study/StudySession', () => ({ default: ({ deck }: { deck: { id: string } }) => <div>study {deck.id}</div> }))
+vi.mock('@/modules/cards/cards.service', () => ({ getStudyTagsService: (id: string) => getStudyTagsService(id) }))
+vi.mock('@/components/study/StudySession', () => ({
+  default: ({ deck, tags }: { deck: { id: string }, tags: { name: string }[] }) => (
+    <div>study {deck.id} [{tags.map((t) => t.name).join(',')}]</div>
+  ),
+}))
 vi.mock('@/components/qa/QaSession', () => ({ default: ({ deck }: { deck: { id: string } }) => <div>qa {deck.id}</div> }))
 vi.mock('@/components/app/ClientOnly', () => ({ default: ({ children }: { children: React.ReactNode }) => <>{children}</> }))
 
@@ -25,13 +31,23 @@ describe('study and qa pages', () => {
 
   it('render the session for the deck', async () => {
     getDeckService.mockResolvedValue({ success: true, data: { id: 'd1' } })
+    getStudyTagsService.mockResolvedValue({ success: true, data: { tags: [{ name: 'n5' }] } })
     render(await StudyPage(props))
     render(await QaPage(props))
-    expect(screen.getByText('study d1')).toBeTruthy()
+    expect(screen.getByText('study d1 [n5]')).toBeTruthy()
     expect(screen.getByText('qa d1')).toBeTruthy()
   })
 
+  it('studies without a filter when tags fail or are null', async () => {
+    getDeckService.mockResolvedValue({ success: true, data: { id: 'd1' } })
+    getStudyTagsService.mockResolvedValueOnce({ success: false }).mockResolvedValueOnce({ success: true, data: { tags: null } })
+    render(await StudyPage(props))
+    render(await StudyPage(props))
+    expect(screen.getAllByText('study d1 []')).toHaveLength(2)
+  })
+
   it('404 for a missing deck', async () => {
+    getStudyTagsService.mockResolvedValue({ success: true, data: { tags: [] } })
     getDeckService.mockResolvedValue({ success: false })
     await expect(StudyPage(props)).rejects.toThrow('NOT_FOUND')
     await expect(QaPage(props)).rejects.toThrow('NOT_FOUND')

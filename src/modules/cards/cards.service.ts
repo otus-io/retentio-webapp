@@ -52,3 +52,11 @@ export async function getReviewsByDayService(deckId: string, days: number) {
     return ServiceResponse.error('getReviewsByDayService failed', e)
   }
 }
+
+export async function getStudyTagsService(deckId: string) {
+  try {
+    return ServiceResponse.success(await cardsApi.getStudyTags(deckId))
+  } catch (e) {
+    return ServiceResponse.error('getStudyTagsService failed', e)
+  }
+}

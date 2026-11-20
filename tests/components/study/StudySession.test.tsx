@@ -48,8 +48,8 @@ const deck = {
   id: 'd1',
   name: 'Spanish',
   fields: ['Word', 'Meaning'],
-  tags: [{ id: 't1', name: 'verbs' }],
 } as unknown as Deck
+const tags = [{ id: 't1', name: 'verbs', description: '' }] as never
 
 const now = 1_700_000_000
 const card = {
@@ -87,7 +87,7 @@ describe('StudySession', () => {
   it('shows the front, reveals the back and submits the chosen interval', async () => {
     actions.getNextCardAction.mockResolvedValueOnce(withCard()).mockResolvedValueOnce(withCard(null))
     actions.reviewCardAction.mockResolvedValue({ success: true })
-    render(<StudySession deck={deck} />)
+    render(<StudySession deck={deck} tags={tags} />)
 
     expect(await screen.findByText('hola')).toBeTruthy()
     expect(screen.getByTestId('audio').textContent).toBe('a1')
@@ -114,7 +114,7 @@ describe('StudySession', () => {
 
   it('filters by tag and reloads when caught up', async () => {
     actions.getNextCardAction.mockResolvedValue(withCard(null, null))
-    render(<StudySession deck={deck} />)
+    render(<StudySession deck={deck} tags={tags} />)
     expect(await screen.findByText('caught-up-title')).toBeTruthy()
     expect(actions.getNextCardAction).toHaveBeenLastCalledWith('d1', undefined)
     expect(screen.getByText('progress:{"studied":0,"due":0}')).toBeTruthy()
@@ -132,7 +132,7 @@ describe('StudySession', () => {
 
   it('hides the tag filter for decks without tags and shows load errors', async () => {
     actions.getNextCardAction.mockResolvedValue({ success: false, error: 'Deck not found' })
-    render(<StudySession deck={{ ...deck, tags: undefined } as unknown as Deck} />)
+    render(<StudySession deck={deck} tags={[]} />)
     expect(await screen.findByTestId('error')).toBeTruthy()
     expect(screen.getByTestId('error').textContent).toBe('Deck not found')
     expect(screen.queryByRole('combobox')).toBeNull()
@@ -140,7 +140,7 @@ describe('StudySession', () => {
 
   it('shows an empty error string when the action gives none', async () => {
     actions.getNextCardAction.mockResolvedValue({ success: false })
-    render(<StudySession deck={deck} />)
+    render(<StudySession deck={deck} tags={tags} />)
     await waitFor(() => expect(actions.getNextCardAction).toHaveBeenCalled())
     expect(screen.queryByText('hola')).toBeNull()
   })
@@ -148,7 +148,7 @@ describe('StudySession', () => {
   it('hides a card without counting it as studied', async () => {
     actions.getNextCardAction.mockResolvedValueOnce(withCard()).mockResolvedValue(withCard(null))
     actions.hideCardAction.mockResolvedValue({ success: true })
-    render(<StudySession deck={deck} />)
+    render(<StudySession deck={deck} tags={tags} />)
     await screen.findByText('hola')
     fireEvent.click(screen.getByText('hide-card'))
     await waitFor(() => expect(actions.hideCardAction).toHaveBeenCalledWith({ deckId: 'd1', cardId: 'c1' }))
@@ -159,7 +159,7 @@ describe('StudySession', () => {
   it('reports a failed mutation and keeps the card', async () => {
     actions.getNextCardAction.mockResolvedValue(withCard())
     actions.hideCardAction.mockResolvedValueOnce({ success: false, error: 'nope' }).mockResolvedValueOnce({ success: false })
-    render(<StudySession deck={deck} />)
+    render(<StudySession deck={deck} tags={tags} />)
     await screen.findByText('hola')
     fireEvent.click(screen.getByText('hide-card'))
     expect((await screen.findByTestId('error')).textContent).toBe('nope')
@@ -171,7 +171,7 @@ describe('StudySession', () => {
 
   it('opens the facts editor', async () => {
     actions.getNextCardAction.mockResolvedValue(withCard())
-    render(<StudySession deck={deck} />)
+    render(<StudySession deck={deck} tags={tags} />)
     await screen.findByText('hola')
     fireEvent.click(screen.getByText('edit-fact'))
     expect(push).toHaveBeenCalledWith('/decks/d1/facts')
@@ -181,7 +181,7 @@ describe('StudySession', () => {
   it('deletes a card after confirmation', async () => {
     actions.getNextCardAction.mockResolvedValueOnce(withCard()).mockResolvedValue(withCard(null))
     actions.deleteCardAction.mockResolvedValue({ success: true })
-    render(<StudySession deck={deck} />)
+    render(<StudySession deck={deck} tags={tags} />)
     await screen.findByText('hola')
     fireEvent.click(screen.getAllByText('delete-card')[0])
     fireEvent.click(screen.getByText('dismiss'))
@@ -195,7 +195,7 @@ describe('StudySession', () => {
 
   it('treats a front-only card as having no back', async () => {
     actions.getNextCardAction.mockResolvedValue(withCard({ ...card, back: [] }))
-    render(<StudySession deck={deck} />)
+    render(<StudySession deck={deck} tags={tags} />)
     await screen.findByText('hola')
     await clickWhenEnabled('show-answer')
     expect(screen.queryByText('hello')).toBeNull()
@@ -204,7 +204,7 @@ describe('StudySession', () => {
   it('lets importers report an issue on the current fact', async () => {
     actions.getNextCardAction.mockResolvedValue(withCard())
     submitReport.mockResolvedValue({ success: true })
-    render(<StudySession deck={{ ...deck, source_deck_id: 'src' } as Deck} />)
+    render(<StudySession deck={{ ...deck, source_deck_id: 'src' } as Deck} tags={tags} />)
     await screen.findByText('hola')
     fireEvent.click(screen.getByText('report-issue'))
     expect(screen.getByRole('dialog')).toBeTruthy()
@@ -217,5 +217,18 @@ describe('StudySession', () => {
       expect.any(FormData),
     )
     expect(toast).toHaveBeenCalledWith('report-sent')
+  })
+
+  it('resets card media state when the next card loads', async () => {
+    const second = { ...card, id: 'c2', front: [{ text: 'adiós' }] }
+    actions.getNextCardAction.mockResolvedValueOnce(withCard()).mockResolvedValue(withCard(second))
+    actions.reviewCardAction.mockResolvedValue({ success: true })
+    render(<StudySession deck={deck} tags={tags} />)
+    await screen.findByText('hola')
+    await clickWhenEnabled('show-answer')
+    await clickWhenEnabled('next')
+    expect(await screen.findByText('adiós')).toBeTruthy()
+    // the new card starts hidden again (fresh card subtree)
+    expect(screen.getByText('show-answer')).toBeTruthy()
   })
 })

@@ -79,12 +79,10 @@ const DEF_FACTOR = 2
 
 /**
  * 计算复习间隔的允许范围（秒），规则见 docs/api.md「Review a Card」。
- * 当 due_date <= last_review 时返回全 0。
+ * 小于 300 秒（含异常的 due_date <= last_review）一律按 300 秒计算。
  */
 export function computeIntervalRange(nowSec: number, lastReview: number, dueDate: number): IntervalRange {
-  const current = dueDate - lastReview
-  if (current <= 0) return { min: 0, max: 0, def: 0 }
-  const interval = Math.max(MIN_INTERVAL_SEC, current)
+  const interval = Math.max(MIN_INTERVAL_SEC, dueDate - lastReview)
   const urgency = (nowSec - lastReview) / interval
   const scale = (factor: number) => urgency >= 1
     ? interval * factor

@@ -1,6 +1,5 @@
 'use server'
 
-import { revalidatePath } from 'next/cache'
 import type { CardStats, NextCardResponseDTO } from '@/modules/cards/cards.schema'
 import {
   deleteCardService,
@@ -34,7 +33,6 @@ export async function getNextCardAction(deckId: string, tagId?: string): Promise
 export async function reviewCardAction({ deckId, cardId, interval }: CardPayload & { interval: number }): Promise<ActionState> {
   const res = await reviewCardService(deckId, cardId, interval)
   if (!res.success) return { success: false, error: res.message }
-  revalidatePath(`/decks/${deckId}`)
   return { success: true }
 }
 
@@ -42,7 +40,6 @@ export async function reviewCardAction({ deckId, cardId, interval }: CardPayload
 export async function hideCardAction({ deckId, cardId }: CardPayload): Promise<ActionState> {
   const res = await hideCardService(deckId, cardId)
   if (!res.success) return { success: false, error: res.message }
-  revalidatePath(`/decks/${deckId}`)
   return { success: true }
 }
 
@@ -50,6 +47,5 @@ export async function hideCardAction({ deckId, cardId }: CardPayload): Promise<A
 export async function deleteCardAction({ deckId, cardId }: CardPayload): Promise<ActionState> {
   const res = await deleteCardService(deckId, cardId)
   if (!res.success) return { success: false, error: res.message }
-  revalidatePath(`/decks/${deckId}`)
   return { success: true }
 }

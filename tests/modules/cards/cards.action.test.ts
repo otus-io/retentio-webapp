@@ -8,10 +8,8 @@ const services = vi.hoisted(() => ({
   deleteCardService: vi.fn(),
 }))
 
-vi.mock('next/cache', () => ({ revalidatePath: vi.fn() }))
 vi.mock('@/modules/cards/cards.service', () => services)
 
-import { revalidatePath } from 'next/cache'
 import { deleteCardAction, getNextCardAction, hideCardAction, reviewCardAction } from '@/modules/cards/cards.action'
 
 const stats = { due_cards: 3 }
@@ -48,13 +46,10 @@ describe('cards actions', () => {
     ['reviewCardAction', () => reviewCardAction({ deckId: 'd1', cardId: 'c1', interval: 60 }), services.reviewCardService],
     ['hideCardAction', () => hideCardAction({ deckId: 'd1', cardId: 'c1' }), services.hideCardService],
     ['deleteCardAction', () => deleteCardAction({ deckId: 'd1', cardId: 'c1' }), services.deleteCardService],
-  ] as const)('%s revalidates on success and reports failure', async (_, call, service) => {
+  ] as const)('%s reports success and failure', async (_, call, service) => {
     service.mockResolvedValueOnce({ success: true })
     expect(await call()).toEqual({ success: true })
-    expect(revalidatePath).toHaveBeenCalledWith('/decks/d1')
-    vi.mocked(revalidatePath).mockClear()
     service.mockResolvedValueOnce({ success: false, message: 'nope' })
     expect(await call()).toEqual({ success: false, error: 'nope' })
-    expect(revalidatePath).not.toHaveBeenCalled()
   })
 })

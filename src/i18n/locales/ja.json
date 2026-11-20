@@ -481,7 +481,8 @@
     "no-activity": "この期間には復習記録がありません。",
     "reviews-count": "{count}回の復習",
     "weekday-distribution": "曜日別の復習",
-    "utc-note": "日付と日の区切りは UTC です。"
+    "utc-note": "日付と日の区切りは UTC です。",
+    "partial-load": "一部のデッキを読み込めなかったため、数値が不完全な可能性があります。"
   },
   "qa": {
     "title": "QAモード",

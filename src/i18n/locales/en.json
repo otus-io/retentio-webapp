@@ -385,8 +385,8 @@
     "preview-has-changes": "Unpublished changes",
     "preview-facts": "Facts: {added} added, {edited} edited, {removed} removed",
     "preview-media": "Media: {added} added, {edited} updated, {removed} deleted",
-    "preview-tags": "{count} tag changes",
-    "preview-templates": "{count} card template changes",
+    "preview-tags": "{count, plural, one {# tag change} other {# tag changes}}",
+    "preview-templates": "{count, plural, one {# card template change} other {# card template changes}}",
     "preview-meta": "Deck name, description, fields or rate changed",
     "description": "Browse and import public decks published by the community to jump-start your learning.",
     "heading": "Shared deck catalog",
@@ -485,9 +485,10 @@
     "daily-average": "Daily average",
     "daily-activity": "Daily activity",
     "no-activity": "No review activity in this period.",
-    "reviews-count": "{count} reviews",
+    "reviews-count": "{count, plural, one {# review} other {# reviews}}",
     "weekday-distribution": "Reviews by weekday",
-    "utc-note": "Dates and day boundaries use UTC."
+    "utc-note": "Dates and day boundaries use UTC.",
+    "partial-load": "Some decks could not be loaded, so these numbers may be incomplete."
   },
   "qa": {
     "title": "QA mode",
@@ -498,7 +499,7 @@
     "complete-title": "You're done with these columns. Thank you.",
     "change-columns": "Choose columns",
     "share-with-author": "Share sign-offs with author",
-    "review-sent": "Sent {count} verified fields to the author",
+    "review-sent": "{count, plural, one {Sent # verified field to the author} other {Sent # verified fields to the author}}",
     "position": "Fact {current} of {total}",
     "verified": "Verified",
     "prev": "Previous",

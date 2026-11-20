@@ -710,6 +710,7 @@ describe('deleteAccountAction', () => {
     const state = await deleteAccountAction(null, formData({ password: 'wrong' }))
     expect(state).toEqual({ error: 'Invalid credentials', success: false })
     expect(redirect).not.toHaveBeenCalled()
+    expect(revalidatePath).toHaveBeenCalledWith('/', 'layout')
   })
 
   it('redirects home after deleting', async () => {

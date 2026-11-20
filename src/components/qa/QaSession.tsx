@@ -266,7 +266,11 @@ export default function QaSession({ deck }: QaSessionProps) {
                 >
                   {t('prev')}
                 </AppButton>
-                <AppButton variant="tertiary" isDisabled={!hasNext || isPending} onPress={() => loadFact(factIds, index + 1)}>
+                <AppButton
+                  variant="tertiary"
+                  isDisabled={isPending}
+                  onPress={() => (hasNext ? loadFact(factIds, index + 1) : setComplete(true))}
+                >
                   {t('skip')}
                 </AppButton>
                 <AppButton

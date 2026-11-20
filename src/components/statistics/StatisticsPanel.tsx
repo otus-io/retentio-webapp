@@ -15,9 +15,11 @@ interface StatisticsPanelProps {
   deckId: string | null
   days: number
   summary: ReviewSummary | null
+  /** Some decks failed to load, so totals are understated */
+  partial?: boolean
 }
 
-export default function StatisticsPanel({ decks, deckId, days, summary }: StatisticsPanelProps) {
+export default function StatisticsPanel({ decks, deckId, days, summary, partial = false }: StatisticsPanelProps) {
   const t = useTranslations('statistics')
   const format = useFormatter()
   const router = useRouter()
@@ -64,6 +66,7 @@ export default function StatisticsPanel({ decks, deckId, days, summary }: Statis
 
         {decks.length === 0 && <p className="text-muted">{t('no-decks')}</p>}
         {decks.length > 0 && !summary && <AppError error={t('load-failed')} />}
+        {partial && <AppError error={t('partial-load')} />}
 
         {summary && (
           <>

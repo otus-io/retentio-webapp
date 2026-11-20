@@ -214,6 +214,8 @@ export const deleteAccountAction: ActionFunction = async (_, formData) => {
   }
   const res = await deleteAccountService(result.data)
   if (!res.success) {
+    // The session may have been cleared (see deleteAccountService); refresh the header.
+    revalidatePath('/', 'layout')
     return { error: res.message, success: false }
   }
   revalidatePath('/', 'layout')

@@ -5,6 +5,7 @@ import {
   getCardStatsService,
   getNextCardService,
   getReviewsByDayService,
+  getStudyTagsService,
   hideCardService,
   reviewCardService,
 } from '@/modules/cards/cards.service'
@@ -17,6 +18,7 @@ vi.mock('@/api/cards', () => ({
   deleteCard: vi.fn(),
   getCardStats: vi.fn(),
   getReviewsByDay: vi.fn(),
+  getStudyTags: vi.fn(),
 }))
 
 const ok = { data: {}, meta: { msg: 'ok' } }
@@ -33,6 +35,7 @@ describe('cards service', () => {
     ['deleteCardService', () => deleteCardService('d1', 'c1'), cardsApi.deleteCard, ['d1', 'c1']],
     ['getCardStatsService', () => getCardStatsService('d1', 't1'), cardsApi.getCardStats, ['d1', 't1']],
     ['getReviewsByDayService', () => getReviewsByDayService('d1', 7), cardsApi.getReviewsByDay, ['d1', 7]],
+    ['getStudyTagsService', () => getStudyTagsService('d1'), cardsApi.getStudyTags, ['d1']],
   ] as const)('%s wraps success and failure', async (_, call, api, args) => {
     vi.mocked(api).mockResolvedValueOnce(ok as never)
     expect(await call()).toMatchObject({ success: true })

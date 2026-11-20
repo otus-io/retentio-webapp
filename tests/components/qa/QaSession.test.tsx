@@ -225,6 +225,17 @@ describe('QaSession', () => {
     expect(screen.getByText('progress:{"verified":1,"total":3}')).toBeTruthy()
   })
 
+  it('skipping the last fact finishes the walk', async () => {
+    actions.startQaWalkAction.mockResolvedValue({ success: true, data: { factIds: ['f1'], stats } })
+    actions.getQaFactAction.mockResolvedValue(fact('f1', [{ text: 'hola' }]))
+    render(<QaSession deck={deck} />)
+    await clickWhenEnabled('start')
+    await screen.findByText('hola')
+    await clickWhenEnabled('skip')
+    expect(await screen.findByText('complete-title')).toBeTruthy()
+    expect(actions.putFactQualityAction).not.toHaveBeenCalled()
+  })
+
   it('shows nothing extra when sharing fails without a message', async () => {
     actions.startQaWalkAction.mockResolvedValue({ success: true, data: { factIds: [], stats } })
     actions.submitQaReviewAction.mockResolvedValue({ success: false })

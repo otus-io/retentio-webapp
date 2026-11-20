@@ -61,6 +61,18 @@ describe('deleteAccountService', () => {
     expect(res).toMatchObject({ success: true })
   })
 
+  it.each([404, 500])('clears the token when deletion fails with %i', async (status) => {
+    vi.mocked(authApi.deleteAccount).mockRejectedValue(new RequestError('Error deleting account', status))
+    expect(await deleteAccountService({ password: 'x' })).toMatchObject({ success: false, status })
+    expect(removeToken).toHaveBeenCalled()
+  })
+
+  it('keeps the token on a non-HTTP failure', async () => {
+    vi.mocked(authApi.deleteAccount).mockRejectedValue(new Error('network'))
+    expect(await deleteAccountService({ password: 'x' })).toMatchObject({ success: false })
+    expect(removeToken).not.toHaveBeenCalled()
+  })
+
   it('keeps the token when deletion fails', async () => {
     vi.mocked(authApi.deleteAccount).mockRejectedValue(new RequestError('Invalid credentials', 401))
     expect(await deleteAccountService({ password: 'x' }))

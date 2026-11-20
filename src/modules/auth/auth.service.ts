@@ -10,6 +10,7 @@ import type {
 } from './auth.schema'
 import { getToken, setToken, removeToken } from '@/lib/token'
 import { ServiceResponse } from '@/lib/response'
+import { RequestError } from '@/utils/request'
 
 async function fetchProfileWithTokenService(token: string) {
   await setToken(token)
@@ -90,6 +91,9 @@ export async function deleteAccountService(params: DeleteAccountDTO) {
     await removeToken()
     return ServiceResponse.success(res)
   } catch (e) {
+    // 404: account already gone. 500: the server may have gated the account and
+    // blacklisted the token before failing (docs/api.md), so it cannot be reused.
+    if (e instanceof RequestError && (e.status === 404 || e.status >= 500)) await removeToken()
     return ServiceResponse.error('deleteAccount failed', e)
   }
 }

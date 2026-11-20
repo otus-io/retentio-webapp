@@ -29,6 +29,7 @@ export default async function Page(props: PageProps<'/statistics'>) {
       deckId={deckId}
       days={days}
       summary={loadFailed ? null : summarizeReviewDays(loaded)}
+      partial={!loadFailed && loaded.length < targets.length}
     />
   )
 }

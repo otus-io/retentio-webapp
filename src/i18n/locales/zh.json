@@ -487,7 +487,8 @@
     "no-activity": "该时间段内暂无复习记录。",
     "reviews-count": "{count} 次复习",
     "weekday-distribution": "星期分布",
-    "utc-note": "日期和每日边界均以 UTC 计算。"
+    "utc-note": "日期和每日边界均以 UTC 计算。",
+    "partial-load": "部分卡组加载失败，以下数据可能不完整。"
   },
   "qa": {
     "title": "QA 模式",

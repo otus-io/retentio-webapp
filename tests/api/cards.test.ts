@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { request } from '@/utils/request'
-import { deleteCard, getCardStats, getNextCard, getReviewsByDay, hideCard, reviewCard } from '@/api/cards'
+import { deleteCard, getCardStats, getNextCard, getReviewsByDay, getStudyTags, hideCard, reviewCard } from '@/api/cards'
 
 vi.mock('@/utils/request', () => ({
   request: vi.fn(),
@@ -44,6 +44,11 @@ describe('cards api', () => {
     expect(request).toHaveBeenLastCalledWith('/api/decks/d1/cards?stats_only=true')
     getCardStats('d1', 't1')
     expect(request).toHaveBeenLastCalledWith('/api/decks/d1/cards?stats_only=true&tag_id=t1')
+  })
+
+  it('lists tags used on the deck facts', () => {
+    getStudyTags('d1')
+    expect(request).toHaveBeenCalledWith('/api/tags?used_on=fact&deck_id=d1&unused=exclude')
   })
 
   it('gets reviews by day', () => {

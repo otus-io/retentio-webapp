@@ -50,7 +50,8 @@ export function scoreableAspects(entry: Entry | undefined): QualityAspectName[] 
 }
 
 /**
- * PUT 用的 entries（整体替换）：勾选列的可评分方面写入 human/10；
+ * PUT 用的 entries（整体替换）：勾选列的可评分方面写入 human/10，
+ * 已有的 human 确认原样回传（保留 `by`，不改签名人）；
  * 未勾选的活动列撤回 human 确认但保留其它评分；非活动列原样保留。
  */
 export function mergeQualityEntries(
@@ -68,7 +69,10 @@ export function mergeQualityEntries(
     }
     const aspects: Partial<Record<QualityAspectName, QualityAspect>> = {}
     if (checked.has(i)) {
-      for (const aspect of scoreableAspects(entry)) aspects[aspect] = { score: HUMAN_SCORE, model: HUMAN_MODEL }
+      for (const aspect of scoreableAspects(entry)) {
+        const stored = prior[aspect]
+        aspects[aspect] = stored?.model === HUMAN_MODEL ? stored : { score: HUMAN_SCORE, model: HUMAN_MODEL }
+      }
     }
     for (const [aspect, score] of Object.entries(prior) as [QualityAspectName, QualityAspect][]) {
       if (aspects[aspect] || score.model === HUMAN_MODEL) continue

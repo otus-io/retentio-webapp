@@ -39,6 +39,17 @@ describe('mergeQualityEntries', () => {
     expect(merged).toEqual({ 0: { text: human } })
   })
 
+  it('echoes an existing human sign-off so its signer is kept', () => {
+    const signed = { ...human, by: 'author', fingerprint: 'fp' }
+    const merged = mergeQualityEntries(
+      { fact_id: 'f1', updated_at: '', entries: { 0: { text: signed } } },
+      [{ text: 'hola', audio: 'a1' }],
+      new Set([0]),
+      new Set([0]),
+    )
+    expect(merged).toEqual({ 0: { text: signed, audio: human } })
+  })
+
   it('withdraws human sign-offs on unchecked active columns', () => {
     const merged = mergeQualityEntries(
       { fact_id: 'f1', updated_at: '', entries: { 0: { text: { ...human, by: 'me' } } } },

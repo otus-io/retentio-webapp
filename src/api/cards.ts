@@ -1,4 +1,5 @@
 import { request } from '@/utils/request'
+import type { TagsListResponseDTO } from '@/modules/tags/tags.schema'
 import type {
   CardStatsResponseDTO,
   DeleteCardResponseDTO,
@@ -60,4 +61,13 @@ export function getCardStats(deckId: string, tagId?: string) {
  */
 export function getReviewsByDay(deckId: string, days: number) {
   return request<ReviewsByDayResponseDTO>(`/api/decks/${deckId}/reviews/by-day?days=${days}`)
+}
+
+/**
+ * 本卡组词条上实际使用的标签（学习时按 tag_id 过滤）
+ */
+export function getStudyTags(deckId: string) {
+  return request<TagsListResponseDTO>(
+    `/api/tags?${new URLSearchParams({ used_on: 'fact', deck_id: deckId, unused: 'exclude' })}`,
+  )
 }

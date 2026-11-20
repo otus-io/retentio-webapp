@@ -53,6 +53,11 @@ describe('StatisticsPanel', () => {
     expect(push).toHaveBeenLastCalledWith('/statistics?deck=d1&days=30')
   })
 
+  it('warns about partial data', () => {
+    render(<StatisticsPanel decks={decks} deckId={null} days={30} summary={summarizeReviewDays([])} partial />)
+    expect(screen.getByTestId('error').textContent).toBe('partial-load')
+  })
+
   it('shows empty and error states', () => {
     const { unmount } = render(<StatisticsPanel decks={[]} deckId={null} days={30} summary={null} />)
     expect(screen.getByText('no-decks')).toBeTruthy()

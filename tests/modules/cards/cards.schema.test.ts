@@ -8,8 +8,8 @@ import {
 } from '@/modules/cards/cards.schema'
 
 describe('computeIntervalRange', () => {
-  it('returns zeros for an invalid window', () => {
-    expect(computeIntervalRange(1000, 500, 500)).toEqual({ min: 0, max: 0, def: 0 })
+  it('floors an invalid window to 300 seconds', () => {
+    expect(computeIntervalRange(1000, 500, 500)).toEqual({ min: 150, max: 1200, def: 600 })
   })
 
   it('uses fixed factors when overdue', () => {
