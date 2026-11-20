@@ -7,6 +7,7 @@ import type {
   DeckFeedbackListResponseDTO,
   DeckFeedbackResponseDTO,
   DeckImportUpdatesResponseDTO,
+  DeckUpdateFactResponseDTO,
   DeckUpdatesSummaryResponseDTO,
   GetDeckCatalogDTO,
   GetDeckFeedbackDTO,
@@ -71,6 +72,13 @@ export function getDeckImportUpdates(importId: string) {
  */
 export function getDeckUpdatesSummary(importId: string) {
   return request<DeckUpdatesSummaryResponseDTO>(`/api/decks/${importId}/updates?summary=1`)
+}
+
+/**
+ * 导入卡组某条更新词条的详情（更新前后、默认处理）
+ */
+export function getDeckUpdateFact(importId: string, factId: string) {
+  return request<DeckUpdateFactResponseDTO>(`/api/decks/${importId}/updates/facts/${factId}`)
 }
 
 /**

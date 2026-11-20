@@ -558,5 +558,29 @@
     "load-failed": "无法加载贡献",
     "retry": "重试",
     "cancel": "取消"
+  },
+  "updates": {
+    "version": "当前版本 v{source} → 最新版本 v{latest}",
+    "counts": "新增 {added}，修改 {edited}，删除 {removed}，媒体变更 {media}",
+    "description-changed": "描述已更改",
+    "review-changes": "查看变更",
+    "hide-review": "收起变更",
+    "edited-section": "修改词条（{count}）",
+    "removed-section": "删除词条（{count}）",
+    "added-section": "新增词条（{count}）",
+    "media-section": "媒体变更（{count}）",
+    "templates-section": "卡片模板变更（{count}）",
+    "aligned": "已对齐",
+    "local-overlay": "本地 overlay",
+    "before": "更新前",
+    "after": "更新后",
+    "accept": "接受",
+    "keep-local": "拒绝",
+    "sync-now": "立即同步",
+    "up-to-date": "已是最新版本",
+    "sync-success": "卡组已同步",
+    "sync-failed": "同步失败",
+    "load-failed": "无法加载更新",
+    "retry": "重试"
   }
 }

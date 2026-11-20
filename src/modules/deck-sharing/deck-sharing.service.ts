@@ -146,6 +146,17 @@ export async function getDeckUpdatesSummaryService(importId: string) {
 }
 
 /**
+ * 导入卡组某条更新词条的详情
+ */
+export async function getDeckUpdateFactService(importId: string, factId: string) {
+  try {
+    return ServiceResponse.success(await deckSharingApi.getDeckUpdateFact(importId, factId))
+  } catch (e) {
+    return ServiceResponse.error('getDeckUpdateFactService failed', e)
+  }
+}
+
+/**
  * My Decks 卡片提醒，规则同移动端：导入卡组有更新、源卡组有未发布更改时闪烁；
  * 源卡组有待处理贡献时显示收件箱。
  * 请求失败时不提醒。

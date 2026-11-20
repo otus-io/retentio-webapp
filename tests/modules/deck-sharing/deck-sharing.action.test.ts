@@ -2,7 +2,9 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 const publishDeckServiceMock = vi.fn()
 const getPublishPreviewServiceMock = vi.fn()
-const getDeckImportUpdatesServiceMock = vi.fn()
+const getDeckUpdatesSummaryServiceMock = vi.fn()
+const getDeckUpdateFactServiceMock = vi.fn()
+const syncImportedDeckServiceMock = vi.fn()
 const getDeckSharingStatusesServiceMock = vi.fn()
 const getAllDecksServiceMock = vi.fn()
 
@@ -17,17 +19,20 @@ vi.mock('@/modules/decks/decks.service', () => ({
 vi.mock('@/modules/deck-sharing/deck-sharing.service', () => ({
   importDeckService: vi.fn(),
   publishDeckService: (...args: unknown[]) => publishDeckServiceMock(...args),
-  syncImportedDeckService: vi.fn(),
+  syncImportedDeckService: (...args: unknown[]) => syncImportedDeckServiceMock(...args),
   getPublishPreviewService: (...args: unknown[]) => getPublishPreviewServiceMock(...args),
-  getDeckImportUpdatesService: (...args: unknown[]) => getDeckImportUpdatesServiceMock(...args),
+  getDeckUpdatesSummaryService: (...args: unknown[]) => getDeckUpdatesSummaryServiceMock(...args),
+  getDeckUpdateFactService: (...args: unknown[]) => getDeckUpdateFactServiceMock(...args),
   getDeckSharingStatusesService: (...args: unknown[]) => getDeckSharingStatusesServiceMock(...args),
 }))
 
 import {
-  getDeckImportUpdatesAction,
   getDeckSharingStatusesAction,
+  getDeckUpdateFactAction,
+  getDeckUpdatesSummaryAction,
   getPublishPreviewAction,
   publishDeckAction,
+  syncDeckWithDecisionsAction,
 } from '@/modules/deck-sharing/deck-sharing.action'
 
 describe('sharing sheet loaders', () => {
@@ -53,11 +58,26 @@ describe('sharing sheet loaders', () => {
     expect(await getDeckSharingStatusesAction()).toEqual({})
   })
 
-  it('getDeckImportUpdatesAction returns the updates or the error', async () => {
-    getDeckImportUpdatesServiceMock.mockResolvedValueOnce({ success: true, data: { latest_version: 2 } })
-    expect(await getDeckImportUpdatesAction('i1')).toEqual({ success: true, data: { latest_version: 2 } })
-    getDeckImportUpdatesServiceMock.mockResolvedValueOnce({ success: false, message: 'gone' })
-    expect(await getDeckImportUpdatesAction('i1')).toEqual({ success: false, error: 'gone' })
+  it('getDeckUpdatesSummaryAction and getDeckUpdateFactAction return data or the error', async () => {
+    getDeckUpdatesSummaryServiceMock.mockResolvedValueOnce({ success: true, data: { latest_version: 2 } })
+    expect(await getDeckUpdatesSummaryAction('i1')).toEqual({ success: true, data: { latest_version: 2 } })
+    getDeckUpdatesSummaryServiceMock.mockResolvedValueOnce({ success: false, message: 'gone' })
+    expect(await getDeckUpdatesSummaryAction('i1')).toEqual({ success: false, error: 'gone' })
+
+    getDeckUpdateFactServiceMock.mockResolvedValueOnce({ success: true, data: { kind: 'edited' } })
+    expect(await getDeckUpdateFactAction('i1', 'f1')).toEqual({ success: true, data: { kind: 'edited' } })
+    expect(getDeckUpdateFactServiceMock).toHaveBeenCalledWith('i1', 'f1')
+    getDeckUpdateFactServiceMock.mockResolvedValueOnce({ success: false, message: 'nope' })
+    expect(await getDeckUpdateFactAction('i1', 'f1')).toEqual({ success: false, error: 'nope' })
+  })
+
+  it('syncDeckWithDecisionsAction syncs to the target version with the decisions', async () => {
+    const decisions = [{ fact_id: 'f1', action: 'keep' as const }]
+    syncImportedDeckServiceMock.mockResolvedValueOnce({ success: true, data: { source_version: 3 } })
+    expect(await syncDeckWithDecisionsAction('i1', 3, decisions)).toEqual({ success: true })
+    expect(syncImportedDeckServiceMock).toHaveBeenCalledWith('i1', { target_version: 3, decisions })
+    syncImportedDeckServiceMock.mockResolvedValueOnce({ success: false, message: 'conflict' })
+    expect(await syncDeckWithDecisionsAction('i1', 3, [])).toEqual({ success: false, error: 'conflict' })
   })
 })
 

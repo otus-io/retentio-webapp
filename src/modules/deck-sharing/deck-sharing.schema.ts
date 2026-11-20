@@ -347,7 +347,28 @@ export type DeckUpdatesSummaryResponseDTO = BaseApiResult<{
   media_change_count?: number
   card_template_change_count?: number
   description_changed?: boolean
+  change_summary?: string
 }>
+
+/** 导入卡组某条更新词条的详情（`GET /api/decks/{id}/updates/facts/{factId}`） */
+export interface DeckUpdateFactDetail {
+  fact_id: string
+  kind: 'added' | 'removed' | 'edited'
+  /** added / removed 的词条 */
+  fact?: { entries: Entry[] } | null
+  /** edited 的更新前后 */
+  before?: { entries: Entry[] } | null
+  after?: { entries: Entry[] } | null
+  has_local_overlay?: boolean
+  aligned?: boolean
+  /** removed 时服务端建议的默认处理（keep 表示保留本地） */
+  default_action?: 'accept' | 'keep'
+}
+
+export type DeckUpdateFactResponseDTO = BaseApiResult<DeckUpdateFactDetail>
+
+/** 同步时每条词条的处理 */
+export type SyncFactDecision = NonNullable<SyncImportedDeckDTO['decisions']>[number]
 
 /** My Decks 卡片上的共享提醒（与移动端一致） */
 export interface DeckSharingStatus {

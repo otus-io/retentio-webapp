@@ -558,5 +558,29 @@
     "load-failed": "Couldn't load contributions",
     "retry": "Retry",
     "cancel": "Cancel"
+  },
+  "updates": {
+    "version": "Current v{source} → latest v{latest}",
+    "counts": "Added {added}, edited {edited}, removed {removed}, media changes {media}",
+    "description-changed": "Description changed",
+    "review-changes": "Review changes",
+    "hide-review": "Hide review",
+    "edited-section": "Edited facts ({count})",
+    "removed-section": "Removed facts ({count})",
+    "added-section": "Added facts ({count})",
+    "media-section": "Media changes ({count})",
+    "templates-section": "Card template changes ({count})",
+    "aligned": "aligned",
+    "local-overlay": "local overlay",
+    "before": "Before update",
+    "after": "After update",
+    "accept": "Accept",
+    "keep-local": "Reject",
+    "sync-now": "Sync now",
+    "up-to-date": "Already up to date",
+    "sync-success": "Deck synced",
+    "sync-failed": "Couldn't sync the deck",
+    "load-failed": "Couldn't load updates",
+    "retry": "Retry"
   }
 }

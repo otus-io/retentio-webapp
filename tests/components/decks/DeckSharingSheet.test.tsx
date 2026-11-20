@@ -1,11 +1,10 @@
-import { act, fireEvent, render, screen, waitFor } from '@testing-library/react'
+import { act, fireEvent, render, screen } from '@testing-library/react'
 import type { ReactNode } from 'react'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 const refresh = vi.fn()
 const actions = vi.hoisted(() => ({
   getPublishPreviewAction: vi.fn(),
-  getDeckImportUpdatesAction: vi.fn(),
 }))
 
 vi.mock('next-intl', () => ({ useTranslations: () => (key: string) => key }))
@@ -27,7 +26,6 @@ vi.mock('@heroui/react', async () => {
 })
 vi.mock('@/modules/deck-sharing/deck-sharing.action', () => ({
   getPublishPreviewAction: actions.getPublishPreviewAction,
-  getDeckImportUpdatesAction: actions.getDeckImportUpdatesAction,
 }))
 vi.mock('@/components/app/AppError', () => ({
   default: ({ error }: { error?: string | null }) => (error ? <div data-testid="error">{error}</div> : null),
@@ -35,13 +33,8 @@ vi.mock('@/components/app/AppError', () => ({
 vi.mock('@/components/decks/DeckPublishSheet', () => ({
   default: ({ preview }: { preview: unknown }) => <div data-testid="publish">{JSON.stringify(preview)}</div>,
 }))
-vi.mock('@/components/decks/DeckImportUpdatesPanel', () => ({
-  default: ({ updates, onSynced }: { updates: { latest_version: number }, onSynced: () => void }) => (
-    <div data-testid="updates">
-      v{updates.latest_version}
-      <button type="button" onClick={onSynced}>synced</button>
-    </div>
-  ),
+vi.mock('@/components/decks/DeckImportUpdatesSheet', () => ({
+  default: ({ importId }: { importId: string }) => <div data-testid="updates">{importId}</div>,
 }))
 vi.mock('@/components/decks/DeckContributionsPanel', () => ({ default: () => <div data-testid="outbox" /> }))
 vi.mock('@/components/decks/DeckContributionsInbox', () => ({
@@ -79,24 +72,14 @@ describe('DeckSharingSheet', () => {
     expect(screen.queryByTestId('publish')).toBeNull()
   })
 
-  it('loads updates and reloads them after a sync', async () => {
-    actions.getDeckImportUpdatesAction
-      .mockResolvedValueOnce({ success: true, data: { latest_version: 2 } })
-      .mockResolvedValueOnce({ success: true, data: { latest_version: 3 } })
+  it('shows the updates sheet straight away', () => {
     render(<DeckSharingSheet deck={deck()} kind="updates" onClose={vi.fn()} />)
-    expect((await screen.findByTestId('updates')).textContent).toContain('v2')
-    fireEvent.click(screen.getByText('synced'))
-    await waitFor(() => expect(screen.getByTestId('updates').textContent).toContain('v3'))
+    expect(screen.getByTestId('updates').textContent).toBe('d1')
   })
 
-  it('shows update load errors, with a fallback message', async () => {
-    actions.getDeckImportUpdatesAction.mockResolvedValueOnce({ success: false, error: 'Not an import' })
-    const { unmount } = render(<DeckSharingSheet deck={deck()} kind="updates" onClose={vi.fn()} />)
-    expect((await screen.findByTestId('error')).textContent).toBe('Not an import')
-    expect(screen.queryByTestId('updates')).toBeNull()
-    unmount()
-    actions.getDeckImportUpdatesAction.mockResolvedValueOnce({ success: false })
-    render(<DeckSharingSheet deck={deck()} kind="updates" onClose={vi.fn()} />)
+  it('falls back to a generic message when the preview fails without one', async () => {
+    actions.getPublishPreviewAction.mockResolvedValueOnce({ success: false })
+    render(<DeckSharingSheet deck={deck()} kind="publish" onClose={vi.fn()} />)
     expect((await screen.findByTestId('error')).textContent).toBe('load-failed')
   })
 
@@ -114,16 +97,16 @@ describe('DeckSharingSheet', () => {
 
   it('refreshes the page when closed, and ignores loads that finish after closing', async () => {
     let resolve!: (v: unknown) => void
-    actions.getDeckImportUpdatesAction.mockReturnValueOnce(new Promise((r) => { resolve = r }))
+    actions.getPublishPreviewAction.mockReturnValueOnce(new Promise((r) => { resolve = r }))
     const onClose = vi.fn()
-    const { unmount } = render(<DeckSharingSheet deck={deck()} kind="updates" onClose={onClose} />)
+    const { unmount } = render(<DeckSharingSheet deck={deck()} kind="publish" onClose={onClose} />)
     fireEvent.click(screen.getByText('keep-open'))
     expect(onClose).not.toHaveBeenCalled()
     fireEvent.click(screen.getByText('dismiss'))
     expect(onClose).toHaveBeenCalled()
     expect(refresh).toHaveBeenCalled()
     unmount()
-    await act(async () => resolve({ success: true, data: { latest_version: 5 } }))
-    expect(screen.queryByTestId('updates')).toBeNull()
+    await act(async () => resolve({ success: true, data: { has_unpublished_changes: true } }))
+    expect(screen.queryByTestId('publish')).toBeNull()
   })
 })

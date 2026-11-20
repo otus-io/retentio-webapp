@@ -3,15 +3,15 @@
 import AppError from '@/components/app/AppError'
 import DeckContributionsInbox from '@/components/decks/DeckContributionsInbox'
 import DeckContributionsPanel from '@/components/decks/DeckContributionsPanel'
-import DeckImportUpdatesPanel from '@/components/decks/DeckImportUpdatesPanel'
+import DeckImportUpdatesSheet from '@/components/decks/DeckImportUpdatesSheet'
 import DeckPublishSheet from '@/components/decks/DeckPublishSheet'
-import { getDeckImportUpdatesAction, getPublishPreviewAction } from '@/modules/deck-sharing/deck-sharing.action'
-import type { DeckImportUpdatesResponseDTO, PublishPreview } from '@/modules/deck-sharing/deck-sharing.schema'
+import { getPublishPreviewAction } from '@/modules/deck-sharing/deck-sharing.action'
+import type { PublishPreview } from '@/modules/deck-sharing/deck-sharing.schema'
 import type { Deck } from '@/modules/decks/decks.schema'
 import { Modal, Spinner } from '@heroui/react'
 import { useTranslations } from 'next-intl'
 import { useRouter } from 'next/navigation'
-import { useCallback, useEffect, useState } from 'react'
+import { useEffect, useState } from 'react'
 
 export type DeckSheetKind = 'publish' | 'inbox' | 'outbox' | 'updates'
 
@@ -36,20 +36,9 @@ export default function DeckSharingSheet({ deck, kind, onClose }: DeckSharingShe
   const t = useTranslations('deck-menu')
   const router = useRouter()
   const [preview, setPreview] = useState<PublishPreview | null>(null)
-  const [updates, setUpdates] = useState<DeckImportUpdatesResponseDTO['data'] | null>(null)
   const [error, setError] = useState<string | null>(null)
-  // The outbox and inbox load their own data.
-  const [loaded, setLoaded] = useState(kind === 'outbox' || kind === 'inbox')
-  const [version, setVersion] = useState(0)
-  // Clear what is shown before a new load, so a tab or reload never shows the previous data or error.
-  const restart = useCallback(() => {
-    setLoaded(false)
-    setError(null)
-  }, [])
-  const reload = useCallback(() => {
-    restart()
-    setVersion((v) => v + 1)
-  }, [restart])
+  // Only publish loads here; the other sheets load their own data.
+  const [loaded, setLoaded] = useState(kind !== 'publish')
 
   useEffect(() => {
     let cancelled = false
@@ -59,26 +48,19 @@ export default function DeckSharingSheet({ deck, kind, onClose }: DeckSharingShe
       if (failure !== undefined) setError(String(failure ?? ''))
       setLoaded(true)
     }
-    if (kind === 'publish') {
-      // A deck that was never published has nothing to compare against.
-      if (deck.published_version <= 0) {
-        done()
-        return
-      }
-      void getPublishPreviewAction(deck.id).then((res) => {
-        if (!cancelled && res.success && res.data) setPreview(res.data)
-        done(res.success ? undefined : res.error ?? '')
-      })
-    } else if (kind === 'updates') {
-      void getDeckImportUpdatesAction(deck.id).then((res) => {
-        if (!cancelled && res.success && res.data) setUpdates(res.data)
-        done(res.success ? undefined : res.error ?? '')
-      })
+    // A deck that was never published has nothing to compare against.
+    if (kind !== 'publish' || deck.published_version <= 0) {
+      done()
+      return
     }
+    void getPublishPreviewAction(deck.id).then((res) => {
+      if (!cancelled && res.success && res.data) setPreview(res.data)
+      done(res.success ? undefined : res.error ?? '')
+    })
     return () => {
       cancelled = true
     }
-  }, [kind, deck.id, deck.published_version, version])
+  }, [kind, deck.id, deck.published_version])
 
   const close = () => {
     onClose()
@@ -99,9 +81,7 @@ export default function DeckSharingSheet({ deck, kind, onClose }: DeckSharingShe
             <AppError error={error === '' ? t('load-failed') : error} />
             {/* Without its preview, a published deck must not offer Publish next to the error. */}
             {loaded && kind === 'publish' && error === null && <DeckPublishSheet deck={deck} preview={preview} />}
-            {loaded && kind === 'updates' && updates && (
-              <DeckImportUpdatesPanel deckId={deck.id} updates={updates} onSynced={reload} />
-            )}
+            {kind === 'updates' && <DeckImportUpdatesSheet importId={deck.id} />}
             {kind === 'outbox' && <DeckContributionsPanel deck={deck} />}
             {kind === 'inbox' && <DeckContributionsInbox sourceDeckId={deck.id} />}
           </Modal.Body>

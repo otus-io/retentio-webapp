@@ -3,13 +3,14 @@ import * as api from '@/api/deck-sharing'
 import { getContributionsService } from '@/modules/contributions/contributions.service'
 import {
   getDeckSharingStatusesService,
+  getDeckUpdateFactService,
   getDeckUpdatesSummaryService,
   getPublishPreviewService,
 } from '@/modules/deck-sharing/deck-sharing.service'
 import type { Deck } from '@/modules/decks/decks.schema'
 import { RequestError } from '@/utils/request'
 
-vi.mock('@/api/deck-sharing', () => ({ getPublishPreview: vi.fn(), getDeckUpdatesSummary: vi.fn() }))
+vi.mock('@/api/deck-sharing', () => ({ getPublishPreview: vi.fn(), getDeckUpdatesSummary: vi.fn(), getDeckUpdateFact: vi.fn() }))
 vi.mock('@/modules/contributions/contributions.service', () => ({ getContributionsService: vi.fn() }))
 
 const ok = (data: unknown) => ({ data, meta: { msg: 'ok' } }) as never
@@ -29,6 +30,15 @@ describe('getDeckUpdatesSummaryService', () => {
     expect(await getDeckUpdatesSummaryService('i1')).toMatchObject({ success: true, data: { latest_version: 2 } })
     vi.mocked(api.getDeckUpdatesSummary).mockRejectedValueOnce(new RequestError('Not found', 404))
     expect(await getDeckUpdatesSummaryService('i1')).toMatchObject({ success: false, status: 404 })
+  })
+})
+
+describe('getDeckUpdateFactService', () => {
+  it('wraps success and failure', async () => {
+    vi.mocked(api.getDeckUpdateFact).mockResolvedValueOnce(ok({ kind: 'edited' }))
+    expect(await getDeckUpdateFactService('i1', 'f1')).toMatchObject({ success: true, data: { kind: 'edited' } })
+    vi.mocked(api.getDeckUpdateFact).mockRejectedValueOnce(new RequestError('Not found', 404))
+    expect(await getDeckUpdateFactService('i1', 'f1')).toMatchObject({ success: false, status: 404 })
   })
 })
 

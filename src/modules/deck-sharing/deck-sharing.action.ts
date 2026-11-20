@@ -7,10 +7,12 @@ import z from 'zod'
 import { EMAIL_NOT_VERIFIED_CODE } from '@/modules/auth/auth.schema'
 import { getAllDecksService } from '@/modules/decks/decks.service'
 import type {
-  DeckImportUpdatesResponseDTO,
   DeckSharingStatus,
+  DeckUpdateFactDetail,
+  DeckUpdatesSummaryResponseDTO,
   PublishDeckDTO,
   PublishPreview,
+  SyncFactDecision,
 } from '@/modules/deck-sharing/deck-sharing.schema'
 import {
   createPublishDeckVersionSchema,
@@ -18,8 +20,9 @@ import {
   type PublishDeckActionPayload,
 } from '@/modules/deck-sharing/deck-sharing.schema'
 import {
-  getDeckImportUpdatesService,
   getDeckSharingStatusesService,
+  getDeckUpdateFactService,
+  getDeckUpdatesSummaryService,
   getPublishPreviewService,
   importDeckService,
   publishDeckService,
@@ -125,12 +128,35 @@ export async function getPublishPreviewAction(deckId: string): Promise<ActionSta
   return res.success ? { success: true, data: res.data } : { success: false, error: res.message }
 }
 
-/** 导入卡组的更新详情（在卡组菜单的检查更新弹窗中加载） */
-export async function getDeckImportUpdatesAction(
+/** 导入卡组的更新摘要（在卡组菜单的检查更新弹窗中加载） */
+export async function getDeckUpdatesSummaryAction(
   importId: string,
-): Promise<ActionState<DeckImportUpdatesResponseDTO['data']>> {
-  const res = await getDeckImportUpdatesService(importId)
+): Promise<ActionState<DeckUpdatesSummaryResponseDTO['data']>> {
+  const res = await getDeckUpdatesSummaryService(importId)
   return res.success ? { success: true, data: res.data } : { success: false, error: res.message }
+}
+
+/** 某条更新词条的详情（在检查更新弹窗中展开时加载） */
+export async function getDeckUpdateFactAction(
+  importId: string,
+  factId: string,
+): Promise<ActionState<DeckUpdateFactDetail>> {
+  const res = await getDeckUpdateFactService(importId, factId)
+  return res.success ? { success: true, data: res.data } : { success: false, error: res.message }
+}
+
+/** 同步到指定版本，并按词条应用“接受 / 保留本地”的选择（同移动端） */
+export async function syncDeckWithDecisionsAction(
+  importId: string,
+  targetVersion: number,
+  decisions: SyncFactDecision[],
+): Promise<ActionState> {
+  const res = await syncImportedDeckService(importId, { target_version: targetVersion, decisions })
+  if (!res.success) return { success: false, error: res.message }
+  revalidatePath(`/decks/${importId}`)
+  revalidatePath(`/decks/${importId}/facts`)
+  revalidatePath('/decks')
+  return { success: true }
 }
 
 /**

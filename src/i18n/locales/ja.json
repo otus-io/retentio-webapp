@@ -552,5 +552,29 @@
     "load-failed": "貢献を読み込めませんでした",
     "retry": "再試行",
     "cancel": "キャンセル"
+  },
+  "updates": {
+    "version": "現在 v{source} → 最新 v{latest}",
+    "counts": "追加 {added}、編集 {edited}、削除 {removed}、メディア変更 {media}",
+    "description-changed": "説明が変更されました",
+    "review-changes": "変更を確認",
+    "hide-review": "レビューを非表示",
+    "edited-section": "編集された項目（{count}）",
+    "removed-section": "削除された項目（{count}）",
+    "added-section": "追加された項目（{count}）",
+    "media-section": "メディア変更（{count}）",
+    "templates-section": "カードテンプレート変更（{count}）",
+    "aligned": "揃っています",
+    "local-overlay": "ローカルオーバーレイ",
+    "before": "更新前",
+    "after": "更新後",
+    "accept": "承認",
+    "keep-local": "拒否",
+    "sync-now": "今すぐ同期",
+    "up-to-date": "最新です",
+    "sync-success": "デッキを同期しました",
+    "sync-failed": "同期できませんでした",
+    "load-failed": "更新を読み込めませんでした",
+    "retry": "再試行"
   }
 }
