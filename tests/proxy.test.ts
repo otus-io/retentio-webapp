@@ -31,7 +31,7 @@ vi.mock('@/lib/logger', () => ({
 vi.mock('@/utils/request', async (importOriginal) => ({
   ...(await importOriginal<Record<string, unknown>>()),
   createRequest: (getToken: () => Promise<string | null>) =>
-    async (endpoint: string) => profileRequestMock(endpoint, await getToken()),
+    async (endpoint: string, options?: RequestInit) => profileRequestMock(endpoint, await getToken(), options),
 }))
 
 import { proxy } from '@/proxy'
@@ -99,7 +99,7 @@ describe('proxy auth guest paths', () => {
 
   it('validates the token against the profile endpoint', async () => {
     await proxy(makeRequest(LOGIN_PATH, 'jwt'))
-    expect(profileRequestMock).toHaveBeenCalledWith('/api/profile', 'jwt')
+    expect(profileRequestMock).toHaveBeenCalledWith('/api/profile', 'jwt', { signal: expect.any(AbortSignal) })
   })
 
   it('clears a rejected token and lets the user reach login', async () => {
@@ -111,7 +111,7 @@ describe('proxy auth guest paths', () => {
   })
 
   it('keeps the token when the profile check fails for another reason', async () => {
-    for (const err of [new RequestError('boom', 500), new Error('network')]) {
+    for (const err of [new RequestError('boom', 500), new Error('network'), new DOMException('slow', 'TimeoutError')]) {
       redirectMock.mockClear()
       profileRequestMock.mockRejectedValue(err)
       await proxy(makeRequest(LOGIN_PATH, 'jwt'))

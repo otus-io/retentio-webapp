@@ -12,10 +12,12 @@ const blacklist = [
 
 const authGuestPaths = new Set([LOGIN_PATH, REGISTER_PATH, FORGOT_PASSWORD_PATH])
 
-/** True only when the API rejects the token (401); network errors keep the session. */
+const PROFILE_CHECK_TIMEOUT_MS = 3000
+
+/** True only when the API rejects the token (401); network errors and timeouts keep the session. */
 async function isTokenRejected(token: string) {
   try {
-    await createRequest(async () => token)('/api/profile')
+    await createRequest(async () => token)('/api/profile', { signal: AbortSignal.timeout(PROFILE_CHECK_TIMEOUT_MS) })
     return false
   } catch (e) {
     return e instanceof RequestError && e.status === 401

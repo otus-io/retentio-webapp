@@ -14,7 +14,7 @@ export default function DeleteAccountModal({ isOpen, setOpen }: UseOverlayStateR
   const [state, action, isPending] = useActionState(deleteAccountAction, null)
 
   return (
-    <Modal.Backdrop isOpen={isOpen} onOpenChange={setOpen} isDismissable={!isPending}>
+    <Modal.Backdrop isOpen={isOpen} onOpenChange={setOpen} isDismissable={!isPending} isKeyboardDismissDisabled={isPending}>
       <Modal.Container>
         <Modal.Dialog className="sm:max-w-100">
           <Modal.CloseTrigger isDisabled={isPending} />
