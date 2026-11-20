@@ -29,12 +29,13 @@ while read -r _local_ref local_sha remote_ref _remote_sha; do
     REVIEW_SHAS+=("$local_sha")
 done
 
-[ -n "$SKIP_AI_REVIEW" ] && exit 0
+[ "$SKIP_AI_REVIEW" = 1 ] && exit 0
 [ ${#REVIEW_SHAS[@]} -eq 0 ] && exit 0
 
 if ! command -v claude &> /dev/null || ! command -v python3 &> /dev/null; then
-    echo -e "${YELLOW}⚠ claude CLI or python3 not found; skipping AI review${NC}"
-    exit 0
+    echo -e "${RED}✗ The AI review needs the claude CLI and python3.${NC}"
+    echo "  Install Claude Code (https://code.claude.com) and python3, or override with:  SKIP_AI_REVIEW=1 git push"
+    exit 1
 fi
 
 git fetch --quiet origin main 2> /dev/null
@@ -43,6 +44,7 @@ LEVEL="${AI_REVIEW_LEVEL:-low}"
 FINDINGS=0
 
 # Prints the last assistant text of a headless run, then classifies it; sets FINDINGS=1 unless CLEAN.
+# A run that fails or ends without a successful terminal result prints nothing, so it counts as findings.
 # /code-review runs as a subagent, so its findings arrive in the event stream, not in the final result.
 # stdin is redirected because git feeds the ref list on it.
 run_review() {
@@ -52,18 +54,22 @@ run_review() {
     out="$(claude -p "$1" --output-format stream-json --verbose < /dev/null 2> /dev/null | python3 -c '
 import json, sys
 texts = []
+done = False
 for line in sys.stdin:
     try:
         event = json.loads(line)
     except ValueError:
+        continue
+    if event.get("type") == "result":
+        done = event.get("subtype") == "success" and not event.get("is_error")
         continue
     if event.get("type") != "assistant":
         continue
     for block in event.get("message", {}).get("content", []):
         if block.get("type") == "text" and block.get("text", "").strip():
             texts.append(block["text"].strip())
-print(texts[-1] if texts else "")
-')"
+print(texts[-1] if done and texts else "")
+'; exit "${PIPESTATUS[0]}")" || out=""
     echo "${out:-No review output.}"
     [ -z "$out" ] && FINDINGS=1 && return
     # Review wording varies, so a cheap model decides whether anything important was reported.
