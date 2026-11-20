@@ -36,6 +36,13 @@ describe('cards actions', () => {
     expect(await getNextCardAction('d1')).toEqual({ success: true, data: { card: {}, stats: null } })
   })
 
+  it('getNextCardAction treats the empty card array as no card', async () => {
+    services.getNextCardService.mockResolvedValue({ success: true, data: { card: [] } })
+    services.getCardStatsService.mockResolvedValue({ success: true, data: { stats } })
+    const state = await getNextCardAction('d1')
+    expect(state).toEqual({ success: true, data: { card: { card: undefined }, stats } })
+  })
+
   it('getNextCardAction fails when the card request fails', async () => {
     services.getNextCardService.mockResolvedValue({ success: false, message: 'Deck not found' })
     services.getCardStatsService.mockResolvedValue({ success: true, data: { stats } })

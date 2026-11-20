@@ -238,6 +238,22 @@ describe('StudySession', () => {
     expect(await screen.findByText('due-progress:{"cleared":0,"target":5,"percent":"0%"}')).toBeTruthy()
   })
 
+  it('counts only reviews made under the current tag filter', async () => {
+    actions.getNextCardAction
+      .mockResolvedValueOnce(withCard(card, { due_cards: 50 }))
+      .mockResolvedValueOnce(withCard({ ...card, id: 'c2' }, { due_cards: 49 }))
+      .mockResolvedValueOnce(withCard(card, { due_cards: 5 }))
+    actions.reviewCardAction.mockResolvedValue({ success: true })
+    render(<StudySession deck={deck} tags={tags} />)
+    await screen.findByText('hola')
+    await clickWhenEnabled('show-answer')
+    await clickWhenEnabled('next')
+    expect(await screen.findByText('due-progress:{"cleared":1,"target":50,"percent":"2%"}')).toBeTruthy()
+    await waitFor(() => expect((screen.getByRole('combobox') as HTMLSelectElement).disabled).toBe(false))
+    fireEvent.change(screen.getByRole('combobox'), { target: { value: 't1' } })
+    expect(await screen.findByText('due-progress:{"cleared":0,"target":5,"percent":"0%"}')).toBeTruthy()
+  })
+
   it('measures progress against the due count at session start', async () => {
     actions.getNextCardAction
       .mockResolvedValueOnce(withCard(card, { due_cards: 300 }))

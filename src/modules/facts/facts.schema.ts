@@ -77,8 +77,8 @@ export const updateFactSchema = z.object({
     audio: z.string().optional(),
     image: z.string().optional(),
     video: z.string().optional(),
-    /** Kept so a PATCH round-trips entries that carry structured data */
-    json: z.unknown().optional(),
+    /** Kept so a PATCH round-trips entries that carry structured data (a JSON string) */
+    json: z.string().optional(),
   })).optional(),
   fields: z.array(z.string()).optional(),
 })

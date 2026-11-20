@@ -147,6 +147,7 @@ export default function StudySession({ deck, tags }: StudySessionProps) {
                 // Due counts are narrowed by the tag, so a new filter starts a new progress target.
                 setDue(null)
                 setDueTarget(null)
+                setStudied(0)
                 setTagId(String(key ?? ALL_TAGS))
               }}
             />
@@ -175,7 +176,9 @@ export default function StudySession({ deck, tags }: StudySessionProps) {
             <PartyPopper className="size-10 text-accent" />
             <Card.Title>{t('caught-up-title')}</Card.Title>
             <Card.Description>{t('caught-up-description')}</Card.Description>
-            <AppButton variant="secondary" isPending={isPending} onPress={() => load(tagId)}>{t('reload')}</AppButton>
+            <AppButton variant="secondary" isPending={isPending} onPress={() => load(tagId)}>
+              {t('reload')}
+            </AppButton>
           </Card>
         )}
 

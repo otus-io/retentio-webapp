@@ -44,7 +44,7 @@ export default function StudyFlipCard({ revealed, onFlip, label, front, back }: 
         aria-label={label}
         aria-pressed={revealed}
         className={clsx(
-          'absolute right-3 top-3 rounded-full p-1.5 text-muted transition-colors',
+          'absolute right-3 top-3 z-10 rounded-full p-1.5 text-muted transition-colors',
           'hover:bg-default hover:text-foreground',
           'outline-none focus-visible:ring-2 focus-visible:ring-focus',
         )}

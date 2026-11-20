@@ -26,7 +26,9 @@ export async function getNextCardAction(deckId: string, tagId?: string): Promise
     getCardStatsService(deckId, tagId),
   ])
   if (!card.success) return { success: false, error: card.message }
-  return { success: true, data: { card: card.data, stats: stats.success ? stats.data.stats : null } }
+  // With nothing to serve, the API sends `card: []` rather than leaving it out.
+  const served = Array.isArray(card.data.card) ? { ...card.data, card: undefined } : card.data
+  return { success: true, data: { card: served, stats: stats.success ? stats.data.stats : null } }
 }
 
 /** 提交复习 */
