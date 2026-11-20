@@ -192,6 +192,8 @@
     "empty": "タグがありません。右上の + をタップして作成してください。"
   },
   "common": {
+    "deck-details": "デッキ詳細",
+    "total-reviews": "総復習数",
     "edit-facts": "項目を編集",
     "retry": "再試行",
     "login": "ログイン",

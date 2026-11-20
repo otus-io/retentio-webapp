@@ -107,6 +107,8 @@ interface Stats {
    * 上次复习时间 - 最近一次复习的 Unix 时间戳（未复习过则为 0）
    */
   last_reviewed_at: number;
+  /** 累计复习次数 */
+  total_reviews?: number;
 }
 
 interface Meta {

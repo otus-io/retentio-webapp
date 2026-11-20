@@ -10,6 +10,7 @@ import StudyIntervalSlider from '@/components/study/StudyIntervalSlider'
 import StudyEditFactModal from '@/components/study/StudyEditFactModal'
 import StudyReportModal from '@/components/study/StudyReportModal'
 import { showSuccessToast } from '@/lib/ui'
+import { formatPercent } from '@/utils/format'
 import {
   deleteCardAction,
   getNextCardAction,
@@ -27,9 +28,6 @@ import type { Key } from 'react'
 import { useCallback, useEffect, useState, useTransition } from 'react'
 
 const ALL_TAGS = '__all__'
-
-/** Same rounding as the mobile app: whole percent, or two decimals below 1%. */
-const formatPercent = (percent: number) => `${percent >= 1 || percent === 0 ? percent.toFixed(0) : percent.toFixed(2)}%`
 
 interface StudySessionProps {
   deck: Deck

@@ -192,6 +192,8 @@
     "empty": "No tags yet — tap the + in the top-right to create one."
   },
   "common": {
+    "deck-details": "Deck details",
+    "total-reviews": "Total reviews",
     "edit-facts": "Edit Facts",
     "retry": "Retry",
     "login": "Login",

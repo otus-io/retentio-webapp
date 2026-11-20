@@ -4,12 +4,12 @@ import { Dropdown, Label } from '@heroui/react'
 import { useRouter } from 'next/navigation'
 import type { Key } from 'react'
 import { useCallback, useMemo, useState } from 'react'
-import { BookA, EllipsisVertical, Pencil, ShieldCheck, Trash2 } from 'lucide-react'
+import { BookA, EllipsisVertical, Info, Pencil, ShieldCheck, Trash2 } from 'lucide-react'
 import { useTranslations } from 'next-intl'
 import DeleteModal from '@/components/common/DeleteModal'
 import { deleteDeckAction } from '@/modules/decks/decks.action'
 
-type DecksActionItem = 'edit' | 'facts' | 'qa' | 'delete'
+type DecksActionItem = 'details' | 'edit' | 'facts' | 'qa' | 'delete'
 
 interface DecksActionProps {
   deck: Deck,
@@ -26,6 +26,9 @@ export default function DecksAction({ deck, actions }: DecksActionProps) {
 
   const handleAction = useCallback((id: Key) => {
     switch (id) {
+      case 'details':
+        router.push(`/decks/${deck.id}`)
+        break
       case 'edit':
         router.push(`/decks/${deck.id}/edit`)
         break
@@ -50,6 +53,14 @@ export default function DecksAction({ deck, actions }: DecksActionProps) {
         </Dropdown.Trigger>
         <Dropdown.Popover>
           <Dropdown.Menu onAction={handleAction}>
+            {actions.includes('details') && (
+              <Dropdown.Item id="details" textValue="details">
+                <div className="flex items-center gap-1">
+                  <Info className="size-3.5 text-muted-foreground" />
+                  <Label>{t('common.deck-details')}</Label>
+                </div>
+              </Dropdown.Item>
+            )}
             {actions.includes('edit') && (
               <Dropdown.Item id="edit" textValue="edit">
                 <div className="flex items-center gap-1">

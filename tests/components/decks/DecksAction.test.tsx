@@ -31,6 +31,12 @@ describe('DecksAction', () => {
     expect(push).toHaveBeenLastCalledWith('/decks/d1/facts')
   })
 
+  it('opens the deck details page', () => {
+    render(<DecksAction deck={deck} actions={['details']} />)
+    fireEvent.click(screen.getByText('common.deck-details'))
+    expect(push).toHaveBeenCalledWith('/decks/d1')
+  })
+
   it('edits and confirms deletion', () => {
     render(<DecksAction deck={deck} actions={['edit', 'delete']} />)
     expect(screen.queryByText('qa.title')).toBeNull()

@@ -62,3 +62,8 @@ export function formDataToObject(formData: FormData) {
 // export function getLabelByValue(labels: IFormItemItems, value: number | string) {
 //   return labels.find(item => item.value === value)?.label || ''
 // }
+
+/** Progress percent like the mobile app: whole percent, or two decimals below 1%. */
+export function formatPercent(percent: number) {
+  return `${percent >= 1 || percent === 0 ? percent.toFixed(0) : percent.toFixed(2)}%`
+}
