@@ -5,20 +5,25 @@ import type { Metadata } from 'next'
 import { getTranslations } from 'next-intl/server'
 import { Suspense } from 'react'
 
-async function SharedDecksHomeSCP(){
-  // 首页只推荐 6 个
-  const homeDecks = await getDeckCatalogService({ limit: 6, offset: 0 })
+/** 首页每页展示的公开卡组数 */
+const HOME_PAGE_SIZE = 6
+
+async function SharedDecksHomeSCP({ page }: { page: number }){
+  const homeDecks = await getDeckCatalogService({ limit: HOME_PAGE_SIZE, offset: (page - 1) * HOME_PAGE_SIZE })
   if(!homeDecks.success){
     return null
   }
-  return <SharedDecksHome data={homeDecks.data.decks} />
+  const totalPages = Math.ceil((homeDecks.meta.total ?? 0) / HOME_PAGE_SIZE)
+  return <SharedDecksHome data={homeDecks.data.decks} totalPages={totalPages} />
 }
 
-export default async function Page() {
+export default async function Page(props: PageProps<'/'>) {
+  const requested = Number((await props.searchParams).page)
+  const page = Number.isInteger(requested) && requested > 0 ? requested : 1
   return (
     <HomePage>
       <Suspense>
-        <SharedDecksHomeSCP />
+        <SharedDecksHomeSCP page={page} />
       </Suspense>
     </HomePage>
   )

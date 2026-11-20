@@ -8,11 +8,14 @@ import { useCallback, useState } from 'react'
 import SharedDecksCard from '@/components/decks/SharedDecksCard'
 import AppButton from '@/components/app/AppButton'
 import { useRouter } from 'next/navigation'
+import TablePagination from '@/components/common/TablePagination'
 
 export default function SharedDecksHome({
   data,
+  totalPages = 1,
 }: {
   data: DeckCatalogItem[]
+  totalPages?: number
 }) {
   const t = useTranslations()
   const [keywords, setKeywords] = useState('')
@@ -72,6 +75,7 @@ export default function SharedDecksHome({
           ))
         }
       </div>
+      {totalPages > 1 && <TablePagination className="mt-4" totalPages={totalPages} />}
     </div>
   )
 }
