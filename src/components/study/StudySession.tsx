@@ -245,11 +245,15 @@ export default function StudySession({ deck, tags }: StudySessionProps) {
                       isDisabled={isPending}
                       format={formatInterval}
                     />
-                    <AppButton isPending={isPending} onPress={() => handleNext(card.id)}>{t('next')}</AppButton>
+                    <AppButton className="self-center" isPending={isPending} onPress={() => handleNext(card.id)}>
+                      {t('next')}
+                    </AppButton>
                   </>
                 )
                 : (
-                  <AppButton onPress={() => setRevealed(true)} isDisabled={isPending}>{t('show-answer')}</AppButton>
+                  <AppButton className="self-center" onPress={() => setRevealed(true)} isDisabled={isPending}>
+                    {t('show-answer')}
+                  </AppButton>
                 )}
             </div>
           </>

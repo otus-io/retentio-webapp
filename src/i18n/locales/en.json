@@ -191,6 +191,7 @@
     "empty": "No tags yet — tap the + in the top-right to create one."
   },
   "common": {
+    "edit-facts": "Edit Facts",
     "retry": "Retry",
     "login": "Login",
     "logout": "Logout",

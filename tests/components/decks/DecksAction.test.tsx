@@ -27,7 +27,7 @@ describe('DecksAction', () => {
     expect(screen.queryByText('common.delete')).toBeNull()
     fireEvent.click(screen.getByText('qa.title'))
     expect(push).toHaveBeenCalledWith('/decks/d1/qa')
-    fireEvent.click(screen.getByText('term.facts'))
+    fireEvent.click(screen.getByText('common.edit-facts'))
     expect(push).toHaveBeenLastCalledWith('/decks/d1/facts')
   })
 
