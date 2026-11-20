@@ -4,8 +4,14 @@ import { revalidatePath } from 'next/cache'
 import { redirect } from 'next/navigation'
 import z from 'zod'
 import { formatErrorMessage, formDataToObject } from '@/utils/format'
-import { createFactsSchema, updateFactSchema } from '@/modules/facts/facts.schema'
-import { createFactsService, deleteFactService, deleteFactsService, updateFactService } from '@/modules/facts/facts.service'
+import { createFactsSchema, type Entry, type Fact, updateFactSchema } from '@/modules/facts/facts.schema'
+import {
+  createFactsService,
+  deleteFactService,
+  deleteFactsService,
+  getFactService,
+  updateFactService,
+} from '@/modules/facts/facts.service'
 
 /**
  * 添加词条的 Action
@@ -136,4 +142,18 @@ export const deleteFactsAction: ActionFunctionPayload<{ deckId: string; factIds:
   }
   revalidatePath(`/decks/${deckId}/facts`)
   redirect(`/decks/${deckId}/facts`)
+}
+
+/** 获取单个词条（学习时编辑用） */
+export async function getFactAction(deckId: string, factId: string): Promise<ActionState<Fact>> {
+  const res = await getFactService(deckId, factId)
+  return res.success ? { success: true, data: res.data.fact } : { success: false, error: res.message }
+}
+
+/** 整体替换词条的 entries，不跳转（学习时编辑用） */
+export async function updateFactEntriesAction(deckId: string, factId: string, entries: Entry[]): Promise<ActionState> {
+  const res = await updateFactService(deckId, factId, { entries })
+  if (!res.success) return { success: false, error: res.message }
+  revalidatePath(`/decks/${deckId}/facts`)
+  return { success: true }
 }

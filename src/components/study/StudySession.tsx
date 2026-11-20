@@ -7,6 +7,7 @@ import LayoutPage from '@/components/layout/LayoutPage'
 import StudyCardSide from '@/components/study/StudyCardSide'
 import StudyFlipCard from '@/components/study/StudyFlipCard'
 import StudyIntervalSlider from '@/components/study/StudyIntervalSlider'
+import StudyEditFactModal from '@/components/study/StudyEditFactModal'
 import StudyReportModal from '@/components/study/StudyReportModal'
 import { showSuccessToast } from '@/lib/ui'
 import {
@@ -22,7 +23,6 @@ import type { Tag } from '@/modules/tags/tags.schema'
 import { AlertDialog, Card, Dropdown, Label, Spinner } from '@heroui/react'
 import { EllipsisVertical, EyeOff, Flag, PartyPopper, Pencil, Trash2 } from 'lucide-react'
 import { useFormatter, useTranslations } from 'next-intl'
-import { useRouter } from 'next/navigation'
 import type { Key } from 'react'
 import { useCallback, useEffect, useState, useTransition } from 'react'
 
@@ -41,7 +41,6 @@ export default function StudySession({ deck, tags }: StudySessionProps) {
   const t = useTranslations('study')
   const tRoot = useTranslations()
   const format = useFormatter()
-  const router = useRouter()
   const imported = !!deck.source_deck_id
   const [tagId, setTagId] = useState<string>(ALL_TAGS)
   const [result, setResult] = useState<NextCardResult | null>(null)
@@ -55,6 +54,7 @@ export default function StudySession({ deck, tags }: StudySessionProps) {
   const [isPending, startTransition] = useTransition()
   const [deleteCardId, setDeleteCardId] = useState<string | null>(null)
   const [isReportOpen, setIsReportOpen] = useState(false)
+  const [isEditOpen, setIsEditOpen] = useState(false)
 
   const [range, setRange] = useState<IntervalRange | null>(null)
   const card = result?.card?.card ?? null
@@ -111,7 +111,7 @@ export default function StudySession({ deck, tags }: StudySessionProps) {
         submit(() => hideCardAction({ deckId: deck.id, cardId }), false)
         break
       case 'edit':
-        router.push(`/decks/${deck.id}/facts`)
+        setIsEditOpen(true)
         break
       case 'report':
         setIsReportOpen(true)
@@ -286,6 +286,17 @@ export default function StudySession({ deck, tags }: StudySessionProps) {
           </AlertDialog.Dialog>
         </AlertDialog.Container>
       </AlertDialog.Backdrop>
+
+      {card && isEditOpen && (
+        <StudyEditFactModal
+          deckId={deck.id}
+          fields={deck.fields}
+          factId={card.fact_id}
+          isOpen={isEditOpen}
+          setIsOpen={setIsEditOpen}
+          onSaved={() => load(tagId)}
+        />
+      )}
 
       {card && imported && (
         <StudyReportModal

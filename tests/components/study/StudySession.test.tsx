@@ -37,6 +37,16 @@ vi.mock('@/components/layout/LayoutPage', () => ({ default: ({ children }: { chi
 vi.mock('@/components/facts/FactsAudioPlayButton', () => ({
   default: ({ mediaId }: { mediaId: string }) => <button type="button" data-testid="audio">{mediaId}</button>,
 }))
+vi.mock('@/components/study/StudyEditFactModal', () => ({
+  default: (
+    { factId, onSaved, setIsOpen }: { factId: string, onSaved: () => void, setIsOpen: (v: boolean) => void },
+  ) => (
+    <div data-testid="edit-fact-modal">
+      {factId}
+      <button type="button" onClick={() => { setIsOpen(false); onSaved() }}>save-fact</button>
+    </div>
+  ),
+}))
 vi.mock('@/components/study/StudyCardMedia', () => ({
   default: ({ kind, url }: { kind: string, url: string }) => <span data-testid={kind}>{url}</span>,
 }))
@@ -246,13 +256,19 @@ describe('StudySession', () => {
     expect(await screen.findByText('due-progress:{"cleared":1,"target":400,"percent":"0.25%"}')).toBeTruthy()
   })
 
-  it('opens the facts editor', async () => {
+  it('edits the current fact in place and reloads the card', async () => {
     actions.getNextCardAction.mockResolvedValue(withCard())
     render(<StudySession deck={deck} tags={tags} />)
     await screen.findByText('hola')
+    expect(screen.queryByTestId('edit-fact-modal')).toBeNull()
     fireEvent.click(screen.getByText('edit-fact'))
-    expect(push).toHaveBeenCalledWith('/decks/d1/facts')
+    expect(screen.getByTestId('edit-fact-modal').textContent).toContain('f1')
+    expect(push).not.toHaveBeenCalled()
     expect(screen.queryByText('report-issue')).toBeNull()
+
+    fireEvent.click(screen.getByText('save-fact'))
+    await waitFor(() => expect(actions.getNextCardAction).toHaveBeenCalledTimes(2))
+    expect(screen.queryByTestId('edit-fact-modal')).toBeNull()
   })
 
   it('deletes a card after confirmation', async () => {

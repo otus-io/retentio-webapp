@@ -1,0 +1,94 @@
+'use client'
+
+import AppButton from '@/components/app/AppButton'
+import AppError from '@/components/app/AppError'
+import AppTextarea from '@/components/app/AppTextarea'
+import { getFactAction, updateFactEntriesAction } from '@/modules/facts/facts.action'
+import type { Entry } from '@/modules/facts/facts.schema'
+import { Modal, Spinner } from '@heroui/react'
+import { useTranslations } from 'next-intl'
+import { useEffect, useState, useTransition } from 'react'
+
+interface StudyEditFactModalProps {
+  deckId: string
+  fields: string[]
+  factId: string
+  isOpen: boolean
+  setIsOpen: (open: boolean) => void
+  onSaved: () => void
+}
+
+/** Edits the text of the studied card's fact; media in each entry is kept as is. */
+export default function StudyEditFactModal(
+  { deckId, fields, factId, isOpen, setIsOpen, onSaved }: StudyEditFactModalProps,
+) {
+  const t = useTranslations('study')
+  const tCommon = useTranslations('common')
+  const [entries, setEntries] = useState<Entry[] | null>(null)
+  const [texts, setTexts] = useState<string[]>([])
+  const [error, setError] = useState<string | null>(null)
+  const [isPending, startTransition] = useTransition()
+
+  useEffect(() => {
+    // Mounted only while open, so each open starts from a fresh load.
+    let cancelled = false
+    void getFactAction(deckId, factId).then((res) => {
+      if (cancelled) return
+      if (!res.success || !res.data) {
+        setError(String(res.error ?? ''))
+        return
+      }
+      const loaded = res.data.entries
+      const count = Math.max(fields.length, loaded.length)
+      setEntries(Array.from({ length: count }, (_, i) => loaded[i] ?? {}))
+      setTexts(Array.from({ length: count }, (_, i) => loaded[i]?.text ?? ''))
+    })
+    return () => {
+      cancelled = true
+    }
+  }, [deckId, factId, fields.length])
+
+  const handleSave = (current: Entry[]) => {
+    const next = current.map(({ text: _text, ...rest }, i) => (texts[i].trim() ? { ...rest, text: texts[i] } : rest))
+    startTransition(async () => {
+      const res = await updateFactEntriesAction(deckId, factId, next)
+      if (!res.success) {
+        setError(String(res.error ?? ''))
+        return
+      }
+      setIsOpen(false)
+      onSaved()
+    })
+  }
+
+  return (
+    <Modal.Backdrop isOpen={isOpen} onOpenChange={setIsOpen} isDismissable={!isPending}>
+      <Modal.Container>
+        <Modal.Dialog className="sm:max-w-md">
+          <Modal.CloseTrigger isDisabled={isPending} />
+          <Modal.Header>
+            <Modal.Heading>{t('edit-fact')}</Modal.Heading>
+          </Modal.Header>
+          <Modal.Body className="space-y-4 px-1 py-2">
+            {!entries && !error && <div className="flex justify-center py-8"><Spinner /></div>}
+            {entries?.map((_, i) => (
+              <AppTextarea
+                key={i}
+                label={fields[i] ?? `#${i + 1}`}
+                value={texts[i]}
+                onChange={(value) => setTexts((prev) => prev.map((v, j) => (j === i ? value : v)))}
+              />
+            ))}
+            <AppError error={error} />
+          </Modal.Body>
+          <Modal.Footer>
+            <AppButton slot="close" variant="secondary" isDisabled={isPending}>{tCommon('cancel')}</AppButton>
+            {entries && (
+              <AppButton isPending={isPending} onPress={() => handleSave(entries)}>{tCommon('save')}</AppButton>
+            )}
+          </Modal.Footer>
+        </Modal.Dialog>
+      </Modal.Container>
+    </Modal.Backdrop>
+  )
+}
