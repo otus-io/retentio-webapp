@@ -582,5 +582,20 @@
     "sync-failed": "Couldn't sync the deck",
     "load-failed": "Couldn't load updates",
     "retry": "Retry"
+  },
+  "outbox": {
+    "hint": "Local changes ready to send to the author, plus what you already sent from this browser.",
+    "tab-pending": "Pending ({count})",
+    "tab-sent": "Sent ({count})",
+    "message-hint": "Optional message for the author",
+    "send-selected": "Send selected",
+    "send-selected-count": "Send selected ({count})",
+    "dismiss-selected": "Dismiss selected",
+    "clear-all": "Clear all",
+    "select-all": "Select all ({count})",
+    "empty": "Nothing pending. Proposals you save for this imported deck show up here until you send them.",
+    "sent-empty": "No sent contributions stored in this browser yet.",
+    "dismissed": "{count, plural, =1 {Dismissed 1 item} other {Dismissed # items}}",
+    "cleared": "{count, plural, =1 {Cleared 1 pending item} other {Cleared # pending items}}"
   }
 }

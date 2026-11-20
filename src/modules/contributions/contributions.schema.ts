@@ -215,6 +215,8 @@ export interface SentDeckContribution {
 export interface SubmitDeckContributionsBatchDTO {
   importDeckId: string
   contributions: PendingDeckContribution[]
+  /** 随本批发送给作者的可选留言 */
+  message?: string
 }
 
 /** 批量提交卡组贡献的结果 */

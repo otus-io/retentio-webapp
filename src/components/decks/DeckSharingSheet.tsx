@@ -2,7 +2,7 @@
 
 import AppError from '@/components/app/AppError'
 import DeckContributionsInbox from '@/components/decks/DeckContributionsInbox'
-import DeckContributionsPanel from '@/components/decks/DeckContributionsPanel'
+import DeckContributionsOutbox from '@/components/decks/DeckContributionsOutbox'
 import DeckImportUpdatesSheet from '@/components/decks/DeckImportUpdatesSheet'
 import DeckPublishSheet from '@/components/decks/DeckPublishSheet'
 import { getPublishPreviewAction } from '@/modules/deck-sharing/deck-sharing.action'
@@ -82,7 +82,7 @@ export default function DeckSharingSheet({ deck, kind, onClose }: DeckSharingShe
             {/* Without its preview, a published deck must not offer Publish next to the error. */}
             {loaded && kind === 'publish' && error === null && <DeckPublishSheet deck={deck} preview={preview} />}
             {kind === 'updates' && <DeckImportUpdatesSheet importId={deck.id} />}
-            {kind === 'outbox' && <DeckContributionsPanel deck={deck} />}
+            {kind === 'outbox' && <DeckContributionsOutbox deck={deck} />}
             {kind === 'inbox' && <DeckContributionsInbox sourceDeckId={deck.id} />}
           </Modal.Body>
         </Modal.Dialog>

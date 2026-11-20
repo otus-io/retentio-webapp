@@ -12,50 +12,20 @@ import { EMAIL_NOT_VERIFIED_CODE } from '@/modules/auth/auth.schema'
 import { submitDeckContributionsBatchAction } from '@/modules/contributions/contributions.action'
 import type { PendingDeckContribution, SentDeckContribution } from '@/modules/contributions/contributions.schema'
 import type { Deck } from '@/modules/decks/decks.schema'
+import {
+  isPendingContribution,
+  isSentContribution,
+  pendingStorageKey,
+  readContributions,
+  sentStorageKey,
+  writeContributions,
+} from '@/modules/contributions/pending-contributions'
 
 interface DeckContributionsPanelProps { deck: Deck }
-type ContributionForm = PendingDeckContribution['kind'] | null
+export type ContributionForm = PendingDeckContribution['kind'] | null
 
 function parseTags(value: string) {
   return [...new Set(value.split(/[,，\n]/).map((tag) => tag.trim()).filter(Boolean))]
-}
-
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return Boolean(value) && typeof value === 'object'
-}
-
-function isStringArray(value: unknown): value is string[] {
-  return Array.isArray(value) && value.every((item) => typeof item === 'string')
-}
-
-function isPendingContribution(value: unknown): value is PendingDeckContribution {
-  if (!isRecord(value) || typeof value.preview !== 'string' || typeof value.savedAt !== 'string') return false
-  if (value.id === 'deck_tags' && value.kind === 'deck_tags') {
-    return isStringArray(value.addTags) && isStringArray(value.removeTags)
-  }
-  return value.id === 'field_rename' && value.kind === 'field_rename' && isStringArray(value.proposedFields)
-}
-
-function isSentContribution(value: unknown): value is SentDeckContribution {
-  return isRecord(value)
-    && typeof value.id === 'string'
-    && (value.kind === 'deck_tags' || value.kind === 'field_rename')
-    && typeof value.preview === 'string'
-    && typeof value.contributionId === 'string'
-    && typeof value.sentAt === 'string'
-}
-
-function readContributions<T>(key: string, guard: (value: unknown) => value is T) {
-  try {
-    const value: unknown = JSON.parse(localStorage.getItem(key) ?? '[]')
-    return Array.isArray(value) ? value.filter(guard) : []
-  } catch {
-    return []
-  }
-}
-
-function writeContributions(key: string, value: PendingDeckContribution[] | SentDeckContribution[]) {
-  localStorage.setItem(key, JSON.stringify(value))
 }
 
 function ContributionsEmptyState({ children }: { children: string }) {
@@ -183,7 +153,7 @@ interface ContributionFormModalProps {
   onSave: (contribution: PendingDeckContribution) => void
 }
 
-function ContributionFormModal({ deck, kind, existing, onClose, onSave }: ContributionFormModalProps) {
+export function ContributionFormModal({ deck, kind, existing, onClose, onSave }: ContributionFormModalProps) {
   const t = useTranslations()
   const [proposedFields, setProposedFields] = useState(
     existing?.kind === 'field_rename' ? existing.proposedFields : deck.fields,
@@ -289,8 +259,8 @@ function ContributionFormModal({ deck, kind, existing, onClose, onSave }: Contri
 export default function DeckContributionsPanel({ deck }: DeckContributionsPanelProps) {
   const t = useTranslations('contributions')
   const tAuth = useTranslations('auth')
-  const pendingStorageKey = `retentio_pending_contribs_v2:${deck.id}`
-  const sentStorageKey = `retentio_sent_contribs_v1:${deck.id}`
+  const pendingKey = pendingStorageKey(deck.id)
+  const sentKey = sentStorageKey(deck.id)
   const [selectedTab, setSelectedTab] = useState('pending')
   const [selectedKeys, setSelectedKeys] = useState<Selection>(new Set())
   const [pendingContributions, setPendingContributions] = useState<PendingDeckContribution[]>([])
@@ -300,16 +270,16 @@ export default function DeckContributionsPanel({ deck }: DeckContributionsPanelP
 
   useEffect(() => {
     const frame = requestAnimationFrame(() => {
-      setPendingContributions(readContributions(pendingStorageKey, isPendingContribution))
-      setSentContributions(readContributions(sentStorageKey, isSentContribution))
+      setPendingContributions(readContributions(pendingKey, isPendingContribution))
+      setSentContributions(readContributions(sentKey, isSentContribution))
     })
     return () => cancelAnimationFrame(frame)
-  }, [pendingStorageKey, sentStorageKey])
+  }, [pendingKey, sentKey])
 
   const saveContribution = (contribution: PendingDeckContribution) => {
     const next = [...pendingContributions.filter((item) => item.id !== contribution.id), contribution]
     setPendingContributions(next)
-    writeContributions(pendingStorageKey, next)
+    writeContributions(pendingKey, next)
     setForm(null)
     setSelectedTab('pending')
   }
@@ -342,8 +312,8 @@ export default function DeckContributionsPanel({ deck }: DeckContributionsPanelP
       setPendingContributions(remaining)
       setSentContributions(nextSent)
       setSelectedKeys(new Set())
-      writeContributions(pendingStorageKey, remaining)
-      writeContributions(sentStorageKey, nextSent)
+      writeContributions(pendingKey, remaining)
+      writeContributions(sentKey, nextSent)
 
       if (batchResult.submitted.length > 0) {
         setSelectedTab('sent')

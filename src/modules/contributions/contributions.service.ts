@@ -80,6 +80,7 @@ export async function submitFieldRenameContributionService(importDeckId: string,
 export async function submitDeckContributionsBatchService(
   importDeckId: string,
   contributions: PendingDeckContribution[],
+  message?: string,
 ) {
   try {
     const result: SubmitDeckContributionsBatchResult = { submitted: [], failed: [] }
@@ -89,9 +90,11 @@ export async function submitDeckContributionsBatchService(
         ? await submitDeckTagContributionService(importDeckId, {
           add_tags: contribution.addTags,
           remove_tags: contribution.removeTags,
+          ...(message ? { message } : {}),
         })
         : await submitFieldRenameContributionService(importDeckId, {
           proposed_fields: contribution.proposedFields,
+          ...(message ? { message } : {}),
         })
 
       if (response.success) {

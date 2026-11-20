@@ -49,8 +49,8 @@ interface ContributionMutationPayload<Data> {
 export const submitDeckContributionsBatchAction: ActionFunctionPayload<
   SubmitDeckContributionsBatchDTO,
   SubmitDeckContributionsBatchResult
-> = async ({ importDeckId, contributions }) => {
-  const response = await submitDeckContributionsBatchService(importDeckId, contributions)
+> = async ({ importDeckId, contributions, message }) => {
+  const response = await submitDeckContributionsBatchService(importDeckId, contributions, message?.trim() || undefined)
   return response.success ? { success: true, data: response.data } : { success: false, error: response.message }
 }
 

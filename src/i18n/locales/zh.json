@@ -582,5 +582,20 @@
     "sync-failed": "同步失败",
     "load-failed": "无法加载更新",
     "retry": "重试"
+  },
+  "outbox": {
+    "hint": "可发给作者的本地修改，以及本浏览器已发送记录。",
+    "tab-pending": "待发送（{count}）",
+    "tab-sent": "已发送（{count}）",
+    "message-hint": "给作者的可选留言",
+    "send-selected": "发送所选",
+    "send-selected-count": "发送所选（{count}）",
+    "dismiss-selected": "忽略所选",
+    "clear-all": "清空全部",
+    "select-all": "全选（{count}）",
+    "empty": "暂无待发送项。为导入卡组保存的提议会出现在这里，直到你发送。",
+    "sent-empty": "本浏览器尚无已发送记录。",
+    "dismissed": "{count, plural, =1 {已忽略 1 项} other {已忽略 # 项}}",
+    "cleared": "{count, plural, =1 {已清空 1 项待发送} other {已清空 # 项待发送}}"
   }
 }

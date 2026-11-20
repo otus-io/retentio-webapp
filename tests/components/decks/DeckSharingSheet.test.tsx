@@ -36,7 +36,7 @@ vi.mock('@/components/decks/DeckPublishSheet', () => ({
 vi.mock('@/components/decks/DeckImportUpdatesSheet', () => ({
   default: ({ importId }: { importId: string }) => <div data-testid="updates">{importId}</div>,
 }))
-vi.mock('@/components/decks/DeckContributionsPanel', () => ({ default: () => <div data-testid="outbox" /> }))
+vi.mock('@/components/decks/DeckContributionsOutbox', () => ({ default: () => <div data-testid="outbox" /> }))
 vi.mock('@/components/decks/DeckContributionsInbox', () => ({
   default: ({ sourceDeckId }: { sourceDeckId: string }) => <div data-testid="inbox">{sourceDeckId}</div>,
 }))
