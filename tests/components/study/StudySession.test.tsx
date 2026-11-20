@@ -270,7 +270,7 @@ describe('StudySession', () => {
     actions.getNextCardAction.mockResolvedValue(withCard())
     render(<StudySession deck={deck} tags={tags} />)
     await screen.findByText('hola')
-    const menu = screen.getByText('deck-menu:details,facts,edit,publish,qa,delete')
+    const menu = screen.getByText('deck-menu:details,add-fact,facts,edit,publish,qa,delete')
     fireEvent.click(menu)
     expect(screen.getByTestId('deck-sheet').textContent).toBe('publish')
     fireEvent.click(screen.getByTestId('deck-sheet'))

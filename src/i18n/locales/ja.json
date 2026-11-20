@@ -519,6 +519,7 @@
     "verify-finish": "確認して完了"
   },
   "deck-menu": {
+    "add-fact": "項目を追加",
     "published": "公開しました！",
     "publish-failed": "公開できませんでした",
     "publish-deck": "デッキを公開",
@@ -591,5 +592,12 @@
     "sent-empty": "このブラウザにはまだ送信済みの記録がありません。",
     "dismissed": "{count, plural, =1 {1件を却下しました} other {#件を却下しました}}",
     "cleared": "{count, plural, =1 {送信待ち1件をクリアしました} other {送信待ち#件をクリアしました}}"
+  },
+  "add-fact": {
+    "submit": "項目を保存",
+    "success": "項目を追加しました",
+    "failed": "項目を追加できませんでした",
+    "needs-content": "各フィールドにテキストが必要です。",
+    "mark-verified": "この項目を確認しました（確認済みにする）"
   }
 }

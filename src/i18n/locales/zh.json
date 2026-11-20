@@ -525,6 +525,7 @@
     "verify-finish": "核验并完成"
   },
   "deck-menu": {
+    "add-fact": "添加词条",
     "published": "已发布！",
     "publish-failed": "发布失败",
     "publish-deck": "发布卡组",
@@ -597,5 +598,12 @@
     "sent-empty": "本浏览器尚无已发送记录。",
     "dismissed": "{count, plural, =1 {已忽略 1 项} other {已忽略 # 项}}",
     "cleared": "{count, plural, =1 {已清空 1 项待发送} other {已清空 # 项待发送}}"
+  },
+  "add-fact": {
+    "submit": "保存词条",
+    "success": "已添加词条",
+    "failed": "无法添加词条",
+    "needs-content": "每个字段都需要填写文本。",
+    "mark-verified": "我已检查此词条（标记为已核验）"
   }
 }

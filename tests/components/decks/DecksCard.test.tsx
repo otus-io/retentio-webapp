@@ -62,7 +62,7 @@ describe('DecksCard', () => {
 
   it('keeps menu clicks from starting a study session', () => {
     render(<DecksCard deck={makeDeck()} />)
-    fireEvent.click(screen.getByText('details,facts,edit,publish,qa,delete'))
+    fireEvent.click(screen.getByText('details,add-fact,facts,edit,publish,qa,delete'))
     fireEvent.click(screen.getByText('open-outbox'))
     expect(screen.getByTestId('sheet').textContent).toContain('outbox')
     fireEvent.click(screen.getByText('close-sheet'))
@@ -72,10 +72,10 @@ describe('DecksCard', () => {
 
   it('gives each kind of deck the mobile app menu', () => {
     const { unmount } = render(<DecksCard deck={makeDeck({ source_deck_id: 'src' })} />)
-    expect(screen.getByText('details,facts,edit,outbox,updates,qa,delete')).toBeTruthy()
+    expect(screen.getByText('details,add-fact,facts,edit,outbox,updates,qa,delete')).toBeTruthy()
     unmount()
     render(<DecksCard deck={makeDeck({ published_version: 2 })} />)
-    expect(screen.getByText('details,facts,edit,publish,inbox,qa,delete')).toBeTruthy()
+    expect(screen.getByText('details,add-fact,facts,edit,publish,inbox,qa,delete')).toBeTruthy()
   })
 
   it('shows sharing badges only when there is something to act on, and opens their sheets', () => {

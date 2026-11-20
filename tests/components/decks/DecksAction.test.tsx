@@ -33,8 +33,10 @@ describe('DecksAction', () => {
 
   it('opens sharing sheets through the callback', () => {
     const onOpenSheet = vi.fn()
-    render(<DecksAction deck={deck} actions={['publish', 'inbox', 'outbox', 'updates']} onOpenSheet={onOpenSheet} />)
+    const actions = ['add-fact', 'publish', 'inbox', 'outbox', 'updates'] as const
+    render(<DecksAction deck={deck} actions={[...actions]} onOpenSheet={onOpenSheet} />)
     for (const [label, kind] of [
+      ['deck-menu.add-fact', 'add-fact'],
       ['deck-menu.publish-deck', 'publish'],
       ['deck-menu.contributions-inbox', 'inbox'],
       ['deck-menu.pending-outbox', 'outbox'],

@@ -1,6 +1,7 @@
 'use client'
 
 import AppError from '@/components/app/AppError'
+import DeckAddFact from '@/components/decks/DeckAddFact'
 import DeckContributionsInbox from '@/components/decks/DeckContributionsInbox'
 import DeckContributionsOutbox from '@/components/decks/DeckContributionsOutbox'
 import DeckImportUpdatesSheet from '@/components/decks/DeckImportUpdatesSheet'
@@ -13,7 +14,7 @@ import { useTranslations } from 'next-intl'
 import { useRouter } from 'next/navigation'
 import { useEffect, useState } from 'react'
 
-export type DeckSheetKind = 'publish' | 'inbox' | 'outbox' | 'updates'
+export type DeckSheetKind = 'add-fact' | 'publish' | 'inbox' | 'outbox' | 'updates'
 
 interface DeckSharingSheetProps {
   deck: Deck
@@ -22,6 +23,7 @@ interface DeckSharingSheetProps {
 }
 
 const titleKeys = {
+  'add-fact': 'add-fact',
   publish: 'publish-deck',
   inbox: 'contributions-inbox',
   outbox: 'pending-outbox',
@@ -82,6 +84,7 @@ export default function DeckSharingSheet({ deck, kind, onClose }: DeckSharingShe
             {/* Without its preview, a published deck must not offer Publish next to the error. */}
             {loaded && kind === 'publish' && error === null && <DeckPublishSheet deck={deck} preview={preview} />}
             {kind === 'updates' && <DeckImportUpdatesSheet importId={deck.id} />}
+            {kind === 'add-fact' && <DeckAddFact deck={deck} />}
             {kind === 'outbox' && <DeckContributionsOutbox deck={deck} />}
             {kind === 'inbox' && <DeckContributionsInbox sourceDeckId={deck.id} />}
           </Modal.Body>

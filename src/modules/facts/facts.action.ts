@@ -159,3 +159,18 @@ export async function updateFactEntriesAction(deckId: string, factId: string, en
   revalidatePath(`/decks/${deckId}/facts`)
   return { success: true }
 }
+
+/** 逐条添加一个词条（卡组菜单的“添加词条”，同移动端）；verified 记录作者已核验 */
+export async function addFactAction(deckId: string, entries: Entry[], verified: boolean): Promise<ActionState> {
+  const result = createFactsSchema.safeParse({
+    facts: [{ entries }],
+    operation: 'append',
+    verified: verified || undefined,
+  })
+  if (!result.success) return { success: false, error: z.prettifyError(result.error) }
+  const res = await createFactsService(deckId, result.data)
+  if (!res.success) return { success: false, error: res.message }
+  revalidatePath(`/decks/${deckId}/facts`)
+  revalidatePath(`/decks/${deckId}`)
+  return { success: true }
+}

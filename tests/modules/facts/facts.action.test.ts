@@ -13,7 +13,7 @@ vi.mock('@/modules/facts/facts.service', () => services)
 vi.mock('next/cache', () => ({ revalidatePath }))
 vi.mock('next/navigation', () => ({ redirect: vi.fn() }))
 
-import { getFactAction, updateFactEntriesAction } from '@/modules/facts/facts.action'
+import { addFactAction, getFactAction, updateFactEntriesAction } from '@/modules/facts/facts.action'
 
 describe('study fact actions', () => {
   beforeEach(() => {
@@ -59,5 +59,31 @@ describe('updateFactEntriesAction validation', () => {
     const entries = [{ text: 'a', json: '{"k":1}' }] as never
     await updateFactEntriesAction('d1', 'f1', entries)
     expect(services.updateFactService).toHaveBeenCalledWith('d1', 'f1', { entries: [{ text: 'a', json: '{"k":1}' }] })
+  })
+})
+
+describe('addFactAction', () => {
+  beforeEach(() => {
+    vi.clearAllMocks()
+  })
+
+  it('appends one fact, with the sign-off only when checked', async () => {
+    services.createFactsService.mockResolvedValue({ success: true, data: { fact_length: 1 } })
+    expect(await addFactAction('d1', [{ text: 'hola' }, { text: 'hello' }], true)).toEqual({ success: true })
+    expect(services.createFactsService).toHaveBeenLastCalledWith('d1', {
+      facts: [{ entries: [{ text: 'hola' }, { text: 'hello' }] }],
+      operation: 'append',
+      verified: true,
+    })
+    expect(revalidatePath).toHaveBeenCalledWith('/decks/d1/facts')
+    await addFactAction('d1', [{ text: 'hola' }], false)
+    expect(services.createFactsService.mock.lastCall?.[1]).not.toHaveProperty('verified', false)
+  })
+
+  it('returns validation and backend errors', async () => {
+    expect((await addFactAction('d1', [], false)).success).toBe(false)
+    expect(services.createFactsService).not.toHaveBeenCalled()
+    services.createFactsService.mockResolvedValueOnce({ success: false, message: 'Forbidden' })
+    expect(await addFactAction('d1', [{ text: 'a' }], false)).toEqual({ success: false, error: 'Forbidden' })
   })
 })

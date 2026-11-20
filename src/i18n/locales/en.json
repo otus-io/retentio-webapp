@@ -525,6 +525,7 @@
     "verify-finish": "Verify & finish"
   },
   "deck-menu": {
+    "add-fact": "Add fact",
     "published": "Published!",
     "publish-failed": "Couldn't publish the deck",
     "publish-deck": "Publish Deck",
@@ -597,5 +598,12 @@
     "sent-empty": "No sent contributions stored in this browser yet.",
     "dismissed": "{count, plural, =1 {Dismissed 1 item} other {Dismissed # items}}",
     "cleared": "{count, plural, =1 {Cleared 1 pending item} other {Cleared # pending items}}"
+  },
+  "add-fact": {
+    "submit": "Save fact",
+    "success": "Fact added",
+    "failed": "Could not add fact",
+    "needs-content": "Each field needs text.",
+    "mark-verified": "I've checked this fact (mark as verified)"
   }
 }

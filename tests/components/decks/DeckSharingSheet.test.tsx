@@ -36,6 +36,7 @@ vi.mock('@/components/decks/DeckPublishSheet', () => ({
 vi.mock('@/components/decks/DeckImportUpdatesSheet', () => ({
   default: ({ importId }: { importId: string }) => <div data-testid="updates">{importId}</div>,
 }))
+vi.mock('@/components/decks/DeckAddFact', () => ({ default: () => <div data-testid="add-fact" /> }))
 vi.mock('@/components/decks/DeckContributionsOutbox', () => ({ default: () => <div data-testid="outbox" /> }))
 vi.mock('@/components/decks/DeckContributionsInbox', () => ({
   default: ({ sourceDeckId }: { sourceDeckId: string }) => <div data-testid="inbox">{sourceDeckId}</div>,
@@ -81,6 +82,12 @@ describe('DeckSharingSheet', () => {
     actions.getPublishPreviewAction.mockResolvedValueOnce({ success: false })
     render(<DeckSharingSheet deck={deck()} kind="publish" onClose={vi.fn()} />)
     expect((await screen.findByTestId('error')).textContent).toBe('load-failed')
+  })
+
+  it('shows the add-fact form straight away', () => {
+    render(<DeckSharingSheet deck={deck()} kind="add-fact" onClose={vi.fn()} />)
+    expect(screen.getByText('add-fact')).toBeTruthy()
+    expect(screen.getByTestId('add-fact')).toBeTruthy()
   })
 
   it('shows the outbox straight away', () => {

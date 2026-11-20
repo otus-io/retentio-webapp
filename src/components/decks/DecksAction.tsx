@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation'
 import type { Key } from 'react'
 import { useCallback, useMemo, useState } from 'react'
 import {
-  BookA, EllipsisVertical, Inbox, Info, Pencil, RefreshCw, Send, Share2, ShieldCheck, Trash2,
+  BookA, EllipsisVertical, Inbox, Info, Pencil, Plus, RefreshCw, Send, Share2, ShieldCheck, Trash2,
 } from 'lucide-react'
 import { useTranslations } from 'next-intl'
 import DeleteModal from '@/components/common/DeleteModal'
@@ -15,6 +15,7 @@ import type { DeckSheetKind } from '@/components/decks/DeckSharingSheet'
 export type DecksActionItem = 'details' | 'edit' | 'facts' | 'qa' | 'delete' | DeckSheetKind
 
 const sheetItems = [
+  { id: 'add-fact', label: 'deck-menu.add-fact', Icon: Plus },
   { id: 'publish', label: 'deck-menu.publish-deck', Icon: Share2 },
   { id: 'inbox', label: 'deck-menu.contributions-inbox', Icon: Inbox },
   { id: 'outbox', label: 'deck-menu.pending-outbox', Icon: Send },
@@ -53,6 +54,7 @@ export default function DecksAction({ deck, actions, onOpenSheet }: DecksActionP
       case 'delete':
         setIsOpen(true)
         break
+      case 'add-fact':
       case 'publish':
       case 'inbox':
       case 'outbox':
