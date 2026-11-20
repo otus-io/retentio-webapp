@@ -20,7 +20,7 @@
     "hero": {
       "title": "A journey of a thousand miles begins with a single step",
       "titleHighlight": "",
-      "subtitle": "A collaborative platform for building and improving decks — powered by a novel SRS scheduling algorithm, AI-assisted quality checks, and adaptive review.",
+      "subtitle": "A collaborative platform for building and improving decks — import, correct, and contribute back like Git — powered by a novel SRS scheduling algorithm, AI-assisted quality checks, and adaptive review.",
       "cta": "Join on TestFlight",
       "learnMore": "Learn More",
       "appPreview": "App Preview"
@@ -32,8 +32,8 @@
     "features": {
       "sectionTitle": "Why Choose Rete",
       "community": {
-        "title": "Community Decks",
-        "description": "Create, share, and improve decks together — quality compounds over time instead of drifting stale."
+        "title": "Improve Decks Together",
+        "description": "Fix a typo or add a missing example and send it back to the author. Every accepted correction reaches every learner, so decks get better instead of going stale."
       },
       "algorithm": {
         "title": "Novel Algorithm",
@@ -46,6 +46,35 @@
       "ai": {
         "title": "AI-Assisted Quality",
         "description": "AI reviews decks for accuracy and clarity — with human verification before any change goes live."
+      }
+    },
+    "collaborate": {
+      "sectionTitle": "Decks that improve like code",
+      "subtitle": "Shared decks work like open-source projects: everyone studies their own copy, proposes fixes, and the author merges the good ones into the next published version.",
+      "import": {
+        "git": "fork",
+        "title": "Import a deck",
+        "description": "Get your own copy of any public deck and start studying right away."
+      },
+      "correct": {
+        "git": "commit",
+        "title": "Correct as you study",
+        "description": "Spot a mistake? Edit the fact in your copy. Your change applies at once, just for you."
+      },
+      "propose": {
+        "git": "pull request",
+        "title": "Propose the fix",
+        "description": "Send your corrections to the author with a note — one at a time or as a batch."
+      },
+      "merge": {
+        "git": "merge",
+        "title": "Author reviews and publishes",
+        "description": "The author sees each change side by side, accepts or dismisses it, and publishes a new version."
+      },
+      "sync": {
+        "git": "pull",
+        "title": "Sync the new version",
+        "description": "Review what changed and choose, fact by fact, to take the update or keep your own edit."
       }
     },
     "howItWorks": {

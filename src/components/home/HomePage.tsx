@@ -3,7 +3,10 @@
 import type { ReactNode } from 'react'
 import { useRef, useState, useEffect } from 'react'
 import { useTranslations } from 'next-intl'
-import { Users, Brain, Palette, Bot, ArrowRight, Clock, BookOpen, TrendingUp } from 'lucide-react'
+import {
+  Users, Brain, Palette, Bot, ArrowRight, Clock, BookOpen, TrendingUp,
+  GitFork, GitCommitHorizontal, GitPullRequest, GitMerge, RefreshCw,
+} from 'lucide-react'
 import clsx from 'clsx'
 import AppLink from '@/components/app/AppLink'
 import { AppButtonLink } from '@/components/app/AppButtonLink'
@@ -79,6 +82,15 @@ const features = [
   { icon: Brain, key: 'algorithm' },
   { icon: Palette, key: 'ui' },
   { icon: Bot, key: 'ai' },
+] as const
+
+/** How a shared deck improves, mapped to the Git workflow it borrows from */
+const flow = [
+  { icon: GitFork, key: 'import' },
+  { icon: GitCommitHorizontal, key: 'correct' },
+  { icon: GitPullRequest, key: 'propose' },
+  { icon: GitMerge, key: 'merge' },
+  { icon: RefreshCw, key: 'sync' },
 ] as const
 
 const steps = [
@@ -195,6 +207,36 @@ export default function HomePage({ children }:{ children?: ReactNode }) {
             </AnimatedSection>
           ))}
         </div>
+      </section>
+
+      {/* Collaborate Section: decks improve the way code does */}
+      <section id="collaborate" className="py-16 md:py-24 max-w-content px-4 md:px-2 mx-auto">
+        <AnimatedSection className="text-center mb-12 max-w-3xl mx-auto">
+          <h2 className="text-3xl md:text-4xl font-bold mb-4">{t('home.collaborate.sectionTitle')}</h2>
+          <p className="text-gray-600 dark:text-gray-400 leading-relaxed text-lg">{t('home.collaborate.subtitle')}</p>
+        </AnimatedSection>
+        <ol className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+          {flow.map((item, i) => (
+            <AnimatedSection key={item.key} delay={i * 120}>
+              <li className="h-full flex flex-col gap-3 p-5 rounded-2xl border border-gray-200 dark:border-gray-700">
+                <div className="flex items-center justify-between">
+                  <div className="w-11 h-11 rounded-xl bg-accent/10 text-accent flex items-center justify-center">
+                    <item.icon className="size-5" />
+                  </div>
+                  <span className="rounded-full bg-default px-2 py-0.5 font-mono text-xs text-muted">
+                    {t(`home.collaborate.${item.key}.git` as 'home.collaborate.import.git')}
+                  </span>
+                </div>
+                <h3 className="font-semibold">
+                  {`${i + 1}. ${t(`home.collaborate.${item.key}.title` as 'home.collaborate.import.title')}`}
+                </h3>
+                <p className="text-sm text-gray-600 dark:text-gray-400 leading-relaxed">
+                  {t(`home.collaborate.${item.key}.description` as 'home.collaborate.import.description')}
+                </p>
+              </li>
+            </AnimatedSection>
+          ))}
+        </ol>
       </section>
 
       {/* How It Works Section */}

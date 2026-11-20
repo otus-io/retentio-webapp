@@ -20,7 +20,7 @@
     "hero": {
       "title": "日积跬步，以至千里",
       "titleHighlight": "",
-      "subtitle": "面向卡组共建与改进的协作平台——依托创新 SRS 调度算法、AI 辅助质量审校与自适应复习。",
+      "subtitle": "一个共同构建、持续改进卡组的协作平台——像 Git 一样导入、修正并回馈贡献——由新颖的 SRS 调度算法、AI 辅助质量检查和自适应复习驱动。",
       "cta": "加入 TestFlight 测试",
       "learnMore": "了解更多",
       "appPreview": "应用预览"
@@ -32,8 +32,8 @@
     "features": {
       "sectionTitle": "为什么选择 Rete",
       "community": {
-        "title": "协作卡组",
-        "description": "共同创建、分享与改进卡组——质量随时间累积，而不是逐渐陈旧。"
+        "title": "共同改进卡组",
+        "description": "发现错别字或缺少例句？修改后发回给作者。每一次被采纳的修正都会惠及所有学习者，卡组越用越好，而不是逐渐过时。"
       },
       "algorithm": {
         "title": "创新算法",
@@ -46,6 +46,35 @@
       "ai": {
         "title": "AI 辅助审校",
         "description": "AI 审查卡组的质量与准确性，所有建议修改均经人工审核后才会生效。"
+      }
+    },
+    "collaborate": {
+      "sectionTitle": "像代码一样持续改进的卡组",
+      "subtitle": "共享卡组就像开源项目：每个人学习自己的副本、提出修正，作者把好的修改合并进下一个发布版本。",
+      "import": {
+        "git": "fork",
+        "title": "导入卡组",
+        "description": "获得任意公开卡组的个人副本，立即开始学习。"
+      },
+      "correct": {
+        "git": "commit",
+        "title": "边学边改",
+        "description": "发现错误？直接在你的副本中修改词条，立即生效，只影响你自己。"
+      },
+      "propose": {
+        "git": "pull request",
+        "title": "提交修正",
+        "description": "附上留言，把修正发给作者——可以逐条发送，也可以批量发送。"
+      },
+      "merge": {
+        "git": "merge",
+        "title": "作者审阅并发布",
+        "description": "作者逐条对比查看修改，接受或忽略，然后发布新版本。"
+      },
+      "sync": {
+        "git": "pull",
+        "title": "同步新版本",
+        "description": "查看变更内容，逐条选择采用更新还是保留你自己的修改。"
       }
     },
     "howItWorks": {
