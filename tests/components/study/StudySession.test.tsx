@@ -169,6 +169,35 @@ describe('StudySession', () => {
     expect(actions.getNextCardAction).toHaveBeenCalledTimes(1)
   })
 
+  it('locks the tag filter while a request is pending', async () => {
+    let resolve!: (v: unknown) => void
+    actions.getNextCardAction.mockReturnValueOnce(new Promise((r) => { resolve = r }))
+    render(<StudySession deck={deck} tags={tags} />)
+    await waitFor(() => expect((screen.getByRole('combobox') as HTMLSelectElement).disabled).toBe(true))
+    await act(async () => resolve(withCard()))
+    await screen.findByText('hola')
+    expect((screen.getByRole('combobox') as HTMLSelectElement).disabled).toBe(false)
+  })
+
+  it('retries loading after a review without submitting it again', async () => {
+    actions.getNextCardAction
+      .mockResolvedValueOnce(withCard())
+      .mockResolvedValueOnce({ success: false, error: 'boom' })
+      .mockResolvedValueOnce(withCard(null))
+    actions.reviewCardAction.mockResolvedValue({ success: true })
+    render(<StudySession deck={deck} tags={tags} />)
+    await screen.findByText('hola')
+    await clickWhenEnabled('show-answer')
+    await clickWhenEnabled('next')
+
+    expect((await screen.findByTestId('error')).textContent).toBe('boom')
+    expect(screen.queryByText('hola')).toBeNull()
+    expect(screen.queryByText('next')).toBeNull()
+    await clickWhenEnabled('common.retry')
+    expect(await screen.findByText('caught-up-title')).toBeTruthy()
+    expect(actions.reviewCardAction).toHaveBeenCalledTimes(1)
+  })
+
   it('opens the facts editor', async () => {
     actions.getNextCardAction.mockResolvedValue(withCard())
     render(<StudySession deck={deck} tags={tags} />)

@@ -7,6 +7,7 @@ import { REVIEW_RANGES, type ReviewSummary, reviewDayToDate } from '@/modules/ca
 import { Card, Tooltip } from '@heroui/react'
 import { useFormatter, useTranslations } from 'next-intl'
 import { useRouter } from 'next/navigation'
+import { useEffect, useRef } from 'react'
 
 const ALL_DECKS = '__all__'
 
@@ -24,11 +25,18 @@ export default function StatisticsPanel({ decks, deckId, days, summary, partial 
   const format = useFormatter()
   const router = useRouter()
 
+  // Filter changes made before the previous navigation lands, so consecutive changes keep each other.
+  const pending = useRef<{ deck?: string | null, days?: number }>({})
+  useEffect(() => {
+    pending.current = {}
+  }, [deckId, days])
+
   const navigate = (next: { deck?: string | null, days?: number }) => {
+    pending.current = { ...pending.current, ...next }
     const params = new URLSearchParams()
-    const deck = next.deck === undefined ? deckId : next.deck
+    const deck = pending.current.deck === undefined ? deckId : pending.current.deck
     if (deck) params.set('deck', deck)
-    params.set('days', String(next.days ?? days))
+    params.set('days', String(pending.current.days ?? days))
     router.push(`/statistics?${params}`)
   }
 

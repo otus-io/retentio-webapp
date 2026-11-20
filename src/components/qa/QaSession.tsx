@@ -191,6 +191,7 @@ export default function QaSession({ deck }: QaSessionProps) {
                 <Checkbox
                   key={i}
                   isSelected={columns.has(i)}
+                  isDisabled={isPending}
                   onChange={() => setColumns((prev) => {
                     const next = new Set(prev)
                     if (!next.delete(i)) next.add(i)
@@ -236,7 +237,12 @@ export default function QaSession({ deck }: QaSessionProps) {
               {progress}
             </Card.Header>
             <Card.Content className="gap-4 py-4">
-              {!fact && <div className="flex justify-center py-12"><Spinner /></div>}
+              {!fact && isPending && <div className="flex justify-center py-12"><Spinner /></div>}
+              {!fact && !isPending && error && (
+                <AppButton variant="secondary" className="self-center" onPress={() => loadFact(factIds, index)}>
+                  {tRoot('common.retry')}
+                </AppButton>
+              )}
               {fact?.entries.map((entry, i) => columns.has(i) && (
                 <div key={i} className="flex items-start justify-between gap-4 border-b border-border/50 pb-3">
                   <div className="flex min-w-0 flex-col gap-1">

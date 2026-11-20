@@ -74,6 +74,17 @@ describe('summarizeReviewDays', () => {
     expect(summary.weekdays).toEqual([3, 4, 0, 0, 0, 0, 0])
   })
 
+  it('keeps only the latest days when series straddle UTC midnight', () => {
+    const summary = summarizeReviewDays([
+      [{ day: '20260906', count: 2 }, { day: '20260907', count: 1 }],
+      [{ day: '20260907', count: 3 }, { day: '20260908', count: 5 }],
+    ], 2)
+    expect(summary.days).toEqual([{ day: '20260907', count: 4 }, { day: '20260908', count: 5 }])
+    expect(summary.total).toBe(9)
+    expect(summary.today).toBe(5)
+    expect(summary.average).toBe(4.5)
+  })
+
   it('handles no data', () => {
     expect(summarizeReviewDays([])).toEqual({
       days: [],

@@ -28,7 +28,7 @@ export default async function Page(props: PageProps<'/statistics'>) {
       decks={decks.map((d) => ({ id: d.id, name: d.name }))}
       deckId={deckId}
       days={days}
-      summary={loadFailed ? null : summarizeReviewDays(loaded)}
+      summary={loadFailed ? null : summarizeReviewDays(loaded, days)}
       partial={!loadFailed && loaded.length < targets.length}
     />
   )

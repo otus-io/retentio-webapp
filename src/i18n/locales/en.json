@@ -191,6 +191,7 @@
     "empty": "No tags yet — tap the + in the top-right to create one."
   },
   "common": {
+    "retry": "Retry",
     "login": "Login",
     "logout": "Logout",
     "logout-confirm": "Are you sure you want to log out?",

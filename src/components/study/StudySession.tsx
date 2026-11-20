@@ -82,6 +82,8 @@ export default function StudySession({ deck, tags }: StudySessionProps) {
         return
       }
       if (countAsStudied) setStudied((n) => n + 1)
+      // Drop the reviewed card so a failed reload cannot submit it again.
+      setResult(null)
       load(tagId)
     })
   }, [load, tagId])
@@ -130,6 +132,7 @@ export default function StudySession({ deck, tags }: StudySessionProps) {
               label={t('tag-filter')}
               items={tagItems}
               value={tagId}
+              isDisabled={isPending}
               onChange={(key) => setTagId(String(key ?? ALL_TAGS))}
             />
           )}
@@ -142,6 +145,12 @@ export default function StudySession({ deck, tags }: StudySessionProps) {
 
         {!result && isPending && (
           <div className="flex justify-center py-16"><Spinner /></div>
+        )}
+
+        {!result && !isPending && error && (
+          <AppButton variant="secondary" className="self-center" onPress={() => load(tagId)}>
+            {tRoot('common.retry')}
+          </AppButton>
         )}
 
         {result && !card && (

@@ -97,11 +97,11 @@ export function AppButtonMock({ children, onPress, isDisabled, isPending, icon: 
   )
 }
 
-export function AppSelectMock({ items, value, onChange, label }: Props) {
+export function AppSelectMock({ items, value, onChange, label, isDisabled }: Props) {
   return (
     <label>
       {label as ReactNode}
-      <select value={value as string} onChange={(e) => (onChange as (v: string | null) => void)(e.target.value || null)}>
+      <select value={value as string} disabled={!!isDisabled} onChange={(e) => (onChange as (v: string | null) => void)(e.target.value || null)}>
         {(items as { id: string, name: string }[]).map((i) => <option key={i.id} value={i.id}>{i.name}</option>)}
       </select>
     </label>

@@ -138,8 +138,9 @@ export interface ReviewSummary {
 
 /**
  * 合并多个卡组的按天序列（按 day 求和）并计算汇总指标。
+ * 传入 `limit` 时只保留最近 `limit` 天（并发请求跨越 UTC 零点时并集会多出一天）。
  */
-export function summarizeReviewDays(series: ReviewDay[][]): ReviewSummary {
+export function summarizeReviewDays(series: ReviewDay[][], limit?: number): ReviewSummary {
   const byDay = new Map<string, number>()
   for (const list of series) {
     for (const { day, count } of list) byDay.set(day, (byDay.get(day) ?? 0) + count)
@@ -147,6 +148,7 @@ export function summarizeReviewDays(series: ReviewDay[][]): ReviewSummary {
   const days = [...byDay.entries()]
     .sort(([a], [b]) => a.localeCompare(b))
     .map(([day, count]) => ({ day, count }))
+    .slice(limit ? -limit : 0)
   const weekdays = [0, 0, 0, 0, 0, 0, 0]
   let total = 0
   let activeDays = 0

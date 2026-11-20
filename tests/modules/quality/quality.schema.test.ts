@@ -29,6 +29,16 @@ describe('mergeQualityEntries', () => {
     })
   })
 
+  it('keeps stored scores for entries the fact no longer has', () => {
+    const merged = mergeQualityEntries(
+      { fact_id: 'f1', updated_at: '', entries: { 0: {}, 2: { text: human }, 3: {} } },
+      [{ text: 'hola' }],
+      new Set([0]),
+      new Set([0]),
+    )
+    expect(merged).toEqual({ 0: { text: human }, 2: { text: human } })
+  })
+
   it('replaces scores on a checked column with human sign-offs', () => {
     const merged = mergeQualityEntries(
       { fact_id: 'f1', updated_at: '', entries: { 0: { text: { score: 1, model: 'claude' } } } },

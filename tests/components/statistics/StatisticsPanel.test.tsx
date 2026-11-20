@@ -48,9 +48,21 @@ describe('StatisticsPanel', () => {
     fireEvent.change(rangeSelect, { target: { value: '90' } })
     expect(push).toHaveBeenLastCalledWith('/statistics?deck=d1&days=90')
     fireEvent.change(deckSelect, { target: { value: '__all__' } })
-    expect(push).toHaveBeenLastCalledWith('/statistics?days=30')
+    expect(push).toHaveBeenLastCalledWith('/statistics?days=90')
     fireEvent.change(deckSelect, { target: { value: 'd1' } })
-    expect(push).toHaveBeenLastCalledWith('/statistics?deck=d1&days=30')
+    expect(push).toHaveBeenLastCalledWith('/statistics?deck=d1&days=90')
+  })
+
+  it('keeps both filters when they change before navigation lands', () => {
+    const { rerender } = render(<StatisticsPanel decks={decks} deckId={null} days={30} summary={summarizeReviewDays([])} />)
+    const [deckSelect, rangeSelect] = screen.getAllByRole('combobox')
+    fireEvent.change(rangeSelect, { target: { value: '90' } })
+    fireEvent.change(deckSelect, { target: { value: 'd1' } })
+    expect(push).toHaveBeenLastCalledWith('/statistics?deck=d1&days=90')
+
+    rerender(<StatisticsPanel decks={decks} deckId="d1" days={7} summary={summarizeReviewDays([])} />)
+    fireEvent.change(screen.getAllByRole('combobox')[0], { target: { value: '__all__' } })
+    expect(push).toHaveBeenLastCalledWith('/statistics?days=7')
   })
 
   it('warns about partial data', () => {

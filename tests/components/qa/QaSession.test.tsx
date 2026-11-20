@@ -161,6 +161,28 @@ describe('QaSession', () => {
     expect(push).toHaveBeenCalledWith('/decks/d1/facts')
   })
 
+  it('locks the column picker while the walk starts', async () => {
+    let resolve!: (v: unknown) => void
+    actions.startQaWalkAction.mockReturnValueOnce(new Promise((r) => { resolve = r }))
+    render(<QaSession deck={deck} />)
+    await clickWhenEnabled('start')
+    await waitFor(() => expect(checkboxFor('Word').disabled).toBe(true))
+    await act(async () => resolve({ success: true, data: { factIds: [], stats } }))
+    expect(await screen.findByText('complete-title')).toBeTruthy()
+  })
+
+  it('retries a fact that failed to load', async () => {
+    actions.startQaWalkAction.mockResolvedValue({ success: true, data: { factIds: ['f1'], stats } })
+    actions.getQaFactAction.mockResolvedValueOnce({ success: false, error: 'timeout' })
+      .mockResolvedValueOnce(fact('f1', [{ text: 'hola' }]))
+    render(<QaSession deck={deck} />)
+    await clickWhenEnabled('start')
+    expect(await screen.findByText('timeout')).toBeTruthy()
+    await clickWhenEnabled('common.retry')
+    expect(await screen.findByText('hola')).toBeTruthy()
+    expect(actions.getQaFactAction).toHaveBeenLastCalledWith('d1', 'f1')
+  })
+
   it('falls back to all columns for invalid saved picks and disables start with none', async () => {
     localStorage.setItem('qa_columns_d1', '{"bad":1}')
     const { unmount } = render(<QaSession deck={deck} />)
