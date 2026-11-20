@@ -192,6 +192,7 @@
     "empty": "タグがありません。右上の + をタップして作成してください。"
   },
   "common": {
+    "edit-deck": "デッキを編集",
     "deck-options": "デッキのオプション",
     "deck-details": "デッキ詳細",
     "total-reviews": "総復習数",

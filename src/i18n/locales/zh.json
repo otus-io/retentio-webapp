@@ -192,6 +192,7 @@
     "empty": "暂无标签，点击右上角 + 新建标签。"
   },
   "common": {
+    "edit-deck": "编辑卡组",
     "deck-options": "卡组选项",
     "deck-details": "卡组详情",
     "total-reviews": "累计复习",

@@ -23,7 +23,7 @@ describe('DecksAction', () => {
 
   it('shows only the requested items and opens the QA page', () => {
     render(<DecksAction deck={deck} actions={['facts', 'qa']} />)
-    expect(screen.queryByText('common.edit')).toBeNull()
+    expect(screen.queryByText('common.edit-deck')).toBeNull()
     expect(screen.queryByText('common.delete')).toBeNull()
     fireEvent.click(screen.getByText('qa.title'))
     expect(push).toHaveBeenCalledWith('/decks/d1/qa')
@@ -63,7 +63,7 @@ describe('DecksAction', () => {
   it('edits and confirms deletion', () => {
     render(<DecksAction deck={deck} actions={['edit', 'delete']} />)
     expect(screen.queryByText('qa.title')).toBeNull()
-    fireEvent.click(screen.getByText('common.edit'))
+    fireEvent.click(screen.getByText('common.edit-deck'))
     expect(push).toHaveBeenCalledWith('/decks/d1/edit')
     fireEvent.click(screen.getByText('common.delete'))
     expect(screen.getByTestId('delete-modal')).toBeTruthy()

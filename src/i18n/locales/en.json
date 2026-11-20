@@ -192,6 +192,7 @@
     "empty": "No tags yet — tap the + in the top-right to create one."
   },
   "common": {
+    "edit-deck": "Edit Deck",
     "deck-options": "Deck options",
     "deck-details": "Deck details",
     "total-reviews": "Total reviews",

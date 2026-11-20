@@ -85,7 +85,7 @@ export default function DecksAction({ deck, actions, onOpenSheet }: DecksActionP
               <Dropdown.Item id="edit" textValue="edit">
                 <div className="flex items-center gap-1">
                   <Pencil className="size-3.5 text-muted-foreground" />
-                  <Label>{t('common.edit')}</Label>
+                  <Label>{t('common.edit-deck')}</Label>
                 </div>
               </Dropdown.Item>
             )
