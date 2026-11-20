@@ -28,7 +28,9 @@ export default function StatisticsPanel({ decks, deckId, days, summary, partial 
   // Filter changes made before the previous navigation lands, so consecutive changes keep each other.
   const pending = useRef<{ deck?: string | null, days?: number }>({})
   useEffect(() => {
-    pending.current = {}
+    // Forget a pending value only once the page shows it, so in-flight changes survive earlier ones landing.
+    if (pending.current.deck !== undefined && (pending.current.deck ?? null) === deckId) delete pending.current.deck
+    if (pending.current.days === days) delete pending.current.days
   }, [deckId, days])
 
   const navigate = (next: { deck?: string | null, days?: number }) => {

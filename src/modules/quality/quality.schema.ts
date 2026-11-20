@@ -80,9 +80,5 @@ export function mergeQualityEntries(
     }
     if (Object.keys(aspects).length) merged[String(i)] = aspects
   })
-  // PUT replaces the whole record, so keep scores stored for entries the fact no longer has.
-  for (const [key, prior] of Object.entries(quality?.entries ?? {})) {
-    if (Number(key) >= entries.length && Object.keys(prior).length) merged[key] = prior
-  }
   return merged
 }
