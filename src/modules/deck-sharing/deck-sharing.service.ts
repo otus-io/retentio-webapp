@@ -119,3 +119,14 @@ export async function acceptDeckFeedbackService(sourceDeckId: string, feedbackId
     return ServiceResponse.error('acceptDeckFeedbackService failed', e)
   }
 }
+
+/**
+ * 获取作者源卡组的未发布更改
+ */
+export async function getPublishPreviewService(deckId: string) {
+  try {
+    return ServiceResponse.success(await deckSharingApi.getPublishPreview(deckId))
+  } catch (e) {
+    return ServiceResponse.error('getPublishPreviewService failed', e)
+  }
+}

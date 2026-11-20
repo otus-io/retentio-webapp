@@ -14,6 +14,8 @@ import {
   Clock,
   ListIcon,
   Tag,
+  GraduationCap,
+  ShieldCheck,
 } from 'lucide-react'
 import { useFormatter, useTranslations } from 'next-intl'
 import DecksAction from '@/components/decks/DecksAction'
@@ -23,13 +25,15 @@ import DeckPublishPanel from '@/components/decks/DeckPublishPanel'
 import DeckImportUpdatesPanel from '@/components/decks/DeckImportUpdatesPanel'
 import DeckContributionsPanel from '@/components/decks/DeckContributionsPanel'
 import DeckAuthorContributionsPanel, { type ContributionInboxTab } from '@/components/decks/DeckAuthorContributionsPanel'
-import type { DeckImportUpdatesResponseDTO } from '@/modules/deck-sharing/deck-sharing.schema'
+import type { DeckImportUpdatesResponseDTO, PublishPreview } from '@/modules/deck-sharing/deck-sharing.schema'
+import { AppButtonLink } from '@/components/app/AppButtonLink'
 import type { Contribution } from '@/modules/contributions/contributions.schema'
 import useAutoRefresh from '@/hooks/useAutoRefresh'
 
 interface DecksDetailProps {
   deck: Deck
   updates: DeckImportUpdatesResponseDTO['data'] | null
+  publishPreview?: PublishPreview | null
   authorContributions: {
     contributions: Contribution[]
     selectedTab: ContributionInboxTab
@@ -46,7 +50,7 @@ const containerVariants = {
   },
 }
 
-export default function DecksDetail({ deck, updates, authorContributions }: DecksDetailProps) {
+export default function DecksDetail({ deck, updates, publishPreview, authorContributions }: DecksDetailProps) {
   const t = useTranslations()
   useAutoRefresh({ enabled: !!authorContributions })
 
@@ -92,7 +96,17 @@ export default function DecksDetail({ deck, updates, authorContributions }: Deck
                   </div>
                 )}
               </div>
-              <DecksAction deck={deck} actions={['facts']} />
+              <div className="flex items-center gap-2">
+                <AppButtonLink href={`/decks/${deck.id}/qa`} variant="secondary" size="sm">
+                  <ShieldCheck className="size-4" />
+                  {t('qa.title')}
+                </AppButtonLink>
+                <AppButtonLink href={`/decks/${deck.id}/study`} size="sm">
+                  <GraduationCap className="size-4" />
+                  {t('study.start')}
+                </AppButtonLink>
+                <DecksAction deck={deck} actions={['facts']} />
+              </div>
             </div>
           </Card.Header>
 
@@ -182,7 +196,7 @@ export default function DecksDetail({ deck, updates, authorContributions }: Deck
             </motion.div>
           </Card.Content>
         </Card>
-        {!deck.source_deck_id && <DeckPublishPanel deck={deck} />}
+        {!deck.source_deck_id && <DeckPublishPanel deck={deck} preview={publishPreview} />}
         {authorContributions
           ? (
             <DeckAuthorContributionsPanel

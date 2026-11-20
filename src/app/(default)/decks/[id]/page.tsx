@@ -1,7 +1,7 @@
 import DecksDetail from '@/components/decks/DecksDetail'
 import type { ContributionInboxTab } from '@/components/decks/DeckAuthorContributionsPanel'
 import { getContributionsService } from '@/modules/contributions/contributions.service'
-import { getDeckImportUpdatesService } from '@/modules/deck-sharing/deck-sharing.service'
+import { getDeckImportUpdatesService, getPublishPreviewService } from '@/modules/deck-sharing/deck-sharing.service'
 import { getDeckService } from '@/modules/decks/decks.service'
 import type { Metadata } from 'next'
 import { getTranslations } from 'next-intl/server'
@@ -18,6 +18,10 @@ export default async function Page(props: PageProps<'/decks/[id]'>) {
     ? await getDeckImportUpdatesService(id)
     : null
   const updates = updatesResponse?.success ? updatesResponse.data : null
+  const previewResponse = !data.data.source_deck_id && data.data.published_version > 0
+    ? await getPublishPreviewService(id)
+    : null
+  const publishPreview = previewResponse?.success ? previewResponse.data : null
   const requestedStatus = typeof searchParams.contributionStatus === 'string'
     ? searchParams.contributionStatus
     : 'open'
@@ -47,6 +51,7 @@ export default async function Page(props: PageProps<'/decks/[id]'>) {
     <DecksDetail
       deck={data.data}
       updates={updates}
+      publishPreview={publishPreview}
       authorContributions={authorContributions}
     />
   )

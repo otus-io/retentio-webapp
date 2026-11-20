@@ -318,3 +318,19 @@ export interface UpdateDeckFeedbackStatusDTO {
  * 单条反馈响应 DTO
  */
 export type DeckFeedbackResponseDTO = BaseApiResult<{ feedback: DeckFeedback }>
+
+/** 未发布更改计数（GET /api/decks/{id}/publish-preview） */
+export interface PublishPreview {
+  published_version: number
+  has_unpublished_changes: boolean
+  facts: { added: number, edited: number, removed: number }
+  media: { added: number, updated: number, deleted: number }
+  tags: {
+    deck: { added: number, removed: number }
+    facts: { added: number, removed: number, facts_changed: number }
+  }
+  card_templates_changed: number
+  meta_changed: boolean
+}
+
+export type PublishPreviewResponseDTO = BaseApiResult<PublishPreview>

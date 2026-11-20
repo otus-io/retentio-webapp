@@ -13,6 +13,7 @@ import type {
   ImportDeckResponseDTO,
   PublishDeckDTO,
   PublishDeckResponseDTO,
+  PublishPreviewResponseDTO,
   SyncImportedDeckDTO,
   SyncImportedDeckResponseDTO,
   UpdateDeckFeedbackStatusDTO,
@@ -114,4 +115,11 @@ export function acceptDeckFeedback(sourceDeckId: string, feedbackId: string) {
   return request<DeckFeedbackResponseDTO>(`/api/decks/${sourceDeckId}/feedback/${feedbackId}/accept`, {
     method: 'POST',
   })
+}
+
+/**
+ * 作者源卡组：工作副本与最近发布快照的差异（计数）
+ */
+export function getPublishPreview(deckId: string) {
+  return request<PublishPreviewResponseDTO>(`/api/decks/${deckId}/publish-preview`)
 }

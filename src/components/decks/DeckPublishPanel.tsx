@@ -17,18 +17,20 @@ import AppButton from '@/components/app/AppButton'
 import AppError from '@/components/app/AppError'
 import { showSuccessToast } from '@/lib/ui'
 import { publishDeckAction } from '@/modules/deck-sharing/deck-sharing.action'
-import type { PublishDeckActionData } from '@/modules/deck-sharing/deck-sharing.schema'
+import type { PublishDeckActionData, PublishPreview } from '@/modules/deck-sharing/deck-sharing.schema'
 import type { Deck } from '@/modules/decks/decks.schema'
 
 interface DeckPublishPanelProps {
   deck: Deck
+  preview?: PublishPreview | null
 }
 
-export default function DeckPublishPanel({ deck }: DeckPublishPanelProps) {
+export default function DeckPublishPanel({ deck, preview }: DeckPublishPanelProps) {
   const t = useTranslations('deck-sharing')
   const format = useFormatter()
   const [isOpen, setIsOpen] = useState(false)
   const isPublished = deck.published_version > 0
+  const noChanges = isPublished && preview?.has_unpublished_changes === false
   const updatedAt = format.dateTime(new Date(deck.updated_at), {
     dateStyle: 'medium',
     timeStyle: 'short',
@@ -54,6 +56,7 @@ export default function DeckPublishPanel({ deck }: DeckPublishPanelProps) {
           <AppButton
             icon={<Upload className="size-4" />}
             onPress={() => setIsOpen(true)}
+            isDisabled={noChanges}
             variant={isPublished ? 'secondary' : 'primary'}
           >
             {isPublished ? t('republish') : t('publish')}
@@ -76,6 +79,7 @@ export default function DeckPublishPanel({ deck }: DeckPublishPanelProps) {
               <span className="font-medium text-foreground">{updatedAt}</span>
             </div>
           </div>
+          {preview && <PublishPreviewSummary preview={preview} />}
         </Card.Content>
       )}
       <PublishDeckModal
@@ -86,6 +90,34 @@ export default function DeckPublishPanel({ deck }: DeckPublishPanelProps) {
         setIsOpen={setIsOpen}
       />
     </Card>
+  )
+}
+
+function PublishPreviewSummary({ preview }: { preview: PublishPreview }) {
+  const t = useTranslations('deck-sharing')
+  if (!preview.has_unpublished_changes) {
+    return <p className="mt-3 text-sm text-muted">{t('preview-no-changes')}</p>
+  }
+  const rows = [
+    ['preview-facts', preview.facts.added, preview.facts.edited, preview.facts.removed],
+    ['preview-media', preview.media.added, preview.media.updated, preview.media.deleted],
+  ] as const
+  const tagChanges = preview.tags.deck.added + preview.tags.deck.removed
+    + preview.tags.facts.added + preview.tags.facts.removed
+  return (
+    <div className="mt-3 rounded-lg bg-warning/10 p-3 text-sm">
+      <p className="font-medium text-warning">{t('preview-has-changes')}</p>
+      <ul className="mt-1 list-inside list-disc text-foreground/80">
+        {rows.map(([key, added, edited, removed]) => (added + edited + removed > 0) && (
+          <li key={key}>{t(key, { added, edited, removed })}</li>
+        ))}
+        {tagChanges > 0 && <li>{t('preview-tags', { count: tagChanges })}</li>}
+        {preview.card_templates_changed > 0 && (
+          <li>{t('preview-templates', { count: preview.card_templates_changed })}</li>
+        )}
+        {preview.meta_changed && <li>{t('preview-meta')}</li>}
+      </ul>
+    </div>
   )
 }
 
