@@ -226,4 +226,40 @@ describe('VerifyEmailPanel', () => {
     expect(verifyEmailActionMock).toHaveBeenCalledTimes(3)
     expect(screen.queryByText('verifyEmailSuccess')).toBeNull()
   })
+
+  it('hides retry once a conflict has spent the link', async () => {
+    verifyEmailActionMock.mockResolvedValue({ success: false, error: 'verifyEmailUsernameTaken', linkUsed: true })
+    render(
+      <VerifyEmailPanel
+        token="tok-conflict"
+        initialStatus="pending"
+        initialError={null}
+      />,
+    )
+    await waitFor(() => {
+      expect(screen.getByTestId('app-error').textContent).toBe('verifyEmailUsernameTaken')
+    })
+    expect(screen.queryByRole('button', { name: 'verifyEmailRetry' })).toBeNull()
+  })
+
+  it('hides retry when a retry hits a conflict', async () => {
+    verifyEmailActionMock
+      .mockResolvedValueOnce({ success: false, error: 'temp fail' })
+      .mockResolvedValueOnce({ success: false, error: 'verifyEmailAccountExists', linkUsed: true })
+    render(
+      <VerifyEmailPanel
+        token="tok-retry-conflict"
+        initialStatus="pending"
+        initialError={null}
+      />,
+    )
+    await waitFor(() => {
+      expect(screen.getByRole('button', { name: 'verifyEmailRetry' })).toBeDefined()
+    })
+    screen.getByRole('button', { name: 'verifyEmailRetry' }).click()
+    await waitFor(() => {
+      expect(screen.getByTestId('app-error').textContent).toBe('verifyEmailAccountExists')
+    })
+    expect(screen.queryByRole('button', { name: 'verifyEmailRetry' })).toBeNull()
+  })
 })

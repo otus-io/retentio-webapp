@@ -183,7 +183,7 @@
     "usernameOrEmailPlaceholder": "Enter your username or email",
     "registerCheckEmail": "Check {email} to finish signing up. Your account is created when you open the link in that email.",
     "verifyEmailUsernameTaken": "Someone took that username before you opened the link. Please sign up again with another username.",
-    "verifyEmailAccountExists": "An account with this email already exists. Log in, or use “Forgot password?” on the login page."
+    "verifyEmailAccountExists": "This email already belongs to an account. If it is yours, log in or use “Forgot password?” on the login page."
   },
   "tags": {
     "select-placeholder": "Select tags",

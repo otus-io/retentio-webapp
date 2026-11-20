@@ -157,7 +157,13 @@ export const deleteAccountSchema = z.object({
 
 export type DeleteAccountDTO = z.infer<typeof deleteAccountSchema>
 
-export type ChangeEmailResponseDTO = BaseApiResult<{ email: string; username: string; email_verified: boolean }>
+/** `email` stays the current address; the new one is `pending_email` until its link is opened. */
+export type ChangeEmailResponseDTO = BaseApiResult<{
+  email: string
+  pending_email?: string
+  username: string
+  email_verified: boolean
+}>
 
 export type LoginResponseDTO = BaseApiResult<
   { token: string },

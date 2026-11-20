@@ -213,5 +213,17 @@ describe('AuthForm', () => {
     expect(await screen.findByText('registerCheckEmail')).toBeTruthy()
     expect(document.querySelector('form')).toBeNull()
     expect(screen.getByRole('link', { name: 'goLogin' }).getAttribute('href')).toBe('/login')
+    expect(screen.queryByText('registerDescription')).toBeNull()
+  })
+
+  it('keeps the redirect on the login link after registering', async () => {
+    terms.include = true
+    nav.search = new URLSearchParams('redirect=/decks/123')
+    vi.mocked(registerAction).mockResolvedValue({ success: true, data: { username: 'ada', email: 'ada@example.com' } })
+    render(<AuthForm type="register" />)
+    fireEvent.submit(document.querySelector('form')!)
+
+    expect(await screen.findByText('registerCheckEmail')).toBeTruthy()
+    expect(screen.getByRole('link', { name: 'goLogin' }).getAttribute('href')).toBe('/login?redirect=/decks/123')
   })
 })

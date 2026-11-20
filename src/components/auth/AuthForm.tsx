@@ -63,14 +63,16 @@ export default function AuthForm({ type }: { type: 'login' | 'register' }) {
         <Card>
           <Card.Header>
             <Card.Title>{isLogin ? t('loginTitle') : t('registerTitle')}</Card.Title>
-            <Card.Description>{isLogin ? t('loginDescription') : t('registerDescription')}</Card.Description>
+            {!(!isLogin && state?.success) && (
+              <Card.Description>{isLogin ? t('loginDescription') : t('registerDescription')}</Card.Description>
+            )}
           </Card.Header>
           {!isLogin && state?.success
             ? (
               <Card.Content>
                 <p className="text-sm text-default-500">{t('registerCheckEmail', { email: state.data?.email })}</p>
                 <p className="text-sm text-center text-default-500 mt-4">
-                  <AppLink className="text-sm" isActive href={LOGIN_PATH}>
+                  <AppLink className="text-sm" isActive href={authUrl}>
                     {t('goLogin')}
                   </AppLink>
                 </p>

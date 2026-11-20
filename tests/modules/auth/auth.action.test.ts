@@ -582,8 +582,13 @@ describe('verifyEmailAction', () => {
       ['An account with this email already exists', 'verifyEmailAccountExists'],
     ]) {
       verifyEmailServiceMock.mockResolvedValue({ success: false, message, status: 409 })
-      expect(await verifyEmailAction('tok')).toEqual({ error: key, success: false })
+      expect(await verifyEmailAction('tok')).toEqual({ error: key, linkUsed: true, success: false })
     }
+  })
+
+  it('does not treat inherited object keys as conflicts', async () => {
+    verifyEmailServiceMock.mockResolvedValue({ success: false, message: 'constructor', status: 400 })
+    expect(await verifyEmailAction('tok')).toEqual({ error: 'constructor', success: false })
   })
 })
 

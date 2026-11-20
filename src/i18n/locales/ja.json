@@ -183,7 +183,7 @@
     "usernameOrEmailPlaceholder": "ユーザー名またはメールアドレスを入力",
     "registerCheckEmail": "{email} に届くメールで登録を完了してください。メール内のリンクを開くとアカウントが作成されます。",
     "verifyEmailUsernameTaken": "リンクを開く前に、そのユーザー名は他の人に使われました。別のユーザー名で登録し直してください。",
-    "verifyEmailAccountExists": "このメールアドレスのアカウントは既にあります。ログインするか、ログイン画面の「パスワードをお忘れですか？」をご利用ください。"
+    "verifyEmailAccountExists": "このメールアドレスは既にアカウントで使われています。ご自身のものであれば、ログインするか、ログイン画面の「パスワードをお忘れですか？」をご利用ください。"
   },
   "tags": {
     "select-placeholder": "タグを選択",

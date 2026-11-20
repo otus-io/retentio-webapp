@@ -159,7 +159,7 @@ export const resetPasswordAction: ActionFunction = async (_, formData) => {
   redirect(LOGIN_PATH)
 }
 
-/** Verify-email 409s: another sign-up claimed the username or email before the link was opened. */
+/** Verify-email 409s: another account claimed the username or email before the link was opened. */
 const VERIFY_CONFLICT_KEYS: Record<string, 'verifyEmailUsernameTaken' | 'verifyEmailAccountExists'> = {
   'Username already exists; sign up again with another username': 'verifyEmailUsernameTaken',
   'An account with this email already exists': 'verifyEmailAccountExists',
@@ -176,8 +176,12 @@ export async function verifyEmailAction(token: string) {
   }
   const res = await verifyEmailService(result.data)
   if (!res.success) {
+    if (Object.hasOwn(VERIFY_CONFLICT_KEYS, res.message)) {
+      // The backend spends the link on these conflicts, so retrying it cannot succeed.
+      return { error: t(VERIFY_CONFLICT_KEYS[res.message]), linkUsed: true, success: false as const }
+    }
     return {
-      error: VERIFY_CONFLICT_KEYS[res.message] ? t(VERIFY_CONFLICT_KEYS[res.message]) : res.message,
+      error: res.message,
       success: false as const,
     }
   }

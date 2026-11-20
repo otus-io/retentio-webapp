@@ -183,7 +183,7 @@
     "usernameOrEmailPlaceholder": "请输入用户名或邮箱",
     "registerCheckEmail": "请查收发送到 {email} 的邮件完成注册。打开邮件中的链接后才会创建账号。",
     "verifyEmailUsernameTaken": "在你打开链接前，该用户名已被他人使用。请换一个用户名重新注册。",
-    "verifyEmailAccountExists": "该邮箱已有账号。请直接登录，或在登录页使用“忘记密码？”。"
+    "verifyEmailAccountExists": "该邮箱已被某个账号使用。如果是你的账号，请直接登录，或在登录页使用“忘记密码？”。"
   },
   "tags": {
     "select-placeholder": "选择标签",
