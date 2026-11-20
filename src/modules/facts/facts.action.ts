@@ -152,7 +152,9 @@ export async function getFactAction(deckId: string, factId: string): Promise<Act
 
 /** 整体替换词条的 entries，不跳转（学习时编辑用） */
 export async function updateFactEntriesAction(deckId: string, factId: string, entries: Entry[]): Promise<ActionState> {
-  const res = await updateFactService(deckId, factId, { entries })
+  const result = updateFactSchema.safeParse({ entries })
+  if (!result.success) return { success: false, error: z.prettifyError(result.error) }
+  const res = await updateFactService(deckId, factId, result.data)
   if (!res.success) return { success: false, error: res.message }
   revalidatePath(`/decks/${deckId}/facts`)
   return { success: true }

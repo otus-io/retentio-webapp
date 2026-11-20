@@ -468,6 +468,8 @@
     "card-options": "Card options",
     "hide-card": "Hide card",
     "edit-fact": "Edit fact",
+    "edit-fact-load-failed": "Couldn't load this fact",
+    "edit-fact-save-failed": "Couldn't save your changes",
     "report-issue": "Report issue",
     "delete-card": "Delete card",
     "delete-card-confirm": "Only this card will be removed. The fact and other cards for it stay in the deck.",

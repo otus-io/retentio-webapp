@@ -41,3 +41,23 @@ describe('study fact actions', () => {
     expect(await updateFactEntriesAction('d1', 'f1', entries)).toEqual({ success: false, error: 'Forbidden' })
   })
 })
+
+describe('updateFactEntriesAction validation', () => {
+  beforeEach(() => {
+    vi.clearAllMocks()
+  })
+
+  it('rejects malformed entries without calling the API', async () => {
+    const state = await updateFactEntriesAction('d1', 'f1', [{ text: 1 }] as never)
+    expect(state.success).toBe(false)
+    expect(String(state.error)).toContain('text')
+    expect(services.updateFactService).not.toHaveBeenCalled()
+  })
+
+  it('keeps json on entries it forwards', async () => {
+    services.updateFactService.mockResolvedValueOnce({ success: true, data: { fact_id: 'f1' } })
+    const entries = [{ text: 'a', json: { k: 1 } }] as never
+    await updateFactEntriesAction('d1', 'f1', entries)
+    expect(services.updateFactService).toHaveBeenCalledWith('d1', 'f1', { entries: [{ text: 'a', json: { k: 1 } }] })
+  })
+})

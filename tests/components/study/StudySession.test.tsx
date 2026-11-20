@@ -208,28 +208,34 @@ describe('StudySession', () => {
     expect(actions.reviewCardAction).toHaveBeenCalledTimes(1)
   })
 
-  it('flips the card by click or keyboard, but not from controls inside it', async () => {
+  it('flips the card by click or its flip button, but not from controls inside it', async () => {
     actions.getNextCardAction.mockResolvedValue(withCard())
     render(<StudySession deck={deck} tags={tags} />)
     await screen.findByText('hola')
-    const cardEl = screen.getByRole('button', { name: 'flip-card' })
+    const flipButton = screen.getByRole('button', { name: 'flip-card' })
 
     fireEvent.click(screen.getByTestId('audio'))
     expect(screen.queryByText('hello')).toBeNull()
     fireEvent.click(screen.getByText('hola'))
     expect(screen.getByText('hello')).toBeTruthy()
-    expect(cardEl.getAttribute('aria-pressed')).toBe('true')
+    expect(flipButton.getAttribute('aria-pressed')).toBe('true')
     expect(screen.getByText('hard')).toBeTruthy()
     expect(screen.queryByText('show-answer')).toBeNull()
 
-    fireEvent.keyDown(cardEl, { key: 'Enter' })
+    fireEvent.click(flipButton)
     expect(screen.queryByText('hello')).toBeNull()
     expect(screen.getByText('show-answer')).toBeTruthy()
-    fireEvent.keyDown(screen.getByText('hola'), { key: ' ' })
-    fireEvent.keyDown(cardEl, { key: 'a' })
-    expect(screen.queryByText('hello')).toBeNull()
-    fireEvent.keyDown(cardEl, { key: ' ' })
-    expect(screen.getByText('hello')).toBeTruthy()
+    expect(flipButton.getAttribute('aria-pressed')).toBe('false')
+  })
+
+  it('starts a new progress target when the tag filter changes', async () => {
+    actions.getNextCardAction
+      .mockResolvedValueOnce(withCard(card, { due_cards: 50 }))
+      .mockResolvedValueOnce(withCard(card, { due_cards: 5 }))
+    render(<StudySession deck={deck} tags={tags} />)
+    expect(await screen.findByText('due-progress:{"cleared":0,"target":50,"percent":"0%"}')).toBeTruthy()
+    fireEvent.change(screen.getByRole('combobox'), { target: { value: 't1' } })
+    expect(await screen.findByText('due-progress:{"cleared":0,"target":5,"percent":"0%"}')).toBeTruthy()
   })
 
   it('measures progress against the due count at session start', async () => {

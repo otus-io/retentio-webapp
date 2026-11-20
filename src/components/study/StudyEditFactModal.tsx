@@ -26,7 +26,10 @@ export default function StudyEditFactModal(
   const tCommon = useTranslations('common')
   const [entries, setEntries] = useState<Entry[] | null>(null)
   const [texts, setTexts] = useState<string[]>([])
+  /** Entries the fact had when loaded; fields past it are only added when filled in. */
+  const [loadedCount, setLoadedCount] = useState(0)
   const [error, setError] = useState<string | null>(null)
+  const [loadFailed, setLoadFailed] = useState(false)
   const [isPending, startTransition] = useTransition()
 
   useEffect(() => {
@@ -35,10 +38,12 @@ export default function StudyEditFactModal(
     void getFactAction(deckId, factId).then((res) => {
       if (cancelled) return
       if (!res.success || !res.data) {
-        setError(String(res.error ?? ''))
+        setLoadFailed(true)
+        if (res.error) setError(String(res.error))
         return
       }
       const loaded = res.data.entries
+      setLoadedCount(loaded.length)
       const count = Math.max(fields.length, loaded.length)
       setEntries(Array.from({ length: count }, (_, i) => loaded[i] ?? {}))
       setTexts(Array.from({ length: count }, (_, i) => loaded[i]?.text ?? ''))
@@ -50,10 +55,12 @@ export default function StudyEditFactModal(
 
   const handleSave = (current: Entry[]) => {
     const next = current.map(({ text: _text, ...rest }, i) => (texts[i].trim() ? { ...rest, text: texts[i] } : rest))
+    // Keep the fact's own entries (empty ones hold their column); drop untouched trailing deck fields.
+    while (next.length > loadedCount && Object.keys(next[next.length - 1]).length === 0) next.pop()
     startTransition(async () => {
       const res = await updateFactEntriesAction(deckId, factId, next)
       if (!res.success) {
-        setError(String(res.error ?? ''))
+        setError(res.error ? String(res.error) : t('edit-fact-save-failed'))
         return
       }
       setIsOpen(false)
@@ -70,7 +77,7 @@ export default function StudyEditFactModal(
             <Modal.Heading>{t('edit-fact')}</Modal.Heading>
           </Modal.Header>
           <Modal.Body className="space-y-4 px-1 py-2">
-            {!entries && !error && <div className="flex justify-center py-8"><Spinner /></div>}
+            {!entries && !loadFailed && <div className="flex justify-center py-8"><Spinner /></div>}
             {entries?.map((_, i) => (
               <AppTextarea
                 key={i}
@@ -79,7 +86,7 @@ export default function StudyEditFactModal(
                 onChange={(value) => setTexts((prev) => prev.map((v, j) => (j === i ? value : v)))}
               />
             ))}
-            <AppError error={error} />
+            <AppError error={error ?? (loadFailed ? t('edit-fact-load-failed') : null)} />
           </Modal.Body>
           <Modal.Footer>
             <AppButton slot="close" variant="secondary" isDisabled={isPending}>{tCommon('cancel')}</AppButton>

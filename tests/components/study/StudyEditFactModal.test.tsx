@@ -1,4 +1,4 @@
-import { act, fireEvent, render, screen, waitFor } from '@testing-library/react'
+import { act, fireEvent, render, screen } from '@testing-library/react'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 const actions = vi.hoisted(() => ({ getFactAction: vi.fn(), updateFactEntriesAction: vi.fn() }))
@@ -68,7 +68,7 @@ describe('StudyEditFactModal', () => {
     await act(async () => fireEvent.click(screen.getByText('save')))
     expect(screen.getByTestId('error').textContent).toBe('Forbidden')
     await act(async () => fireEvent.click(screen.getByText('save')))
-    await waitFor(() => expect(screen.queryByTestId('error')).toBeNull())
+    expect(screen.getByTestId('error').textContent).toBe('edit-fact-save-failed')
     expect(onSaved).not.toHaveBeenCalled()
   })
 
@@ -79,11 +79,22 @@ describe('StudyEditFactModal', () => {
     expect(screen.queryByText('save')).toBeNull()
   })
 
-  it('shows an empty load error when the action gives none', async () => {
+  it('falls back to a load error instead of spinning when the action gives none', async () => {
     actions.getFactAction.mockResolvedValueOnce({ success: false })
     setup()
-    await waitFor(() => expect(actions.getFactAction).toHaveBeenCalled())
+    expect((await screen.findByTestId('error')).textContent).toBe('edit-fact-load-failed')
+    expect(screen.queryByRole('status')).toBeNull()
     expect(screen.queryByText('save')).toBeNull()
+  })
+
+  it('does not pad the fact with untouched deck fields', async () => {
+    const entries = [{ text: 'hola' }, { text: 'x' }]
+    actions.getFactAction.mockResolvedValue({ success: true, data: { id: 'f1', entries } })
+    actions.updateFactEntriesAction.mockResolvedValue({ success: true })
+    setup(['Word', 'Meaning', 'Note', 'Extra'])
+    fireEvent.change(await screen.findByLabelText('Meaning'), { target: { value: '' } })
+    await act(async () => fireEvent.click(screen.getByText('save')))
+    expect(actions.updateFactEntriesAction).toHaveBeenCalledWith('d1', 'f1', [{ text: 'hola' }, {}])
   })
 
   it('ignores a load that finishes after closing', async () => {

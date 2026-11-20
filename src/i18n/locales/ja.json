@@ -462,6 +462,8 @@
     "card-options": "カードのオプション",
     "hide-card": "カードを非表示",
     "edit-fact": "項目を編集",
+    "edit-fact-load-failed": "この項目を読み込めませんでした",
+    "edit-fact-save-failed": "変更を保存できませんでした",
     "report-issue": "問題を報告",
     "delete-card": "カードを削除",
     "delete-card-confirm": "このカードのみ削除されます。対応する項目とその他のカードはデッキに残ります。",

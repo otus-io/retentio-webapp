@@ -468,6 +468,8 @@
     "card-options": "卡片选项",
     "hide-card": "隐藏卡片",
     "edit-fact": "编辑词条",
+    "edit-fact-load-failed": "无法加载该词条",
+    "edit-fact-save-failed": "保存失败",
     "report-issue": "报告问题",
     "delete-card": "删除卡片",
     "delete-card-confirm": "只会删除这一张卡片；对应的词条及其他卡片仍会保留。",

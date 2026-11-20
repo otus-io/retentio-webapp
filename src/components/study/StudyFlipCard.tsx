@@ -2,6 +2,7 @@
 
 import { Card } from '@heroui/react'
 import clsx from 'clsx'
+import { RefreshCw } from 'lucide-react'
 import type { MouseEvent, ReactNode } from 'react'
 
 interface StudyFlipCardProps {
@@ -15,25 +16,16 @@ interface StudyFlipCardProps {
 /** Clicks on controls inside the card (audio, media) must not flip it. */
 const isInteractive = (e: MouseEvent) => !!(e.target as HTMLElement).closest('button, a, input, audio, video')
 
-/** Study card that flips around the Y axis on click, Enter or Space, like the mobile app. */
+/**
+ * Study card that flips around the Y axis, like the mobile app. A click anywhere on it flips it; keyboard and
+ * screen-reader users get a dedicated flip button, so the controls inside the card stay reachable.
+ */
 export default function StudyFlipCard({ revealed, onFlip, label, front, back }: StudyFlipCardProps) {
   return (
     <div
-      role="button"
-      tabIndex={0}
-      aria-label={label}
-      aria-pressed={revealed}
-      className={clsx(
-        'h-[min(60vh,28rem)] cursor-pointer rounded-2xl perspective-[1200px]',
-        'outline-none focus-visible:ring-2 focus-visible:ring-focus',
-      )}
+      className="relative h-[min(60vh,28rem)] cursor-pointer perspective-[1200px]"
       onClick={(e) => {
         if (!isInteractive(e)) onFlip()
-      }}
-      onKeyDown={(e) => {
-        if (e.target !== e.currentTarget || (e.key !== 'Enter' && e.key !== ' ')) return
-        e.preventDefault()
-        onFlip()
       }}
     >
       <div
@@ -47,6 +39,19 @@ export default function StudyFlipCard({ revealed, onFlip, label, front, back }: 
           {revealed && back}
         </Card>
       </div>
+      <button
+        type="button"
+        aria-label={label}
+        aria-pressed={revealed}
+        className={clsx(
+          'absolute right-3 top-3 rounded-full p-1.5 text-muted transition-colors',
+          'hover:bg-default hover:text-foreground',
+          'outline-none focus-visible:ring-2 focus-visible:ring-focus',
+        )}
+        onClick={onFlip}
+      >
+        <RefreshCw className="size-4" />
+      </button>
     </div>
   )
 }

@@ -4,13 +4,15 @@ import AppButton from '@/components/app/AppButton'
 import AppError from '@/components/app/AppError'
 import AppSelect from '@/components/app/AppSelect'
 import LayoutPage from '@/components/layout/LayoutPage'
+import StudyAnswerControls from '@/components/study/StudyAnswerControls'
+import StudyCardMenu from '@/components/study/StudyCardMenu'
 import StudyCardSide from '@/components/study/StudyCardSide'
+import StudyDeleteCardDialog from '@/components/study/StudyDeleteCardDialog'
+import StudyDueProgress from '@/components/study/StudyDueProgress'
 import StudyFlipCard from '@/components/study/StudyFlipCard'
-import StudyIntervalSlider from '@/components/study/StudyIntervalSlider'
 import StudyEditFactModal from '@/components/study/StudyEditFactModal'
 import StudyReportModal from '@/components/study/StudyReportModal'
 import { showSuccessToast } from '@/lib/ui'
-import { formatPercent } from '@/utils/format'
 import {
   deleteCardAction,
   getNextCardAction,
@@ -18,12 +20,12 @@ import {
   type NextCardResult,
   reviewCardAction,
 } from '@/modules/cards/cards.action'
-import { computeIntervalRange, type IntervalRange, intervalToUnit } from '@/modules/cards/cards.schema'
+import { computeIntervalRange, type IntervalRange } from '@/modules/cards/cards.schema'
 import type { Deck } from '@/modules/decks/decks.schema'
 import type { Tag } from '@/modules/tags/tags.schema'
-import { AlertDialog, Card, Dropdown, Label, Spinner } from '@heroui/react'
-import { EllipsisVertical, EyeOff, Flag, PartyPopper, Pencil, Trash2 } from 'lucide-react'
-import { useFormatter, useTranslations } from 'next-intl'
+import { Card, Spinner } from '@heroui/react'
+import { PartyPopper } from 'lucide-react'
+import { useTranslations } from 'next-intl'
 import type { Key } from 'react'
 import { useCallback, useEffect, useState, useTransition } from 'react'
 
@@ -38,7 +40,6 @@ interface StudySessionProps {
 export default function StudySession({ deck, tags }: StudySessionProps) {
   const t = useTranslations('study')
   const tRoot = useTranslations()
-  const format = useFormatter()
   const imported = !!deck.source_deck_id
   const [tagId, setTagId] = useState<string>(ALL_TAGS)
   const [result, setResult] = useState<NextCardResult | null>(null)
@@ -120,17 +121,11 @@ export default function StudySession({ deck, tags }: StudySessionProps) {
     }
   }
 
-  const formatInterval = (seconds: number) => {
-    const { value, unit } = intervalToUnit(seconds)
-    return format.number(value, { style: 'unit', unit, unitDisplay: 'short' })
-  }
-
   const tagItems = [{ id: ALL_TAGS, name: t('all-tags') }, ...tags.map((e) => ({ id: e.id, name: e.name }))]
   const target = dueTarget ?? 0
   // Live progress toward the frozen target, with this session's reviews as a floor when new cards fall due.
   const liveCleared = due != null && due < target ? target - due : 0
   const cleared = Math.max(liveCleared, Math.min(studied, target))
-  const percent = target > 0 ? Math.min(cleared / target, 1) * 100 : 100
 
   return (
     <LayoutPage
@@ -148,55 +143,20 @@ export default function StudySession({ deck, tags }: StudySessionProps) {
               items={tagItems}
               value={tagId}
               isDisabled={isPending}
-              onChange={(key) => setTagId(String(key ?? ALL_TAGS))}
+              onChange={(key) => {
+                // Due counts are narrowed by the tag, so a new filter starts a new progress target.
+                setDue(null)
+                setDueTarget(null)
+                setTagId(String(key ?? ALL_TAGS))
+              }}
             />
           )}
           {card && (
-            <Dropdown>
-              <Dropdown.Trigger aria-label={t('card-options')} isDisabled={isPending} className="ml-auto">
-                <EllipsisVertical className="size-4 text-muted" />
-              </Dropdown.Trigger>
-              <Dropdown.Popover>
-                <Dropdown.Menu onAction={handleMenu(card.id)}>
-                  <Dropdown.Item id="hide" textValue={t('hide-card')}>
-                    <EyeOff className="size-3.5 text-muted-foreground" />
-                    <Label>{t('hide-card')}</Label>
-                  </Dropdown.Item>
-                  <Dropdown.Item id="edit" textValue={t('edit-fact')}>
-                    <Pencil className="size-3.5 text-muted-foreground" />
-                    <Label>{t('edit-fact')}</Label>
-                  </Dropdown.Item>
-                  {imported
-                    ? (
-                      <Dropdown.Item id="report" textValue={t('report-issue')}>
-                        <Flag className="size-3.5 text-muted-foreground" />
-                        <Label>{t('report-issue')}</Label>
-                      </Dropdown.Item>
-                    )
-                    : null}
-                  <Dropdown.Item id="delete" textValue={t('delete-card')} variant="danger">
-                    <Trash2 className="size-3.5 text-danger" />
-                    <Label>{t('delete-card')}</Label>
-                  </Dropdown.Item>
-                </Dropdown.Menu>
-              </Dropdown.Popover>
-            </Dropdown>
+            <StudyCardMenu isDisabled={isPending} imported={imported} onAction={handleMenu(card.id)} />
           )}
         </div>
 
-        {dueTarget !== null && (
-          <div className="flex flex-col gap-1.5">
-            <div className="h-1.5 overflow-hidden rounded-full bg-default">
-              <div className="h-full rounded-full bg-accent transition-[width]" style={{ width: `${percent}%` }} />
-            </div>
-            <div className="flex justify-between text-xs text-muted">
-              <span>{t('todays-due')}</span>
-              <span className="tabular-nums">
-                {t('due-progress', { cleared, target, percent: formatPercent(percent) })}
-              </span>
-            </div>
-          </div>
-        )}
+        {dueTarget !== null && <StudyDueProgress cleared={cleared} target={target} />}
 
         <AppError error={error} />
 
@@ -215,9 +175,7 @@ export default function StudySession({ deck, tags }: StudySessionProps) {
             <PartyPopper className="size-10 text-accent" />
             <Card.Title>{t('caught-up-title')}</Card.Title>
             <Card.Description>{t('caught-up-description')}</Card.Description>
-            <AppButton variant="secondary" isPending={isPending} onPress={() => load(tagId)}>
-              {t('reload')}
-            </AppButton>
+            <AppButton variant="secondary" isPending={isPending} onPress={() => load(tagId)}>{t('reload')}</AppButton>
           </Card>
         )}
 
@@ -232,58 +190,28 @@ export default function StudySession({ deck, tags }: StudySessionProps) {
               back={<StudyCardSide entries={card.back} deckId={deck.id} factId={card.fact_id} imported={imported} />}
             />
 
-            <div className="flex flex-col gap-4">
-              {revealed
-                ? (
-                  <>
-                    <StudyIntervalSlider
-                      range={range}
-                      value={interval}
-                      onChange={setIntervalSec}
-                      isDisabled={isPending}
-                      format={formatInterval}
-                    />
-                    <AppButton className="self-center" isPending={isPending} onPress={() => handleNext(card.id)}>
-                      {t('next')}
-                    </AppButton>
-                  </>
-                )
-                : (
-                  <AppButton className="self-center" onPress={() => setRevealed(true)} isDisabled={isPending}>
-                    {t('show-answer')}
-                  </AppButton>
-                )}
-            </div>
+            <StudyAnswerControls
+              revealed={revealed}
+              range={range}
+              interval={interval}
+              onIntervalChange={setIntervalSec}
+              isPending={isPending}
+              onShowAnswer={() => setRevealed(true)}
+              onNext={() => handleNext(card.id)}
+            />
           </>
         )}
       </div>
 
-      <AlertDialog.Backdrop isOpen={!!deleteCardId} onOpenChange={() => setDeleteCardId(null)}>
-        <AlertDialog.Container>
-          <AlertDialog.Dialog className="sm:max-w-100">
-            <AlertDialog.CloseTrigger />
-            <AlertDialog.Header>
-              <AlertDialog.Heading>{t('delete-card')}</AlertDialog.Heading>
-            </AlertDialog.Header>
-            <AlertDialog.Body>
-              <p>{t('delete-card-confirm')}</p>
-            </AlertDialog.Body>
-            <AlertDialog.Footer>
-              <AppButton slot="close" variant="tertiary">{tRoot('common.cancel')}</AppButton>
-              <AppButton
-                variant="danger"
-                onPress={() => {
-                  const cardId = deleteCardId as string
-                  setDeleteCardId(null)
-                  submit(() => deleteCardAction({ deckId: deck.id, cardId }), false)
-                }}
-              >
-                {t('delete-card')}
-              </AppButton>
-            </AlertDialog.Footer>
-          </AlertDialog.Dialog>
-        </AlertDialog.Container>
-      </AlertDialog.Backdrop>
+      <StudyDeleteCardDialog
+        isOpen={!!deleteCardId}
+        onClose={() => setDeleteCardId(null)}
+        onConfirm={() => {
+          const cardId = deleteCardId as string
+          setDeleteCardId(null)
+          submit(() => deleteCardAction({ deckId: deck.id, cardId }), false)
+        }}
+      />
 
       {card && isEditOpen && (
         <StudyEditFactModal
