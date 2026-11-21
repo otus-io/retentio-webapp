@@ -35,6 +35,8 @@ const page = (contributions: unknown[], hasMore = false) => ({ success: true, da
 describe('DeckContributionsInbox', () => {
   beforeEach(() => {
     vi.clearAllMocks()
+    // Drop implementations and one-off results too, so no test leaks mocks into the next.
+    for (const action of Object.values(actions)) action.mockReset()
   })
 
   it('shows open contributions as cards with their changes', async () => {
@@ -212,20 +214,30 @@ describe('DeckContributionsInbox', () => {
     expect(toast.showFailToast).toHaveBeenLastCalledWith('load-failed')
   })
 
-  it('stops on a page with nothing new and keeps the count a lower bound', async () => {
+  it('steps past a page of repeats and keeps going until the server is done', async () => {
     actions.getOpenContributionsAction
       .mockResolvedValueOnce(page([edit], true))
-      .mockResolvedValueOnce(page([edit, add], true))
       .mockResolvedValueOnce(page([edit], true))
+      .mockResolvedValueOnce(page([add]))
     render(<DeckContributionsInbox sourceDeckId="s1" />)
     const acceptAllButton = await screen.findByText('accept-all:{"count":"1+"}')
     await act(async () => fireEvent.click(acceptAllButton))
-    // Offsets follow what the server served: 1 after page 1, then 3 after the 2-item page.
-    expect(actions.getOpenContributionsAction.mock.calls.map((c) => c[1])).toEqual([undefined, 1, 3])
+    // Offsets follow what the server served, so the repeat page is stepped past.
+    expect(actions.getOpenContributionsAction.mock.calls.map((c) => c[1])).toEqual([undefined, 1, 2])
     expect(screen.getByText('accept-all-confirm-message:{"count":2}')).toBeTruthy()
     expect(screen.getAllByText('types.fact_edit')).toHaveLength(1)
-    // The server still reports more, so the button keeps showing a lower bound.
-    expect(screen.getByText('accept-all:{"count":"2+"}')).toBeTruthy()
+    expect(screen.queryByText('accept-all-more-open')).toBeNull()
+  })
+
+  it('keeps the count a lower bound when the walk stops with more still open', async () => {
+    actions.getOpenContributionsAction
+      .mockResolvedValueOnce(page([edit], true))
+      .mockResolvedValueOnce(page([], true))
+    render(<DeckContributionsInbox sourceDeckId="s1" />)
+    const acceptAllButton = await screen.findByText('accept-all:{"count":"1+"}')
+    await act(async () => fireEvent.click(acceptAllButton))
+    expect(screen.getByText('accept-all:{"count":"1+"}')).toBeTruthy()
+    expect(screen.getByText('accept-all-more-open')).toBeTruthy()
   })
 
   it('stops the walk on an empty page', async () => {
@@ -249,7 +261,8 @@ describe('DeckContributionsInbox', () => {
     const acceptAllButton = await screen.findByText('accept-all:{"count":"1+"}')
     await act(async () => fireEvent.click(acceptAllButton))
     expect(actions.getOpenContributionsAction).toHaveBeenCalledTimes(41)
-    actions.getOpenContributionsAction.mockReset()
+    // Cut short with more still open: the dialog says so.
+    expect(screen.getByText('accept-all-more-open')).toBeTruthy()
   })
 
   it('keeps Load more moving past a page of repeats', async () => {

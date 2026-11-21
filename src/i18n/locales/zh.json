@@ -568,6 +568,7 @@
     "load-failed": "加载失败"
   },
   "inbox": {
+    "accept-all-more-open": "仍有更多待处理贡献。完成后再次点击“全部接受”即可继续。",
     "accept": "接受",
     "dismiss": "忽略",
     "resolve": "标为已解决",

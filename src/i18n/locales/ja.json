@@ -562,6 +562,7 @@
     "load-failed": "読み込めませんでした"
   },
   "inbox": {
+    "accept-all-more-open": "まだ未処理の貢献があります。完了後にもう一度「すべて承認」を実行してください。",
     "accept": "承認",
     "dismiss": "却下",
     "resolve": "解決済みにする",

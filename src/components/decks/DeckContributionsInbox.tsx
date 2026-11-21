@@ -100,6 +100,8 @@ export default function DeckContributionsInbox({ sourceDeckId }: { sourceDeckId:
   const [progress, setProgress] = useState<{ done: number, total: number } | null>(null)
   const [version, setVersion] = useState(0)
   const [preparing, setPreparing] = useState(false)
+  /** The last walk stopped with contributions still open (cap reached or the server stopped early) */
+  const [walkCutShort, setWalkCutShort] = useState(false)
   // Cleared on close, so a walk still running then is dropped (another deck remounts the inbox via its key).
   const activeDeck = useRef<string | null>(sourceDeckId)
   useEffect(() => {
@@ -201,14 +203,15 @@ export default function DeckContributionsInbox({ sourceDeckId }: { sourceDeckId:
       all = [...all, ...fresh]
       served.current += res.data.contributions.length
       serverHasMore = res.data.hasMore
-      // Stop on an empty page or one with nothing new, and after a hard cap, so the walk always ends.
-      more = res.data.hasMore && fresh.length > 0 && pages + 1 < MAX_WALK_PAGES
+      // Step past pages of repeats (served already moved on); stop on an empty page or at the cap.
+      more = res.data.hasMore && res.data.contributions.length > 0 && pages + 1 < MAX_WALK_PAGES
     }
     setPreparing(false)
     // Keep what loaded, even when a page failed, so a retry continues from here.
     setItems(all)
     // More may still be open (a failed or cut-short walk): keep the count a lower bound and Load more available.
     setHasMore(failure !== null || serverHasMore)
+    setWalkCutShort(serverHasMore)
     if (failure !== null) {
       showFailToast(failure)
       return
@@ -341,6 +344,8 @@ export default function DeckContributionsInbox({ sourceDeckId }: { sourceDeckId:
             </AlertDialog.Header>
             <AlertDialog.Body>
               <p>{t('accept-all-confirm-message', { count: acceptable.length })}</p>
+              {/* Be clear that this accepts what was loaded, not every open contribution. */}
+              {walkCutShort && <p className="mt-2 text-sm text-muted">{t('accept-all-more-open')}</p>}
             </AlertDialog.Body>
             <AlertDialog.Footer>
               <AppButton slot="close" variant="ghost">{t('cancel')}</AppButton>
