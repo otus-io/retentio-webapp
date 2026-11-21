@@ -3,8 +3,7 @@
 import AppButton from '@/components/app/AppButton'
 import AppError from '@/components/app/AppError'
 import AppTextarea from '@/components/app/AppTextarea'
-import { showFailToast, showSuccessToast } from '@/lib/ui'
-import { sendFactEdits } from '@/modules/contributions/auto-send'
+import { sendFactEditsAndNotify } from '@/modules/contributions/auto-send'
 import { getFactAction, updateFactEntriesAction } from '@/modules/facts/facts.action'
 import type { Entry } from '@/modules/facts/facts.schema'
 import { Modal, Spinner } from '@heroui/react'
@@ -72,9 +71,11 @@ export default function StudyEditFactModal(
       onSaved()
       if (!imported) return
       // An edit on an imported deck goes to the author right away, as on mobile.
-      const { unsent } = await sendFactEdits(deckId, [{ factId, entries: next }])
-      if (unsent > 0) showFailToast(tSend('unsent'))
-      else showSuccessToast(tSend('sent'))
+      await sendFactEditsAndNotify(
+        deckId,
+        [{ factId, entries: next }],
+        { sent: tSend('sent'), unsent: tSend('unsent') },
+      )
     })
   }
 

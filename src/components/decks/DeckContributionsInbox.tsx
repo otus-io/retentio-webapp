@@ -12,7 +12,7 @@ import type { Entry } from '@/modules/facts/facts.schema'
 import { AlertDialog, Spinner } from '@heroui/react'
 import { Inbox } from 'lucide-react'
 import { useTranslations } from 'next-intl'
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 
 const canAccept = (c: Contribution) => c.type !== 'report'
 
@@ -96,6 +96,15 @@ export default function DeckContributionsInbox({ sourceDeckId }: { sourceDeckId:
   const [confirmAll, setConfirmAll] = useState(false)
   const [progress, setProgress] = useState<{ done: number, total: number } | null>(null)
   const [version, setVersion] = useState(0)
+  const [preparing, setPreparing] = useState(false)
+  // The deck this inbox currently shows; a walk started for another deck (or after closing) is dropped.
+  const activeDeck = useRef<string | null>(sourceDeckId)
+  useEffect(() => {
+    activeDeck.current = sourceDeckId
+    return () => {
+      activeDeck.current = null
+    }
+  }, [sourceDeckId])
 
   const reload = useCallback(() => setVersion((v) => v + 1), [])
 
@@ -160,22 +169,33 @@ export default function DeckContributionsInbox({ sourceDeckId }: { sourceDeckId:
 
   // Accept all covers every open contribution: load the remaining pages before asking to confirm.
   const prepareAcceptAll = async (current: Contribution[]) => {
+    const deckId = sourceDeckId
     let all = current
     let more = hasMore
-    setLoadingMore(true)
+    let failure: string | null = null
+    setPreparing(true)
     while (more) {
-      const res = await getOpenContributionsAction(sourceDeckId, all.length)
+      const res = await getOpenContributionsAction(deckId, all.length)
+      if (activeDeck.current !== deckId) return
       if (!res.success || !res.data) {
-        setLoadingMore(false)
-        showFailToast(String(res.error ?? '') || t('load-failed'))
-        return
+        failure = String(res.error ?? '') || t('load-failed')
+        break
       }
-      all = [...all, ...res.data.contributions]
-      more = res.data.hasMore
+      // The list can shift while paging (others accept or dismiss), so skip anything already loaded.
+      const seen = new Set(all.map((c) => c.id))
+      const fresh = res.data.contributions.filter((c) => !seen.has(c.id))
+      all = [...all, ...fresh]
+      // An empty page cannot advance the offset; stop instead of asking for it again.
+      more = res.data.hasMore && fresh.length > 0
     }
-    setLoadingMore(false)
+    setPreparing(false)
+    // Keep what loaded, even when a page failed, so a retry continues from here.
     setItems(all)
-    setHasMore(false)
+    setHasMore(failure !== null)
+    if (failure !== null) {
+      showFailToast(failure)
+      return
+    }
     setConfirmAll(true)
   }
 
@@ -220,7 +240,7 @@ export default function DeckContributionsInbox({ sourceDeckId }: { sourceDeckId:
 
   const acceptable = items.filter(canAccept)
   // Card actions and Load more never overlap, so neither works from a stale list.
-  const busy = busyId !== null || progress !== null || loadingMore
+  const busy = busyId !== null || progress !== null || loadingMore || preparing
 
   return (
     <div className="flex flex-col gap-3 px-1">
@@ -229,7 +249,7 @@ export default function DeckContributionsInbox({ sourceDeckId }: { sourceDeckId:
           <AppButton
             size="sm"
             fullWidth
-            isPending={progress !== null}
+            isPending={progress !== null || preparing}
             isDisabled={busy}
             onPress={() => prepareAcceptAll(items)}
           >

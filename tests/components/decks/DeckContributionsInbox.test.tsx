@@ -194,19 +194,48 @@ describe('DeckContributionsInbox', () => {
     expect(screen.getByText('empty')).toBeTruthy()
   })
 
-  it('stops preparing accept all when a page fails to load', async () => {
+  it('keeps loaded pages when one fails, and retries from there', async () => {
     actions.getOpenContributionsAction
       .mockResolvedValueOnce(page([edit], true))
+      .mockResolvedValueOnce(page([add], true))
       .mockResolvedValueOnce({ success: false, error: 'Timeout' })
-      .mockResolvedValueOnce(page([edit], true))
       .mockResolvedValueOnce({ success: false })
     render(<DeckContributionsInbox sourceDeckId="s1" />)
     const acceptAllButton = await screen.findByText('accept-all:{"count":"1+"}')
     await act(async () => fireEvent.click(acceptAllButton))
     expect(toast.showFailToast).toHaveBeenLastCalledWith('Timeout')
     expect(screen.queryByText(/accept-all-confirm-message/)).toBeNull()
-    await act(async () => fireEvent.click(screen.getByText('accept-all:{"count":"1+"}')))
+    // The second page stayed loaded, so the retry continues after it.
+    expect(screen.getByText('types.fact_add')).toBeTruthy()
+    await act(async () => fireEvent.click(screen.getByText('accept-all:{"count":"2+"}')))
+    expect(actions.getOpenContributionsAction).toHaveBeenLastCalledWith('s1', 2)
     expect(toast.showFailToast).toHaveBeenLastCalledWith('load-failed')
+  })
+
+  it('stops paging on an empty page and skips repeated contributions', async () => {
+    actions.getOpenContributionsAction
+      .mockResolvedValueOnce(page([edit], true))
+      .mockResolvedValueOnce(page([edit, add], true))
+      .mockResolvedValueOnce(page([], true))
+    render(<DeckContributionsInbox sourceDeckId="s1" />)
+    const acceptAllButton = await screen.findByText('accept-all:{"count":"1+"}')
+    await act(async () => fireEvent.click(acceptAllButton))
+    expect(actions.getOpenContributionsAction).toHaveBeenCalledTimes(3)
+    expect(screen.getByText('accept-all-confirm-message:{"count":2}')).toBeTruthy()
+    expect(screen.getAllByText('types.fact_edit')).toHaveLength(1)
+  })
+
+  it('drops an accept-all walk after the inbox closes', async () => {
+    let more!: (v: unknown) => void
+    actions.getOpenContributionsAction
+      .mockResolvedValueOnce(page([edit], true))
+      .mockReturnValueOnce(new Promise((r) => { more = r }))
+    const { unmount } = render(<DeckContributionsInbox sourceDeckId="s1" />)
+    const acceptAllButton = await screen.findByText('accept-all:{"count":"1+"}')
+    act(() => { fireEvent.click(acceptAllButton) })
+    unmount()
+    await act(async () => more(page([add])))
+    expect(screen.queryByText(/accept-all-confirm-message/)).toBeNull()
   })
 
   it('shows progress while accepting all', async () => {
