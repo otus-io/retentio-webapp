@@ -4,7 +4,7 @@
 import { AgGridReact } from 'ag-grid-react'
 import type { ColDef, IHeaderParams, IRowNode, SelectionChangedEvent } from 'ag-grid-community'
 import type { Entry, Fact } from '@/modules/facts/facts.schema'
-import { useActionState, useCallback, useMemo, useRef, useState } from 'react'
+import { useActionState, useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import type { Deck } from '@/modules/decks/decks.schema'
 import { ModuleRegistry } from 'ag-grid-community'
 import { AllCommunityModule } from 'ag-grid-community'
@@ -54,7 +54,9 @@ export default function FactsGridPage({ facts, meta, deck }: FactsGridPageProps)
   const t = useTranslations()
   // Read through a ref so the cell-save handler (and the grid's callbacks) stay stable across renders.
   const tRef = useRef(t)
-  tRef.current = t
+  useEffect(() => {
+    tRef.current = t
+  }, [t])
   const { resolvedTheme } = useTheme()
   const [isOpen, setIsOpen] = useState(false)
   const [target, setTarget] = useState<{ factId: string; fieldKey: string; entry: Entry }>()

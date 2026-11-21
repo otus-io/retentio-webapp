@@ -54,6 +54,19 @@ describe('home page catalog', () => {
     expect(redirect).toHaveBeenCalledWith('/?page=3')
   })
 
+  it('renders the page without the catalog when it takes too long', async () => {
+    vi.useFakeTimers()
+    getDeckCatalogService.mockReturnValue(new Promise(() => {}))
+    const page = await Page({ searchParams: Promise.resolve({}) } as never)
+    const section = page.props.children
+    const pending = section.type(section.props)
+    await vi.advanceTimersByTimeAsync(3000)
+    const { container } = render(await pending)
+    expect(container.innerHTML).toBe('')
+    expect(home).not.toHaveBeenCalled()
+    vi.useRealTimers()
+  })
+
   it('hides the catalog when it fails to load', async () => {
     getDeckCatalogService.mockResolvedValue({ success: false, message: 'down' })
     const { container } = await renderPage({})

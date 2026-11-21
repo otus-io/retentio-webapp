@@ -7,10 +7,15 @@ import { redirect } from 'next/navigation'
 
 /** 首页每页展示的公开卡组数 */
 const HOME_PAGE_SIZE = 6
+/** The page waits at most this long for the catalog, so a slow backend never blocks the landing content. */
+const CATALOG_WAIT_MS = 3000
 
 async function SharedDecksHomeSCP({ page }: { page: number }){
-  const homeDecks = await getDeckCatalogService({ limit: HOME_PAGE_SIZE, offset: (page - 1) * HOME_PAGE_SIZE })
-  if(!homeDecks.success){
+  const homeDecks = await Promise.race([
+    getDeckCatalogService({ limit: HOME_PAGE_SIZE, offset: (page - 1) * HOME_PAGE_SIZE }),
+    new Promise<null>((resolve) => setTimeout(() => resolve(null), CATALOG_WAIT_MS)),
+  ])
+  if(!homeDecks?.success){
     return null
   }
   const totalPages = Math.ceil((homeDecks.meta.total ?? 0) / HOME_PAGE_SIZE)

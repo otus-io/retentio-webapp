@@ -91,7 +91,7 @@ export default function DecksCard({
         {deck.visibility === 'public' && (
           <Chip size="sm" variant="primary" color="accent">{t('term.public')}</Chip>
         )}
-        {/* Badge, menu and sheet clicks must not start studying. */}
+        {/* Badge, menu and sheet clicks must not open the deck details (the card's own click). */}
         <span className="flex items-center" onClick={(e) => e.stopPropagation()}>
           {publishedSource && sharing?.openContributions && (
             <DeckBadge label={t('deck-menu.contributions-inbox')} onPress={() => setSheet('inbox')}>
