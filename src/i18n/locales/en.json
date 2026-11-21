@@ -20,7 +20,7 @@
     "hero": {
       "title": "A journey of a thousand miles begins with a single step",
       "titleHighlight": "",
-      "subtitle": "A collaborative platform for building and improving decks — import, correct, and contribute back like Git — powered by a novel SRS scheduling algorithm, AI-assisted quality checks, and adaptive review.",
+      "subtitle": "A learning app for building and improving decks — correct typos, contribute fixes, and publish each version the way a version control system does.",
       "cta": "Join on TestFlight",
       "learnMore": "Learn More",
       "appPreview": "App Preview"
