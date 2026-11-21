@@ -212,19 +212,30 @@ describe('DeckContributionsInbox', () => {
     expect(toast.showFailToast).toHaveBeenLastCalledWith('load-failed')
   })
 
-  it('stops paging on an empty page and skips repeated contributions', async () => {
+  it('steps past a page of repeats, skips duplicates and stops on an empty page', async () => {
     actions.getOpenContributionsAction
       .mockResolvedValueOnce(page([edit], true))
-      .mockResolvedValueOnce(page([edit, add], true))
+      .mockResolvedValueOnce(page([edit], true))
+      .mockResolvedValueOnce(page([add], true))
       .mockResolvedValueOnce(page([], true))
     render(<DeckContributionsInbox sourceDeckId="s1" />)
     const acceptAllButton = await screen.findByText('accept-all:{"count":"1+"}')
     await act(async () => fireEvent.click(acceptAllButton))
-    expect(actions.getOpenContributionsAction).toHaveBeenCalledTimes(3)
+    // The repeat page still advances the offset, so the walk reaches the new item.
+    expect(actions.getOpenContributionsAction.mock.calls.map((c) => c[1])).toEqual([undefined, 1, 2, 3])
     expect(screen.getByText('accept-all-confirm-message:{"count":2}')).toBeTruthy()
     expect(screen.getAllByText('types.fact_edit')).toHaveLength(1)
-    // The server still reports more, so the button keeps showing a lower bound.
-    expect(screen.getByText('accept-all:{"count":"2+"}')).toBeTruthy()
+  })
+
+  it('does not show a contribution twice when Load more returns one already loaded', async () => {
+    actions.getOpenContributionsAction
+      .mockResolvedValueOnce(page([edit], true))
+      .mockResolvedValueOnce(page([edit, add]))
+    render(<DeckContributionsInbox sourceDeckId="s1" />)
+    await screen.findByText('types.fact_edit')
+    await act(async () => fireEvent.click(screen.getByText('load-more')))
+    expect(screen.getAllByText('types.fact_edit')).toHaveLength(1)
+    expect(screen.getByText('types.fact_add')).toBeTruthy()
   })
 
   it('drops an accept-all walk after the inbox closes', async () => {
