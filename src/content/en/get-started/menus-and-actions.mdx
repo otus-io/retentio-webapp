@@ -19,6 +19,8 @@ This page explains the main **menus and buttons** in the app. For concepts, see 
 
 On the website, **My Decks**, **Shared Decks**, and **Statistics** sit in the top bar. **Shared Decks** is the same catalog as **Discover**.
 
+**Discover** works without an account. **Decks** and **Profile** ask you to log in.
+
 ## Decks list
 
 On **Decks**:
@@ -58,13 +60,14 @@ While studying, open the card **⋯** menu:
 
 ### Edit Fact
 
-**Edit Fact** opens a full sheet for the current card’s fact:
+**Edit Fact** opens a full sheet for the current card’s fact. **Add fact** uses the same sheet for a new row.
 
-- Edit each **entry** (text and media: image, video, audio)
+- Edit each **entry**. A row needs text or at least one attachment.
+- Attach **image**, **video**, or **audio**. Long-press an attachment to remove it. You can also pick a photo or video from your library, or record audio with the microphone (tap again to stop; long-press while recording to discard).
+- Select text and choose **Ruby** to put a reading above those characters. **Font** on the deck menu (**Font & ruby**) sets **main text size** and **ruby text size** separately for the **Front** and the **Back**.
 - **Add tag** / remove tags on the fact
+- On a deck you own, **Add fact** can include **I've checked this fact (mark as verified)**
 - **Save fact** — on owned decks this updates the source; on imported decks it updates your copy and sends the change to the author. If the send fails, retry it from **Unsent contributions**
-
-**Add fact** (from the deck menu) uses the same kind of sheet for a **new** row.
 
 ## Studying controls
 
@@ -72,7 +75,7 @@ During review (see also [Start studying](/guide/get-started/start-studying)):
 
 - Tag chips / **Study by tag** — narrow which cards are due
 - **Show Answer** — reveal the back
-- **Hard** ↔ **Easy** slider — choose the next interval
+- **Hard** ↔ **Easy** slider — the thumb shows the next interval (seconds through years). **Hard** is the short end, **Easy** the long end
 - **Next** — save the rating and load the next card
 - **Review Again** — restart after **All Caught Up!**
 
@@ -114,7 +117,7 @@ See [Import an existing deck](/guide/get-started/import-an-existing-deck).
 3. Tick the columns that look right. Use the pencil to **Edit Fact** when something is wrong. **Skip** moves on without signing off (that fact comes back in a later walk). **Previous** goes back. **Verified** signs off the ticked columns and moves to the next fact.
 4. At the end: **You're done with these columns. Thank you.**
 
-On a deck you own, those sign-offs already count. On an imported deck, leaving QA mode sends them to the author — only fields you verified that still match the author's version.
+On a deck you own, those sign-offs already count. On an imported deck, leaving QA mode sends them to the author — only fields you verified that still match the author's version. The author sees them in **Contributions**. A deck that is fully checked shows **Fully QA-verified** on its card.
 
 ## Profile
 
@@ -125,7 +128,7 @@ Open the **Profile** tab:
 - **Statistics** — reviews for **7**, **30**, **90**, or **365** days, for one deck or **All decks**. Day boundaries use UTC
 - **Tags** — the same library as **Manage tags**
 - **Change email** — confirm with your password
-- **Logout**
+- **Logout** — if some reviews have not been uploaded yet, choose **Sync and log out**, **Keep and log out**, or **Discard and log out**
 - **Delete account** — permanently deletes the account, private decks, and study progress. Confirm with your password. Published decks stay available to people who imported them, without your name
 
 If your email is not verified yet, Profile also shows a reminder and **Resend verification email**. Publishing and sending contributions need that verification. See [Login / Registration](/guide/get-started/login-registration#email-verification).
