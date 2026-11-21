@@ -2,11 +2,12 @@
 
 import type { Selection } from '@heroui/react'
 import { Card, Checkbox, Chip, EmptyState, Modal, Table, Tabs } from '@heroui/react'
-import { Check, Inbox, PencilLine, Tags, X } from 'lucide-react'
+import { Check, FileText, Inbox, PencilLine, Tags, X } from 'lucide-react'
 import { useTranslations } from 'next-intl'
 import { useEffect, useState, useTransition } from 'react'
 import AppButton from '@/components/app/AppButton'
 import AppInput from '@/components/app/AppInput'
+import AppTextarea from '@/components/app/AppTextarea'
 import { showFailToast, showSuccessToast } from '@/lib/ui'
 import { EMAIL_NOT_VERIFIED_CODE } from '@/modules/auth/auth.schema'
 import { sendToAuthor } from '@/modules/contributions/auto-send'
@@ -23,7 +24,16 @@ import {
 } from '@/modules/contributions/pending-contributions'
 
 interface DeckContributionsPanelProps { deck: Deck }
-export type ContributionForm = 'field_rename' | 'deck_tags' | null
+export type ContributionForm = 'field_rename' | 'deck_tags' | 'description_edit' | null
+
+/** The backend caps a deck description at 500 bytes of UTF-8, not 500 characters. */
+const MAX_DESCRIPTION_BYTES = 500
+
+const FORM_TITLES = {
+  field_rename: 'contributions.field-rename-title',
+  deck_tags: 'contributions.deck-tags-title',
+  description_edit: 'contributions.description-title',
+} as const
 
 function parseTags(value: string) {
   return [...new Set(value.split(/[,，\n]/).map((tag) => tag.trim()).filter(Boolean))]
@@ -161,9 +171,22 @@ export function ContributionFormModal({ deck, kind, existing, onClose, onSave }:
   )
   const [addTagsInput, setAddTagsInput] = useState(existing?.kind === 'deck_tags' ? existing.addTags.join(', ') : '')
   const [removeTagsInput, setRemoveTagsInput] = useState(existing?.kind === 'deck_tags' ? existing.removeTags.join(', ') : '')
+  const currentDescription = deck.description ?? ''
+  const [proposedDescription, setProposedDescription] = useState(
+    existing?.kind === 'description_edit' ? existing.proposedDescription : currentDescription,
+  )
+  const [message, setMessage] = useState(existing?.kind === kind ? existing.message ?? '' : '')
   const fieldsChanged = proposedFields.some((field, index) => field.trim() !== deck.fields[index])
   const fieldsValid = proposedFields.every((field) => field.trim().length > 0)
   const hasTagChanges = parseTags(addTagsInput).length > 0 || parseTags(removeTagsInput).length > 0
+  const description = proposedDescription.trim()
+  const descriptionValid = description.length > 0
+    && new TextEncoder().encode(description).length <= MAX_DESCRIPTION_BYTES
+    && description !== currentDescription.trim()
+  const canSave = kind === 'field_rename'
+    ? fieldsChanged && fieldsValid
+    : kind === 'description_edit' ? descriptionValid : hasTagChanges
+  const note = message.trim() ? { message: message.trim() } : {}
 
   const save = () => {
     if (kind === 'field_rename') {
@@ -173,6 +196,20 @@ export function ContributionFormModal({ deck, kind, existing, onClose, onSave }:
         kind: 'field_rename',
         preview: fields.join(' · '),
         proposedFields: fields,
+        ...note,
+        savedAt: new Date().toISOString(),
+      })
+      return
+    }
+
+    if (kind === 'description_edit') {
+      onSave({
+        id: 'description_edit',
+        kind: 'description_edit',
+        // Cut by code point so an emoji is never split in half.
+        preview: Array.from(description).length > 80 ? `${Array.from(description).slice(0, 79).join('')}…` : description,
+        proposedDescription: description,
+        ...note,
         savedAt: new Date().toISOString(),
       })
       return
@@ -186,6 +223,7 @@ export function ContributionFormModal({ deck, kind, existing, onClose, onSave }:
       preview: [...addTags.map((tag) => `+${tag}`), ...removeTags.map((tag) => `−${tag}`)].join(' · '),
       addTags,
       removeTags,
+      ...note,
       savedAt: new Date().toISOString(),
     })
   }
@@ -196,9 +234,7 @@ export function ContributionFormModal({ deck, kind, existing, onClose, onSave }:
         <Modal.Dialog className="sm:max-w-2xl">
           <Modal.CloseTrigger />
           <Modal.Header>
-            <Modal.Heading>
-              {kind === 'field_rename' ? t('contributions.field-rename-title') : t('contributions.deck-tags-title')}
-            </Modal.Heading>
+            <Modal.Heading>{t(FORM_TITLES[kind])}</Modal.Heading>
           </Modal.Header>
           <Modal.Body className="space-y-4">
             {kind === 'field_rename'
@@ -218,24 +254,49 @@ export function ContributionFormModal({ deck, kind, existing, onClose, onSave }:
                   />
                 </div>
               ))
-              : (
-                <div className="grid gap-4 sm:grid-cols-2">
-                  <AppInput
-                    label={t('contributions.add-tags')}
-                    description={t('contributions.tags-description')}
-                    value={addTagsInput}
-                    onChange={setAddTagsInput}
-                    inputProps={{ variant: 'secondary' }}
-                  />
-                  <AppInput
-                    label={t('contributions.remove-tags')}
-                    description={t('contributions.tags-description')}
-                    value={removeTagsInput}
-                    onChange={setRemoveTagsInput}
-                    inputProps={{ variant: 'secondary' }}
-                  />
-                </div>
-              )}
+              : kind === 'description_edit'
+                ? (
+                  <>
+                    <AppTextarea
+                      isReadOnly
+                      label={t('contributions.current-description')}
+                      value={currentDescription || '—'}
+                      inputProps={{ variant: 'secondary' }}
+                    />
+                    <AppTextarea
+                      label={t('contributions.suggested-description')}
+                      value={proposedDescription}
+                      onChange={setProposedDescription}
+                      inputProps={{ variant: 'secondary' }}
+                    />
+                  </>
+                )
+                : (
+                  <div className="grid gap-4 sm:grid-cols-2">
+                    <AppInput
+                      label={t('contributions.add-tags')}
+                      description={t('contributions.tags-description')}
+                      value={addTagsInput}
+                      onChange={setAddTagsInput}
+                      inputProps={{ variant: 'secondary' }}
+                    />
+                    <AppInput
+                      label={t('contributions.remove-tags')}
+                      description={t('contributions.tags-description')}
+                      value={removeTagsInput}
+                      onChange={setRemoveTagsInput}
+                      inputProps={{ variant: 'secondary' }}
+                    />
+                  </div>
+                )}
+            <AppInput
+              label={t('contributions.message')}
+              placeholder={t('contributions.message-placeholder')}
+              value={message}
+              onChange={setMessage}
+              maxLength={2000}
+              inputProps={{ variant: 'secondary' }}
+            />
           </Modal.Body>
           <Modal.Footer>
             <AppButton isIconOnly aria-label={t('common.cancel')} variant="primary" onPress={onClose}>
@@ -245,7 +306,7 @@ export function ContributionFormModal({ deck, kind, existing, onClose, onSave }:
               isIconOnly
               aria-label={t('common.save')}
               variant="primary"
-              isDisabled={kind === 'field_rename' ? !fieldsChanged || !fieldsValid : !hasTagChanges}
+              isDisabled={!canSave}
               onPress={save}
             >
               <Check className="size-4" />
@@ -362,6 +423,15 @@ export default function DeckContributionsPanel({ deck }: DeckContributionsPanelP
               onPress={() => setForm('deck_tags')}
             >
               <Tags className="size-4" />
+            </AppButton>
+            <AppButton
+              isIconOnly
+              aria-label={t('description-title')}
+              variant="primary"
+              isDisabled={isSubmitting}
+              onPress={() => setForm('description_edit')}
+            >
+              <FileText className="size-4" />
             </AppButton>
           </div>
         </Card.Header>

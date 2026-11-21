@@ -18,7 +18,7 @@ import {
 } from '@/modules/contributions/pending-contributions'
 import type { Deck } from '@/modules/decks/decks.schema'
 import { Checkbox, Label } from '@heroui/react'
-import { PencilLine, Send, Tags } from 'lucide-react'
+import { FileText, PencilLine, Send, Tags } from 'lucide-react'
 import { useTranslations } from 'next-intl'
 import { useEffect, useState, useTransition } from 'react'
 
@@ -159,6 +159,16 @@ export default function DeckContributionsOutbox({ deck }: { deck: Deck }) {
             onPress={() => setForm('deck_tags')}
           >
             <Tags className="size-4" />
+          </AppButton>
+          <AppButton
+            isIconOnly
+            size="sm"
+            variant="secondary"
+            aria-label={tKinds('description-title')}
+            isDisabled={isSubmitting}
+            onPress={() => setForm('description_edit')}
+          >
+            <FileText className="size-4" />
           </AppButton>
         </div>
       </div>

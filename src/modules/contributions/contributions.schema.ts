@@ -1,7 +1,15 @@
 import type { Entry } from '@/modules/facts/facts.schema'
 
 /** 贡献类型 */
-export type ContributionType = 'fact_edit' | 'fact_add' | 'fact_tag_update' | 'deck_tag_update' | 'template_add' | 'field_rename' | 'report'
+export type ContributionType =
+  | 'fact_edit'
+  | 'fact_add'
+  | 'fact_tag_update'
+  | 'deck_tag_update'
+  | 'template_add'
+  | 'field_rename'
+  | 'description_edit'
+  | 'report'
 
 /** 贡献状态 */
 export type ContributionStatus = 'open' | 'resolved' | 'dismissed' | 'accepted'
@@ -108,6 +116,10 @@ export interface Contribution {
   proposed_fields?: string[]
   /** 提交时的原始字段名称 */
   reported_fields?: string[]
+  /** 建议的卡组简介 */
+  proposed_description?: string
+  /** 提交时的原始卡组简介 */
+  reported_description?: string
   /** 建议新增的卡片模板 */
   template?: number[][]
   /** 媒体变更列表 */
@@ -186,6 +198,14 @@ export interface SubmitFieldRenameContributionDTO {
   message?: string
 }
 
+/** 提交卡组简介建议请求 DTO */
+export interface SubmitDescriptionContributionDTO {
+  /** 建议的卡组简介 */
+  proposed_description: string
+  /** 留言 */
+  message?: string
+}
+
 /** 本地待提交的卡组贡献 */
 export type PendingDeckContribution = {
   id: 'deck_tags'
@@ -193,12 +213,22 @@ export type PendingDeckContribution = {
   preview: string
   addTags: string[]
   removeTags: string[]
+  /** 随建议发送给作者的留言 */
+  message?: string
   savedAt: string
 } | {
   id: 'field_rename'
   kind: 'field_rename'
   preview: string
   proposedFields: string[]
+  message?: string
+  savedAt: string
+} | {
+  id: 'description_edit'
+  kind: 'description_edit'
+  preview: string
+  proposedDescription: string
+  message?: string
   savedAt: string
 } | {
   /** 导入卡组中编辑或新增的词条（同移动端：保存后立即发送，失败则留待重试） */

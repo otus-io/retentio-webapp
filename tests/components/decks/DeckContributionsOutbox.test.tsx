@@ -183,6 +183,9 @@ describe('DeckContributionsOutbox', () => {
     expect(screen.getByTestId('form').textContent).toContain('deck_tags')
     fireEvent.click(screen.getByText('close-form'))
     expect(screen.queryByTestId('form')).toBeNull()
+    fireEvent.click(iconButton('file-text'))
+    expect(screen.getByTestId('form').textContent).toContain('description_edit')
+    fireEvent.click(screen.getByText('close-form'))
 
     fireEvent.click(screen.getByText('tab-sent:{"count":0}'))
     fireEvent.click(iconButton('pencil-line'))
