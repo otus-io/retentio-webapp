@@ -7,6 +7,7 @@ import { RequestError } from '@/utils/request'
 vi.mock('@/api/contributions', () => ({
   submitDeckTagContribution: vi.fn(),
   submitFieldRenameContribution: vi.fn(),
+  submitDescriptionContribution: vi.fn(),
   submitFactEditContribution: vi.fn(),
   submitFactAddContribution: vi.fn(),
 }))
@@ -54,6 +55,33 @@ describe('submitDeckContributionsBatchService', () => {
     await submitDeckContributionsBatchService('import-1', [rename])
     expect(vi.mocked(contributionsApi.submitFieldRenameContribution).mock.lastCall?.[1])
       .toEqual({ proposed_fields: ['Word'] })
+  })
+
+  it('sends a description suggestion with its own note unless the batch has one', async () => {
+    vi.mocked(contributionsApi.submitDescriptionContribution).mockResolvedValue({ data: { contribution_id: 'd1' } } as never)
+    const description = {
+      id: 'description_edit',
+      kind: 'description_edit',
+      proposedDescription: 'Everyday verbs',
+      message: 'clearer',
+    } as unknown as PendingDeckContribution
+
+    const res = await submitDeckContributionsBatchService('import-1', [description])
+    expect(res.success && res.data.submitted).toEqual([
+      { localId: 'description_edit', kind: 'description_edit', contributionId: 'd1' },
+    ])
+    expect(contributionsApi.submitDescriptionContribution)
+      .toHaveBeenLastCalledWith('import-1', { proposed_description: 'Everyday verbs', message: 'clearer' })
+
+    await submitDeckContributionsBatchService('import-1', [description], 'typed now')
+    expect(contributionsApi.submitDescriptionContribution)
+      .toHaveBeenLastCalledWith('import-1', { proposed_description: 'Everyday verbs', message: 'typed now' })
+
+    vi.mocked(contributionsApi.submitDescriptionContribution).mockRejectedValue(new RequestError('Offline', 0))
+    const failed = await submitDeckContributionsBatchService('import-1', [description])
+    expect(failed.success && failed.data.failed).toEqual([
+      expect.objectContaining({ localId: 'description_edit', error: 'Offline' }),
+    ])
   })
 
   it('sends queued fact edits and new facts to their endpoints', async () => {

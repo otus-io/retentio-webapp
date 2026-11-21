@@ -377,7 +377,11 @@
     "no-current-tags": "当前卡组没有标签",
     "field-rename-success": "字段重命名建议已发送",
     "deck-tags-success": "卡组标签建议已发送",
-    "submit-failed": "建议发送失败"
+    "submit-failed": "建议发送失败",
+    "description_edit": "卡组简介",
+    "description-title": "建议简介",
+    "current-description": "当前简介",
+    "suggested-description": "建议的简介"
   },
   "author-contributions": {
     "title": "贡献收件箱",
@@ -408,6 +412,7 @@
       "deck_tag_update": "卡组标签修改",
       "template_add": "新增卡片模板",
       "field_rename": "字段重命名",
+      "description_edit": "简介修改",
       "report": "问题报告"
     },
     "accept-proposal": "接受提案",
@@ -586,6 +591,7 @@
     "reported": "报告内容",
     "fields": "列名",
     "tags": "标签",
+    "description": "简介",
     "accepted": "已接受贡献",
     "updated": "贡献状态已更新",
     "operation-failed": "贡献更新失败",

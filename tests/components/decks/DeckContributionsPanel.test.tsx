@@ -150,6 +150,13 @@ describe('DeckContributionsPanel proposals', () => {
     expect(JSON.parse(localStorage.getItem(`retentio_pending_contribs_v2:${deck.id}`)!)).toEqual([])
   })
 
+  it('opens the description suggestion form', async () => {
+    const { container } = render(<DeckContributionsPanel deck={{ ...deck, fields: ['Word'] } as Deck} />)
+    await screen.findByText('+a')
+    fireEvent.click(container.querySelector('.lucide-file-text')!.closest('button')!)
+    expect(screen.getByText('undefined.contributions.description-title')).toBeTruthy()
+  })
+
   it('keeps a proposal pending when it cannot be sent', async () => {
     vi.mocked(submitDeckContributionsBatchAction).mockResolvedValue({ success: false, error: 'Offline' })
     await saveDeckTags()
