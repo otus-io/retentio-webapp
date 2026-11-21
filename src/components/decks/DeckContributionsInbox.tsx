@@ -16,6 +16,9 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 
 const canAccept = (c: Contribution) => c.type !== 'report'
 
+/** Most pages Accept all walks through before confirming (50 contributions each) */
+const MAX_WALK_PAGES = 40
+
 /** Entry texts joined like the mobile app; a dash when there is nothing to show. */
 function entriesPreview(entries: Entry[] = []) {
   const parts = entries.map((e) => e.text?.trim()).filter(Boolean)
@@ -107,6 +110,11 @@ export default function DeckContributionsInbox({ sourceDeckId }: { sourceDeckId:
   }, [sourceDeckId])
 
   const reload = useCallback(() => setVersion((v) => v + 1), [])
+  /**
+   * Where the next page starts in the server's open list. It grows by every page fetched and shrinks by one for
+   * each card handled here (it leaves the open list), so it stays right even after repeats are dropped.
+   */
+  const served = useRef(0)
 
   useEffect(() => {
     let cancelled = false
@@ -118,6 +126,7 @@ export default function DeckContributionsInbox({ sourceDeckId }: { sourceDeckId:
         return
       }
       setError(null)
+      served.current = res.data.contributions.length
       setItems(res.data.contributions)
       setHasMore(res.data.hasMore)
     })
@@ -128,12 +137,13 @@ export default function DeckContributionsInbox({ sourceDeckId }: { sourceDeckId:
 
   const loadMore = async (current: Contribution[]) => {
     setLoadingMore(true)
-    const res = await getOpenContributionsAction(sourceDeckId, current.length)
+    const res = await getOpenContributionsAction(sourceDeckId, served.current)
     setLoadingMore(false)
     if (!res.success || !res.data) {
       showFailToast(String(res.error ?? '') || t('load-failed'))
       return
     }
+    served.current += res.data.contributions.length
     // The list can shift between pages, so never show a contribution twice.
     const seen = new Set(current.map((c) => c.id))
     setItems([...current, ...res.data.contributions.filter((c) => !seen.has(c.id))])
@@ -158,6 +168,7 @@ export default function DeckContributionsInbox({ sourceDeckId }: { sourceDeckId:
       return
     }
     showSuccessToast(op === 'accept' ? t('accepted') : t('updated'))
+    served.current = Math.max(0, served.current - 1)
     // Drop the handled card in place, keeping any pages already loaded.
     const remaining = (items ?? []).filter((item) => item.id !== c.id)
     // Everything loaded is handled but more are open: show the spinner and fetch them instead of "empty".
@@ -175,11 +186,10 @@ export default function DeckContributionsInbox({ sourceDeckId }: { sourceDeckId:
     let all = current
     let more = hasMore
     let failure: string | null = null
-    // Advance by what the server returned, not by what was new, so a page of repeats is stepped past.
-    let offset = current.length
+    let serverHasMore = more
     setPreparing(true)
-    while (more) {
-      const res = await getOpenContributionsAction(deckId, offset)
+    for (let pages = 0; more; pages += 1) {
+      const res = await getOpenContributionsAction(deckId, served.current)
       if (activeDeck.current !== deckId) return
       if (!res.success || !res.data) {
         failure = String(res.error ?? '') || t('load-failed')
@@ -189,15 +199,16 @@ export default function DeckContributionsInbox({ sourceDeckId }: { sourceDeckId:
       const seen = new Set(all.map((c) => c.id))
       const fresh = res.data.contributions.filter((c) => !seen.has(c.id))
       all = [...all, ...fresh]
-      offset += res.data.contributions.length
-      // An empty page cannot advance the offset; stop instead of asking for it again.
-      more = res.data.hasMore && res.data.contributions.length > 0
+      served.current += res.data.contributions.length
+      serverHasMore = res.data.hasMore
+      // Stop on an empty page or one with nothing new, and after a hard cap, so the walk always ends.
+      more = res.data.hasMore && fresh.length > 0 && pages + 1 < MAX_WALK_PAGES
     }
     setPreparing(false)
     // Keep what loaded, even when a page failed, so a retry continues from here.
     setItems(all)
-    // A failed walk leaves more on the server, so the count stays a lower bound until a retry.
-    setHasMore(failure !== null)
+    // More may still be open (a failed or cut-short walk): keep the count a lower bound and Load more available.
+    setHasMore(failure !== null || serverHasMore)
     if (failure !== null) {
       showFailToast(failure)
       return

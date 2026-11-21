@@ -212,30 +212,71 @@ describe('DeckContributionsInbox', () => {
     expect(toast.showFailToast).toHaveBeenLastCalledWith('load-failed')
   })
 
-  it('steps past a page of repeats, skips duplicates and stops on an empty page', async () => {
+  it('stops on a page with nothing new and keeps the count a lower bound', async () => {
     actions.getOpenContributionsAction
       .mockResolvedValueOnce(page([edit], true))
+      .mockResolvedValueOnce(page([edit, add], true))
       .mockResolvedValueOnce(page([edit], true))
-      .mockResolvedValueOnce(page([add], true))
+    render(<DeckContributionsInbox sourceDeckId="s1" />)
+    const acceptAllButton = await screen.findByText('accept-all:{"count":"1+"}')
+    await act(async () => fireEvent.click(acceptAllButton))
+    // Offsets follow what the server served: 1 after page 1, then 3 after the 2-item page.
+    expect(actions.getOpenContributionsAction.mock.calls.map((c) => c[1])).toEqual([undefined, 1, 3])
+    expect(screen.getByText('accept-all-confirm-message:{"count":2}')).toBeTruthy()
+    expect(screen.getAllByText('types.fact_edit')).toHaveLength(1)
+    // The server still reports more, so the button keeps showing a lower bound.
+    expect(screen.getByText('accept-all:{"count":"2+"}')).toBeTruthy()
+  })
+
+  it('stops the walk on an empty page', async () => {
+    actions.getOpenContributionsAction
+      .mockResolvedValueOnce(page([edit], true))
       .mockResolvedValueOnce(page([], true))
     render(<DeckContributionsInbox sourceDeckId="s1" />)
     const acceptAllButton = await screen.findByText('accept-all:{"count":"1+"}')
     await act(async () => fireEvent.click(acceptAllButton))
-    // The repeat page still advances the offset, so the walk reaches the new item.
-    expect(actions.getOpenContributionsAction.mock.calls.map((c) => c[1])).toEqual([undefined, 1, 2, 3])
-    expect(screen.getByText('accept-all-confirm-message:{"count":2}')).toBeTruthy()
-    expect(screen.getAllByText('types.fact_edit')).toHaveLength(1)
+    expect(actions.getOpenContributionsAction).toHaveBeenCalledTimes(2)
+    expect(screen.getByText('accept-all-confirm-message:{"count":1}')).toBeTruthy()
   })
 
-  it('does not show a contribution twice when Load more returns one already loaded', async () => {
+  it('caps the walk so a server that never stops cannot spin forever', async () => {
+    let n = 0
+    actions.getOpenContributionsAction.mockImplementation(async () => {
+      n += 1
+      return page([{ ...edit, id: `c${n}` }], true)
+    })
+    render(<DeckContributionsInbox sourceDeckId="s1" />)
+    const acceptAllButton = await screen.findByText('accept-all:{"count":"1+"}')
+    await act(async () => fireEvent.click(acceptAllButton))
+    expect(actions.getOpenContributionsAction).toHaveBeenCalledTimes(41)
+    actions.getOpenContributionsAction.mockReset()
+  })
+
+  it('keeps Load more moving past a page of repeats', async () => {
     actions.getOpenContributionsAction
       .mockResolvedValueOnce(page([edit], true))
-      .mockResolvedValueOnce(page([edit, add]))
+      .mockResolvedValueOnce(page([edit], true))
+      .mockResolvedValueOnce(page([add]))
     render(<DeckContributionsInbox sourceDeckId="s1" />)
     await screen.findByText('types.fact_edit')
     await act(async () => fireEvent.click(screen.getByText('load-more')))
     expect(screen.getAllByText('types.fact_edit')).toHaveLength(1)
+    await act(async () => fireEvent.click(screen.getByText('load-more')))
+    expect(actions.getOpenContributionsAction.mock.calls.map((c) => c[1])).toEqual([undefined, 1, 2])
     expect(screen.getByText('types.fact_add')).toBeTruthy()
+  })
+
+  it('pages from the right place after handling a card in place', async () => {
+    actions.getOpenContributionsAction
+      .mockResolvedValueOnce(page([edit, { ...edit, id: 'c8' }], true))
+      .mockResolvedValueOnce(page([add]))
+    actions.updateContributionStatusAction.mockResolvedValue({ success: true })
+    render(<DeckContributionsInbox sourceDeckId="s1" />)
+    await screen.findAllByText('types.fact_edit')
+    await act(async () => fireEvent.click(screen.getAllByText('dismiss')[0]))
+    await act(async () => fireEvent.click(screen.getByText('load-more')))
+    // Two were served and one left the open list, so the next page starts at 1.
+    expect(actions.getOpenContributionsAction).toHaveBeenLastCalledWith('s1', 1)
   })
 
   it('drops an accept-all walk after the inbox closes', async () => {
