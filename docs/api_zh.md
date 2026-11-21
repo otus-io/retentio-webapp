@@ -135,6 +135,7 @@
 | `/api/decks/{id}/contributions/facts/{factId}/report`                 | POST   | **（共享）** 导入者：仅留言的 `report`（不可 accept）。**201**。                                                                                                                                                                                                                                                                                                                                                   |
 | `/api/decks/{id}/contributions/deck-tags`                             | POST   | **（共享）** 导入者：提交卡组标签增删为 `deck_tag_update`。**201**。                                                                                                                                                                                                                                                                                                                                               |
 | `/api/decks/{id}/contributions/fields/rename`                         | POST   | **（共享）** 导入者：提交等长 `proposed_fields` 为 `field_rename`。**201**。                                                                                                                                                                                                                                                                                                                                       |
+| `/api/decks/{id}/contributions/description`                           | POST   | **（共享）** 导入者：提交 `proposed_description` 为 `description_edit`。**201**。                                                                                                                                                                                                                                                                                                                                  |
 | `/api/decks/{id}/contributions/qa-review`                             | POST   | **（共享）** 导入者：以 `qa_review` 请求作者采纳其 QA 签核。**201**。见 [QA 审核请求](#qa-审核请求)。                                                                                                                                                                                                                                                                                                              |
 | `/api/decks/{id}/contributions`                                       | GET    | **（共享）** 作者在**源**卡组上的贡献收件箱。查询：`status`、`type`、`reporter`、`fact_id`、`media_type`、`limit`、`offset`。                                                                                                                                                                                                                                                                                      |
 | `/api/decks/{id}/contributions/{contributionId}`                      | PATCH  | **（共享）** 作者：将状态设为 `open` / `resolved` / `dismissed`。                                                                                                                                                                                                                                                                                                                                                  |
@@ -1274,15 +1275,16 @@
 - 接受贡献仅更新作者**工作副本**；作者仍须 [发布](#发布卡组) 后，导入者才能通过 updates/sync 看到变更。
 - 每日配额：每个源卡组每个 UTC 日最多 **20 条新**贡献（刷新已有 open 去重目标不占配额）→ **429** `daily contribution limit exceeded`。
 
-| 内部 `type`       | 提交路由（导入卡组 id）                                               |
-| ----------------- | --------------------------------------------------------------------- |
-| `fact_edit`       | `POST …/contributions/facts/{factId}/edit`                            |
-| `fact_add`        | `POST …/contributions/facts/{factId}/add`                             |
-| `fact_tag_update` | `POST …/contributions/facts/{factId}/tags`                            |
-| `deck_tag_update` | `POST …/contributions/deck-tags`                                      |
-| `template_add`    | `POST …/contributions/facts/{factId}/templates`                       |
-| `field_rename`    | `POST …/contributions/fields/rename`                                  |
-| `report`          | `POST …/contributions/facts/{factId}/report`（仅收件箱；不可 accept） |
+| 内部 `type`        | 提交路由（导入卡组 id）                                               |
+| ------------------ | --------------------------------------------------------------------- |
+| `fact_edit`        | `POST …/contributions/facts/{factId}/edit`                            |
+| `fact_add`         | `POST …/contributions/facts/{factId}/add`                             |
+| `fact_tag_update`  | `POST …/contributions/facts/{factId}/tags`                            |
+| `deck_tag_update`  | `POST …/contributions/deck-tags`                                      |
+| `template_add`     | `POST …/contributions/facts/{factId}/templates`                       |
+| `field_rename`     | `POST …/contributions/fields/rename`                                  |
+| `description_edit` | `POST …/contributions/description`                                    |
+| `report`           | `POST …/contributions/facts/{factId}/report`（仅收件箱；不可 accept） |
 
 #### 私有 overlay 词条变更
 
@@ -1624,6 +1626,21 @@
 }
 ```
 
+##### 卡组简介
+
+**接口：** `POST /api/decks/{importId}/contributions/description`
+
+`proposed_description` 去除首尾空白后必填，最多 500 字节，且须与钉住快照的简介不同。作者接受后替换源工作副本简介；发布与同步后传播。
+
+```json
+{
+  "proposed_description": "Everyday Japanese verbs with audio",
+  "message": "Mention the audio"
+}
+```
+
+**成功（201）：** 结构同字段重命名，`"type": "description_edit"`。
+
 ##### 仅留言举报
 
 **接口：** `POST /api/decks/{importId}/contributions/facts/{factId}/report`
@@ -1734,14 +1751,14 @@
 
 **查询参数**（均可选；AND 组合）：
 
-| 参数               | 说明                                                                                                    |
-| ------------------ | ------------------------------------------------------------------------------------------------------- |
-| `status`           | `open`、`resolved`、`dismissed`、`accepted`                                                             |
-| `type`             | `fact_edit`、`fact_add`、`fact_tag_update`、`deck_tag_update`、`template_add`、`field_rename`、`report` |
-| `reporter`         | 精确用户名                                                                                              |
-| `fact_id`          | 精确词条 id                                                                                             |
-| `media_type`       | 派生过滤（如 `audio`）                                                                                  |
-| `limit` / `offset` | 分页（默认/上限与其他列表路由相同）                                                                     |
+| 参数               | 说明                                                                                                                        |
+| ------------------ | --------------------------------------------------------------------------------------------------------------------------- |
+| `status`           | `open`、`resolved`、`dismissed`、`accepted`                                                                                 |
+| `type`             | `fact_edit`、`fact_add`、`fact_tag_update`、`deck_tag_update`、`template_add`、`field_rename`、`description_edit`、`report` |
+| `reporter`         | 精确用户名                                                                                                                  |
+| `fact_id`          | 精确词条 id                                                                                                                 |
+| `media_type`       | 派生过滤（如 `audio`）                                                                                                      |
+| `limit` / `offset` | 分页（默认/上限与其他列表路由相同）                                                                                         |
 
 **示例：** `GET /api/decks/srcdeck12345/contributions?status=open&type=fact_edit&media_type=audio&reporter=bob&fact_id=fact0001&limit=50&offset=0`
 
@@ -3331,6 +3348,7 @@ Accept: application/json
 | `/api/decks/{id}/contributions/facts/{factId}/report`                 | POST   | 导入卡组所有者                 | `report`（不可接受）。**201**。                                                                                                                                                                               |
 | `/api/decks/{id}/contributions/deck-tags`                             | POST   | 导入卡组所有者                 | `deck_tag_update`。**201**。                                                                                                                                                                                  |
 | `/api/decks/{id}/contributions/fields/rename`                         | POST   | 导入卡组所有者                 | `field_rename`。**201**。                                                                                                                                                                                     |
+| `/api/decks/{id}/contributions/description`                           | POST   | 导入卡组所有者                 | `description_edit`。**201**。                                                                                                                                                                                 |
 | `/api/decks/{id}/contributions/qa-review`                             | POST   | 导入卡组所有者                 | `qa_review`——请求作者采纳 QA 签核。**201**。                                                                                                                                                                  |
 | `/api/decks/{id}/contributions`                                       | GET    | 源卡组所有者                   | 作者收件箱。查询参数：`status`、`type`、`reporter`、`fact_id`、`media_type`、`limit`、`offset`。                                                                                                              |
 | `/api/decks/{id}/contributions/{contributionId}`                      | PATCH  | 源卡组所有者                   | 状态 `open` / `resolved` / `dismissed`。                                                                                                                                                                      |
@@ -3468,7 +3486,7 @@ Accept: application/json
 
 - `POST /api/decks/{id}/publish`
 - `POST /api/decks/{id}/contributions/facts/{factId}/edit`、`/add`、`/tags`、`/templates`、`/report`
-- `POST /api/decks/{id}/contributions/deck-tags`、`/fields/rename`、`/qa-review`
+- `POST /api/decks/{id}/contributions/deck-tags`、`/fields/rename`、`/description`、`/qa-review`
 
 ---
 

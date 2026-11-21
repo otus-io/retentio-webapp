@@ -7,6 +7,7 @@ import { useTranslations } from 'next-intl'
 import { useEffect, useState, useTransition } from 'react'
 import AppButton from '@/components/app/AppButton'
 import AppInput from '@/components/app/AppInput'
+import AppTextarea from '@/components/app/AppTextarea'
 import { showFailToast, showSuccessToast } from '@/lib/ui'
 import { EMAIL_NOT_VERIFIED_CODE } from '@/modules/auth/auth.schema'
 import { sendToAuthor } from '@/modules/contributions/auto-send'
@@ -25,8 +26,8 @@ import {
 interface DeckContributionsPanelProps { deck: Deck }
 export type ContributionForm = 'field_rename' | 'deck_tags' | 'description_edit' | null
 
-/** Same limit as the backend's deck description. */
-const MAX_DESCRIPTION_LENGTH = 500
+/** The backend caps a deck description at 500 bytes of UTF-8, not 500 characters. */
+const MAX_DESCRIPTION_BYTES = 500
 
 const FORM_TITLES = {
   field_rename: 'contributions.field-rename-title',
@@ -180,7 +181,7 @@ export function ContributionFormModal({ deck, kind, existing, onClose, onSave }:
   const hasTagChanges = parseTags(addTagsInput).length > 0 || parseTags(removeTagsInput).length > 0
   const description = proposedDescription.trim()
   const descriptionValid = description.length > 0
-    && description.length <= MAX_DESCRIPTION_LENGTH
+    && new TextEncoder().encode(description).length <= MAX_DESCRIPTION_BYTES
     && description !== currentDescription.trim()
   const canSave = kind === 'field_rename'
     ? fieldsChanged && fieldsValid
@@ -205,7 +206,8 @@ export function ContributionFormModal({ deck, kind, existing, onClose, onSave }:
       onSave({
         id: 'description_edit',
         kind: 'description_edit',
-        preview: description.length > 80 ? `${description.slice(0, 79)}…` : description,
+        // Cut by code point so an emoji is never split in half.
+        preview: Array.from(description).length > 80 ? `${Array.from(description).slice(0, 79).join('')}…` : description,
         proposedDescription: description,
         ...note,
         savedAt: new Date().toISOString(),
@@ -255,17 +257,16 @@ export function ContributionFormModal({ deck, kind, existing, onClose, onSave }:
               : kind === 'description_edit'
                 ? (
                   <>
-                    <AppInput
+                    <AppTextarea
                       isReadOnly
                       label={t('contributions.current-description')}
                       value={currentDescription || '—'}
                       inputProps={{ variant: 'secondary' }}
                     />
-                    <AppInput
+                    <AppTextarea
                       label={t('contributions.suggested-description')}
                       value={proposedDescription}
                       onChange={setProposedDescription}
-                      maxLength={MAX_DESCRIPTION_LENGTH}
                       inputProps={{ variant: 'secondary' }}
                     />
                   </>

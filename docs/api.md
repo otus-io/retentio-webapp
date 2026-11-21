@@ -134,6 +134,7 @@ This guide walks you through using the Retentio API via Swagger UI.
 | `/api/decks/{id}/contributions/facts/{factId}/report`                 | POST   | **(Sharing)** Importer: message-only `report` (no accept). **201**.                                                                                                                                                                                                                                                                                                                                                                                                                                                   |
 | `/api/decks/{id}/contributions/deck-tags`                             | POST   | **(Sharing)** Importer: submit deck tag add/remove as `deck_tag_update`. **201**.                                                                                                                                                                                                                                                                                                                                                                                                                                     |
 | `/api/decks/{id}/contributions/fields/rename`                         | POST   | **(Sharing)** Importer: submit same-length `proposed_fields` as `field_rename`. **201**.                                                                                                                                                                                                                                                                                                                                                                                                                              |
+| `/api/decks/{id}/contributions/description`                           | POST   | **(Sharing)** Importer: submit `proposed_description` as `description_edit`. **201**.                                                                                                                                                                                                                                                                                                                                                                                                                                 |
 | `/api/decks/{id}/contributions/qa-review`                             | POST   | **(Sharing)** Importer: ask the author to adopt their QA sign-offs as `qa_review`. **201**. See [QA review request](#qa-review-request).                                                                                                                                                                                                                                                                                                                                                                              |
 | `/api/decks/{id}/contributions`                                       | GET    | **(Sharing)** Author inbox on **source** deck. Query: `status`, `type`, `reporter`, `fact_id`, `media_type`, `limit`, `offset`.                                                                                                                                                                                                                                                                                                                                                                                       |
 | `/api/decks/{id}/contributions/{contributionId}`                      | PATCH  | **(Sharing)** Author: set status `open` / `resolved` / `dismissed`.                                                                                                                                                                                                                                                                                                                                                                                                                                                   |
@@ -1306,16 +1307,17 @@ Examples below use source `srcdeck12345`, import `impdeck12345`, and snapshot fa
 - Accepted contributions update the author’s **working copy** only; the author must still [publish](#publish-a-deck) before importers see them via updates/sync.
 - Daily quota: max **200 new** contribution rows per source deck per UTC day (refreshing an open dedupe target does not consume quota) → **429** `daily contribution limit exceeded`.
 
-| Internal `type`   | Submit route (import id)                                                     |
-| ----------------- | ---------------------------------------------------------------------------- |
-| `fact_edit`       | `POST …/contributions/facts/{factId}/edit`                                   |
-| `fact_add`        | `POST …/contributions/facts/{factId}/add`                                    |
-| `fact_tag_update` | `POST …/contributions/facts/{factId}/tags`                                   |
-| `deck_tag_update` | `POST …/contributions/deck-tags`                                             |
-| `template_add`    | `POST …/contributions/facts/{factId}/templates`                              |
-| `field_rename`    | `POST …/contributions/fields/rename`                                         |
-| `report`          | `POST …/contributions/facts/{factId}/report` (inbox only; cannot accept)     |
-| `qa_review`       | `POST …/contributions/qa-review` (author adopts the importer's QA sign-offs) |
+| Internal `type`    | Submit route (import id)                                                     |
+| ------------------ | ---------------------------------------------------------------------------- |
+| `fact_edit`        | `POST …/contributions/facts/{factId}/edit`                                   |
+| `fact_add`         | `POST …/contributions/facts/{factId}/add`                                    |
+| `fact_tag_update`  | `POST …/contributions/facts/{factId}/tags`                                   |
+| `deck_tag_update`  | `POST …/contributions/deck-tags`                                             |
+| `template_add`     | `POST …/contributions/facts/{factId}/templates`                              |
+| `field_rename`     | `POST …/contributions/fields/rename`                                         |
+| `description_edit` | `POST …/contributions/description`                                           |
+| `report`           | `POST …/contributions/facts/{factId}/report` (inbox only; cannot accept)     |
+| `qa_review`        | `POST …/contributions/qa-review` (author adopts the importer's QA sign-offs) |
 
 #### Private overlay fact mutations
 
@@ -1654,6 +1656,22 @@ On accept, the author receives the **same** `fact_id` (no remapping).
 }
 ```
 
+##### Deck description
+
+**Endpoint:** `POST /api/decks/{importId}/contributions/description`
+
+`proposed_description` is trimmed, required, at most 500 bytes, and must differ from the pinned
+snapshot description. On accept the source working-copy description is replaced; publish and sync propagate it.
+
+```json
+{
+  "proposed_description": "Everyday Japanese verbs with audio",
+  "message": "Mention the audio"
+}
+```
+
+**Success (201):** same shape as field rename, with `"type": "description_edit"`.
+
 ##### Message-only report
 
 **Endpoint:** `POST /api/decks/{importId}/contributions/facts/{factId}/report`
@@ -1767,14 +1785,14 @@ All author routes use the **source** deck id (`srcdeck12345`).
 
 **Query parameters** (all optional; combine with AND):
 
-| Parameter          | Description                                                                                             |
-| ------------------ | ------------------------------------------------------------------------------------------------------- |
-| `status`           | `open`, `resolved`, `dismissed`, `accepted`                                                             |
-| `type`             | `fact_edit`, `fact_add`, `fact_tag_update`, `deck_tag_update`, `template_add`, `field_rename`, `report` |
-| `reporter`         | Exact username                                                                                          |
-| `fact_id`          | Exact fact id                                                                                           |
-| `media_type`       | Derived filter (e.g. `audio`)                                                                           |
-| `limit` / `offset` | Pagination (same defaults/max as other list routes)                                                     |
+| Parameter          | Description                                                                                                                 |
+| ------------------ | --------------------------------------------------------------------------------------------------------------------------- |
+| `status`           | `open`, `resolved`, `dismissed`, `accepted`                                                                                 |
+| `type`             | `fact_edit`, `fact_add`, `fact_tag_update`, `deck_tag_update`, `template_add`, `field_rename`, `description_edit`, `report` |
+| `reporter`         | Exact username                                                                                                              |
+| `fact_id`          | Exact fact id                                                                                                               |
+| `media_type`       | Derived filter (e.g. `audio`)                                                                                               |
+| `limit` / `offset` | Pagination (same defaults/max as other list routes)                                                                         |
 
 **Example:** `GET /api/decks/srcdeck12345/contributions?status=open&type=fact_edit&media_type=audio&reporter=bob&fact_id=fact0001&limit=50&offset=0`
 
@@ -3359,6 +3377,7 @@ Related routes (details in the subsections below):
 | `/api/decks/{id}/contributions/facts/{factId}/report`                 | POST   | Import owner                  | `report` (cannot accept). **201**.                                                                                                                                                                                                                                         |
 | `/api/decks/{id}/contributions/deck-tags`                             | POST   | Import owner                  | `deck_tag_update`. **201**.                                                                                                                                                                                                                                                |
 | `/api/decks/{id}/contributions/fields/rename`                         | POST   | Import owner                  | `field_rename`. **201**.                                                                                                                                                                                                                                                   |
+| `/api/decks/{id}/contributions/description`                           | POST   | Import owner                  | `description_edit`. **201**.                                                                                                                                                                                                                                               |
 | `/api/decks/{id}/contributions/qa-review`                             | POST   | Import owner                  | `qa_review` — ask the author to adopt QA sign-offs. **201**.                                                                                                                                                                                                               |
 | `/api/decks/{id}/contributions`                                       | GET    | Source owner                  | Author inbox. Query: `status`, `type`, `reporter`, `fact_id`, `media_type`, `limit`, `offset`.                                                                                                                                                                             |
 | `/api/decks/{id}/contributions/{contributionId}`                      | PATCH  | Source owner                  | Status `open` / `resolved` / `dismissed`.                                                                                                                                                                                                                                  |
@@ -3494,7 +3513,7 @@ These routes need a verified email. Unverified callers get **403**
 
 - `POST /api/decks/{id}/publish`
 - `POST /api/decks/{id}/contributions/facts/{factId}/edit`, `/add`, `/tags`, `/templates`, `/report`
-- `POST /api/decks/{id}/contributions/deck-tags`, `/fields/rename`, `/qa-review`
+- `POST /api/decks/{id}/contributions/deck-tags`, `/fields/rename`, `/description`, `/qa-review`
 
 ---
 
