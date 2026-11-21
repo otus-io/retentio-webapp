@@ -173,6 +173,7 @@ export default function DeckContributionsInbox({ sourceDeckId }: { sourceDeckId:
     let all = current
     let more = hasMore
     let failure: string | null = null
+    let serverHasMore = false
     setPreparing(true)
     while (more) {
       const res = await getOpenContributionsAction(deckId, all.length)
@@ -185,13 +186,16 @@ export default function DeckContributionsInbox({ sourceDeckId }: { sourceDeckId:
       const seen = new Set(all.map((c) => c.id))
       const fresh = res.data.contributions.filter((c) => !seen.has(c.id))
       all = [...all, ...fresh]
-      // An empty page cannot advance the offset; stop instead of asking for it again.
+      serverHasMore = res.data.hasMore
+      // A page with nothing new cannot advance the offset; stop instead of asking for it again.
       more = res.data.hasMore && fresh.length > 0
     }
     setPreparing(false)
     // Keep what loaded, even when a page failed, so a retry continues from here.
     setItems(all)
-    setHasMore(failure !== null)
+    // Still more on the server (a failed or stalled walk): the count stays a lower bound, and anything not
+    // accepted now shows up after the reload.
+    setHasMore(failure !== null || serverHasMore)
     if (failure !== null) {
       showFailToast(failure)
       return

@@ -223,6 +223,8 @@ describe('DeckContributionsInbox', () => {
     expect(actions.getOpenContributionsAction).toHaveBeenCalledTimes(3)
     expect(screen.getByText('accept-all-confirm-message:{"count":2}')).toBeTruthy()
     expect(screen.getAllByText('types.fact_edit')).toHaveLength(1)
+    // The server still reports more, so the button keeps showing a lower bound.
+    expect(screen.getByText('accept-all:{"count":"2+"}')).toBeTruthy()
   })
 
   it('drops an accept-all walk after the inbox closes', async () => {

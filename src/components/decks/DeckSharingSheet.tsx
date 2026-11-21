@@ -86,7 +86,8 @@ export default function DeckSharingSheet({ deck, kind, onClose }: DeckSharingShe
             {kind === 'updates' && <DeckImportUpdatesSheet importId={deck.id} />}
             {kind === 'add-fact' && <DeckAddFact deck={deck} />}
             {kind === 'outbox' && <DeckContributionsOutbox deck={deck} />}
-            {kind === 'inbox' && <DeckContributionsInbox sourceDeckId={deck.id} />}
+            {/* Keyed by deck: another deck gets a fresh inbox, never the previous deck's cards or in-flight loads. */}
+            {kind === 'inbox' && <DeckContributionsInbox key={deck.id} sourceDeckId={deck.id} />}
           </Modal.Body>
         </Modal.Dialog>
       </Modal.Container>

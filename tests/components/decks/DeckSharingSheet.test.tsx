@@ -96,9 +96,14 @@ describe('DeckSharingSheet', () => {
     expect(screen.queryByRole('status')).toBeNull()
   })
 
-  it('shows the inbox straight away', () => {
-    render(<DeckSharingSheet deck={deck()} kind="inbox" onClose={vi.fn()} />)
-    expect(screen.getByTestId('inbox').textContent).toBe('d1')
+  it('shows the inbox straight away, fresh for each deck', () => {
+    const { rerender } = render(<DeckSharingSheet deck={deck()} kind="inbox" onClose={vi.fn()} />)
+    const first = screen.getByTestId('inbox')
+    expect(first.textContent).toBe('d1')
+    rerender(<DeckSharingSheet deck={deck({ id: 'd2' })} kind="inbox" onClose={vi.fn()} />)
+    // A different deck remounts the inbox instead of reusing the previous one.
+    expect(screen.getByTestId('inbox')).not.toBe(first)
+    expect(screen.getByTestId('inbox').textContent).toBe('d2')
     expect(screen.queryByRole('status')).toBeNull()
   })
 
