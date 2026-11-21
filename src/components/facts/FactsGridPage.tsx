@@ -52,6 +52,9 @@ interface FactsGridPageProps {
 
 export default function FactsGridPage({ facts, meta, deck }: FactsGridPageProps) {
   const t = useTranslations()
+  // Read through a ref so the cell-save handler (and the grid's callbacks) stay stable across renders.
+  const tRef = useRef(t)
+  tRef.current = t
   const { resolvedTheme } = useTheme()
   const [isOpen, setIsOpen] = useState(false)
   const [target, setTarget] = useState<{ factId: string; fieldKey: string; entry: Entry }>()
@@ -172,13 +175,13 @@ export default function FactsGridPage({ facts, meta, deck }: FactsGridPageProps)
         await sendFactEditsAndNotify(
           deck.id,
           changedNodes.map(({ node, entries }) => ({ factId: node.data.id, entries })),
-          { sent: t('auto-send.sent'), unsent: t('auto-send.unsent') },
+          { sent: tRef.current('auto-send.sent'), unsent: tRef.current('auto-send.unsent') },
         )
       }
     } finally {
       setLoading(false)
     }
-  }, [deck.id, deck.source_deck_id, getEntriesFromData, t])
+  }, [deck.id, deck.source_deck_id, getEntriesFromData])
 
   const handleDebouncedCellChange = useDebouncedCallback(handleCellChange, 100)
 
@@ -387,15 +390,6 @@ export default function FactsGridPage({ facts, meta, deck }: FactsGridPageProps)
             rowData={rowData}
             columnDefs={columnDefs}
             getRowId={(p) => p.data.id}
-            onCellDoubleClicked={(e) => {
-              if (e.colDef.context?.isActionColumn) return
-              if (!e.column.isCellEditable(e.node)) return
-              if (e.rowIndex == null) return
-              e.api.startEditingCell({
-                rowIndex: e.rowIndex,
-                colKey: e.column.getColId(),
-              })
-            }}
             onCellValueChanged={handleDebouncedCellChange}
             onSelectionChanged={handleSelectionChanged}
             rowSelection={{

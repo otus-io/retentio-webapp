@@ -58,7 +58,7 @@ function DeckStat({ value, label, emphasis = false }: { value: number, label: st
   )
 }
 
-/** My Decks card: a click anywhere starts studying; deck management lives in the menu. */
+/** My Decks card: the deck name starts studying; the rest of the card opens the deck's details. */
 export default function DecksCard({
   deck,
   highlight = '',
@@ -78,7 +78,7 @@ export default function DecksCard({
     <Card
       variant="default"
       className="cursor-pointer gap-3 transition-shadow hover:shadow-md"
-      onClick={() => router.push(studyHref)}
+      onClick={() => router.push(`/decks/${deck.id}`)}
     >
       <div className="flex items-center gap-2">
         <AppLink

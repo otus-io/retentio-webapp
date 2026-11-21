@@ -4,7 +4,6 @@ import { getDeckCatalogService } from '@/modules/deck-sharing/deck-sharing.servi
 import type { Metadata } from 'next'
 import { getTranslations } from 'next-intl/server'
 import { redirect } from 'next/navigation'
-import { Suspense } from 'react'
 
 /** 首页每页展示的公开卡组数 */
 const HOME_PAGE_SIZE = 6
@@ -22,11 +21,11 @@ async function SharedDecksHomeSCP({ page }: { page: number }){
 export default async function Page(props: PageProps<'/'>) {
   const requested = Number((await props.searchParams).page)
   const page = Number.isInteger(requested) && requested > 0 ? requested : 1
+  // Rendered with the page rather than streamed in a Suspense boundary: the page now depends on `?page=`, and a
+  // streamed boundary briefly showed the catalog twice while hydrating.
   return (
     <HomePage>
-      <Suspense>
-        <SharedDecksHomeSCP page={page} />
-      </Suspense>
+      <SharedDecksHomeSCP page={page} />
     </HomePage>
   )
 }

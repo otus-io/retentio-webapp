@@ -24,7 +24,7 @@ import Page from '@/app/(default)/(public)/page'
 /** Renders the page and its async catalog section. */
 async function renderPage(searchParams: Record<string, string>) {
   const page = await Page({ searchParams: Promise.resolve(searchParams) } as never)
-  const section = page.props.children.props.children
+  const section = page.props.children
   return render(await section.type(section.props))
 }
 

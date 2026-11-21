@@ -51,13 +51,13 @@ describe('DecksCard', () => {
     vi.clearAllMocks()
   })
 
-  it('starts studying from the card or its name', () => {
+  it('starts studying from the deck name and opens details from the rest of the card', () => {
     render(<DecksCard deck={makeDeck()} />)
     expect(screen.getByText('Spanish').closest('a')?.getAttribute('href')).toBe('/decks/d1/study')
     fireEvent.click(screen.getByText('Spanish'))
     expect(push).toHaveBeenCalledTimes(0)
     fireEvent.click(screen.getByText('common.total-reviews'))
-    expect(push).toHaveBeenCalledWith('/decks/d1/study')
+    expect(push).toHaveBeenCalledWith('/decks/d1')
   })
 
   it('keeps menu clicks from starting a study session', () => {
