@@ -170,6 +170,45 @@ describe('DeckContributionsInbox', () => {
     expect(toast.showFailToast).toHaveBeenLastCalledWith('Gone')
   })
 
+  it('loads every open page before accepting all, then clears the list while it reloads', async () => {
+    let reload!: (v: unknown) => void
+    actions.getOpenContributionsAction
+      .mockResolvedValueOnce(page([edit], true))
+      .mockResolvedValueOnce(page([add], true))
+      .mockResolvedValueOnce(page([meta]))
+      .mockReturnValueOnce(new Promise((r) => { reload = r }))
+    actions.acceptContributionAction.mockResolvedValue({ success: true })
+    render(<DeckContributionsInbox sourceDeckId="s1" />)
+    // With more pages on the server the count is a lower bound.
+    const acceptAllButton = await screen.findByText('accept-all:{"count":"1+"}')
+    await act(async () => fireEvent.click(acceptAllButton))
+    expect(actions.getOpenContributionsAction).toHaveBeenNthCalledWith(2, 's1', 1)
+    expect(actions.getOpenContributionsAction).toHaveBeenNthCalledWith(3, 's1', 2)
+    expect(screen.getByText('accept-all-confirm-message:{"count":3}')).toBeTruthy()
+
+    await act(async () => fireEvent.click(screen.getAllByText('accept').at(-1)!))
+    expect(actions.acceptContributionAction).toHaveBeenCalledTimes(3)
+    expect(screen.queryByText('types.fact_edit')).toBeNull()
+    expect(screen.getByRole('status')).toBeTruthy()
+    await act(async () => reload(page([])))
+    expect(screen.getByText('empty')).toBeTruthy()
+  })
+
+  it('stops preparing accept all when a page fails to load', async () => {
+    actions.getOpenContributionsAction
+      .mockResolvedValueOnce(page([edit], true))
+      .mockResolvedValueOnce({ success: false, error: 'Timeout' })
+      .mockResolvedValueOnce(page([edit], true))
+      .mockResolvedValueOnce({ success: false })
+    render(<DeckContributionsInbox sourceDeckId="s1" />)
+    const acceptAllButton = await screen.findByText('accept-all:{"count":"1+"}')
+    await act(async () => fireEvent.click(acceptAllButton))
+    expect(toast.showFailToast).toHaveBeenLastCalledWith('Timeout')
+    expect(screen.queryByText(/accept-all-confirm-message/)).toBeNull()
+    await act(async () => fireEvent.click(screen.getByText('accept-all:{"count":"1+"}')))
+    expect(toast.showFailToast).toHaveBeenLastCalledWith('load-failed')
+  })
+
   it('shows progress while accepting all', async () => {
     actions.getOpenContributionsAction.mockResolvedValue(page([edit]))
     let resolve!: (v: unknown) => void

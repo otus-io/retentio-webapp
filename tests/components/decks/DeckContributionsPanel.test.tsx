@@ -3,6 +3,7 @@ import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/re
 import type { ReactNode } from 'react'
 
 const showFailToast = vi.fn()
+const showSuccessToast = vi.fn()
 
 vi.mock('next-intl', () => ({
   useTranslations: (ns?: string) => (key: string, values?: { count?: number }) =>
@@ -10,7 +11,7 @@ vi.mock('next-intl', () => ({
 }))
 vi.mock('@/lib/ui', () => ({
   showFailToast: (...args: unknown[]) => showFailToast(...args),
-  showSuccessToast: vi.fn(),
+  showSuccessToast: (...args: unknown[]) => showSuccessToast(...args),
 }))
 vi.mock('@/modules/contributions/contributions.action', () => ({
   submitDeckContributionsBatchAction: vi.fn(),
@@ -112,5 +113,47 @@ describe('DeckContributionsPanel batch failures', () => {
     await submitAll()
     await waitFor(() => expect(showFailToast).toHaveBeenCalledWith('auth.emailNotVerifiedError'))
     expect(showFailToast).toHaveBeenCalledWith('contributions.batch-submit-failed:1')
+  })
+})
+
+describe('DeckContributionsPanel proposals', () => {
+  beforeEach(() => {
+    vi.clearAllMocks()
+    const store = new Map<string, string>()
+    vi.stubGlobal('localStorage', {
+      getItem: (key: string) => store.get(key) ?? null,
+      setItem: (key: string, value: string) => { store.set(key, value) },
+    })
+    localStorage.setItem(`retentio_pending_contribs_v2:${deck.id}`, JSON.stringify([pending]))
+  })
+  afterEach(() => {
+    cleanup()
+    vi.unstubAllGlobals()
+  })
+
+  async function saveDeckTags() {
+    const { container } = render(<DeckContributionsPanel deck={{ ...deck, fields: ['Word'] } as Deck} />)
+    await screen.findByText('+a')
+    fireEvent.click(container.querySelector('.lucide-tags')!.closest('button')!)
+    fireEvent.click(container.querySelector('.lucide-check')!.closest('button')!)
+  }
+
+  it('sends a saved proposal to the author right away', async () => {
+    vi.mocked(submitDeckContributionsBatchAction).mockResolvedValue({
+      success: true,
+      data: { submitted: [{ localId: 'deck_tags', kind: 'deck_tags', contributionId: 'c1' }], failed: [] },
+    })
+    await saveDeckTags()
+    await waitFor(() => expect(showSuccessToast).toHaveBeenCalledWith('auto-send.sent'))
+    expect(vi.mocked(submitDeckContributionsBatchAction).mock.calls[0][0].contributions)
+      .toEqual([expect.objectContaining({ id: 'deck_tags', addTags: ['a'] })])
+    expect(JSON.parse(localStorage.getItem(`retentio_pending_contribs_v2:${deck.id}`)!)).toEqual([])
+  })
+
+  it('keeps a proposal pending when it cannot be sent', async () => {
+    vi.mocked(submitDeckContributionsBatchAction).mockResolvedValue({ success: false, error: 'Offline' })
+    await saveDeckTags()
+    await waitFor(() => expect(showFailToast).toHaveBeenCalledWith('auto-send.unsent'))
+    expect(JSON.parse(localStorage.getItem(`retentio_pending_contribs_v2:${deck.id}`)!)).toHaveLength(1)
   })
 })

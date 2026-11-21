@@ -158,6 +158,27 @@ export default function DeckContributionsInbox({ sourceDeckId }: { sourceDeckId:
     }
   }
 
+  // Accept all covers every open contribution: load the remaining pages before asking to confirm.
+  const prepareAcceptAll = async (current: Contribution[]) => {
+    let all = current
+    let more = hasMore
+    setLoadingMore(true)
+    while (more) {
+      const res = await getOpenContributionsAction(sourceDeckId, all.length)
+      if (!res.success || !res.data) {
+        setLoadingMore(false)
+        showFailToast(String(res.error ?? '') || t('load-failed'))
+        return
+      }
+      all = [...all, ...res.data.contributions]
+      more = res.data.hasMore
+    }
+    setLoadingMore(false)
+    setItems(all)
+    setHasMore(false)
+    setConfirmAll(true)
+  }
+
   const acceptAll = async (toAccept: Contribution[]) => {
     setConfirmAll(false)
     setProgress({ done: 0, total: toAccept.length })
@@ -174,6 +195,8 @@ export default function DeckContributionsInbox({ sourceDeckId }: { sourceDeckId:
     if (failed === 0) showSuccessToast(t('accept-all-success', { count: sent }))
     else if (sent > 0) showFailToast(t('accept-all-partial', { sent, failed }))
     else showFailToast(lastError || t('operation-failed'))
+    // Clear the accepted cards while the list reloads, so none of them can be acted on again.
+    setItems(null)
     reload()
   }
 
@@ -208,9 +231,10 @@ export default function DeckContributionsInbox({ sourceDeckId }: { sourceDeckId:
             fullWidth
             isPending={progress !== null}
             isDisabled={busy}
-            onPress={() => setConfirmAll(true)}
+            onPress={() => prepareAcceptAll(items)}
           >
-            {t('accept-all', { count: acceptable.length })}
+            {/* More pages are still on the server: the count is a lower bound until they load. */}
+            {t('accept-all', { count: hasMore ? `${acceptable.length}+` : acceptable.length })}
           </AppButton>
           {progress && <p className="text-center text-xs text-muted">{t('accept-all-progress', progress)}</p>}
         </div>

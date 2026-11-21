@@ -25,8 +25,7 @@ import type { MediaType } from '@/hooks/useFactsCellAttachments'
 import { spliceDeletedFieldFromRow } from '@/components/facts/spliceDeletedFieldFromRow'
 import { actionSymbol, rawSymbol } from '@/components/facts/token'
 import { useTranslations } from 'next-intl'
-import { showFailToast, showSuccessToast } from '@/lib/ui'
-import { sendFactEdits } from '@/modules/contributions/auto-send'
+import { sendFactEditsAndNotify } from '@/modules/contributions/auto-send'
 import LayoutPage from '@/components/layout/LayoutPage'
 import { createFactsAction, deleteFactsAction } from '@/modules/facts/facts.action'
 import { Button } from '@heroui/react'
@@ -168,14 +167,13 @@ export default function FactsGridPage({ facts, meta, deck }: FactsGridPageProps)
       changedNodes.forEach(({ node, entries }) => {
         node.data[rawSymbol].entries = entries
       })
+      // Edits on an imported deck go to the author right away, as on mobile.
       if (deck.source_deck_id) {
-        // Edits on an imported deck go to the author right away, as on mobile.
-        const { unsent } = await sendFactEdits(deck.id, changedNodes.map(({ node, entries }) => ({
-          factId: node.data.id,
-          entries,
-        })))
-        if (unsent > 0) showFailToast(t('auto-send.unsent'))
-        else showSuccessToast(t('auto-send.sent'))
+        await sendFactEditsAndNotify(
+          deck.id,
+          changedNodes.map(({ node, entries }) => ({ factId: node.data.id, entries })),
+          { sent: t('auto-send.sent'), unsent: t('auto-send.unsent') },
+        )
       }
     } finally {
       setLoading(false)

@@ -2,8 +2,15 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 const submitDeckContributionsBatchAction = vi.hoisted(() => vi.fn())
 vi.mock('@/modules/contributions/contributions.action', () => ({ submitDeckContributionsBatchAction }))
+const toast = vi.hoisted(() => ({ showSuccessToast: vi.fn(), showFailToast: vi.fn() }))
+vi.mock('@/lib/ui', () => toast)
 
-import { factContribution, sendFactEdits, sendToAuthor } from '@/modules/contributions/auto-send'
+import {
+  factContribution,
+  sendFactEdits,
+  sendFactEditsAndNotify,
+  sendToAuthor,
+} from '@/modules/contributions/auto-send'
 
 function memoryStorage() {
   const map = new Map<string, string>()
@@ -57,5 +64,18 @@ describe('sendToAuthor', () => {
     await sendFactEdits('i1', [{ factId: 'f1', entries: [{ text: 'hola' }, { text: 'hello' }] }])
     expect(submitDeckContributionsBatchAction.mock.calls[0][0].contributions)
       .toEqual([expect.objectContaining({ id: 'fact_edit:f1', factId: 'f1', preview: 'hola · hello' })])
+  })
+
+  it('sendFactEditsAndNotify tells the user whether the edits reached the author', async () => {
+    const messages = { sent: 'sent', unsent: 'unsent' }
+    submitDeckContributionsBatchAction.mockResolvedValueOnce({
+      success: true,
+      data: { submitted: [{ localId: 'fact_edit:f1', kind: 'fact_edit', contributionId: 'c1' }], failed: [] },
+    })
+    await sendFactEditsAndNotify('i1', [{ factId: 'f1', entries: [{ text: 'a' }] }], messages)
+    expect(toast.showSuccessToast).toHaveBeenCalledWith('sent')
+    submitDeckContributionsBatchAction.mockResolvedValueOnce({ success: false })
+    await sendFactEditsAndNotify('i1', [{ factId: 'f1', entries: [{ text: 'a' }] }], messages)
+    expect(toast.showFailToast).toHaveBeenCalledWith('unsent')
   })
 })

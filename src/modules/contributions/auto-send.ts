@@ -1,3 +1,4 @@
+import { showFailToast, showSuccessToast } from '@/lib/ui'
 import { submitDeckContributionsBatchAction } from '@/modules/contributions/contributions.action'
 import type {
   PendingDeckContribution,
@@ -70,4 +71,15 @@ export function factContribution(
 export function sendFactEdits(deckId: string, edits: { factId: string, entries: Entry[] }[]) {
   return sendToAuthor(deckId, edits.map(({ factId, entries }) =>
     factContribution('fact_edit', factId, previewFromEntries(entries))))
+}
+
+/** Sends saved fact edits and tells the user whether they reached the author. */
+export async function sendFactEditsAndNotify(
+  deckId: string,
+  edits: { factId: string, entries: Entry[] }[],
+  messages: { sent: string, unsent: string },
+) {
+  const { unsent } = await sendFactEdits(deckId, edits)
+  if (unsent > 0) showFailToast(messages.unsent)
+  else showSuccessToast(messages.sent)
 }
