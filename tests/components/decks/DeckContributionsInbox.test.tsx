@@ -229,6 +229,16 @@ describe('DeckContributionsInbox', () => {
     expect(screen.queryByText('accept-all-more-open')).toBeNull()
   })
 
+  it('stops after two pages in a row bring nothing new', async () => {
+    actions.getOpenContributionsAction.mockResolvedValue(page([edit], true))
+    render(<DeckContributionsInbox sourceDeckId="s1" />)
+    const acceptAllButton = await screen.findByText('accept-all:{"count":"1+"}')
+    await act(async () => fireEvent.click(acceptAllButton))
+    // The first load plus two repeat pages, not the full 40-page cap.
+    expect(actions.getOpenContributionsAction).toHaveBeenCalledTimes(3)
+    expect(screen.getByText('accept-all-more-open')).toBeTruthy()
+  })
+
   it('keeps the count a lower bound when the walk stops with more still open', async () => {
     actions.getOpenContributionsAction
       .mockResolvedValueOnce(page([edit], true))

@@ -189,6 +189,7 @@ export default function DeckContributionsInbox({ sourceDeckId }: { sourceDeckId:
     let more = hasMore
     let failure: string | null = null
     let serverHasMore = more
+    let repeatPages = 0
     setPreparing(true)
     for (let pages = 0; more; pages += 1) {
       const res = await getOpenContributionsAction(deckId, served.current)
@@ -203,8 +204,10 @@ export default function DeckContributionsInbox({ sourceDeckId }: { sourceDeckId:
       all = [...all, ...fresh]
       served.current += res.data.contributions.length
       serverHasMore = res.data.hasMore
-      // Step past pages of repeats (served already moved on); stop on an empty page or at the cap.
-      more = res.data.hasMore && res.data.contributions.length > 0 && pages + 1 < MAX_WALK_PAGES
+      // Step past a page of repeats (served already moved on), but two in a row means the server is not moving
+      // on; also stop on an empty page or at the cap.
+      repeatPages = fresh.length === 0 ? repeatPages + 1 : 0
+      more = res.data.hasMore && res.data.contributions.length > 0 && repeatPages < 2 && pages + 1 < MAX_WALK_PAGES
     }
     setPreparing(false)
     // Keep what loaded, even when a page failed, so a retry continues from here.

@@ -568,7 +568,7 @@
     "load-failed": "Couldn't load this"
   },
   "inbox": {
-    "accept-all-more-open": "More contributions are still open. Run Accept all again after this to continue.",
+    "accept-all-more-open": "More contributions may still be open. Any not accepted now will show up in the inbox afterwards.",
     "accept": "Accept",
     "dismiss": "Dismiss",
     "resolve": "Resolve",
