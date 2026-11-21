@@ -371,7 +371,11 @@
     "no-current-tags": "このデッキにはタグがありません",
     "field-rename-success": "フィールド名の提案を送信しました",
     "deck-tags-success": "デッキタグの提案を送信しました",
-    "submit-failed": "提案を送信できませんでした"
+    "submit-failed": "提案を送信できませんでした",
+    "description_edit": "デッキの説明",
+    "description-title": "説明を提案",
+    "current-description": "現在の説明",
+    "suggested-description": "提案する説明"
   },
   "author-contributions": {
     "title": "コントリビューション受信箱",
@@ -402,6 +406,7 @@
       "deck_tag_update": "デッキタグの変更",
       "template_add": "カードテンプレートの追加",
       "field_rename": "フィールド名の変更",
+      "description_edit": "説明の変更",
       "report": "問題報告"
     },
     "accept-proposal": "提案を承認",
@@ -580,6 +585,7 @@
     "reported": "報告内容",
     "fields": "列名",
     "tags": "タグ",
+    "description": "説明",
     "accepted": "貢献を承認しました",
     "updated": "貢献の状態を更新しました",
     "operation-failed": "貢献を更新できませんでした",

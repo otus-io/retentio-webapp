@@ -60,6 +60,18 @@ describe('DeckContributionsInbox', () => {
     expect(actions.getOpenContributionsAction).toHaveBeenCalledWith('s1')
   })
 
+  it('shows a description suggestion before and after', async () => {
+    const first = { id: 'c6', type: 'description_edit', reporter: 'fe', source_version: 1, proposed_description: 'New text' }
+    const changed = { ...first, id: 'c7', reported_description: 'Old text', proposed_description: 'Better text' }
+    actions.getOpenContributionsAction.mockResolvedValue(page([first, changed]))
+    render(<DeckContributionsInbox sourceDeckId="s1" />)
+    expect(await screen.findByText('before: —')).toBeTruthy()
+    expect(screen.getByText('after: New text')).toBeTruthy()
+    expect(screen.getByText('before: Old text')).toBeTruthy()
+    expect(screen.getByText('after: Better text')).toBeTruthy()
+    expect(screen.getAllByText('description')).toHaveLength(2)
+  })
+
   it('shows reported entries, and skips the diff when there is nothing to compare', async () => {
     const reported = { ...report, reported_fact: { id: 'f2', entries: [{ text: 'wrong' }] } }
     const bare = { id: 'c5', type: 'template_add', reporter: 'ed', source_version: 0 }

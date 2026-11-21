@@ -377,7 +377,11 @@
     "no-current-tags": "No tags on this deck",
     "field-rename-success": "Field rename suggestion sent",
     "deck-tags-success": "Deck tag suggestion sent",
-    "submit-failed": "Could not send the suggestion"
+    "submit-failed": "Could not send the suggestion",
+    "description_edit": "Deck description",
+    "description-title": "Suggest a description",
+    "current-description": "Current description",
+    "suggested-description": "Suggested description"
   },
   "author-contributions": {
     "title": "Contribution inbox",
@@ -408,6 +412,7 @@
       "deck_tag_update": "Deck tag change",
       "template_add": "Card template addition",
       "field_rename": "Field rename",
+      "description_edit": "Description change",
       "report": "Report"
     },
     "accept-proposal": "Accept proposal",
@@ -586,6 +591,7 @@
     "reported": "Reported",
     "fields": "Fields",
     "tags": "Tags",
+    "description": "Description",
     "accepted": "Contribution accepted",
     "updated": "Contribution updated",
     "operation-failed": "Couldn't update the contribution",

@@ -15,6 +15,10 @@ function isStringArray(value: unknown): value is string[] {
 
 export function isPendingContribution(value: unknown): value is PendingDeckContribution {
   if (!isRecord(value) || typeof value.preview !== 'string' || typeof value.savedAt !== 'string') return false
+  if (value.message !== undefined && typeof value.message !== 'string') return false
+  if (value.id === 'description_edit' && value.kind === 'description_edit') {
+    return typeof value.proposedDescription === 'string'
+  }
   if (value.id === 'deck_tags' && value.kind === 'deck_tags') {
     return isStringArray(value.addTags) && isStringArray(value.removeTags)
   }
@@ -27,7 +31,7 @@ export function isPendingContribution(value: unknown): value is PendingDeckContr
 export function isSentContribution(value: unknown): value is SentDeckContribution {
   return isRecord(value)
     && typeof value.id === 'string'
-    && typeof value.kind === 'string' && ['deck_tags', 'field_rename', 'fact_edit', 'fact_add'].includes(value.kind)
+    && typeof value.kind === 'string' && ['deck_tags', 'field_rename', 'description_edit', 'fact_edit', 'fact_add'].includes(value.kind)
     && typeof value.preview === 'string'
     && typeof value.contributionId === 'string'
     && typeof value.sentAt === 'string'

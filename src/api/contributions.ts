@@ -5,6 +5,7 @@ import type {
   GetContributionsDTO,
   SubmitContributionMessageDTO,
   SubmitContributionResponseDTO,
+  SubmitDescriptionContributionDTO,
   SubmitFactEditContributionDTO,
   SubmitFieldRenameContributionDTO,
   SubmitReportContributionDTO,
@@ -64,6 +65,14 @@ export function submitDeckTagContribution(importDeckId: string, data: SubmitTagC
 /** 提交字段重命名贡献 */
 export function submitFieldRenameContribution(importDeckId: string, data: SubmitFieldRenameContributionDTO) {
   return request<SubmitContributionResponseDTO>(`/api/decks/${importDeckId}/contributions/fields/rename`, {
+    method: 'POST',
+    body: JSON.stringify(data),
+  })
+}
+
+/** 提交卡组简介建议贡献 */
+export function submitDescriptionContribution(importDeckId: string, data: SubmitDescriptionContributionDTO) {
+  return request<SubmitContributionResponseDTO>(`/api/decks/${importDeckId}/contributions/description`, {
     method: 'POST',
     body: JSON.stringify(data),
   })

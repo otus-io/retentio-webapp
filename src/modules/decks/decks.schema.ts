@@ -22,6 +22,10 @@ export interface Deck {
    */
   fields: string[];
   /**
+   * 卡组简介（导入卡组为作者的简介）
+   */
+  description?: string;
+  /**
    * 评分
    */
   rate: number;
