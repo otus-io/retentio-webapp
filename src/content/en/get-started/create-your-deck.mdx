@@ -1,6 +1,6 @@
 ---
 title: Create Your Deck
-description: Create a deck, define fields and tags, add facts, and generate cards for review.
+description: Create a deck, add facts, publish it to Discover, and improve it with friends.
 ---
 
 # Create Your Deck
@@ -20,6 +20,10 @@ Choose how many **new cards** to introduce per day (`cards per day`). That sets 
 ### Deck name
 
 The deck name identifies the deck in your library. Enter it in the create sheet.
+
+### Description
+
+**Description** is required. People read it on the deck in **Discover**. It can be up to **500** characters. On an imported deck the description follows the author and cannot be edited.
 
 ### Tags
 
@@ -56,9 +60,86 @@ Back: `こんにちは`
 
 One fact can also produce **sibling** cards — for example English→Japanese and Japanese→English. See [Cards](/guide/key-concepts/cards).
 
-## Publish to Discover
+## Publish your deck
 
-When the deck is ready for others, use **Publish Deck**. Published decks appear in **Discover** so other learners can import them. Republish with **Publish updates** when you make real changes. See [Import an existing deck](/guide/get-started/import-an-existing-deck) for how sharing and sync work for importers.
+Publishing shares a **snapshot** of the deck, not a live link to your working copy. You can keep editing after you publish. Friends only see those edits after you publish again.
+
+```
+Your working deck  →  Publish Deck  →  public snapshot v1
+                                            ↓
+                          a friend imports  →  their study copy (pinned to v1)
+```
+
+Publishing, and sending a correction to someone else, needs a [verified email](/guide/get-started/login-registration#email-verification).
+
+### First publish
+
+When the deck is ready for other people:
+
+1. Open the deck **⋯** menu, or open the deck’s detail page.
+2. Choose **Publish Deck**.
+
+The deck then appears in **Discover** as **Public**, at version **v1**.
+
+That first publish stays in effect:
+
+- The deck remains public. You cannot make it private again.
+- You cannot delete a published deck.
+
+Each friend who imports it gets their own cards, due dates, and progress. They do not see your review history, and they do not edit your working copy directly.
+
+### Publish an update
+
+Changes you make after publishing stay on your working copy until you publish them.
+
+1. Edit facts, media, tags, or the deck itself as usual.
+2. Open **Update Published Version** from the deck **⋯** menu. When something is unpublished, the share icon on the deck card opens the same sheet.
+3. Read the preview: facts added, edited, or removed, plus media, tag, and template changes.
+4. Publish. That creates the next snapshot (`v2`, `v3`, and so on).
+
+If nothing changed since the last version, there is nothing new to publish. An imported copy stays on the version that person already has until they choose to update.
+
+## Work on a deck with friends
+
+Friends do not share one live deck. They import your published snapshot, study on their own copy, and send **contributions** when a correction or a new fact should go into the source. You choose what to keep, then publish an update so everyone else can receive it.
+
+### Correct or add something
+
+On the imported deck:
+
+- **Edit Fact** (card **⋯**) — fix an entry, example, or media. Saving updates their copy and sends the correction to you.
+- **Add fact** (deck **⋯**) — propose a new fact the same way.
+- **Report issue** (card **⋯**) — flag audio, content, or something else. This is sent immediately and does not change the fact.
+
+Changing **tags** on an imported deck is sent the same way: deck tags from **Edit Deck**, fact tags together with **Edit Fact**.
+
+If a send cannot go through, the change waits in **Unsent contributions** (deck **⋯**). That sheet has **Pending** and **Sent**, an optional note, **Send selected**, **Dismiss selected**, and **Clear all**.
+
+Ratings, hidden cards, and due dates stay on their copy. Those are never sent.
+
+### Review what friends sent
+
+On your published deck, open **Contributions** from the deck **⋯** menu. When something is waiting, the inbox icon on the deck card opens the same list. Each item shows the change: before and after for an edit, or the proposed fact, fields, or tags.
+
+| Action         | What it does                                                                          |
+| -------------- | ------------------------------------------------------------------------------------- |
+| **Accept**     | Writes the suggestion into your working copy                                          |
+| **Dismiss**    | Drops it                                                                              |
+| **Resolve**    | Closes it without applying the change. Use this for a report you have already handled |
+| **Accept all** | Accepts every open suggestion. Reports are skipped                                    |
+
+Accepting does not update Discover. When you want importers to receive those changes, publish again with **Update Published Version**.
+
+### Take the new version
+
+An import stays on its current version until that person updates. See also [Import an existing deck](/guide/get-started/import-an-existing-deck).
+
+1. Open **Check updates** from the deck **⋯** menu, or the refresh icon on the deck card.
+2. Review added, edited, and removed facts.
+3. For a fact they also changed locally, choose **Accept** (take the published wording) or **Reject** (keep theirs).
+4. Tap **Sync now**.
+
+After sync, removed facts drop out and new facts get new cards. Review history stays for cards whose fact did not change.
 
 ## What’s next
 

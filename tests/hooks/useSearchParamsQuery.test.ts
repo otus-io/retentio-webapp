@@ -44,7 +44,7 @@ describe('useSearchParamsQuery', () => {
     const { result } = renderHook(() => useSearchParamsQuery([]))
 
     result.current.setParam('page', '2')
-    expect(replaceMock).toHaveBeenCalledWith('/test?page=2')
+    expect(replaceMock).toHaveBeenCalledWith('/test?page=2', { scroll: true })
   })
 
   it('setParam 值为空时删除参数', () => {
@@ -52,7 +52,7 @@ describe('useSearchParamsQuery', () => {
     const { result } = renderHook(() => useSearchParamsQuery([]))
 
     result.current.setParam('page', '')
-    expect(replaceMock).toHaveBeenCalledWith('/test?')
+    expect(replaceMock).toHaveBeenCalledWith('/test?', { scroll: true })
   })
 
   it('setParams 批量设置多个参数', () => {
@@ -60,7 +60,7 @@ describe('useSearchParamsQuery', () => {
     const { result } = renderHook(() => useSearchParamsQuery([]))
 
     result.current.setParams({ page: '1', size: '20' })
-    expect(replaceMock).toHaveBeenCalledWith('/test?page=1&size=20')
+    expect(replaceMock).toHaveBeenCalledWith('/test?page=1&size=20', { scroll: true })
   })
 
   it('setParamDebounced 防抖设置参数', () => {
@@ -68,7 +68,7 @@ describe('useSearchParamsQuery', () => {
     const { result } = renderHook(() => useSearchParamsQuery([], 500))
 
     result.current.setParamDebounced('q', 'test')
-    expect(replaceMock).toHaveBeenCalledWith('/test?q=test')
+    expect(replaceMock).toHaveBeenCalledWith('/test?q=test', { scroll: true })
   })
 
   it('setParamsDebounced 函数存在', () => {
@@ -110,7 +110,7 @@ describe('useSearchParamsQuery', () => {
     const { result } = renderHook(() => useSearchParamsQuery([]))
 
     result.current.setParams({ page: '2', drop: '', gone: undefined })
-    expect(replaceMock).toHaveBeenCalledWith('/test?keep=1&page=2')
+    expect(replaceMock).toHaveBeenCalledWith('/test?keep=1&page=2', { scroll: true })
   })
 
   it('setParamsDebounced 写入、删除参数，空更新不导航', () => {
@@ -119,10 +119,17 @@ describe('useSearchParamsQuery', () => {
     const { result } = renderHook(() => useSearchParamsQuery([]))
 
     result.current.setParamsDebounced({ q: 'new', page: '', extra: undefined })
-    expect(replaceMock).toHaveBeenCalledWith('/test?q=new')
+    expect(replaceMock).toHaveBeenCalledWith('/test?q=new', { scroll: true })
 
     replaceMock.mockClear()
     result.current.setParamsDebounced({})
     expect(replaceMock).not.toHaveBeenCalled()
+  })
+
+  it('keeps the scroll position when asked', () => {
+    useSearchParams.mockReturnValue(new URLSearchParams(''))
+    const { result } = renderHook(() => useSearchParamsQuery(['page'], undefined, { scroll: false }))
+    result.current.setParam('page', '2')
+    expect(replaceMock).toHaveBeenLastCalledWith('/test?page=2', { scroll: false })
   })
 })

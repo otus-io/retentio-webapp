@@ -6,7 +6,6 @@ import z from 'zod'
 import { LOGIN_PATH } from '@/config'
 import { formDataToObject } from '@/utils/format'
 import {
-  EMAIL_IN_USE_MESSAGE,
   EMAIL_INVALID,
   PASSWORD_REQUIRED,
   PASSWORD_SPACES,
@@ -18,6 +17,7 @@ import {
   USERNAME_LENGTH,
   USERNAME_SPACES,
   changeEmailSchema,
+  deleteAccountSchema,
   forgotPasswordSchema,
   loginSchema,
   registerSchema,
@@ -26,6 +26,7 @@ import {
 } from './auth.schema'
 import {
   changeEmailService,
+  deleteAccountService,
   forgotPasswordService,
   loginService,
   registerService,
@@ -105,15 +106,13 @@ export const registerAction: ActionFunction = async (_, formData) => {
   const safeData = authFormSafeData(result.data)
   const res = await registerService(result.data)
   if (!res.success) {
-    const emailInUse = res.status === 409 && res.message === EMAIL_IN_USE_MESSAGE
     return {
-      error: emailInUse ? (await getTranslations('auth'))('emailInUseHint') : res.message,
+      error: res.message,
       data: safeData,
       success: false,
     }
   }
-  revalidatePath('/')
-  redirect(result.data.redirect || '/')
+  return { data: safeData, success: true }
 }
 
 export const forgotPasswordAction: ActionFunction = async (_, formData) => {
@@ -160,6 +159,12 @@ export const resetPasswordAction: ActionFunction = async (_, formData) => {
   redirect(LOGIN_PATH)
 }
 
+/** Verify-email 409s: another account claimed the username or email before the link was opened. */
+const VERIFY_CONFLICT_KEYS: Record<string, 'verifyEmailUsernameTaken' | 'verifyEmailAccountExists'> = {
+  'Username already exists; sign up again with another username': 'verifyEmailUsernameTaken',
+  'An account with this email already exists': 'verifyEmailAccountExists',
+}
+
 export async function verifyEmailAction(token: string) {
   const t = await getTranslations('auth')
   const result = verifyEmailSchema.safeParse({ token })
@@ -171,6 +176,10 @@ export async function verifyEmailAction(token: string) {
   }
   const res = await verifyEmailService(result.data)
   if (!res.success) {
+    if (Object.hasOwn(VERIFY_CONFLICT_KEYS, res.message)) {
+      // The backend spends the link on these conflicts, so retrying it cannot succeed.
+      return { error: t(VERIFY_CONFLICT_KEYS[res.message]), linkUsed: true, success: false as const }
+    }
     return {
       error: res.message,
       success: false as const,
@@ -201,8 +210,24 @@ export const changeEmailAction: ActionFunction = async (_, formData) => {
       success: false,
     }
   }
+  // The response keeps the current email until the link mailed to the new address is opened.
   revalidatePath('/', 'layout')
-  return { data: { email: res.data.email }, success: true }
+  return { data: { email: result.data.email }, success: true }
+}
+
+export const deleteAccountAction: ActionFunction = async (_, formData) => {
+  const result = deleteAccountSchema.safeParse(formDataToObject(formData))
+  if (!result.success) {
+    return { validationErrors: await localizeAuthFieldErrors(z.flattenError(result.error).fieldErrors) }
+  }
+  const res = await deleteAccountService(result.data)
+  if (!res.success) {
+    // The session may have been cleared (see deleteAccountService); refresh the header.
+    revalidatePath('/', 'layout')
+    return { error: res.message, success: false }
+  }
+  revalidatePath('/', 'layout')
+  redirect('/')
 }
 
 export async function logoutAction() {

@@ -34,10 +34,12 @@ interface UseSearchParamsQueryReturn {
  * 搜索参数查询Hook
  * @param paramsConfig 参数配置数组（仅用于类型推导，运行时不需要）
  * @param debounceDelay 防抖延迟时间（毫秒），默认为300ms
+ * @param options.scroll 更新参数后是否滚动到页面顶部，默认 true
  */
 export default function useSearchParamsQuery<Config extends ParamConfig[]>(
   paramsConfig: Config,
   debounceDelay: number = 300,
+  { scroll = true }: { scroll?: boolean } = {},
 ): UseSearchParamsQueryReturn {
   void paramsConfig
 
@@ -68,9 +70,9 @@ export default function useSearchParamsQuery<Config extends ParamConfig[]>(
     // startTransition 放在防抖回调内部：等待防抖的 300ms 不计入 pending，
     // 只有真正触发导航后 isPending 才为 true
     startTransition(() => {
-      router.replace(`${pathname}?${params.toString()}`)
+      router.replace(`${pathname}?${params.toString()}`, { scroll })
     })
-  }, [searchParams, pathname, router])
+  }, [searchParams, pathname, router, scroll])
 
   const debouncedApplyUpdates = useDebouncedCallback(
     applyPendingUpdates,
@@ -112,9 +114,9 @@ export default function useSearchParamsQuery<Config extends ParamConfig[]>(
     }
 
     startTransition(() => {
-      router.replace(`${pathname}?${params.toString()}`)
+      router.replace(`${pathname}?${params.toString()}`, { scroll })
     })
-  }, [searchParams, pathname, router, getParam])
+  }, [searchParams, pathname, router, getParam, scroll])
 
   const setParamDebounced = useCallback((key: string, value: string | undefined) => {
     const currentValue = getParam(key)
@@ -137,9 +139,9 @@ export default function useSearchParamsQuery<Config extends ParamConfig[]>(
     })
 
     startTransition(() => {
-      router.replace(`${pathname}?${params.toString()}`)
+      router.replace(`${pathname}?${params.toString()}`, { scroll })
     })
-  }, [searchParams, pathname, router])
+  }, [searchParams, pathname, router, scroll])
 
   const setParamsDebounced = useCallback((updates: Record<string, string | undefined>) => {
     Object.entries(updates).forEach(([key, value]) => {

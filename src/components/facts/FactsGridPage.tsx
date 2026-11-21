@@ -4,7 +4,7 @@
 import { AgGridReact } from 'ag-grid-react'
 import type { ColDef, IHeaderParams, IRowNode, SelectionChangedEvent } from 'ag-grid-community'
 import type { Entry, Fact } from '@/modules/facts/facts.schema'
-import { useActionState, useCallback, useMemo, useRef, useState } from 'react'
+import { useActionState, useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import type { Deck } from '@/modules/decks/decks.schema'
 import { ModuleRegistry } from 'ag-grid-community'
 import { AllCommunityModule } from 'ag-grid-community'
@@ -25,6 +25,7 @@ import type { MediaType } from '@/hooks/useFactsCellAttachments'
 import { spliceDeletedFieldFromRow } from '@/components/facts/spliceDeletedFieldFromRow'
 import { actionSymbol, rawSymbol } from '@/components/facts/token'
 import { useTranslations } from 'next-intl'
+import { sendFactEditsAndNotify } from '@/modules/contributions/auto-send'
 import LayoutPage from '@/components/layout/LayoutPage'
 import { createFactsAction, deleteFactsAction } from '@/modules/facts/facts.action'
 import { Button } from '@heroui/react'
@@ -51,6 +52,11 @@ interface FactsGridPageProps {
 
 export default function FactsGridPage({ facts, meta, deck }: FactsGridPageProps) {
   const t = useTranslations()
+  // Read through a ref so the cell-save handler (and the grid's callbacks) stay stable across renders.
+  const tRef = useRef(t)
+  useEffect(() => {
+    tRef.current = t
+  }, [t])
   const { resolvedTheme } = useTheme()
   const [isOpen, setIsOpen] = useState(false)
   const [target, setTarget] = useState<{ factId: string; fieldKey: string; entry: Entry }>()
@@ -166,10 +172,18 @@ export default function FactsGridPage({ facts, meta, deck }: FactsGridPageProps)
       changedNodes.forEach(({ node, entries }) => {
         node.data[rawSymbol].entries = entries
       })
+      // Edits on an imported deck go to the author right away, as on mobile.
+      if (deck.source_deck_id) {
+        await sendFactEditsAndNotify(
+          deck.id,
+          changedNodes.map(({ node, entries }) => ({ factId: node.data.id, entries })),
+          { sent: tRef.current('auto-send.sent'), unsent: tRef.current('auto-send.unsent') },
+        )
+      }
     } finally {
       setLoading(false)
     }
-  }, [deck.id, getEntriesFromData])
+  }, [deck.id, deck.source_deck_id, getEntriesFromData])
 
   const handleDebouncedCellChange = useDebouncedCallback(handleCellChange, 100)
 
@@ -378,15 +392,6 @@ export default function FactsGridPage({ facts, meta, deck }: FactsGridPageProps)
             rowData={rowData}
             columnDefs={columnDefs}
             getRowId={(p) => p.data.id}
-            onCellDoubleClicked={(e) => {
-              if (e.colDef.context?.isActionColumn) return
-              if (!e.column.isCellEditable(e.node)) return
-              if (e.rowIndex == null) return
-              e.api.startEditingCell({
-                rowIndex: e.rowIndex,
-                colKey: e.column.getColId(),
-              })
-            }}
             onCellValueChanged={handleDebouncedCellChange}
             onSelectionChanged={handleSelectionChanged}
             rowSelection={{

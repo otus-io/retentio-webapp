@@ -9,7 +9,9 @@ import {
   VERIFY_EMAIL_PATH,
 } from '@/config'
 
-const nextMock = vi.fn(() => ({ type: 'next' as const }))
+const cookieDeleteMock = vi.fn()
+const nextMock = vi.fn(() => ({ type: 'next' as const, cookies: { delete: cookieDeleteMock } }))
+const profileRequestMock = vi.fn()
 const redirectMock = vi.fn((url: URL) => ({ type: 'redirect' as const, url: url.toString() }))
 
 vi.mock('next/server', () => ({
@@ -26,7 +28,14 @@ vi.mock('@/lib/logger', () => ({
   },
 }))
 
+vi.mock('@/utils/request', async (importOriginal) => ({
+  ...(await importOriginal<Record<string, unknown>>()),
+  createRequest: (getToken: () => Promise<string | null>) =>
+    async (endpoint: string, options?: RequestInit) => profileRequestMock(endpoint, await getToken(), options),
+}))
+
 import { proxy } from '@/proxy'
+import { RequestError } from '@/utils/request'
 
 function makeRequest(pathname: string, token?: string): NextRequest {
   return {
@@ -43,6 +52,9 @@ describe('proxy auth guest paths', () => {
   beforeEach(() => {
     nextMock.mockClear()
     redirectMock.mockClear()
+    cookieDeleteMock.mockClear()
+    profileRequestMock.mockReset()
+    profileRequestMock.mockResolvedValue({ data: {} })
   })
 
   it('allows authenticated users through /reset-password and /verify-email', async () => {
@@ -83,5 +95,28 @@ describe('proxy auth guest paths', () => {
     const url = String(redirectMock.mock.calls[0]![0])
     expect(url).toContain(LOGIN_PATH)
     expect(url).toContain('redirect=%2Fdashboard')
+  })
+
+  it('validates the token against the profile endpoint', async () => {
+    await proxy(makeRequest(LOGIN_PATH, 'jwt'))
+    expect(profileRequestMock).toHaveBeenCalledWith('/api/profile', 'jwt', { signal: expect.any(AbortSignal) })
+  })
+
+  it('clears a rejected token and lets the user reach login', async () => {
+    profileRequestMock.mockRejectedValue(new RequestError('Invalid or expired token', 401))
+    await proxy(makeRequest(LOGIN_PATH, 'stale'))
+    expect(nextMock).toHaveBeenCalledOnce()
+    expect(cookieDeleteMock).toHaveBeenCalledWith(JWT_COOKIE_NAME)
+    expect(redirectMock).not.toHaveBeenCalled()
+  })
+
+  it('keeps the token when the profile check fails for another reason', async () => {
+    for (const err of [new RequestError('boom', 500), new Error('network'), new DOMException('slow', 'TimeoutError')]) {
+      redirectMock.mockClear()
+      profileRequestMock.mockRejectedValue(err)
+      await proxy(makeRequest(LOGIN_PATH, 'jwt'))
+      expect(redirectMock).toHaveBeenCalledOnce()
+      expect(cookieDeleteMock).not.toHaveBeenCalled()
+    }
   })
 })

@@ -66,6 +66,11 @@ vi.mock('lucide-react', () => ({
   Clock: () => <span data-testid="icon-clock" />,
   BookOpen: () => <span data-testid="icon-book-open" />,
   TrendingUp: () => <span data-testid="icon-trending-up" />,
+  GitFork: () => <span data-testid="icon-git-fork" />,
+  GitCommitHorizontal: () => <span data-testid="icon-git-commit" />,
+  GitPullRequest: () => <span data-testid="icon-git-pull-request" />,
+  GitMerge: () => <span data-testid="icon-git-merge" />,
+  RefreshCw: () => <span data-testid="icon-refresh" />,
 }))
 
 import { PLAY_STORE_URL, TESTFLIGHT_JOIN_URL } from '@/config'
@@ -124,6 +129,18 @@ describe('HomePage', () => {
     expect(screen.getByText('home.features.algorithm.title')).toBeDefined()
     expect(screen.getByText('home.features.ui.title')).toBeDefined()
     expect(screen.getByText('home.features.ai.title')).toBeDefined()
+  })
+
+  it('渲染像 Git 一样协作改进卡组的区域', () => {
+    render(<HomePage />)
+    expect(screen.getByText('home.collaborate.sectionTitle')).toBeDefined()
+    expect(screen.getByText('home.collaborate.subtitle')).toBeDefined()
+    for (const [i, key] of ['import', 'correct', 'propose', 'merge', 'sync'].entries()) {
+      expect(screen.getByText(`${i + 1}. home.collaborate.${key}.title`)).toBeDefined()
+      expect(screen.getByText(`home.collaborate.${key}.git`)).toBeDefined()
+      expect(screen.getByText(`home.collaborate.${key}.description`)).toBeDefined()
+    }
+    expect(screen.getByTestId('icon-git-pull-request')).toBeDefined()
   })
 
   it('渲染如何使用区域', () => {

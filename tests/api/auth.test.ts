@@ -8,6 +8,7 @@ vi.mock('@/utils/request', () => ({
 
 import {
   changeEmail,
+  deleteAccount,
   forgotPassword,
   getProfile,
   login,
@@ -91,6 +92,14 @@ describe('auth API clients', () => {
     expect(requestMock).toHaveBeenCalledWith('/api/profile/email', {
       method: 'PATCH',
       body: JSON.stringify({ email: 'new@b.com', password: 'secret123' }),
+    })
+  })
+
+  it('deleteAccount sends the password with DELETE /api/profile', async () => {
+    await deleteAccount({ password: 'secret123' })
+    expect(requestMock).toHaveBeenCalledWith('/api/profile', {
+      method: 'DELETE',
+      body: JSON.stringify({ password: 'secret123' }),
     })
   })
 })

@@ -1,5 +1,6 @@
 {
   "nav": {
+    "my-decks": "マイデッキ",
     "home": "ホーム",
     "dashboard": "ダッシュボード",
     "guide": "ガイド"
@@ -19,7 +20,7 @@
     "hero": {
       "title": "千里の道も一歩から",
       "titleHighlight": "",
-      "subtitle": "デッキの作成と改善のための協働プラットフォーム——新しい SRS スケジューリングアルゴリズム、AI による品質チェック、適応的な復習を搭載。",
+      "subtitle": "デッキを共に作り、改善していく学習アプリ。誤字を直し、修正を貢献し、バージョン管理システムのように各バージョンを公開できます。",
       "cta": "TestFlight に参加",
       "learnMore": "詳しく見る",
       "appPreview": "アプリのプレビュー"
@@ -31,8 +32,8 @@
     "features": {
       "sectionTitle": "Rete を選ぶ理由",
       "community": {
-        "title": "コミュニティデッキ",
-        "description": "デッキを一緒に作成・共有・改善——品質は古くなるのではなく、時間とともに積み上がります。"
+        "title": "デッキを一緒に改善",
+        "description": "誤字や足りない例文を見つけたら、直して作者に送りましょう。採用された修正はすべての学習者に届くので、デッキは古びるどころか良くなっていきます。"
       },
       "algorithm": {
         "title": "新しいアルゴリズム",
@@ -45,6 +46,35 @@
       "ai": {
         "title": "AI による品質チェック",
         "description": "AI がデッキの正確さと明瞭さをレビュー——変更が公開される前に人の確認が入ります。"
+      }
+    },
+    "collaborate": {
+      "sectionTitle": "コードのように改善されるデッキ",
+      "subtitle": "共有デッキはオープンソースのように動きます。各自が自分のコピーで学び、修正を提案し、作者が良いものを次の公開バージョンにマージします。",
+      "import": {
+        "git": "fork",
+        "title": "デッキをインポート",
+        "description": "公開デッキの自分用コピーを作って、すぐに学習を始めましょう。"
+      },
+      "correct": {
+        "git": "commit",
+        "title": "学びながら修正",
+        "description": "間違いを見つけたら、コピー内の項目を編集。変更はすぐ、あなただけに反映されます。"
+      },
+      "propose": {
+        "git": "pull request",
+        "title": "修正を提案",
+        "description": "メモを添えて作者に修正を送れます。1件ずつでも、まとめてでも。"
+      },
+      "merge": {
+        "git": "merge",
+        "title": "作者がレビューして公開",
+        "description": "作者は変更を並べて確認し、承認または却下して、新しいバージョンを公開します。"
+      },
+      "sync": {
+        "git": "pull",
+        "title": "新バージョンを同期",
+        "description": "変更内容を確認し、項目ごとに更新を取り込むか自分の編集を残すかを選べます。"
       }
     },
     "howItWorks": {
@@ -115,6 +145,8 @@
     "due": "要復習 {count}枚"
   },
   "auth": {
+    "deleteAccount": "アカウントを削除",
+    "deleteAccountMessage": "アカウント、非公開のデッキ、学習記録が完全に削除されます。公開済みのデッキは、インポートした人が引き続き利用できますが、あなたの名前は表示されません。確認のためパスワードを入力してください。",
     "loginTitle": "ログイン",
     "registerTitle": "登録",
     "loginDescription": "アカウントにサインイン",
@@ -171,13 +203,17 @@
     "resendVerification": "リンクを再送信",
     "verificationSent": "未確認のアドレスであれば、新しいリンクを送信しました。",
     "changeEmail": "メールアドレスを変更",
-    "changeEmailDescription": "現在のメールアドレス：{email}。新しいアドレスは再度確認が必要です。",
+    "changeEmailDescription": "現在のメールアドレス：{email}。新しいアドレスに確認リンクを送ります。リンクを開くまでメールアドレスは変わりません。",
     "newEmailLabel": "新しいメールアドレス",
     "currentPasswordLabel": "現在のパスワード",
-    "changeEmailSuccess": "メールアドレスを変更しました。{email} に届く確認リンクを開いてください。",
-    "emailInUseHint": "このメールアドレスは登録済みです。ご自身のものであれば、ログイン画面の「パスワードをお忘れですか？」から再設定してください。",
+    "changeEmailSuccess": "{email} に届く確認リンクを開いてください。開くとメールアドレスが変更されます。",
     "emailInvalid": "有効なメールアドレスを入力してください",
-    "passwordRequired": "パスワードを入力してください"
+    "passwordRequired": "パスワードを入力してください",
+    "usernameOrEmailLabel": "ユーザー名またはメールアドレス",
+    "usernameOrEmailPlaceholder": "ユーザー名またはメールアドレスを入力",
+    "registerCheckEmail": "{email} に届くメールで登録を完了してください。メール内のリンクを開くとアカウントが作成されます。",
+    "verifyEmailUsernameTaken": "リンクを開く前に、そのユーザー名は他の人に使われました。別のユーザー名で登録し直してください。",
+    "verifyEmailAccountExists": "このメールアドレスは既にアカウントで使われています。ご自身のものであれば、ログインするか、ログイン画面の「パスワードをお忘れですか？」をご利用ください。"
   },
   "tags": {
     "select-placeholder": "タグを選択",
@@ -185,6 +221,12 @@
     "empty": "タグがありません。右上の + をタップして作成してください。"
   },
   "common": {
+    "edit-deck": "デッキを編集",
+    "deck-options": "デッキのオプション",
+    "deck-details": "デッキ詳細",
+    "total-reviews": "総復習数",
+    "edit-facts": "項目を編集",
+    "retry": "再試行",
     "login": "ログイン",
     "logout": "ログアウト",
     "logout-confirm": "ログアウトしますか？",
@@ -305,6 +347,8 @@
     "sent-empty": "送信済みの提案はありません",
     "field_rename": "フィールド名",
     "deck_tags": "デッキタグ",
+    "fact_edit": "項目編集",
+    "fact_add": "新規項目",
     "submit-selected": "送信（{count}）",
     "batch-submit-success": "{count} 件の提案を送信しました",
     "batch-submit-failed": "{count} 件の送信に失敗し、保留中に残しました",
@@ -373,6 +417,13 @@
     }
   },
   "deck-sharing": {
+    "preview-no-changes": "前回のバージョン以降、未公開の変更はありません。",
+    "preview-has-changes": "未公開の変更",
+    "preview-facts": "項目：追加 {added}、編集 {edited}、削除 {removed}",
+    "preview-media": "メディア：追加 {added}、更新 {edited}、削除 {removed}",
+    "preview-tags": "タグの変更 {count} 件",
+    "preview-templates": "カードテンプレートの変更 {count} 件",
+    "preview-meta": "デッキ名・説明・フィールド・レートが変更されました",
     "description": "コミュニティが公開したデッキを閲覧・インポートして、すぐに学習を始められます。",
     "heading": "共有デッキカタログ",
     "subtitle": "コミュニティが公開したデッキを閲覧し、詳細を確認してインポートできます。",
@@ -427,5 +478,166 @@
     "image": "画像",
     "video": "動画",
     "cancel": "キャンセル"
+  },
+  "study": {
+    "title": "学習",
+    "start": "学習",
+    "all-tags": "すべてのタグ",
+    "tag-filter": "タグ",
+    "todays-due": "今日の要復習",
+    "due-progress": "{cleared}/{target}（{percent}）",
+    "hard": "難しい",
+    "easy": "簡単",
+    "flip-card": "カードをめくる",
+    "caught-up-title": "すべて完了しました！",
+    "caught-up-description": "今は期限のカードがありません。後でもう一度確認するか、項目を追加してください。",
+    "reload": "もう一度確認",
+    "card-options": "カードのオプション",
+    "hide-card": "カードを非表示",
+    "edit-fact": "項目を編集",
+    "edit-fact-load-failed": "この項目を読み込めませんでした",
+    "edit-fact-save-failed": "変更を保存できませんでした",
+    "report-issue": "問題を報告",
+    "delete-card": "カードを削除",
+    "delete-card-confirm": "このカードのみ削除されます。対応する項目とその他のカードはデッキに残ります。",
+    "next-review": "次の復習まで",
+    "next": "次へ",
+    "show-answer": "答えを表示",
+    "report-sent": "問題を報告しました",
+    "report-kind": "問題の種類",
+    "report-kind-audio": "音声",
+    "report-kind-content": "内容",
+    "report-kind-other": "その他",
+    "report-details": "詳細",
+    "report-details-hint": "詳細を追加（任意）",
+    "report-other-hint": "問題を説明してください",
+    "report-details-required": "問題を説明してください"
+  },
+  "statistics": {
+    "title": "統計",
+    "deck-filter": "デッキ",
+    "all-decks": "すべてのデッキ",
+    "range": "期間",
+    "range-days": "{count}日",
+    "no-decks": "デッキを作成すると復習活動の記録が始まります。",
+    "load-failed": "復習統計を読み込めませんでした。",
+    "period-reviews": "期間内の復習",
+    "today-reviews": "今日の復習",
+    "active-days": "学習した日",
+    "daily-average": "1日平均",
+    "daily-activity": "日別の復習",
+    "no-activity": "この期間には復習記録がありません。",
+    "reviews-count": "{count}回の復習",
+    "weekday-distribution": "曜日別の復習",
+    "utc-note": "日付と日の区切りは UTC です。",
+    "partial-load": "一部のデッキを読み込めなかったため、数値が不完全な可能性があります。"
+  },
+  "qa": {
+    "title": "QAモード",
+    "pick-columns": "列を選ぶ",
+    "pick-columns-description": "選んだ列だけがこの QA ウォークに表示されます。選択はこのデッキ用に保存されます。",
+    "start": "QA を開始",
+    "progress": "確認済み {verified} / {total}",
+    "complete-title": "この列の確認は完了です。ありがとうございます。",
+    "change-columns": "列を選ぶ",
+    "share-with-author": "確認結果を作成者と共有",
+    "review-sent": "確認済みの{count}フィールドを作成者に送りました",
+    "position": "{total}件中{current}件目",
+    "verified": "確認済みにする",
+    "prev": "前へ",
+    "skip": "スキップ",
+    "edit": "項目を編集",
+    "verify-next": "確認して次へ",
+    "verify-finish": "確認して完了"
+  },
+  "deck-menu": {
+    "add-fact": "項目を追加",
+    "published": "公開しました！",
+    "publish-failed": "公開できませんでした",
+    "publish-deck": "デッキを公開",
+    "publish-update": "公開バージョンを更新",
+    "contributions-inbox": "貢献受信箱",
+    "pending-outbox": "未送信の貢献",
+    "check-updates": "更新を確認",
+    "load-failed": "読み込めませんでした"
+  },
+  "inbox": {
+    "accept-all-more-open": "まだ未処理の貢献があるかもしれません。今回承認されなかったものは、後で受信箱に表示されます。",
+    "accept": "承認",
+    "dismiss": "却下",
+    "resolve": "解決済みにする",
+    "accept-all": "すべて承認（{count}）",
+    "accept-all-confirm-title": "すべて承認しますか？",
+    "accept-all-confirm-message": "{count}件の貢献を作業コピーに反映しますか？報告はスキップされます。",
+    "accept-all-progress": "承認中 {done}/{total}…",
+    "accept-all-success": "{count, plural, =1 {1件の貢献を承認しました} other {#件の貢献を承認しました}}",
+    "accept-all-partial": "{sent}件を承認、{failed}件が失敗",
+    "load-more": "さらに読み込む",
+    "empty": "未処理の貢献はありません",
+    "before": "変更前",
+    "after": "変更後",
+    "proposed": "提案内容",
+    "reported": "報告内容",
+    "fields": "列名",
+    "tags": "タグ",
+    "accepted": "貢献を承認しました",
+    "updated": "貢献の状態を更新しました",
+    "operation-failed": "貢献を更新できませんでした",
+    "load-failed": "貢献を読み込めませんでした",
+    "retry": "再試行",
+    "cancel": "キャンセル"
+  },
+  "updates": {
+    "version": "現在 v{source} → 最新 v{latest}",
+    "counts": "追加 {added}、編集 {edited}、削除 {removed}、メディア変更 {media}",
+    "description-changed": "説明が変更されました",
+    "review-changes": "変更を確認",
+    "hide-review": "レビューを非表示",
+    "edited-section": "編集された項目（{count}）",
+    "removed-section": "削除された項目（{count}）",
+    "added-section": "追加された項目（{count}）",
+    "media-section": "メディア変更（{count}）",
+    "templates-section": "カードテンプレート変更（{count}）",
+    "aligned": "揃っています",
+    "local-overlay": "ローカルオーバーレイ",
+    "before": "更新前",
+    "after": "更新後",
+    "accept": "承認",
+    "keep-local": "拒否",
+    "sync-now": "今すぐ同期",
+    "up-to-date": "最新です",
+    "sync-success": "デッキを同期しました",
+    "sync-failed": "同期できませんでした",
+    "load-failed": "更新を読み込めませんでした",
+    "retry": "再試行"
+  },
+  "outbox": {
+    "hint": "作者に送れるローカル変更と、このブラウザから送信済みの記録です。",
+    "tab-pending": "送信待ち（{count}）",
+    "tab-sent": "送信済み（{count}）",
+    "message-hint": "作者への任意メッセージ",
+    "send-selected": "選択したものを送信",
+    "send-selected-count": "選択したものを送信（{count}）",
+    "dismiss-selected": "選択したものを却下",
+    "clear-all": "すべてクリア",
+    "select-all": "すべて選択（{count}）",
+    "empty": "送信待ちはありません。インポートしたデッキで保存した提案は、送信するまでここに表示されます。",
+    "sent-empty": "このブラウザにはまだ送信済みの記録がありません。",
+    "dismissed": "{count, plural, =1 {1件を却下しました} other {#件を却下しました}}",
+    "cleared": "{count, plural, =1 {送信待ち1件をクリアしました} other {送信待ち#件をクリアしました}}"
+  },
+  "add-fact": {
+    "submit": "項目を保存",
+    "success": "項目を追加しました",
+    "failed": "項目を追加できませんでした",
+    "needs-content": "各フィールドにテキストが必要です。",
+    "mark-verified": "この項目を確認しました（確認済みにする）"
+  },
+  "auto-send": {
+    "fact-added-not-sent": "項目を追加しましたが、作成者に送れませんでした。",
+    "sent": "作成者に送りました",
+    "unsent": "保存しましたが、作成者に送れませんでした。未送信の貢献から再送できます。",
+    "fact-added-sent": "項目を追加し、作成者に送りました",
+    "fact-added-unsent": "項目を追加しましたが、作成者に送れませんでした。未送信の貢献から再送できます。"
   }
 }

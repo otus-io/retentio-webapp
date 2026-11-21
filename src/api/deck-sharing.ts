@@ -7,12 +7,15 @@ import type {
   DeckFeedbackListResponseDTO,
   DeckFeedbackResponseDTO,
   DeckImportUpdatesResponseDTO,
+  DeckUpdateFactResponseDTO,
+  DeckUpdatesSummaryResponseDTO,
   GetDeckCatalogDTO,
   GetDeckFeedbackDTO,
   ImportDeckDTO,
   ImportDeckResponseDTO,
   PublishDeckDTO,
   PublishDeckResponseDTO,
+  PublishPreviewResponseDTO,
   SyncImportedDeckDTO,
   SyncImportedDeckResponseDTO,
   UpdateDeckFeedbackStatusDTO,
@@ -65,6 +68,20 @@ export function getDeckImportUpdates(importId: string) {
 }
 
 /**
+ * 导入卡组是否有更新（只返回 ID 与计数）
+ */
+export function getDeckUpdatesSummary(importId: string) {
+  return request<DeckUpdatesSummaryResponseDTO>(`/api/decks/${importId}/updates?summary=1`)
+}
+
+/**
+ * 导入卡组某条更新词条的详情（更新前后、默认处理）
+ */
+export function getDeckUpdateFact(importId: string, factId: string) {
+  return request<DeckUpdateFactResponseDTO>(`/api/decks/${importId}/updates/facts/${factId}`)
+}
+
+/**
  * 同步导入卡组到最新（或指定）发布版本
  */
 export function syncImportedDeck(importId: string, data?: SyncImportedDeckDTO) {
@@ -114,4 +131,11 @@ export function acceptDeckFeedback(sourceDeckId: string, feedbackId: string) {
   return request<DeckFeedbackResponseDTO>(`/api/decks/${sourceDeckId}/feedback/${feedbackId}/accept`, {
     method: 'POST',
   })
+}
+
+/**
+ * 作者源卡组：工作副本与最近发布快照的差异（计数）
+ */
+export function getPublishPreview(deckId: string) {
+  return request<PublishPreviewResponseDTO>(`/api/decks/${deckId}/publish-preview`)
 }

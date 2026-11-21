@@ -200,6 +200,13 @@ export type PendingDeckContribution = {
   preview: string
   proposedFields: string[]
   savedAt: string
+} | {
+  /** 导入卡组中编辑或新增的词条（同移动端：保存后立即发送，失败则留待重试） */
+  id: `fact_edit:${string}` | `fact_add:${string}`
+  kind: 'fact_edit' | 'fact_add'
+  factId: string
+  preview: string
+  savedAt: string
 }
 
 /** 已发送的本地贡献记录 */
@@ -215,6 +222,8 @@ export interface SentDeckContribution {
 export interface SubmitDeckContributionsBatchDTO {
   importDeckId: string
   contributions: PendingDeckContribution[]
+  /** 随本批发送给作者的可选留言 */
+  message?: string
 }
 
 /** 批量提交卡组贡献的结果 */

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { formatErrorMessage, formDataToObject, urlSearchParamsToObject } from '@/utils/format'
+import { formatErrorMessage, formatPercent, formDataToObject, urlSearchParamsToObject } from '@/utils/format'
 
 describe('urlSearchParamsToObject', () => {
   it('将单值参数转为字符串', () => {
@@ -96,5 +96,14 @@ describe('formDataToObject', () => {
     fd.append('role', 'user')
     fd.append('role', 'guest')
     expect(formDataToObject(fd)).toEqual({ role: ['admin', 'user', 'guest'] })
+  })
+})
+
+describe('formatPercent', () => {
+  it('rounds like the mobile app', () => {
+    expect(formatPercent(0)).toBe('0%')
+    expect(formatPercent(0.25)).toBe('0.25%')
+    expect(formatPercent(33.333)).toBe('33%')
+    expect(formatPercent(100)).toBe('100%')
   })
 })

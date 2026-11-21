@@ -16,6 +16,7 @@ import type {
 } from '@/modules/contributions/contributions.schema'
 import {
   acceptContributionService,
+  getContributionsService,
   submitDeckContributionsBatchService,
   submitDeckTagContributionService,
   submitFactAddContributionService,
@@ -48,8 +49,8 @@ interface ContributionMutationPayload<Data> {
 export const submitDeckContributionsBatchAction: ActionFunctionPayload<
   SubmitDeckContributionsBatchDTO,
   SubmitDeckContributionsBatchResult
-> = async ({ importDeckId, contributions }) => {
-  const response = await submitDeckContributionsBatchService(importDeckId, contributions)
+> = async ({ importDeckId, contributions, message }) => {
+  const response = await submitDeckContributionsBatchService(importDeckId, contributions, message?.trim() || undefined)
   return response.success ? { success: true, data: response.data } : { success: false, error: response.message }
 }
 
@@ -140,4 +141,15 @@ export const acceptContributionAction: ActionFunctionPayload<
   revalidatePath(`/decks/${sourceDeckId}/facts`)
   revalidatePath('/decks')
   return { success: true, data: response.data }
+}
+
+/** 作者收件箱：一页待处理贡献（卡组菜单的贡献弹窗，同移动端每页 50 条） */
+export async function getOpenContributionsAction(
+  sourceDeckId: string,
+  offset = 0,
+): Promise<ActionState<{ contributions: Contribution[], hasMore: boolean }>> {
+  const res = await getContributionsService(sourceDeckId, { status: 'open', limit: 50, offset })
+  return res.success
+    ? { success: true, data: { contributions: res.data.contributions, hasMore: res.meta.has_more } }
+    : { success: false, error: res.message }
 }

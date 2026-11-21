@@ -4,15 +4,18 @@ import type { DeckCatalogItem } from '@/modules/deck-sharing/deck-sharing.schema
 import { useTranslations } from 'next-intl'
 import { SearchField } from '@heroui/react'
 import type { KeyboardEvent } from 'react'
-import { useCallback, useState } from 'react'
+import { Suspense, useCallback, useState } from 'react'
 import SharedDecksCard from '@/components/decks/SharedDecksCard'
 import AppButton from '@/components/app/AppButton'
 import { useRouter } from 'next/navigation'
+import TablePagination from '@/components/common/TablePagination'
 
 export default function SharedDecksHome({
   data,
+  totalPages = 1,
 }: {
   data: DeckCatalogItem[]
+  totalPages?: number
 }) {
   const t = useTranslations()
   const [keywords, setKeywords] = useState('')
@@ -72,6 +75,13 @@ export default function SharedDecksHome({
           ))
         }
       </div>
+      {/* Stay on the catalog when changing pages instead of jumping to the top of the home page. Its own Suspense
+          boundary keeps the URL-reading pagination from re-rendering the whole catalog in the browser. */}
+      {totalPages > 1 && (
+        <Suspense fallback={null}>
+          <TablePagination className="mt-4" totalPages={totalPages} scroll={false} />
+        </Suspense>
+      )}
     </div>
   )
 }

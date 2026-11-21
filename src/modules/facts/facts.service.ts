@@ -1,4 +1,5 @@
 import * as factsApi from '@/api/facts'
+import * as qualityApi from '@/api/quality'
 import { ServiceResponse } from '@/lib/response'
 import type { CreateFactsDTO, UpdateFactDTO } from '@/modules/facts/facts.schema'
 
@@ -10,6 +11,17 @@ export async function getFactsPageService(deckId: string, params?: { limit?: num
     return ServiceResponse.success(await factsApi.getFactsPage(deckId, params))
   } catch (e) {
     return ServiceResponse.error('getFactsPageService failed', e)
+  }
+}
+
+/**
+ * 卡组全部词条 ID（导入卡组新增词条后，用前后差集找出新词条）
+ */
+export async function getFactIdsService(deckId: string) {
+  try {
+    return ServiceResponse.success(await qualityApi.getFactIds(deckId))
+  } catch (e) {
+    return ServiceResponse.error('getFactIdsService failed', e)
   }
 }
 

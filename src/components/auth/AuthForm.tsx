@@ -63,110 +63,125 @@ export default function AuthForm({ type }: { type: 'login' | 'register' }) {
         <Card>
           <Card.Header>
             <Card.Title>{isLogin ? t('loginTitle') : t('registerTitle')}</Card.Title>
-            <Card.Description>{isLogin ? t('loginDescription') : t('registerDescription')}</Card.Description>
+            {!(!isLogin && state?.success) && (
+              <Card.Description>{isLogin ? t('loginDescription') : t('registerDescription')}</Card.Description>
+            )}
           </Card.Header>
-          <Form
-            action={action}
-            onSubmit={handleSubmit}
-            validationErrors={state?.validationErrors}
-          >
-            <Card.Content>
-              <div className="w-full justify-center items-center space-y-4">
-                <AppInput
-                  label={t('usernameLabel')}
-                  name="username"
-                  isRequired
-                  placeholder={t('usernamePlaceholder')}
-                  variant="secondary"
-                  minLength={isLogin ? undefined : USERNAME_MIN}
-                  maxLength={isLogin ? undefined : USERNAME_MAX}
-                  defaultValue={state?.data?.username}
-                />
-
-                {
-                  !isLogin && (
-                    <AppInput
-                      label={t('emailLabel')}
-                      name="email"
-                      type="email"
-                      isRequired
-                      placeholder={t('emailPlaceholder')}
-                      variant="secondary"
-                      defaultValue={state?.data?.email}
-                    />
-                  )
-                }
-                <AppPasswordInput
-                  isRequired
-                  label={t('passwordLabel')}
-                  name="password"
-                  variant="secondary"
-                  placeholder={t('passwordPlaceholder')}
-                  minLength={isLogin ? undefined : PASSWORD_MIN}
-                  maxLength={isLogin ? undefined : PASSWORD_MAX}
-                />
-
-                {
-                  isLogin && (
-                    <p className="text-sm text-end">
-                      <AppLink className="text-sm" isActive href={FORGOT_PASSWORD_PATH}>
-                        {t('forgotPassword')}
-                      </AppLink>
-                    </p>
-                  )
-                }
-
-                {
-                  !isLogin && (
-                    <AppPasswordInput
-                      isRequired
-                      label={t('confirmPasswordLabel')}
-                      name="confirmPassword"
-                      variant="secondary"
-                      placeholder={t('confirmPasswordPlaceholder')}
-                    />
-                  )
-                }
-                <input
-                  name="redirect"
-                  type="hidden"
-                  value={redirectPath}
-                />
-              </div>
-            </Card.Content>
-            <Card.Footer>
-              <div className="flex flex-col gap-4 w-full">
-                {
-                  !isLogin && (
-                    <TermsAgreement
-                      defaultSelected={isTermsAccepted}
-                      onChange={setIsTermsAccepted}
-                    />
-                  )
-                }
-                <div className="flex gap-4">
-                  <AppButton
-                    isPending={isPending}
-                    className="w-full"
-                    type="submit"
-                    size="lg"
-                  >
-                    {isLogin ? t('loginButton') : t('registerButton')}
-                  </AppButton>
-                </div>
-                <p className="text-sm text-center text-default-500">
-                  {t('noAccount')}
-                  <AppLink
-                    className="ml-1 text-sm"
-                    isActive
-                    href={authUrl}
-                  >
-                    {isLogin ? t('goRegister') : t('goLogin')}
+          {!isLogin && state?.success
+            ? (
+              <Card.Content>
+                <p className="text-sm text-default-500">{t('registerCheckEmail', { email: state.data?.email })}</p>
+                <p className="text-sm text-center text-default-500 mt-4">
+                  <AppLink className="text-sm" isActive href={authUrl}>
+                    {t('goLogin')}
                   </AppLink>
                 </p>
-              </div>
-            </Card.Footer>
-          </Form>
+              </Card.Content>
+            )
+            : (
+              <Form
+                action={action}
+                onSubmit={handleSubmit}
+                validationErrors={state?.validationErrors}
+              >
+                <Card.Content>
+                  <div className="w-full justify-center items-center space-y-4">
+                    <AppInput
+                      label={isLogin ? t('usernameOrEmailLabel') : t('usernameLabel')}
+                      name="username"
+                      isRequired
+                      placeholder={isLogin ? t('usernameOrEmailPlaceholder') : t('usernamePlaceholder')}
+                      variant="secondary"
+                      minLength={isLogin ? undefined : USERNAME_MIN}
+                      maxLength={isLogin ? undefined : USERNAME_MAX}
+                      defaultValue={state?.data?.username}
+                    />
+
+                    {
+                      !isLogin && (
+                        <AppInput
+                          label={t('emailLabel')}
+                          name="email"
+                          type="email"
+                          isRequired
+                          placeholder={t('emailPlaceholder')}
+                          variant="secondary"
+                          defaultValue={state?.data?.email}
+                        />
+                      )
+                    }
+                    <AppPasswordInput
+                      isRequired
+                      label={t('passwordLabel')}
+                      name="password"
+                      variant="secondary"
+                      placeholder={t('passwordPlaceholder')}
+                      minLength={isLogin ? undefined : PASSWORD_MIN}
+                      maxLength={isLogin ? undefined : PASSWORD_MAX}
+                    />
+
+                    {
+                      isLogin && (
+                        <p className="text-sm text-end">
+                          <AppLink className="text-sm" isActive href={FORGOT_PASSWORD_PATH}>
+                            {t('forgotPassword')}
+                          </AppLink>
+                        </p>
+                      )
+                    }
+
+                    {
+                      !isLogin && (
+                        <AppPasswordInput
+                          isRequired
+                          label={t('confirmPasswordLabel')}
+                          name="confirmPassword"
+                          variant="secondary"
+                          placeholder={t('confirmPasswordPlaceholder')}
+                        />
+                      )
+                    }
+                    <input
+                      name="redirect"
+                      type="hidden"
+                      value={redirectPath}
+                    />
+                  </div>
+                </Card.Content>
+                <Card.Footer>
+                  <div className="flex flex-col gap-4 w-full">
+                    {
+                      !isLogin && (
+                        <TermsAgreement
+                          defaultSelected={isTermsAccepted}
+                          onChange={setIsTermsAccepted}
+                        />
+                      )
+                    }
+                    <div className="flex gap-4">
+                      <AppButton
+                        isPending={isPending}
+                        className="w-full"
+                        type="submit"
+                        size="lg"
+                      >
+                        {isLogin ? t('loginButton') : t('registerButton')}
+                      </AppButton>
+                    </div>
+                    <p className="text-sm text-center text-default-500">
+                      {t('noAccount')}
+                      <AppLink
+                        className="ml-1 text-sm"
+                        isActive
+                        href={authUrl}
+                      >
+                        {isLogin ? t('goRegister') : t('goLogin')}
+                      </AppLink>
+                    </p>
+                  </div>
+                </Card.Footer>
+              </Form>
+            )}
         </Card>
         <AppError error={state?.error} />
       </div>

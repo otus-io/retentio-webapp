@@ -1,5 +1,6 @@
 {
   "nav": {
+    "my-decks": "我的卡组",
     "home": "首页",
     "dashboard": "控制台",
     "guide": "指南"
@@ -19,7 +20,7 @@
     "hero": {
       "title": "日积跬步，以至千里",
       "titleHighlight": "",
-      "subtitle": "面向卡组共建与改进的协作平台——依托创新 SRS 调度算法、AI 辅助质量审校与自适应复习。",
+      "subtitle": "一款用于共同构建、持续改进卡组的学习应用——修正错别字、提交贡献，并像版本控制系统一样发布每个版本。",
       "cta": "加入 TestFlight 测试",
       "learnMore": "了解更多",
       "appPreview": "应用预览"
@@ -31,8 +32,8 @@
     "features": {
       "sectionTitle": "为什么选择 Rete",
       "community": {
-        "title": "协作卡组",
-        "description": "共同创建、分享与改进卡组——质量随时间累积，而不是逐渐陈旧。"
+        "title": "共同改进卡组",
+        "description": "发现错别字或缺少例句？修改后发回给作者。每一次被采纳的修正都会惠及所有学习者，卡组越用越好，而不是逐渐过时。"
       },
       "algorithm": {
         "title": "创新算法",
@@ -45,6 +46,35 @@
       "ai": {
         "title": "AI 辅助审校",
         "description": "AI 审查卡组的质量与准确性，所有建议修改均经人工审核后才会生效。"
+      }
+    },
+    "collaborate": {
+      "sectionTitle": "像代码一样持续改进的卡组",
+      "subtitle": "共享卡组就像开源项目：每个人学习自己的副本、提出修正，作者把好的修改合并进下一个发布版本。",
+      "import": {
+        "git": "fork",
+        "title": "导入卡组",
+        "description": "获得任意公开卡组的个人副本，立即开始学习。"
+      },
+      "correct": {
+        "git": "commit",
+        "title": "边学边改",
+        "description": "发现错误？直接在你的副本中修改词条，立即生效，只影响你自己。"
+      },
+      "propose": {
+        "git": "pull request",
+        "title": "提交修正",
+        "description": "附上留言，把修正发给作者——可以逐条发送，也可以批量发送。"
+      },
+      "merge": {
+        "git": "merge",
+        "title": "作者审阅并发布",
+        "description": "作者逐条对比查看修改，接受或忽略，然后发布新版本。"
+      },
+      "sync": {
+        "git": "pull",
+        "title": "同步新版本",
+        "description": "查看变更内容，逐条选择采用更新还是保留你自己的修改。"
       }
     },
     "howItWorks": {
@@ -115,6 +145,8 @@
     "due": "{count} 待复习"
   },
   "auth": {
+    "deleteAccount": "删除账号",
+    "deleteAccountMessage": "这将永久删除你的账号、私有卡组和学习记录。已发布的卡组仍可供已导入的用户使用，但不再显示你的名字。请输入密码确认。",
     "loginTitle": "登录",
     "registerTitle": "注册",
     "loginDescription": "登录你的账号",
@@ -171,13 +203,17 @@
     "resendVerification": "重新发送链接",
     "verificationSent": "如果该邮箱尚未验证，新的链接已发送。",
     "changeEmail": "修改邮箱",
-    "changeEmailDescription": "当前邮箱：{email}。新邮箱需要重新验证。",
+    "changeEmailDescription": "当前邮箱：{email}。我们会向新邮箱发送确认链接，打开链接前邮箱保持不变。",
     "newEmailLabel": "新邮箱",
     "currentPasswordLabel": "当前密码",
-    "changeEmailSuccess": "邮箱已修改，请查收发送到 {email} 的验证链接。",
-    "emailInUseHint": "该邮箱已被注册。如果是你的邮箱，请在登录页使用“忘记密码？”找回账号。",
+    "changeEmailSuccess": "请查收发送到 {email} 的确认链接，打开后邮箱才会更改。",
     "emailInvalid": "请输入有效的邮箱地址",
-    "passwordRequired": "请输入密码"
+    "passwordRequired": "请输入密码",
+    "usernameOrEmailLabel": "用户名或邮箱",
+    "usernameOrEmailPlaceholder": "请输入用户名或邮箱",
+    "registerCheckEmail": "请查收发送到 {email} 的邮件完成注册。打开邮件中的链接后才会创建账号。",
+    "verifyEmailUsernameTaken": "在你打开链接前，该用户名已被他人使用。请换一个用户名重新注册。",
+    "verifyEmailAccountExists": "该邮箱已被某个账号使用。如果是你的账号，请直接登录，或在登录页使用“忘记密码？”。"
   },
   "tags": {
     "select-placeholder": "选择标签",
@@ -185,6 +221,12 @@
     "empty": "暂无标签，点击右上角 + 新建标签。"
   },
   "common": {
+    "edit-deck": "编辑卡组",
+    "deck-options": "卡组选项",
+    "deck-details": "卡组详情",
+    "total-reviews": "累计复习",
+    "edit-facts": "编辑词条",
+    "retry": "重试",
     "login": "登录",
     "logout": "退出登录",
     "logout-confirm": "确定退出登录吗?",
@@ -311,6 +353,8 @@
     "sent-empty": "暂无已发送建议",
     "field_rename": "字段重命名",
     "deck_tags": "卡组标签",
+    "fact_edit": "词条修改",
+    "fact_add": "新增词条",
     "submit-selected": "提交（{count}）",
     "batch-submit-success": "已发送 {count} 条建议",
     "batch-submit-failed": "{count} 条建议发送失败，已保留在待发送列表",
@@ -379,6 +423,13 @@
     }
   },
   "deck-sharing": {
+    "preview-no-changes": "自上个版本以来没有未发布的更改。",
+    "preview-has-changes": "未发布的更改",
+    "preview-facts": "词条：新增 {added}，修改 {edited}，删除 {removed}",
+    "preview-media": "媒体：新增 {added}，更新 {edited}，删除 {removed}",
+    "preview-tags": "{count} 处标签更改",
+    "preview-templates": "{count} 处卡片模板更改",
+    "preview-meta": "卡组名称、描述、字段或评分已更改",
     "description": "浏览并导入社区发布的公开卡组，快速开始你的学习。",
     "heading": "共享卡组目录",
     "subtitle": "浏览社区发布的卡组，打开卡组查看详情并导入。",
@@ -433,5 +484,166 @@
     "image": "图片",
     "video": "视频",
     "cancel": "取消"
+  },
+  "study": {
+    "title": "学习",
+    "start": "学习",
+    "all-tags": "全部标签",
+    "tag-filter": "标签",
+    "todays-due": "今日待复习",
+    "due-progress": "{cleared}/{target}（{percent}）",
+    "hard": "困难",
+    "easy": "简单",
+    "flip-card": "翻转卡片",
+    "caught-up-title": "全部完成！",
+    "caught-up-description": "当前没有到期的卡片。稍后再来，或添加更多词条。",
+    "reload": "重新检查",
+    "card-options": "卡片选项",
+    "hide-card": "隐藏卡片",
+    "edit-fact": "编辑词条",
+    "edit-fact-load-failed": "无法加载该词条",
+    "edit-fact-save-failed": "保存失败",
+    "report-issue": "报告问题",
+    "delete-card": "删除卡片",
+    "delete-card-confirm": "只会删除这一张卡片；对应的词条及其他卡片仍会保留。",
+    "next-review": "下次复习",
+    "next": "下一张",
+    "show-answer": "显示答案",
+    "report-sent": "问题已报告",
+    "report-kind": "问题类型",
+    "report-kind-audio": "音频",
+    "report-kind-content": "内容",
+    "report-kind-other": "其他",
+    "report-details": "说明",
+    "report-details-hint": "补充说明（可选）",
+    "report-other-hint": "请描述问题",
+    "report-details-required": "请描述问题"
+  },
+  "statistics": {
+    "title": "统计",
+    "deck-filter": "卡组",
+    "all-decks": "全部卡组",
+    "range": "范围",
+    "range-days": "{count} 天",
+    "no-decks": "创建卡组后即可开始记录复习活动。",
+    "load-failed": "无法加载复习统计。",
+    "period-reviews": "期间复习",
+    "today-reviews": "今日复习",
+    "active-days": "活跃天数",
+    "daily-average": "日均复习",
+    "daily-activity": "每日复习趋势",
+    "no-activity": "该时间段内暂无复习记录。",
+    "reviews-count": "{count} 次复习",
+    "weekday-distribution": "星期分布",
+    "utc-note": "日期和每日边界均以 UTC 计算。",
+    "partial-load": "部分卡组加载失败，以下数据可能不完整。"
+  },
+  "qa": {
+    "title": "QA 模式",
+    "pick-columns": "选择列",
+    "pick-columns-description": "本次 QA 只显示所选列。选择会为本卡组记住。",
+    "start": "开始 QA",
+    "progress": "已校验 {verified} / {total}",
+    "complete-title": "这些栏目已核验完成，谢谢。",
+    "change-columns": "选择列",
+    "share-with-author": "与作者分享核验结果",
+    "review-sent": "已向作者发送 {count} 个已校验字段",
+    "position": "第 {current} / {total} 条",
+    "verified": "已核验",
+    "prev": "上一条",
+    "skip": "跳过",
+    "edit": "编辑词条",
+    "verify-next": "核验并继续",
+    "verify-finish": "核验并完成"
+  },
+  "deck-menu": {
+    "add-fact": "添加词条",
+    "published": "已发布！",
+    "publish-failed": "发布失败",
+    "publish-deck": "发布卡组",
+    "publish-update": "更新已发布版本",
+    "contributions-inbox": "贡献收件箱",
+    "pending-outbox": "未发送贡献",
+    "check-updates": "检查更新",
+    "load-failed": "加载失败"
+  },
+  "inbox": {
+    "accept-all-more-open": "可能仍有更多待处理贡献，未被接受的会在之后显示在收件箱中。",
+    "accept": "接受",
+    "dismiss": "忽略",
+    "resolve": "标为已解决",
+    "accept-all": "全部接受（{count}）",
+    "accept-all-confirm-title": "全部接受？",
+    "accept-all-confirm-message": "将 {count} 条贡献接受进工作副本？报告不会被接受。",
+    "accept-all-progress": "正在接受 {done}/{total}…",
+    "accept-all-success": "{count, plural, =1 {已接受 1 条贡献} other {已接受 # 条贡献}}",
+    "accept-all-partial": "已接受 {sent} 条；{failed} 条失败",
+    "load-more": "加载更多",
+    "empty": "暂无待处理贡献",
+    "before": "修改前",
+    "after": "修改后",
+    "proposed": "提议内容",
+    "reported": "报告内容",
+    "fields": "列名",
+    "tags": "标签",
+    "accepted": "已接受贡献",
+    "updated": "贡献状态已更新",
+    "operation-failed": "贡献更新失败",
+    "load-failed": "无法加载贡献",
+    "retry": "重试",
+    "cancel": "取消"
+  },
+  "updates": {
+    "version": "当前版本 v{source} → 最新版本 v{latest}",
+    "counts": "新增 {added}，修改 {edited}，删除 {removed}，媒体变更 {media}",
+    "description-changed": "描述已更改",
+    "review-changes": "查看变更",
+    "hide-review": "收起变更",
+    "edited-section": "修改词条（{count}）",
+    "removed-section": "删除词条（{count}）",
+    "added-section": "新增词条（{count}）",
+    "media-section": "媒体变更（{count}）",
+    "templates-section": "卡片模板变更（{count}）",
+    "aligned": "已对齐",
+    "local-overlay": "本地 overlay",
+    "before": "更新前",
+    "after": "更新后",
+    "accept": "接受",
+    "keep-local": "拒绝",
+    "sync-now": "立即同步",
+    "up-to-date": "已是最新版本",
+    "sync-success": "卡组已同步",
+    "sync-failed": "同步失败",
+    "load-failed": "无法加载更新",
+    "retry": "重试"
+  },
+  "outbox": {
+    "hint": "可发给作者的本地修改，以及本浏览器已发送记录。",
+    "tab-pending": "待发送（{count}）",
+    "tab-sent": "已发送（{count}）",
+    "message-hint": "给作者的可选留言",
+    "send-selected": "发送所选",
+    "send-selected-count": "发送所选（{count}）",
+    "dismiss-selected": "忽略所选",
+    "clear-all": "清空全部",
+    "select-all": "全选（{count}）",
+    "empty": "暂无待发送项。为导入卡组保存的提议会出现在这里，直到你发送。",
+    "sent-empty": "本浏览器尚无已发送记录。",
+    "dismissed": "{count, plural, =1 {已忽略 1 项} other {已忽略 # 项}}",
+    "cleared": "{count, plural, =1 {已清空 1 项待发送} other {已清空 # 项待发送}}"
+  },
+  "add-fact": {
+    "submit": "保存词条",
+    "success": "已添加词条",
+    "failed": "无法添加词条",
+    "needs-content": "每个字段都需要填写文本。",
+    "mark-verified": "我已检查此词条（标记为已核验）"
+  },
+  "auto-send": {
+    "fact-added-not-sent": "词条已添加，但未能发送给作者。",
+    "sent": "已发送给作者",
+    "unsent": "已保存，但暂未发送给作者，可在未发送贡献中重试。",
+    "fact-added-sent": "词条已添加并发送给作者",
+    "fact-added-unsent": "词条已添加，但暂未发送给作者，可在未发送贡献中重试。"
   }
 }

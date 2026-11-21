@@ -1,6 +1,7 @@
 import * as authApi from '@/api/auth'
 import type {
   ChangeEmailDTO,
+  DeleteAccountDTO,
   ForgotPasswordDTO,
   LoginDTO,
   RegisterDTO,
@@ -9,6 +10,7 @@ import type {
 } from './auth.schema'
 import { getToken, setToken, removeToken } from '@/lib/token'
 import { ServiceResponse } from '@/lib/response'
+import { RequestError } from '@/utils/request'
 
 async function fetchProfileWithTokenService(token: string) {
   await setToken(token)
@@ -31,14 +33,12 @@ export async function loginService(params: LoginDTO) {
   }
 }
 
+/** Starts a sign-up. The account exists only after the emailed link is opened, so there is no login here. */
 export async function registerService(params: RegisterDTO) {
   const { username, password, email } = params
   try {
-    await authApi.register({ username, password, email })
-    const loginRes = await authApi.login({ username, password })
-    return await fetchProfileWithTokenService(loginRes.data.token)
+    return ServiceResponse.success(await authApi.register({ username, password, email }))
   } catch (e) {
-    await removeToken()
     return ServiceResponse.error('registerFailed failed', e)
   }
 }
@@ -80,6 +80,19 @@ export async function changeEmailService(params: ChangeEmailDTO) {
     return ServiceResponse.success(await authApi.changeEmail(params))
   } catch (e) {
     return ServiceResponse.error('changeEmail failed', e)
+  }
+}
+
+export async function deleteAccountService(params: DeleteAccountDTO) {
+  try {
+    const res = await authApi.deleteAccount(params)
+    await removeToken()
+    return ServiceResponse.success(res)
+  } catch (e) {
+    // 404: account already gone. 500: the server may have gated the account and
+    // blacklisted the token before failing (docs/api.md), so it cannot be reused.
+    if (e instanceof RequestError && (e.status === 404 || e.status >= 500)) await removeToken()
+    return ServiceResponse.error('deleteAccount failed', e)
   }
 }
 

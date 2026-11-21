@@ -318,3 +318,62 @@ export interface UpdateDeckFeedbackStatusDTO {
  * 单条反馈响应 DTO
  */
 export type DeckFeedbackResponseDTO = BaseApiResult<{ feedback: DeckFeedback }>
+
+/** 未发布更改计数（GET /api/decks/{id}/publish-preview） */
+export interface PublishPreview {
+  published_version: number
+  has_unpublished_changes: boolean
+  facts: { added: number, edited: number, removed: number }
+  media: { added: number, updated: number, deleted: number }
+  tags: {
+    deck: { added: number, removed: number }
+    facts: { added: number, removed: number, facts_changed: number }
+  }
+  card_templates_changed: number
+  meta_changed: boolean
+}
+
+export type PublishPreviewResponseDTO = BaseApiResult<PublishPreview>
+
+/**
+ * 导入卡组更新摘要（`GET /api/decks/{id}/updates?summary=1`）
+ */
+export type DeckUpdatesSummaryResponseDTO = BaseApiResult<{
+  source_version: number
+  latest_version: number
+  added_fact_ids?: string[]
+  removed_fact_ids?: string[]
+  edited_fact_ids?: string[]
+  media_change_count?: number
+  card_template_change_count?: number
+  description_changed?: boolean
+  change_summary?: string
+}>
+
+/** 导入卡组某条更新词条的详情（`GET /api/decks/{id}/updates/facts/{factId}`） */
+export interface DeckUpdateFactDetail {
+  fact_id: string
+  kind: 'added' | 'removed' | 'edited'
+  /** added / removed 的词条 */
+  fact?: { entries: Entry[] } | null
+  /** edited 的更新前后 */
+  before?: { entries: Entry[] } | null
+  after?: { entries: Entry[] } | null
+  has_local_overlay?: boolean
+  aligned?: boolean
+  /** removed 时服务端建议的默认处理（keep 表示保留本地） */
+  default_action?: 'accept' | 'keep'
+}
+
+export type DeckUpdateFactResponseDTO = BaseApiResult<DeckUpdateFactDetail>
+
+/** 同步时每条词条的处理 */
+export type SyncFactDecision = NonNullable<SyncImportedDeckDTO['decisions']>[number]
+
+/** My Decks 卡片上的共享提醒（与移动端一致） */
+export interface DeckSharingStatus {
+  /** 源卡组有未发布更改，或导入卡组有可同步的更新 */
+  flash: boolean
+  /** 源卡组有待处理的导入者贡献 */
+  openContributions: boolean
+}

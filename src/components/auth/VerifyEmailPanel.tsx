@@ -32,6 +32,7 @@ export default function VerifyEmailPanel({
   const t = useTranslations('auth')
   const [status, setStatus] = useState<Status>(initialStatus)
   const [error, setError] = useState<string | null>(initialError)
+  const [linkUsed, setLinkUsed] = useState(false)
   const [isPending, startTransition] = useTransition()
   const ranRef = useRef(false)
 
@@ -49,6 +50,7 @@ export default function VerifyEmailPanel({
         return
       }
       setStatus('error')
+      setLinkUsed(Boolean(res.linkUsed))
       setError(res.error ?? t('verifyEmailFailed'))
     })
     return () => {
@@ -67,6 +69,7 @@ export default function VerifyEmailPanel({
         return
       }
       setStatus('error')
+      setLinkUsed(Boolean(res.linkUsed))
       setError(res.error ?? t('verifyEmailFailed'))
     })
   }
@@ -109,7 +112,7 @@ export default function VerifyEmailPanel({
                 </>
               )}
               {status === 'error' && error && <AppError error={error} />}
-              {status === 'error' && hasToken && (
+              {status === 'error' && hasToken && !linkUsed && (
                 <AppButton
                   className="w-full"
                   type="button"

@@ -1,5 +1,6 @@
 {
   "nav": {
+    "my-decks": "My Decks",
     "home": "Home",
     "dashboard": "Dashboard",
     "guide": "Guide"
@@ -19,7 +20,7 @@
     "hero": {
       "title": "A journey of a thousand miles begins with a single step",
       "titleHighlight": "",
-      "subtitle": "A collaborative platform for building and improving decks — powered by a novel SRS scheduling algorithm, AI-assisted quality checks, and adaptive review.",
+      "subtitle": "A learning app for building and improving decks — correct typos, contribute fixes, and publish each version the way a version control system does.",
       "cta": "Join on TestFlight",
       "learnMore": "Learn More",
       "appPreview": "App Preview"
@@ -31,8 +32,8 @@
     "features": {
       "sectionTitle": "Why Choose Rete",
       "community": {
-        "title": "Community Decks",
-        "description": "Create, share, and improve decks together — quality compounds over time instead of drifting stale."
+        "title": "Improve Decks Together",
+        "description": "Fix a typo or add a missing example and send it back to the author. Every accepted correction reaches every learner, so decks get better instead of going stale."
       },
       "algorithm": {
         "title": "Novel Algorithm",
@@ -45,6 +46,35 @@
       "ai": {
         "title": "AI-Assisted Quality",
         "description": "AI reviews decks for accuracy and clarity — with human verification before any change goes live."
+      }
+    },
+    "collaborate": {
+      "sectionTitle": "Decks that improve like code",
+      "subtitle": "Shared decks work like open-source projects: everyone studies their own copy, proposes fixes, and the author merges the good ones into the next published version.",
+      "import": {
+        "git": "fork",
+        "title": "Import a deck",
+        "description": "Get your own copy of any public deck and start studying right away."
+      },
+      "correct": {
+        "git": "commit",
+        "title": "Correct as you study",
+        "description": "Spot a mistake? Edit the fact in your copy. Your change applies at once, just for you."
+      },
+      "propose": {
+        "git": "pull request",
+        "title": "Propose the fix",
+        "description": "Send your corrections to the author with a note — one at a time or as a batch."
+      },
+      "merge": {
+        "git": "merge",
+        "title": "Author reviews and publishes",
+        "description": "The author sees each change side by side, accepts or dismisses it, and publishes a new version."
+      },
+      "sync": {
+        "git": "pull",
+        "title": "Sync the new version",
+        "description": "Review what changed and choose, fact by fact, to take the update or keep your own edit."
       }
     },
     "howItWorks": {
@@ -115,6 +145,8 @@
     "due": "{count} due"
   },
   "auth": {
+    "deleteAccount": "Delete account",
+    "deleteAccountMessage": "This permanently deletes your account, private decks and study history. Published decks stay available to people who imported them, without your name. Enter your password to confirm.",
     "loginTitle": "Login",
     "registerTitle": "Register",
     "loginDescription": "Sign in to your account",
@@ -171,13 +203,17 @@
     "resendVerification": "Resend link",
     "verificationSent": "If the address is unverified, a new link is on its way.",
     "changeEmail": "Change email",
-    "changeEmailDescription": "Current email: {email}. The new address must be verified again.",
+    "changeEmailDescription": "Current email: {email}. We will send a confirmation link to the new address; your email stays the same until you open it.",
     "newEmailLabel": "New email",
     "currentPasswordLabel": "Current password",
-    "changeEmailSuccess": "Email changed. Check {email} for a verification link.",
-    "emailInUseHint": "This email is already registered. If it is yours, use “Forgot password?” on the login page to get back in.",
+    "changeEmailSuccess": "Check {email} for a confirmation link. Your email changes when you open it.",
     "emailInvalid": "Enter a valid email address",
-    "passwordRequired": "Enter your password"
+    "passwordRequired": "Enter your password",
+    "usernameOrEmailLabel": "Username or email",
+    "usernameOrEmailPlaceholder": "Enter your username or email",
+    "registerCheckEmail": "Check {email} to finish signing up. Your account is created when you open the link in that email.",
+    "verifyEmailUsernameTaken": "Someone took that username before you opened the link. Please sign up again with another username.",
+    "verifyEmailAccountExists": "This email already belongs to an account. If it is yours, log in or use “Forgot password?” on the login page."
   },
   "tags": {
     "select-placeholder": "Select tags",
@@ -185,6 +221,12 @@
     "empty": "No tags yet — tap the + in the top-right to create one."
   },
   "common": {
+    "edit-deck": "Edit Deck",
+    "deck-options": "Deck options",
+    "deck-details": "Deck details",
+    "total-reviews": "Total reviews",
+    "edit-facts": "Edit Facts",
+    "retry": "Retry",
     "login": "Login",
     "logout": "Logout",
     "logout-confirm": "Are you sure you want to log out?",
@@ -311,6 +353,8 @@
     "sent-empty": "No sent suggestions",
     "field_rename": "Field rename",
     "deck_tags": "Deck tags",
+    "fact_edit": "Fact edit",
+    "fact_add": "New fact",
     "submit-selected": "Submit ({count})",
     "batch-submit-success": "Sent {count} suggestion(s)",
     "batch-submit-failed": "{count} suggestion(s) failed and remain pending",
@@ -379,6 +423,13 @@
     }
   },
   "deck-sharing": {
+    "preview-no-changes": "No unpublished changes since the last version.",
+    "preview-has-changes": "Unpublished changes",
+    "preview-facts": "Facts: {added} added, {edited} edited, {removed} removed",
+    "preview-media": "Media: {added} added, {edited} updated, {removed} deleted",
+    "preview-tags": "{count, plural, one {# tag change} other {# tag changes}}",
+    "preview-templates": "{count, plural, one {# card template change} other {# card template changes}}",
+    "preview-meta": "Deck name, description, fields or rate changed",
     "description": "Browse and import public decks published by the community to jump-start your learning.",
     "heading": "Shared deck catalog",
     "subtitle": "Browse published decks from the community. Open a deck for details and import.",
@@ -433,5 +484,166 @@
     "image": "Image",
     "video": "Video",
     "cancel": "Cancel"
+  },
+  "study": {
+    "title": "Study",
+    "start": "Study",
+    "all-tags": "All tags",
+    "tag-filter": "Tag",
+    "todays-due": "Today's due",
+    "due-progress": "{cleared}/{target} ({percent})",
+    "hard": "Hard",
+    "easy": "Easy",
+    "flip-card": "Flip card",
+    "caught-up-title": "All caught up!",
+    "caught-up-description": "No cards are due right now. Come back later or add more facts.",
+    "reload": "Check again",
+    "card-options": "Card options",
+    "hide-card": "Hide card",
+    "edit-fact": "Edit fact",
+    "edit-fact-load-failed": "Couldn't load this fact",
+    "edit-fact-save-failed": "Couldn't save your changes",
+    "report-issue": "Report issue",
+    "delete-card": "Delete card",
+    "delete-card-confirm": "Only this card will be removed. The fact and other cards for it stay in the deck.",
+    "next-review": "Next review in",
+    "next": "Next",
+    "show-answer": "Show answer",
+    "report-sent": "Issue reported",
+    "report-kind": "Issue type",
+    "report-kind-audio": "Audio",
+    "report-kind-content": "Content",
+    "report-kind-other": "Other",
+    "report-details": "Details",
+    "report-details-hint": "Add details (optional)",
+    "report-other-hint": "Describe the issue",
+    "report-details-required": "Please describe the issue"
+  },
+  "statistics": {
+    "title": "Statistics",
+    "deck-filter": "Deck",
+    "all-decks": "All decks",
+    "range": "Range",
+    "range-days": "{count} days",
+    "no-decks": "Create a deck to start tracking review activity.",
+    "load-failed": "Could not load review statistics.",
+    "period-reviews": "Reviews in period",
+    "today-reviews": "Reviews today",
+    "active-days": "Active days",
+    "daily-average": "Daily average",
+    "daily-activity": "Daily activity",
+    "no-activity": "No review activity in this period.",
+    "reviews-count": "{count, plural, one {# review} other {# reviews}}",
+    "weekday-distribution": "Reviews by weekday",
+    "utc-note": "Dates and day boundaries use UTC.",
+    "partial-load": "Some decks could not be loaded, so these numbers may be incomplete."
+  },
+  "qa": {
+    "title": "QA mode",
+    "pick-columns": "Choose columns",
+    "pick-columns-description": "Only selected columns appear during this QA walk. Your choice is remembered for this deck.",
+    "start": "Start QA",
+    "progress": "{verified} / {total} verified",
+    "complete-title": "You're done with these columns. Thank you.",
+    "change-columns": "Choose columns",
+    "share-with-author": "Share sign-offs with author",
+    "review-sent": "{count, plural, one {Sent # verified field to the author} other {Sent # verified fields to the author}}",
+    "position": "Fact {current} of {total}",
+    "verified": "Verified",
+    "prev": "Previous",
+    "skip": "Skip",
+    "edit": "Edit facts",
+    "verify-next": "Verify & next",
+    "verify-finish": "Verify & finish"
+  },
+  "deck-menu": {
+    "add-fact": "Add fact",
+    "published": "Published!",
+    "publish-failed": "Couldn't publish the deck",
+    "publish-deck": "Publish Deck",
+    "publish-update": "Update Published Version",
+    "contributions-inbox": "Contributions",
+    "pending-outbox": "Unsent contributions",
+    "check-updates": "Check updates",
+    "load-failed": "Couldn't load this"
+  },
+  "inbox": {
+    "accept-all-more-open": "More contributions may still be open. Any not accepted now will show up in the inbox afterwards.",
+    "accept": "Accept",
+    "dismiss": "Dismiss",
+    "resolve": "Resolve",
+    "accept-all": "Accept all ({count})",
+    "accept-all-confirm-title": "Accept all?",
+    "accept-all-confirm-message": "Accept {count} contributions into your working copy? Reports are skipped.",
+    "accept-all-progress": "Accepting {done} of {total}…",
+    "accept-all-success": "{count, plural, =1 {Accepted 1 contribution} other {Accepted # contributions}}",
+    "accept-all-partial": "Accepted {sent}; {failed} failed",
+    "load-more": "Load more",
+    "empty": "No open contributions",
+    "before": "Before",
+    "after": "After",
+    "proposed": "Proposed",
+    "reported": "Reported",
+    "fields": "Fields",
+    "tags": "Tags",
+    "accepted": "Contribution accepted",
+    "updated": "Contribution updated",
+    "operation-failed": "Couldn't update the contribution",
+    "load-failed": "Couldn't load contributions",
+    "retry": "Retry",
+    "cancel": "Cancel"
+  },
+  "updates": {
+    "version": "Current v{source} → latest v{latest}",
+    "counts": "Added {added}, edited {edited}, removed {removed}, media changes {media}",
+    "description-changed": "Description changed",
+    "review-changes": "Review changes",
+    "hide-review": "Hide review",
+    "edited-section": "Edited facts ({count})",
+    "removed-section": "Removed facts ({count})",
+    "added-section": "Added facts ({count})",
+    "media-section": "Media changes ({count})",
+    "templates-section": "Card template changes ({count})",
+    "aligned": "aligned",
+    "local-overlay": "local overlay",
+    "before": "Before update",
+    "after": "After update",
+    "accept": "Accept",
+    "keep-local": "Reject",
+    "sync-now": "Sync now",
+    "up-to-date": "Already up to date",
+    "sync-success": "Deck synced",
+    "sync-failed": "Couldn't sync the deck",
+    "load-failed": "Couldn't load updates",
+    "retry": "Retry"
+  },
+  "outbox": {
+    "hint": "Local changes ready to send to the author, plus what you already sent from this browser.",
+    "tab-pending": "Pending ({count})",
+    "tab-sent": "Sent ({count})",
+    "message-hint": "Optional message for the author",
+    "send-selected": "Send selected",
+    "send-selected-count": "Send selected ({count})",
+    "dismiss-selected": "Dismiss selected",
+    "clear-all": "Clear all",
+    "select-all": "Select all ({count})",
+    "empty": "Nothing pending. Proposals you save for this imported deck show up here until you send them.",
+    "sent-empty": "No sent contributions stored in this browser yet.",
+    "dismissed": "{count, plural, =1 {Dismissed 1 item} other {Dismissed # items}}",
+    "cleared": "{count, plural, =1 {Cleared 1 pending item} other {Cleared # pending items}}"
+  },
+  "add-fact": {
+    "submit": "Save fact",
+    "success": "Fact added",
+    "failed": "Could not add fact",
+    "needs-content": "Each field needs text.",
+    "mark-verified": "I've checked this fact (mark as verified)"
+  },
+  "auto-send": {
+    "fact-added-not-sent": "Fact added, but it couldn't be sent to the author.",
+    "sent": "Sent to the author",
+    "unsent": "Saved. Couldn't send it to the author yet; retry from Unsent contributions.",
+    "fact-added-sent": "Fact added and sent to the author",
+    "fact-added-unsent": "Fact added. Couldn't send it to the author yet; retry from Unsent contributions."
   }
 }

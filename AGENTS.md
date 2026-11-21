@@ -69,7 +69,9 @@ Production Next.js web app: marketing, auth, dashboard/library, MDX user guide. 
 
 1. Branch from `main`: `git checkout -b <branch-name>`
 2. Commit on the feature branch (husky runs lint-staged, then `pnpm test`)
-3. Push: `git push -u origin <branch-name>`
+3. Push: `git push -u origin <branch-name>` (husky pre-push blocks `main` and runs Claude `/code-review` +
+   `/security-review`, blocking on important findings; `SKIP_AI_REVIEW=1` overrides). Claude Code agents are
+   gated by `.claude/settings.json` until HEAD is reviewed and marked with `utils/claude-push-gate.sh --mark`
 4. Open PR; wait for CI (`build-test-deploy-webapp.yml`)
 5. Squash and merge after review
 

@@ -64,6 +64,8 @@ export const createFactsSchema = z.object({
   })).min(1, 'At least one fact is required'),
   template: z.array(z.array(z.array(z.number()))).optional(),
   operation: operationSchema,
+  /** Owner's human sign-off on every text/audio aspect of facts typed in (ignored on imports) */
+  verified: z.boolean().optional(),
 })
 
 export type CreateFactsDTO = z.infer<typeof createFactsSchema>
@@ -77,6 +79,8 @@ export const updateFactSchema = z.object({
     audio: z.string().optional(),
     image: z.string().optional(),
     video: z.string().optional(),
+    /** Kept so a PATCH round-trips entries that carry structured data (a JSON string) */
+    json: z.string().optional(),
   })).optional(),
   fields: z.array(z.string()).optional(),
 })

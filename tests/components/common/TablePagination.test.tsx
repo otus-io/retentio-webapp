@@ -71,6 +71,13 @@ describe('TablePagination', () => {
     mockGetParam.mockReset()
   })
 
+  it('超出最后一页时下一页按钮也禁用', () => {
+    mockGetParam.mockReturnValue('9')
+    render(<TablePagination totalPages={5} />)
+    expect(screen.getByText('›').closest('button')?.getAttribute('disabled')).not.toBeNull()
+    mockGetParam.mockReset()
+  })
+
   it('totalPages 较大时显示省略号', () => {
     render(<TablePagination totalPages={10} />)
     expect(screen.getByText('...')).toBeDefined()
@@ -123,5 +130,13 @@ describe('TablePagination', () => {
     screen.getByText('›').closest('button')?.click()
     expect(mockSetParam).toHaveBeenCalledWith('page', '4')
     mockGetParam.mockReset()
+  })
+
+  it('把是否滚动到顶部传给参数 Hook', async () => {
+    const hook = vi.mocked((await import('@/hooks/useSearchParamsQuery')).default)
+    render(<TablePagination totalPages={3} scroll={false} />)
+    expect(hook).toHaveBeenLastCalledWith(['page'], undefined, { scroll: false })
+    render(<TablePagination totalPages={3} />)
+    expect(hook).toHaveBeenLastCalledWith(['page'], undefined, { scroll: true })
   })
 })

@@ -8,6 +8,7 @@ const verifyEmailServiceMock = vi.fn()
 const logoutServiceMock = vi.fn()
 const resendVerificationServiceMock = vi.fn()
 const changeEmailServiceMock = vi.fn()
+const deleteAccountServiceMock = vi.fn()
 const getTranslationsMock = vi.fn(async () => (key: string) => key)
 
 const flattenOverride = vi.hoisted(() => ({
@@ -54,6 +55,7 @@ vi.mock('@/modules/auth/auth.service', () => ({
   logoutService: (...args: unknown[]) => logoutServiceMock(...args),
   resendVerificationService: (...args: unknown[]) => resendVerificationServiceMock(...args),
   changeEmailService: (...args: unknown[]) => changeEmailServiceMock(...args),
+  deleteAccountService: (...args: unknown[]) => deleteAccountServiceMock(...args),
 }))
 
 import { revalidatePath } from 'next/cache'
@@ -61,6 +63,7 @@ import { redirect } from 'next/navigation'
 import { LOGIN_PATH } from '@/config'
 import {
   changeEmailAction,
+  deleteAccountAction,
   forgotPasswordAction,
   loginAction,
   logoutAction,
@@ -369,7 +372,7 @@ describe('registerAction', () => {
     expect(registerServiceMock).not.toHaveBeenCalled()
   })
 
-  it('revalidates and redirects to the requested path after register', async () => {
+  it('reports success without logging in or redirecting after register', async () => {
     vi.mocked(revalidatePath).mockClear()
     vi.mocked(redirect).mockClear()
     registerServiceMock.mockResolvedValue({
@@ -385,7 +388,6 @@ describe('registerAction', () => {
       confirmPassword: 'secret123',
       redirect: '/welcome',
     }))
-    expect(state).toBeUndefined()
     expect(registerServiceMock).toHaveBeenCalledWith({
       username: 'alice',
       email: 'a@b.com',
@@ -393,37 +395,11 @@ describe('registerAction', () => {
       confirmPassword: 'secret123',
       redirect: '/welcome',
     })
-    expect(revalidatePath).toHaveBeenCalledWith('/')
-    expect(redirect).toHaveBeenCalledWith('/welcome')
-  })
-
-  it('redirects to the home page when register has no redirect', async () => {
-    vi.mocked(redirect).mockClear()
-    registerServiceMock.mockResolvedValue({
-      success: true,
-      message: null,
-      data: { email: 'a@b.com', username: 'alice' },
-      meta: { created_at: '2099-01-01', msg: 'register ok' },
-    })
-    const state = await registerAction(null, formData({
-      username: 'alice',
-      email: 'a@b.com',
-      password: 'secret123',
-      confirmPassword: 'secret123',
-    }))
-    expect(state).toBeUndefined()
-    expect(redirect).toHaveBeenCalledWith('/')
-  })
-
-  it('hints at password reset when the email is already registered', async () => {
-    registerServiceMock.mockResolvedValue({ success: false, message: 'Email already in use', status: 409 })
-    const state = await registerAction(null, formData({
-      username: 'alice',
-      email: 'a@b.com',
-      password: 'secret123',
-      confirmPassword: 'secret123',
-    }))
-    expect(state).toMatchObject({ error: 'emailInUseHint', success: false })
+    expect(state).toMatchObject({ success: true, data: { username: 'alice', email: 'a@b.com' } })
+    expect(state?.data).not.toHaveProperty('password')
+    expect(state?.data).not.toHaveProperty('confirmPassword')
+    expect(redirect).not.toHaveBeenCalled()
+    expect(revalidatePath).not.toHaveBeenCalled()
   })
 
   it('keeps the backend message for other conflicts', async () => {
@@ -599,6 +575,21 @@ describe('verifyEmailAction', () => {
     expect(verifyEmailServiceMock).toHaveBeenCalledWith({ token: 'tok' })
     expect(state).toEqual({ success: true })
   })
+
+  it('localizes the conflicts of a sign-up link', async () => {
+    for (const [message, key] of [
+      ['Username already exists; sign up again with another username', 'verifyEmailUsernameTaken'],
+      ['An account with this email already exists', 'verifyEmailAccountExists'],
+    ]) {
+      verifyEmailServiceMock.mockResolvedValue({ success: false, message, status: 409 })
+      expect(await verifyEmailAction('tok')).toEqual({ error: key, linkUsed: true, success: false })
+    }
+  })
+
+  it('does not treat inherited object keys as conflicts', async () => {
+    verifyEmailServiceMock.mockResolvedValue({ success: false, message: 'constructor', status: 400 })
+    expect(await verifyEmailAction('tok')).toEqual({ error: 'constructor', success: false })
+  })
 })
 
 describe('localizeAuthFieldErrors', () => {
@@ -654,10 +645,10 @@ describe('changeEmailAction', () => {
     expect(revalidatePath).not.toHaveBeenCalled()
   })
 
-  it('revalidates the layout and returns the new email on success', async () => {
+  it('revalidates the layout and returns the requested email on success', async () => {
     changeEmailServiceMock.mockResolvedValue({
       success: true,
-      data: { email: 'new@b.com', username: 'alice', email_verified: false },
+      data: { email: 'old@b.com', username: 'alice', email_verified: true, pending_email: 'new@b.com' },
     })
     const state = await changeEmailAction(null, formData({ email: 'new@b.com', password: 'secret123' }))
     expect(changeEmailServiceMock).toHaveBeenCalledWith({ email: 'new@b.com', password: 'secret123' })
@@ -686,5 +677,35 @@ describe('logoutAction', () => {
     expect(vi.mocked(revalidatePath).mock.invocationCallOrder[0]).toBeLessThan(
       vi.mocked(redirect).mock.invocationCallOrder[0],
     )
+  })
+})
+
+describe('deleteAccountAction', () => {
+  beforeEach(() => {
+    deleteAccountServiceMock.mockReset()
+    vi.mocked(redirect).mockClear()
+    vi.mocked(revalidatePath).mockClear()
+  })
+
+  it('requires a password without calling the API', async () => {
+    const state = await deleteAccountAction(null, formData({ password: '' }))
+    expect(state?.validationErrors?.password).toEqual(['passwordRequired'])
+    expect(deleteAccountServiceMock).not.toHaveBeenCalled()
+  })
+
+  it('returns the backend message on failure', async () => {
+    deleteAccountServiceMock.mockResolvedValue({ success: false, message: 'Invalid credentials' })
+    const state = await deleteAccountAction(null, formData({ password: 'wrong' }))
+    expect(state).toEqual({ error: 'Invalid credentials', success: false })
+    expect(redirect).not.toHaveBeenCalled()
+    expect(revalidatePath).toHaveBeenCalledWith('/', 'layout')
+  })
+
+  it('redirects home after deleting', async () => {
+    deleteAccountServiceMock.mockResolvedValue({ success: true })
+    await deleteAccountAction(null, formData({ password: 'secret' }))
+    expect(deleteAccountServiceMock).toHaveBeenCalledWith({ password: 'secret' })
+    expect(revalidatePath).toHaveBeenCalledWith('/', 'layout')
+    expect(redirect).toHaveBeenCalledWith('/')
   })
 })

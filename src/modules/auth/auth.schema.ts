@@ -23,8 +23,6 @@ export const PASSWORD_REQUIRED = 'password_required'
 
 /** Backend `code` on 403 when publish/contribute needs a verified email. */
 export const EMAIL_NOT_VERIFIED_CODE = 'email_not_verified'
-/** Backend `msg` on 409 when registering with a taken email. */
-export const EMAIL_IN_USE_MESSAGE = 'Email already in use'
 
 export const USERNAME_MIN = 2
 export const USERNAME_MAX = 32
@@ -153,7 +151,19 @@ export const changeEmailSchema = z.object({
 
 export type ChangeEmailDTO = z.infer<typeof changeEmailSchema>
 
-export type ChangeEmailResponseDTO = BaseApiResult<{ email: string; username: string; email_verified: boolean }>
+export const deleteAccountSchema = z.object({
+  password: z.string().min(1, PASSWORD_REQUIRED),
+})
+
+export type DeleteAccountDTO = z.infer<typeof deleteAccountSchema>
+
+/** `email` stays the current address; the new one is `pending_email` until its link is opened. */
+export type ChangeEmailResponseDTO = BaseApiResult<{
+  email: string
+  pending_email?: string
+  username: string
+  email_verified: boolean
+}>
 
 export type LoginResponseDTO = BaseApiResult<
   { token: string },

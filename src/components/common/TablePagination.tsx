@@ -8,10 +8,12 @@ import clsx from 'clsx'
 export interface TablePaginationProps {
   totalPages: number
   className?: string
+  /** Scroll to the top of the page on page change (default true) */
+  scroll?: boolean
 }
 
-export default function TablePagination({ totalPages, className }: TablePaginationProps) {
-  const { getParam, setParam } = useSearchParamsQuery(['page'])
+export default function TablePagination({ totalPages, className, scroll = true }: TablePaginationProps) {
+  const { getParam, setParam } = useSearchParamsQuery(['page'], undefined, { scroll })
   const page = Number(getParam('page') || '1')
 
   const pageNumbers = useMemo((): (number | 'ellipsis')[] => {
@@ -72,7 +74,7 @@ export default function TablePagination({ totalPages, className }: TablePaginati
               ))}
           <Pagination.Item>
             <Pagination.Next
-              isDisabled={page === totalPages}
+              isDisabled={page >= totalPages}
               onClick={() => setParam('page', String(page + 1))}
             >
               <Pagination.NextIcon />

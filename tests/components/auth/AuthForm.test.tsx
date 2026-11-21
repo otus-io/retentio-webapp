@@ -124,7 +124,7 @@ describe('AuthForm', () => {
 
   it('does not cap username or password length on login', () => {
     render(<AuthForm type="login" />)
-    expect(limits('usernameLabel')).toEqual({ min: null, max: null })
+    expect(limits('usernameOrEmailLabel')).toEqual({ min: null, max: null })
     expect(limits('passwordLabel')).toEqual({ min: null, max: null })
   })
 
@@ -159,7 +159,7 @@ describe('AuthForm', () => {
 
   it('submits login credentials without a terms warning', () => {
     render(<AuthForm type="login" />)
-    fireEvent.change(screen.getByRole('textbox', { name: 'usernameLabel' }), {
+    fireEvent.change(screen.getByRole('textbox', { name: 'usernameOrEmailLabel' }), {
       target: { value: 'ada' },
     })
     fireEvent.change(screen.getByRole('textbox', { name: 'passwordLabel' }), {
@@ -202,5 +202,28 @@ describe('AuthForm', () => {
     expect(formData.get('username')).toBe('ada')
     expect(formData.get('email')).toBe('ada@example.com')
     expect(loginAction).not.toHaveBeenCalled()
+  })
+
+  it('asks to check the email instead of showing the form after registering', async () => {
+    terms.include = true
+    vi.mocked(registerAction).mockResolvedValue({ success: true, data: { username: 'ada', email: 'ada@example.com' } })
+    render(<AuthForm type="register" />)
+    fireEvent.submit(document.querySelector('form')!)
+
+    expect(await screen.findByText('registerCheckEmail')).toBeTruthy()
+    expect(document.querySelector('form')).toBeNull()
+    expect(screen.getByRole('link', { name: 'goLogin' }).getAttribute('href')).toBe('/login')
+    expect(screen.queryByText('registerDescription')).toBeNull()
+  })
+
+  it('keeps the redirect on the login link after registering', async () => {
+    terms.include = true
+    nav.search = new URLSearchParams('redirect=/decks/123')
+    vi.mocked(registerAction).mockResolvedValue({ success: true, data: { username: 'ada', email: 'ada@example.com' } })
+    render(<AuthForm type="register" />)
+    fireEvent.submit(document.querySelector('form')!)
+
+    expect(await screen.findByText('registerCheckEmail')).toBeTruthy()
+    expect(screen.getByRole('link', { name: 'goLogin' }).getAttribute('href')).toBe('/login?redirect=/decks/123')
   })
 })

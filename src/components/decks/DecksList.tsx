@@ -1,17 +1,22 @@
 'use client'
 
+import type { DeckSharingStatus } from '@/modules/deck-sharing/deck-sharing.schema'
 import type { Deck } from '@/modules/decks/decks.schema'
+import { getDeckSharingStatusesAction } from '@/modules/deck-sharing/deck-sharing.action'
 import { useTranslations } from 'next-intl'
 import { FolderOpen, CircleQuestionMark } from 'lucide-react'
 import DecksCard from '@/components/decks/DecksCard'
 import AppLink from '@/components/app/AppLink'
 import { DecksSearch } from '@/components/decks/DecksSearch'
-import { useDeferredValue, useMemo, useState } from 'react'
+import { useDeferredValue, useEffect, useMemo, useRef, useState } from 'react'
 import Fuse from 'fuse.js'
 import DeckCreateButton from '@/components/decks/DeckCreateButton'
 import DeckImportButton from '@/components/decks/DeckImportButton'
 import LayoutPage from '@/components/layout/LayoutPage'
 import AppTooltip from '@/components/app/AppTooltip'
+
+/** How often the sharing badges are re-checked, as in the mobile app */
+const SHARING_POLL_MS = 60_000
 
 export default function DecksList({
   data,
@@ -19,6 +24,34 @@ export default function DecksList({
   data: Deck[]
 }) {
   const t = useTranslations()
+  const [sharing, setSharing] = useState<Record<string, DeckSharingStatus>>({})
+  const latestCheck = useRef(0)
+  // Re-check when decks change (added, removed, published, synced), not on every identical refresh.
+  const deckKey = data.map((d) => `${d.id}:${d.published_version}:${d.source_version ?? ''}:${d.updated_at}`)
+    .join(',')
+
+  // Badges load after the list renders and re-check every minute while the tab is visible.
+  useEffect(() => {
+    let cancelled = false
+    const check = () => {
+      if (document.visibilityState === 'hidden') return
+      const id = ++latestCheck.current
+      getDeckSharingStatusesAction()
+        // Only the newest check may update the badges; a failed one keeps the previous badges.
+        .then((next) => {
+          if (!cancelled && id === latestCheck.current) setSharing(next)
+        })
+        .catch(() => {})
+    }
+    check()
+    const timer = window.setInterval(check, SHARING_POLL_MS)
+    document.addEventListener('visibilitychange', check)
+    return () => {
+      cancelled = true
+      window.clearInterval(timer)
+      document.removeEventListener('visibilitychange', check)
+    }
+  }, [deckKey])
   const [keywords, setKeywords] = useState('')
   const deferredQuery = useDeferredValue(keywords)
 
@@ -79,6 +112,7 @@ export default function DecksList({
                       highlight={deferredQuery}
                       key={item.id}
                       deck={item}
+                      sharing={sharing[item.id]}
                     />
                   )
                 })

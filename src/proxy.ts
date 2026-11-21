@@ -2,6 +2,7 @@ import type { NextRequest } from 'next/server'
 import { NextResponse } from 'next/server'
 import { FORGOT_PASSWORD_PATH, JWT_COOKIE_NAME, LOGIN_PATH, REGISTER_PATH } from '@/config'
 import { logger } from '@/lib/logger'
+import { createRequest, RequestError } from '@/utils/request'
 
 const blacklist = [
   '/dashboard',
@@ -10,6 +11,18 @@ const blacklist = [
 ]
 
 const authGuestPaths = new Set([LOGIN_PATH, REGISTER_PATH, FORGOT_PASSWORD_PATH])
+
+const PROFILE_CHECK_TIMEOUT_MS = 3000
+
+/** True only when the API rejects the token (401); network errors and timeouts keep the session. */
+async function isTokenRejected(token: string) {
+  try {
+    await createRequest(async () => token)('/api/profile', { signal: AbortSignal.timeout(PROFILE_CHECK_TIMEOUT_MS) })
+    return false
+  } catch (e) {
+    return e instanceof RequestError && e.status === 401
+  }
+}
 
 export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl
@@ -33,6 +46,13 @@ export async function proxy(request: NextRequest) {
   }
   else {
     if (authGuestPaths.has(pathname)) {
+      // A stale cookie would otherwise bounce every login attempt back to '/'.
+      if (await isTokenRejected(token)) {
+        logger.fatal('[proxy] rejected token => clear cookie')
+        const res = NextResponse.next()
+        res.cookies.delete(JWT_COOKIE_NAME)
+        return res
+      }
       const url = new URL('/', request.url)
       logger.fatal('[proxy] has token => redirect(/dashboard)')
       return NextResponse.redirect(url)
