@@ -17,6 +17,7 @@ vi.mock('@/modules/contributions/contributions.action', () => ({
   submitDeckContributionsBatchAction: vi.fn(),
 }))
 vi.mock('@/components/app/AppInput', () => ({ default: () => null }))
+vi.mock('@/components/app/AppTextarea', () => ({ default: () => null }))
 vi.mock('@/components/app/AppButton', () => ({
   default: ({ children, onPress, isDisabled }: { children?: ReactNode, onPress?: () => void, isDisabled?: boolean }) => (
     <button type="button" onClick={onPress} disabled={isDisabled}>{children}</button>

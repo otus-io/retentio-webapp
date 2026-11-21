@@ -6,11 +6,13 @@ vi.mock('@heroui/react', async () => (await import('../../helpers/heroui')).hero
 vi.mock('next-intl', () => ({ useTranslations: () => (key: string) => key }))
 vi.mock('@/lib/ui', () => ({ showFailToast: vi.fn(), showSuccessToast: vi.fn() }))
 vi.mock('@/modules/contributions/contributions.action', () => ({ submitDeckContributionsBatchAction: vi.fn() }))
-vi.mock('@/components/app/AppInput', () => ({
+const inputMock = vi.hoisted(() => ({
   default: (p: { label: string, value: string, isReadOnly?: boolean, onChange?: (v: string) => void }) => (
     <input aria-label={p.label} value={p.value} readOnly={p.isReadOnly} onChange={(e) => p.onChange?.(e.target.value)} />
   ),
 }))
+vi.mock('@/components/app/AppInput', () => inputMock)
+vi.mock('@/components/app/AppTextarea', () => inputMock)
 vi.mock('@/components/app/AppButton', () => ({
   default: (p: { children?: ReactNode, onPress?: () => void, isDisabled?: boolean, 'aria-label'?: string }) => (
     <button type="button" aria-label={p['aria-label']} onClick={p.onPress} disabled={p.isDisabled}>{p.children}</button>
@@ -48,6 +50,11 @@ describe('ContributionFormModal', () => {
     expect(save.disabled).toBe(true)
     type('contributions.suggested-description', 'x'.repeat(501))
     expect(save.disabled).toBe(true)
+    // The backend counts bytes: 167 CJK characters are 501 bytes, 166 fit.
+    type('contributions.suggested-description', '字'.repeat(167))
+    expect(save.disabled).toBe(true)
+    type('contributions.suggested-description', '字'.repeat(166))
+    expect(save.disabled).toBe(false)
 
     type('contributions.suggested-description', ` ${'y'.repeat(100)} `)
     type('contributions.message', ' clearer ')
@@ -70,11 +77,16 @@ describe('ContributionFormModal', () => {
       message: 'saved note',
       savedAt: 't',
     } as PendingDeckContribution
-    const { onSave, save } = open('description_edit', existing, { ...deck, description: undefined })
+    const { onSave, save, type } = open('description_edit', existing, { ...deck, description: undefined })
     expect((screen.getByLabelText('contributions.current-description') as HTMLInputElement).value).toBe('—')
     expect((screen.getByLabelText('contributions.message') as HTMLInputElement).value).toBe('saved note')
     fireEvent.click(save)
     expect(onSave).toHaveBeenCalledWith(expect.objectContaining({ preview: 'Short', message: 'saved note' }))
+
+    // A long preview is cut by code point, so the emoji at the cut stays whole.
+    type('contributions.suggested-description', `${'a'.repeat(78)}😀${'b'.repeat(10)}`)
+    fireEvent.click(save)
+    expect(onSave).toHaveBeenLastCalledWith(expect.objectContaining({ preview: `${'a'.repeat(78)}😀…` }))
   })
 
   it('sends field renames and deck tags with the note, and leaves it out when empty', () => {
