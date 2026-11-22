@@ -1,6 +1,8 @@
 import { API_BASE_URL } from '@/config'
 import { logger } from '@/lib/logger'
 import { formatErrorMessage } from '@/utils/format'
+// Resolves to the real cookie reader only in the react-server layer; client bundles get a null stub.
+import { getToken as getServerToken } from '#server-token'
 
 export type GetTokenFn = () => Promise<string | null>
 
@@ -129,7 +131,7 @@ export function createRequest(getToken: GetTokenFn, baseUrl: string = API_BASE_U
   }
 }
 
-const serverRequest = createRequest(async () => (await import('@/lib/token')).getToken())
+const serverRequest = createRequest(getServerToken)
 /** Browser calls go through the same-origin `/backend` route, which attaches the httpOnly JWT. */
 const browserRequest = createRequest(async () => null, '/backend')
 

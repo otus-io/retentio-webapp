@@ -5,6 +5,12 @@
   "engines": {
     "node": ">=20.9.0"
   },
+  "imports": {
+    "#server-token": {
+      "react-server": "./src/lib/token.ts",
+      "default": "./src/lib/token.stub.ts"
+    }
+  },
   "scripts": {
     "generate:md": "node scripts/generate-index.mjs",
     "dev": "npm run generate:md && next dev",

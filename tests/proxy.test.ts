@@ -10,7 +10,8 @@ import {
 } from '@/config'
 
 const cookieDeleteMock = vi.fn()
-const nextMock = vi.fn(() => ({ type: 'next' as const, cookies: { delete: cookieDeleteMock } }))
+const cookieSetMock = vi.fn()
+const nextMock = vi.fn(() => ({ type: 'next' as const, cookies: { delete: cookieDeleteMock, set: cookieSetMock } }))
 const profileRequestMock = vi.fn()
 const redirectMock = vi.fn((url: URL) => ({ type: 'redirect' as const, url: url.toString() }))
 
@@ -53,6 +54,7 @@ describe('proxy auth guest paths', () => {
     nextMock.mockClear()
     redirectMock.mockClear()
     cookieDeleteMock.mockClear()
+    cookieSetMock.mockClear()
     profileRequestMock.mockReset()
     profileRequestMock.mockResolvedValue({ data: {} })
   })
@@ -66,6 +68,16 @@ describe('proxy auth guest paths', () => {
     await proxy(makeRequest(VERIFY_EMAIL_PATH, 'jwt'))
     expect(nextMock).toHaveBeenCalledOnce()
     expect(redirectMock).not.toHaveBeenCalled()
+  })
+
+  it('re-issues the token cookie with httpOnly and SameSite flags', async () => {
+    await proxy(makeRequest('/library', 'legacy-jwt'))
+    expect(cookieSetMock).toHaveBeenCalledWith(JWT_COOKIE_NAME, 'legacy-jwt', {
+      path: '/',
+      secure: false,
+      sameSite: 'lax',
+      httpOnly: true,
+    })
   })
 
   it('redirects authenticated users away from login/register/forgot-password', async () => {

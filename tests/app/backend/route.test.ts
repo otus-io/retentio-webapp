@@ -12,7 +12,11 @@ vi.mock('@/lib/token', () => ({
 import { DELETE, GET, PATCH, POST, PUT } from '@/app/backend/[...path]/route'
 
 function makeReq(method: string, search = '', init: RequestInit = {}) {
-  const req = new Request(`http://localhost/backend/x${search}`, { method, ...init })
+  const req = new Request(`http://localhost/backend/x${search}`, {
+    method,
+    ...init,
+    headers: { 'Sec-Fetch-Site': 'same-origin', ...(init.headers as Record<string, string>) },
+  })
   return Object.assign(req, { nextUrl: { search } }) as unknown as NextRequest
 }
 
@@ -92,6 +96,8 @@ describe('/backend/[...path] route', () => {
     [['auth', 'login']],
     [['api', '..', 'auth', 'login']],
     [['api', '.', 'profile']],
+    [['api', '../../auth', 'login']],
+    [['api', '..\\auth']],
   ])('rejects non-/api or traversal paths %j', async (path) => {
     const fetchSpy = vi.spyOn(globalThis, 'fetch')
 
@@ -100,5 +106,64 @@ describe('/backend/[...path] route', () => {
     expect(res.status).toBe(404)
     expect(fetchSpy).not.toHaveBeenCalled()
     expect(getTokenMock).not.toHaveBeenCalled()
+  })
+
+  it('passes the request abort signal upstream', async () => {
+    getTokenMock.mockResolvedValue('t')
+    vi.spyOn(globalThis, 'fetch').mockResolvedValue(new Response(null, { status: 204 }))
+    const req = makeReq('GET')
+
+    await GET(req, ctx(['api', 'profile']))
+
+    expect(vi.mocked(fetch).mock.calls[0][1]?.signal).toBe(req.signal)
+  })
+
+  it('returns a JSON 502 when the backend is unreachable', async () => {
+    getTokenMock.mockResolvedValue('t')
+    vi.spyOn(globalThis, 'fetch').mockRejectedValue(new TypeError('fetch failed'))
+
+    const res = await POST(makeReq('POST', '', { body: '{}' }), ctx(['api', 'decks']))
+
+    expect(res.status).toBe(502)
+    await expect(res.json()).resolves.toEqual({ msg: 'Bad Gateway' })
+  })
+
+  it.each([
+    ['cross-site Sec-Fetch-Site', { 'Sec-Fetch-Site': 'cross-site' }],
+    ['same-site Sec-Fetch-Site', { 'Sec-Fetch-Site': 'same-site' }],
+    ['foreign Origin', { Origin: 'https://evil.example', Host: 'web.retentio.app' }],
+    ['unparseable Origin', { Origin: 'null', Host: 'web.retentio.app' }],
+    ['Origin not matching the forwarded host', {
+      'Origin': 'https://web.retentio.app',
+      'Host': 'web.retentio.app',
+      'X-Forwarded-Host': 'other.example',
+    }],
+  ])('rejects %s with 403 before touching the token', async (_, headers) => {
+    const fetchSpy = vi.spyOn(globalThis, 'fetch')
+    const req = makeReq('POST', '', { body: '{}' })
+    req.headers.delete('Sec-Fetch-Site')
+    for (const [k, v] of Object.entries(headers)) req.headers.set(k, v)
+
+    const res = await POST(req, ctx(['api', 'decks']))
+
+    expect(res.status).toBe(403)
+    expect(fetchSpy).not.toHaveBeenCalled()
+    expect(getTokenMock).not.toHaveBeenCalled()
+  })
+
+  it.each([
+    ['matching Origin', { Origin: 'https://web.retentio.app', Host: 'web.retentio.app' }],
+    ['matching forwarded host', { 'Origin': 'https://web.retentio.app', 'X-Forwarded-Host': 'web.retentio.app' }],
+    ['no Origin or Sec-Fetch-Site', {}],
+  ])('allows requests without Sec-Fetch-Site given %s', async (_, headers) => {
+    getTokenMock.mockResolvedValue('t')
+    vi.spyOn(globalThis, 'fetch').mockResolvedValue(new Response(null, { status: 204 }))
+    const req = makeReq('GET')
+    req.headers.delete('Sec-Fetch-Site')
+    for (const [k, v] of Object.entries(headers)) req.headers.set(k, v)
+
+    const res = await GET(req, ctx(['api', 'profile']))
+
+    expect(res.status).toBe(204)
   })
 })
