@@ -72,6 +72,21 @@ describe('DeckContributionsInbox', () => {
     expect(screen.getAllByText('description')).toHaveLength(2)
   })
 
+  it('shows ruby in a proposed new fact', async () => {
+    const rubyAdd = { ...add, proposed_entries: [{ text: '[[日|にち]]' }] }
+    actions.getOpenContributionsAction.mockResolvedValue(page([rubyAdd]))
+    render(<DeckContributionsInbox sourceDeckId="s1" />)
+    expect((await screen.findByText('にち')).tagName).toBe('RT')
+  })
+
+  it('keeps line breaks in description suggestions', async () => {
+    const multi = { id: 'c8', type: 'description_edit', reporter: 'fe', source_version: 1, proposed_description: 'a' }
+    actions.getOpenContributionsAction.mockResolvedValue(page([multi]))
+    render(<DeckContributionsInbox sourceDeckId="s1" />)
+    expect((await screen.findByText('after: a')).className).toContain('whitespace-pre-wrap')
+    expect(screen.getByText('before: —').className).toContain('whitespace-pre-wrap')
+  })
+
   it('shows reported entries, and skips the diff when there is nothing to compare', async () => {
     const reported = { ...report, reported_fact: { id: 'f2', entries: [{ text: 'wrong' }] } }
     const bare = { id: 'c5', type: 'template_add', reporter: 'ed', source_version: 0 }

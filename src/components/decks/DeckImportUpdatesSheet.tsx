@@ -17,7 +17,7 @@ import type { Entry } from '@/modules/facts/facts.schema'
 import { Spinner } from '@heroui/react'
 import { ChevronDown, ChevronUp } from 'lucide-react'
 import { useTranslations } from 'next-intl'
-import { useEffect, useState } from 'react'
+import { Fragment, useEffect, useState } from 'react'
 
 type Summary = DeckUpdatesSummaryResponseDTO['data']
 type Action = SyncFactDecision['action']
@@ -33,8 +33,16 @@ function hasContentChanges(s: Summary) {
 }
 
 function EntriesLine({ label, entries }: { label: string, entries?: Entry[] }) {
-  const texts = (entries ?? []).map((e) => e.text?.trim()).filter(Boolean)
-  return <p className="text-sm"><RubyText text={`${label}: ${texts.length ? texts.join(' · ') : '—'}`} /></p>
+  const texts = (entries ?? []).map((e) => e.text?.trim()).filter((text): text is string => !!text)
+  // Each entry parsed on its own, so a half-edited pair can't join with the next entry's text.
+  return (
+    <p className="text-sm">
+      {`${label}: `}
+      {texts.length
+        ? texts.map((text, i) => <Fragment key={i}>{i > 0 && ' · '}<RubyText text={text} /></Fragment>)
+        : '—'}
+    </p>
+  )
 }
 
 interface FactTileProps {

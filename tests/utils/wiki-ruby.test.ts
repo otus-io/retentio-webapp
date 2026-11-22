@@ -22,6 +22,21 @@ describe('parseWikiRuby', () => {
     expect(parseWikiRuby('[[漢字 と [x] | y')).toEqual([{ kind: 'plain', text: '[[漢字 と [x] | y' }])
     expect(parseWikiRuby('')).toEqual([])
   })
+
+  it('matches the pair rules for brackets and bars inside a pair', () => {
+    expect(parseWikiRuby('[[[a|b|c]]')).toEqual([{ kind: 'ruby', base: '[a', reading: 'b|c' }])
+    expect(parseWikiRuby('[[a|b]c]]')).toEqual([{ kind: 'plain', text: '[[a|b]c]]' }])
+    expect(parseWikiRuby('[[a]|b]]')).toEqual([{ kind: 'plain', text: '[[a]|b]]' }])
+    expect(parseWikiRuby('[[[[a|b]]')).toEqual([{ kind: 'ruby', base: '[[a', reading: 'b' }])
+    expect(parseWikiRuby('x[[a|b')).toEqual([{ kind: 'plain', text: 'x[[a|b' }])
+  })
+
+  it('stays linear on long runs without a complete pair', () => {
+    const start = performance.now()
+    parseWikiRuby('[['.repeat(100_000))
+    parseWikiRuby(`[[a|${'['.repeat(200_000)}`)
+    expect(performance.now() - start).toBeLessThan(500)
+  })
 })
 
 describe('wikiRubyPlainText', () => {

@@ -59,7 +59,7 @@ function ContributionDiff({ c }: { c: Contribution }) {
       {proposedOnly && (
         <div>
           <DiffLabel accent>{t('proposed')}</DiffLabel>
-          <p>{entriesPreview(after)}</p>
+          <p><RubyText text={entriesPreview(after)} /></p>
         </div>
       )}
       {reportedOnly && (
@@ -77,8 +77,8 @@ function ContributionDiff({ c }: { c: Contribution }) {
       {description && (
         <div>
           <DiffLabel>{t('description')}</DiffLabel>
-          <p>{`${t('before')}: ${c.reported_description || '—'}`}</p>
-          <p className="font-semibold">{`${t('after')}: ${c.proposed_description}`}</p>
+          <p className="whitespace-pre-wrap">{`${t('before')}: ${c.reported_description || '—'}`}</p>
+          <p className="whitespace-pre-wrap font-semibold">{`${t('after')}: ${c.proposed_description}`}</p>
         </div>
       )}
       {tags && (

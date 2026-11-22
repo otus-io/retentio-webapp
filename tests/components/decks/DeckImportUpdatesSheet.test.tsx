@@ -112,6 +112,20 @@ describe('DeckImportUpdatesSheet', () => {
     expect(screen.getByText('up-to-date')).toBeTruthy()
   })
 
+  it('parses ruby in each entry on its own', async () => {
+    actions.getDeckUpdatesSummaryAction.mockResolvedValue(ok(summary))
+    actions.getDeckUpdateFactAction.mockResolvedValue(ok({
+      fact_id: 'a1', kind: 'added', fact: { entries: [{ text: '[[日|にち]]' }, { text: '[[a' }, { text: '|b]]' }] },
+    }))
+    await openReview()
+
+    await act(async () => fireEvent.click(screen.getByText('a1')))
+    const line = screen.getByText('にち').closest('p')!
+    // A half-edited pair stays literal instead of pairing with the next entry.
+    expect(line.textContent).toBe('after: 日(にち) · [[a · |b]]')
+    expect(line.querySelectorAll('rt')).toHaveLength(1)
+  })
+
   it('shows the server default for an undecided fact and leaves it to the server on sync', async () => {
     actions.getDeckUpdatesSummaryAction.mockResolvedValue(ok(summary))
     actions.getDeckUpdateFactAction
