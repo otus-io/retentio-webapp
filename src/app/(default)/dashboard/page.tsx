@@ -15,6 +15,7 @@ export default async function Page() {
 
 
 export async function generateMetadata() {
+  // Shares one /api/profile request with Page: Next memoizes identical GET fetches per render.
   const user = await getProfileService()
   const t = await getTranslations()
   const name = user?.success === true ? user.data.username : ''

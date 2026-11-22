@@ -74,7 +74,9 @@ describe('/backend/[...path] route', () => {
 
     const [url, init] = vi.mocked(fetch).mock.calls[0]
     expect(url).toBe(`${API_BASE_URL}/api/decks/d1`)
-    expect(new TextDecoder().decode(init?.body as ArrayBuffer)).toBe('{"rate":1}')
+    expect(init?.body).toBeInstanceOf(ReadableStream)
+    expect((init as { duplex?: string }).duplex).toBe('half')
+    await expect(new Response(init?.body).text()).resolves.toBe('{"rate":1}')
     const headers = init?.headers as Headers
     expect(headers.get('Authorization')).toBeNull()
     expect(headers.get('Content-Type')).toBe('application/json')

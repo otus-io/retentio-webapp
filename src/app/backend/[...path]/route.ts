@@ -8,6 +8,8 @@ function isSameOrigin(req: NextRequest) {
   if (site) return site === 'same-origin'
   const origin = req.headers.get('origin')
   if (!origin) return true
+  // Trusting X-Forwarded-Host is safe: a forged value needs a non-browser client, which lacks the victim's
+  // cookie; browsers without Sec-Fetch-Site can't set it cross-origin without a preflight this route rejects.
   const host = req.headers.get('x-forwarded-host') ?? req.headers.get('host')
   return URL.canParse(origin) && new URL(origin).host === host
 }
@@ -38,9 +40,11 @@ async function forward(req: NextRequest, ctx: RouteContext<'/backend/[...path]'>
     upstream = await fetch(`${API_BASE_URL}/${path.map(encodeURIComponent).join('/')}${req.nextUrl.search}`, {
       method: req.method,
       headers,
-      body: hasBody ? await req.arrayBuffer() : undefined,
+      // Stream instead of buffering: media uploads can reach 200 MB. Node fetch requires duplex for stream bodies.
+      body: hasBody ? req.body : undefined,
+      duplex: 'half',
       signal: req.signal,
-    })
+    } as RequestInit & { duplex: 'half' })
   } catch {
     return Response.json({ msg: 'Bad Gateway' }, { status: 502 })
   }

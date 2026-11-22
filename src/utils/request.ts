@@ -70,6 +70,8 @@ export function createRequest(getToken: GetTokenFn, baseUrl: string = API_BASE_U
 
     const headers: Record<string, string> = normalizeHeaders(fetchOptions.headers)
 
+    // Also set on body-less GET/DELETE on purpose: harmless to the Go backend, and no CORS preflight
+    // since server calls bypass CORS and browser calls hit the same-origin /backend route.
     if (!(fetchOptions.body instanceof FormData)) {
       headers['Content-Type'] = 'application/json;charset=UTF-8'
     }
@@ -127,6 +129,7 @@ export function createRequest(getToken: GetTokenFn, baseUrl: string = API_BASE_U
       throw new RequestError(errorMessage, res.status, code)
     }
 
+    // null only for a non-JSON 2xx; every /api handler the app calls replies with application/json.
     return json
   }
 }
