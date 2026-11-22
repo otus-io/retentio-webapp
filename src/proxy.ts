@@ -59,8 +59,11 @@ export async function proxy(request: NextRequest) {
       return NextResponse.redirect(url)
     }
     // Re-issue so cookies set before httpOnly/SameSite existed pick up the current flags.
+    // Skip Server Actions: a Set-Cookie there makes Next re-render the page and drop client state.
     const res = NextResponse.next()
-    res.cookies.set(JWT_COOKIE_NAME, token, tokenCookieOptions())
+    if (!request.headers.has('next-action')) {
+      res.cookies.set(JWT_COOKIE_NAME, token, tokenCookieOptions())
+    }
     return res
   }
 }

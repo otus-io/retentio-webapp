@@ -38,9 +38,10 @@ vi.mock('@/utils/request', async (importOriginal) => ({
 import { proxy } from '@/proxy'
 import { RequestError } from '@/utils/request'
 
-function makeRequest(pathname: string, token?: string): NextRequest {
+function makeRequest(pathname: string, token?: string, headers: Record<string, string> = {}): NextRequest {
   return {
     nextUrl: { pathname },
+    headers: new Headers(headers),
     url: `https://web.retentio.app${pathname}`,
     cookies: {
       get: (name: string) =>
@@ -78,6 +79,12 @@ describe('proxy auth guest paths', () => {
       sameSite: 'lax',
       httpOnly: true,
     })
+  })
+
+  it('does not re-issue the token cookie on Server Action requests', async () => {
+    await proxy(makeRequest('/decks/d1/facts', 'jwt', { 'next-action': 'abc123' }))
+    expect(nextMock).toHaveBeenCalledOnce()
+    expect(cookieSetMock).not.toHaveBeenCalled()
   })
 
   it('redirects authenticated users away from login/register/forgot-password', async () => {
