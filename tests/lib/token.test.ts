@@ -38,7 +38,27 @@ describe('token', () => {
 
   it('writes the token cookie', async () => {
     await setToken('new-token')
-    expect(cookieStore.set).toHaveBeenCalledWith(JWT_COOKIE_NAME, 'new-token', { path: '/' })
+    expect(cookieStore.set).toHaveBeenCalledWith(JWT_COOKIE_NAME, 'new-token', {
+      path: '/',
+      secure: false,
+      sameSite: 'lax',
+      httpOnly: true,
+    })
+  })
+
+  it('marks the token cookie secure in production', async () => {
+    vi.stubEnv('NODE_ENV', 'production')
+    try {
+      await setToken('new-token')
+    } finally {
+      vi.unstubAllEnvs()
+    }
+    expect(cookieStore.set).toHaveBeenCalledWith(JWT_COOKIE_NAME, 'new-token', {
+      path: '/',
+      secure: true,
+      sameSite: 'lax',
+      httpOnly: true,
+    })
   })
 
   it('deletes the token cookie', async () => {

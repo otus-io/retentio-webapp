@@ -17,7 +17,9 @@ export async function setToken(token: string): Promise<void> {
   const cookieStore = await cookies()
   cookieStore.set(JWT_COOKIE_NAME, token, {
     path: '/',
-    // Consider adding httpOnly, secure, sameSite options for production
+    secure: process.env.NODE_ENV === 'production',
+    sameSite: 'lax',
+    httpOnly: true,
   })
 }
 

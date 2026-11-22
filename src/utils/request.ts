@@ -58,7 +58,7 @@ function normalizeHeaders(input?: HeadersInit): Record<string, string> {
   return { ...(input as Record<string, string>) }
 }
 
-export function createRequest(getToken: GetTokenFn) {
+export function createRequest(getToken: GetTokenFn, baseUrl: string = API_BASE_URL) {
   return async function request<T>(
     endpoint: string,
     options: RequestOptions = {},
@@ -76,7 +76,7 @@ export function createRequest(getToken: GetTokenFn) {
       headers['Authorization'] = `Bearer ${token}`
     }
 
-    const url = `${API_BASE_URL}${endpoint}`
+    const url = `${baseUrl}${endpoint}`
 
     const init = {
       ...fetchOptions,
@@ -129,11 +129,10 @@ export function createRequest(getToken: GetTokenFn) {
   }
 }
 
-const getTokenIsomorphic: GetTokenFn = async () => {
-  if (typeof window === 'undefined') {
-    return (await import('@/lib/token')).getToken()
-  }
-  return (await import('@/lib/token.client')).getClientToken()
-}
+const serverRequest = createRequest(async () => (await import('@/lib/token')).getToken())
+/** Browser calls go through the same-origin `/backend` route, which attaches the httpOnly JWT. */
+const browserRequest = createRequest(async () => null, '/backend')
 
-export const request = createRequest(getTokenIsomorphic)
+export function request<T>(endpoint: string, options?: RequestOptions): Promise<T> {
+  return (typeof window === 'undefined' ? serverRequest : browserRequest)<T>(endpoint, options)
+}
