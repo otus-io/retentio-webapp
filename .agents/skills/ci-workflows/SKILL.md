@@ -17,6 +17,7 @@ description: CI/CD workflow conventions for GitHub Actions in retentio-webapp. U
 - Node version from `.nvmrc`; pnpm 9; frozen lockfile
 - Must pass lint, unit tests, production build, and e2e (Chromium)
 - E2E needs `E2E_USERNAME` / `E2E_PASSWORD` secrets in CI
+- Optional `E2E_USERNAME_2` / `E2E_PASSWORD_2` secrets enable the two-user shared-deck e2e tests
 
 ## Rules
 

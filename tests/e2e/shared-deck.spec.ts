@@ -122,7 +122,7 @@ test.describe('Shared deck import', () => {
 
     await page.goto('/decks')
     const importedDeck = page.locator('[data-slot="card"]').filter({
-      has: page.locator(`a[href="${importedDeckPath}"]`),
+      has: page.locator(`a[href="${importedDeckPath}/study"]`),
     })
     await expect(importedDeck).toBeVisible()
 
@@ -178,24 +178,14 @@ test.describe('Shared deck import', () => {
     await fieldRenameDialog.getByRole('button', { name: t('common.save') }).click()
     await expect(fieldRenameDialog).toBeHidden()
     await expect(page.getByRole('tab', {
-      name: t('contributions.pending-tab', { count: 1 }),
-    })).toBeVisible()
+      name: t('contributions.sent-tab', { count: 1 }),
+    })).toBeVisible({ timeout: 15000 })
 
     await page.getByRole('button', { name: t('contributions.deck-tags-title') }).click()
     const deckTagsDialog = page.getByRole('dialog', { name: t('contributions.deck-tags-title') })
     await deckTagsDialog.getByRole('textbox', { name: t('contributions.add-tags') }).fill(proposedTag)
     await deckTagsDialog.getByRole('button', { name: t('common.save') }).click()
     await expect(deckTagsDialog).toBeHidden()
-
-    await expect(page.getByRole('tab', {
-      name: t('contributions.pending-tab', { count: 2 }),
-    })).toBeVisible()
-    await page.getByRole('columnheader').first().locator('[data-slot="checkbox-control"]').click()
-    const submitButton = page.getByRole('button', {
-      name: t('contributions.submit-selected', { count: 2 }),
-    })
-    await expect(submitButton).toBeEnabled()
-    await submitButton.click()
 
     await expect(page.getByRole('tab', {
       name: t('contributions.sent-tab', { count: 2 }),
@@ -244,10 +234,6 @@ test.describe('Shared deck import', () => {
     const secondDeckTagsDialog = page.getByRole('dialog', { name: t('contributions.deck-tags-title') })
     await secondDeckTagsDialog.getByRole('textbox', { name: t('contributions.add-tags') }).fill(resolvedTag)
     await secondDeckTagsDialog.getByRole('button', { name: t('common.save') }).click()
-    await page.getByRole('columnheader').first().locator('[data-slot="checkbox-control"]').click()
-    await page.getByRole('button', {
-      name: t('contributions.submit-selected', { count: 1 }),
-    }).click()
     await expect(page.getByText(`+${resolvedTag}`, { exact: true })).toBeVisible({ timeout: 15000 })
 
     await authorPage.goto(authorDeckPath)
