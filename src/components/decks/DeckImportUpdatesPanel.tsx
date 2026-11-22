@@ -6,6 +6,7 @@ import { useActionState, useEffect, useRef } from 'react'
 import { useTranslations } from 'next-intl'
 import AppButton from '@/components/app/AppButton'
 import AppError from '@/components/app/AppError'
+import RubyText from '@/components/app/RubyText'
 import { showSuccessToast } from '@/lib/ui'
 import { syncImportedDeckAction } from '@/modules/deck-sharing/deck-sharing.action'
 import type {
@@ -33,7 +34,7 @@ function FactSnapshot({ snapshot }: { snapshot?: DeckUpdateFactSnapshot }) {
           <div className="mb-1 text-xs font-medium text-muted-foreground">
             {t('entry-label', { number: index + 1 })}
           </div>
-          {entry.text ? <p className="whitespace-pre-wrap break-words">{entry.text}</p> : null}
+          {entry.text ? <p className="whitespace-pre-wrap break-words"><RubyText text={entry.text} /></p> : null}
           <div className="mt-1 flex flex-wrap gap-1.5">
             {entry.audio ? <Chip size="sm">{t('audio')}</Chip> : null}
             {entry.image ? <Chip size="sm">{t('image')}</Chip> : null}

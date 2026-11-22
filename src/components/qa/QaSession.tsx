@@ -25,6 +25,7 @@ import { CheckCircle2, Pencil, Send } from 'lucide-react'
 import { useTranslations } from 'next-intl'
 import { useRouter } from 'next/navigation'
 import { useCallback, useEffect, useMemo, useState, useTransition } from 'react'
+import RubyText from '@/components/app/RubyText'
 
 const prefsKey = (deckId: string) => `qa_columns_${deckId}`
 
@@ -248,7 +249,7 @@ export default function QaSession({ deck }: QaSessionProps) {
                   <div className="flex min-w-0 flex-col gap-1">
                     <span className="text-xs uppercase tracking-wide text-muted">{deck.fields[i]}</span>
                     <div className="flex items-center gap-2">
-                      {entry.text && <span className="whitespace-pre-wrap text-lg">{entry.text}</span>}
+                      {entry.text && <span className="whitespace-pre-wrap text-lg"><RubyText text={entry.text} /></span>}
                       {entry.audio && (
                         <FactsAudioPlayButton mediaId={entry.audio} deckId={deck.id} factId={fact.id} imported={imported} />
                       )}
