@@ -1,6 +1,7 @@
 'use client'
 
 import AppButton from '@/components/app/AppButton'
+import RubyText from '@/components/app/RubyText'
 import { showFailToast, showSuccessToast } from '@/lib/ui'
 import {
   acceptContributionAction,
@@ -39,37 +40,45 @@ function ContributionDiff({ c }: { c: Contribution }) {
   const reportedOnly = c.type === 'report' && before.length > 0 && after.length === 0
   const fields = !!(c.proposed_fields?.length || c.reported_fields?.length)
   const tags = !!(c.add_tags?.length || c.remove_tags?.length || c.reported_tags?.length)
-  if (!beforeAfter && !proposedOnly && !reportedOnly && !fields && !tags) return null
+  const description = !!c.proposed_description
+  if (!beforeAfter && !proposedOnly && !reportedOnly && !fields && !tags && !description) return null
   return (
     <div className="flex flex-col gap-2 rounded-lg bg-default/50 p-2.5 text-sm">
       {beforeAfter && (
         <>
           <div>
             <DiffLabel>{t('before')}</DiffLabel>
-            <p>{entriesPreview(before)}</p>
+            <p><RubyText text={entriesPreview(before)} /></p>
           </div>
           <div>
             <DiffLabel accent>{t('after')}</DiffLabel>
-            <p className="font-semibold">{entriesPreview(after)}</p>
+            <p className="font-semibold"><RubyText text={entriesPreview(after)} /></p>
           </div>
         </>
       )}
       {proposedOnly && (
         <div>
           <DiffLabel accent>{t('proposed')}</DiffLabel>
-          <p>{entriesPreview(after)}</p>
+          <p><RubyText text={entriesPreview(after)} /></p>
         </div>
       )}
       {reportedOnly && (
         <div>
           <DiffLabel>{t('reported')}</DiffLabel>
-          <p>{entriesPreview(before)}</p>
+          <p><RubyText text={entriesPreview(before)} /></p>
         </div>
       )}
       {fields && (
         <div>
           <DiffLabel>{t('fields')}</DiffLabel>
           <p>{`${c.reported_fields?.join(' · ') || '—'} → ${c.proposed_fields?.join(' · ') || '—'}`}</p>
+        </div>
+      )}
+      {description && (
+        <div>
+          <DiffLabel>{t('description')}</DiffLabel>
+          <p className="whitespace-pre-wrap">{`${t('before')}: ${c.reported_description || '—'}`}</p>
+          <p className="whitespace-pre-wrap font-semibold">{`${t('after')}: ${c.proposed_description}`}</p>
         </div>
       )}
       {tags && (

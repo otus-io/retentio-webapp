@@ -2,6 +2,7 @@
 
 import AppButton from '@/components/app/AppButton'
 import AppError from '@/components/app/AppError'
+import RubyText from '@/components/app/RubyText'
 import FactsAudioPlayButton from '@/components/facts/FactsAudioPlayButton'
 import LayoutPage from '@/components/layout/LayoutPage'
 import { showSuccessToast } from '@/lib/ui'
@@ -248,7 +249,9 @@ export default function QaSession({ deck }: QaSessionProps) {
                   <div className="flex min-w-0 flex-col gap-1">
                     <span className="text-xs uppercase tracking-wide text-muted">{deck.fields[i]}</span>
                     <div className="flex items-center gap-2">
-                      {entry.text && <span className="whitespace-pre-wrap text-lg">{entry.text}</span>}
+                      {entry.text && (
+                        <span className="whitespace-pre-wrap text-lg"><RubyText text={entry.text} /></span>
+                      )}
                       {entry.audio && (
                         <FactsAudioPlayButton mediaId={entry.audio} deckId={deck.id} factId={fact.id} imported={imported} />
                       )}

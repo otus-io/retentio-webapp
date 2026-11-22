@@ -46,6 +46,17 @@ describe('sendToAuthor', () => {
     expect(stored('retentio_pending_contribs_v2').map((c: { preview: string }) => c.preview)).toEqual(['second', 'new'])
   })
 
+  it('keeps a newer save of the same change that was queued while sending', async () => {
+    const older = { ...factContribution('fact_edit', 'f1', 'first'), savedAt: '2026-01-01T00:00:00.000Z' }
+    const newer = { ...older, preview: 'second', savedAt: '2026-01-01T00:00:01.000Z' }
+    submitDeckContributionsBatchAction.mockImplementationOnce(async () => {
+      localStorage.setItem('retentio_pending_contribs_v2:i1', JSON.stringify([newer]))
+      return { success: true, data: { submitted: [{ localId: older.id, kind: 'fact_edit', contributionId: 'c1' }] } }
+    })
+    expect(await sendToAuthor('i1', [older])).toEqual({ sent: 1, unsent: 0 })
+    expect(stored('retentio_pending_contribs_v2')).toEqual([newer])
+  })
+
   it('counts only results for this call, and survives a failed request', async () => {
     submitDeckContributionsBatchAction.mockResolvedValueOnce({
       success: true,

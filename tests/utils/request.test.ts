@@ -186,7 +186,7 @@ describe('createRequest', () => {
     expect(headers['Content-Type']).toBe('application/json;charset=UTF-8')
   })
 
-  it('浏览器环境从客户端 cookie 读取 token', async () => {
+  it('浏览器环境经同源 /backend 路由请求，不附带 token', async () => {
     document.cookie = `${JWT_COOKIE_NAME}=client-token`
     vi.spyOn(globalThis, 'fetch').mockResolvedValue(
       new Response('{}', { headers: { 'Content-Type': 'application/json' } }),
@@ -194,14 +194,9 @@ describe('createRequest', () => {
 
     await request('/api/profile')
 
-    expect(fetch).toHaveBeenCalledWith(
-      `${API_BASE_URL}/api/profile`,
-      expect.objectContaining({
-        headers: expect.objectContaining({
-          Authorization: 'Bearer client-token',
-        }),
-      }),
-    )
+    expect(fetch).toHaveBeenCalledWith('/backend/api/profile', expect.anything())
+    const headers = (fetch as ReturnType<typeof vi.fn>).mock.calls[0][1].headers
+    expect(headers.Authorization).toBeUndefined()
     expect(cookiesMock).not.toHaveBeenCalled()
   })
 

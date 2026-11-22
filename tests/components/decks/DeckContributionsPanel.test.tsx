@@ -17,6 +17,7 @@ vi.mock('@/modules/contributions/contributions.action', () => ({
   submitDeckContributionsBatchAction: vi.fn(),
 }))
 vi.mock('@/components/app/AppInput', () => ({ default: () => null }))
+vi.mock('@/components/app/AppTextarea', () => ({ default: () => null }))
 vi.mock('@/components/app/AppButton', () => ({
   default: ({ children, onPress, isDisabled }: { children?: ReactNode, onPress?: () => void, isDisabled?: boolean }) => (
     <button type="button" onClick={onPress} disabled={isDisabled}>{children}</button>
@@ -148,6 +149,13 @@ describe('DeckContributionsPanel proposals', () => {
     expect(vi.mocked(submitDeckContributionsBatchAction).mock.calls[0][0].contributions)
       .toEqual([expect.objectContaining({ id: 'deck_tags', addTags: ['a'] })])
     expect(JSON.parse(localStorage.getItem(`retentio_pending_contribs_v2:${deck.id}`)!)).toEqual([])
+  })
+
+  it('opens the description suggestion form', async () => {
+    const { container } = render(<DeckContributionsPanel deck={{ ...deck, fields: ['Word'] } as Deck} />)
+    await screen.findByText('+a')
+    fireEvent.click(container.querySelector('.lucide-file-text')!.closest('button')!)
+    expect(screen.getByText('undefined.contributions.description-title')).toBeTruthy()
   })
 
   it('keeps a proposal pending when it cannot be sent', async () => {

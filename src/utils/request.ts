@@ -1,6 +1,8 @@
 import { API_BASE_URL } from '@/config'
 import { logger } from '@/lib/logger'
 import { formatErrorMessage } from '@/utils/format'
+// Resolves to the real cookie reader only in the react-server layer; client bundles get a null stub.
+import { getToken as getServerToken } from '#server-token'
 
 export type GetTokenFn = () => Promise<string | null>
 
@@ -58,7 +60,7 @@ function normalizeHeaders(input?: HeadersInit): Record<string, string> {
   return { ...(input as Record<string, string>) }
 }
 
-export function createRequest(getToken: GetTokenFn) {
+export function createRequest(getToken: GetTokenFn, baseUrl: string = API_BASE_URL) {
   return async function request<T>(
     endpoint: string,
     options: RequestOptions = {},
@@ -68,6 +70,8 @@ export function createRequest(getToken: GetTokenFn) {
 
     const headers: Record<string, string> = normalizeHeaders(fetchOptions.headers)
 
+    // Also set on body-less GET/DELETE on purpose: harmless to the Go backend, and no CORS preflight
+    // since server calls bypass CORS and browser calls hit the same-origin /backend route.
     if (!(fetchOptions.body instanceof FormData)) {
       headers['Content-Type'] = 'application/json;charset=UTF-8'
     }
@@ -76,7 +80,7 @@ export function createRequest(getToken: GetTokenFn) {
       headers['Authorization'] = `Bearer ${token}`
     }
 
-    const url = `${API_BASE_URL}${endpoint}`
+    const url = `${baseUrl}${endpoint}`
 
     const init = {
       ...fetchOptions,
@@ -125,15 +129,15 @@ export function createRequest(getToken: GetTokenFn) {
       throw new RequestError(errorMessage, res.status, code)
     }
 
+    // null only for a non-JSON 2xx; every /api handler the app calls replies with application/json.
     return json
   }
 }
 
-const getTokenIsomorphic: GetTokenFn = async () => {
-  if (typeof window === 'undefined') {
-    return (await import('@/lib/token')).getToken()
-  }
-  return (await import('@/lib/token.client')).getClientToken()
-}
+const serverRequest = createRequest(getServerToken)
+/** Browser calls go through the same-origin `/backend` route, which attaches the httpOnly JWT. */
+const browserRequest = createRequest(async () => null, '/backend')
 
-export const request = createRequest(getTokenIsomorphic)
+export function request<T>(endpoint: string, options?: RequestOptions): Promise<T> {
+  return (typeof window === 'undefined' ? serverRequest : browserRequest)<T>(endpoint, options)
+}

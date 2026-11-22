@@ -41,8 +41,11 @@ export async function sendToAuthor(deckId: string, contributions: PendingDeckCon
   }
   if (submitted.length > 0) {
     const sentIds = new Set<string>(submitted.map((s) => s.localId))
-    // Re-read: other tabs or edits may have changed the outbox while this was sending.
-    const stillPending = readContributions(pendingKey, isPendingContribution).filter((c) => !sentIds.has(c.id))
+    // Re-read: other tabs or edits may have changed the outbox while this was sending. Match savedAt too, so a
+    // newer save under the same id stays unsent.
+    const sentRevisions = new Map(contributions.filter((c) => sentIds.has(c.id)).map((c) => [c.id, c.savedAt]))
+    const stillPending = readContributions(pendingKey, isPendingContribution)
+      .filter((c) => sentRevisions.get(c.id) !== c.savedAt)
     writeContributions(pendingKey, stillPending)
     const sentAt = new Date().toISOString()
     const sentKey = sentStorageKey(deckId)

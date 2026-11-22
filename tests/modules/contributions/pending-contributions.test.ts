@@ -14,9 +14,16 @@ describe('pending contribution storage', () => {
     expect(isPendingContribution({ ...base, id: 'fact_edit:f1', kind: 'fact_edit' })).toBe(false)
   })
 
+  it('accepts a queued description suggestion and checks its note', () => {
+    const base = { id: 'description_edit', kind: 'description_edit', preview: 'p', savedAt: 't' }
+    expect(isPendingContribution({ ...base, proposedDescription: 'New', message: 'why' })).toBe(true)
+    expect(isPendingContribution({ ...base })).toBe(false)
+    expect(isPendingContribution({ ...base, proposedDescription: 'New', message: 3 })).toBe(false)
+  })
+
   it('accepts sent records of every kind', () => {
     const base = { id: 'x', preview: 'p', contributionId: 'c', sentAt: 't' }
-    for (const kind of ['deck_tags', 'field_rename', 'fact_edit', 'fact_add']) {
+    for (const kind of ['deck_tags', 'field_rename', 'description_edit', 'fact_edit', 'fact_add']) {
       expect(isSentContribution({ ...base, kind })).toBe(true)
     }
     expect(isSentContribution({ ...base, kind: 'report' })).toBe(false)

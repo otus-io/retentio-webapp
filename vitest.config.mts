@@ -15,5 +15,7 @@ export default defineConfig({
   },
   resolve: {
     tsconfigPaths: true,
+    // Tests run outside the react-server layer; use the real module so server paths are exercised.
+    alias: { '#server-token': new URL('./src/lib/token.ts', import.meta.url).pathname },
   },
 })

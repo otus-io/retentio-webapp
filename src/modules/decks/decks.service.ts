@@ -76,7 +76,7 @@ export async function updateDeckService(deckId: string, data: CreateOrUpdateDeck
     if (failed.length > 0) {
       return ServiceResponse.error('updateDeckService error', failed[0].reason)
     }
-    return ServiceResponse.success({ data: {}, meta: { msg: 'deleteFactsService success' } })
+    return ServiceResponse.success({ data: {}, meta: { msg: 'updateDeckService success' } })
   } catch (e) {
     return ServiceResponse.error('updateDeckService failed', e)
   }

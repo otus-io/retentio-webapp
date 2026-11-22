@@ -287,7 +287,7 @@ describe('decks service', () => {
       data: {},
       message: null,
       status: null,
-      meta: { msg: 'deleteFactsService success' },
+      meta: { msg: 'updateDeckService success' },
     })
   })
 
@@ -312,7 +312,7 @@ describe('decks service', () => {
       data: {},
       message: null,
       status: null,
-      meta: { msg: 'deleteFactsService success' },
+      meta: { msg: 'updateDeckService success' },
     })
   })
 

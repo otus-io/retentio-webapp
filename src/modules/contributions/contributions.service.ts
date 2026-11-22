@@ -5,6 +5,7 @@ import type {
   PendingDeckContribution,
   SubmitDeckContributionsBatchResult,
   SubmitContributionMessageDTO,
+  SubmitDescriptionContributionDTO,
   SubmitFactEditContributionDTO,
   SubmitFieldRenameContributionDTO,
   SubmitReportContributionDTO,
@@ -76,6 +77,15 @@ export async function submitFieldRenameContributionService(importDeckId: string,
   }
 }
 
+/** 提交卡组简介建议贡献 */
+export async function submitDescriptionContributionService(importDeckId: string, data: SubmitDescriptionContributionDTO) {
+  try {
+    return ServiceResponse.success(await contributionsApi.submitDescriptionContribution(importDeckId, data))
+  } catch (e) {
+    return ServiceResponse.error('submitDescriptionContributionService failed', e)
+  }
+}
+
 /** 依次提交本地缓存的卡组贡献，并保留每一项的提交结果 */
 export async function submitDeckContributionsBatchService(
   importDeckId: string,
@@ -86,7 +96,9 @@ export async function submitDeckContributionsBatchService(
     const result: SubmitDeckContributionsBatchResult = { submitted: [], failed: [] }
 
     for (const contribution of contributions) {
-      const note = message ? { message } : undefined
+      // A message typed for the batch wins; otherwise keep the one saved with the suggestion.
+      const text = message || ('message' in contribution ? contribution.message : undefined)
+      const note = text ? { message: text } : undefined
       const response = contribution.kind === 'deck_tags'
         ? await submitDeckTagContributionService(importDeckId, {
           add_tags: contribution.addTags,
@@ -98,9 +110,14 @@ export async function submitDeckContributionsBatchService(
             proposed_fields: contribution.proposedFields,
             ...note,
           })
-          : contribution.kind === 'fact_edit'
-            ? await submitFactEditContributionService(importDeckId, contribution.factId, note)
-            : await submitFactAddContributionService(importDeckId, contribution.factId, note)
+          : contribution.kind === 'description_edit'
+            ? await submitDescriptionContributionService(importDeckId, {
+              proposed_description: contribution.proposedDescription,
+              ...note,
+            })
+            : contribution.kind === 'fact_edit'
+              ? await submitFactEditContributionService(importDeckId, contribution.factId, note)
+              : await submitFactAddContributionService(importDeckId, contribution.factId, note)
 
       if (response.success) {
         result.submitted.push({

@@ -3,6 +3,7 @@ import { NextResponse } from 'next/server'
 import { FORGOT_PASSWORD_PATH, JWT_COOKIE_NAME, LOGIN_PATH, REGISTER_PATH } from '@/config'
 import { logger } from '@/lib/logger'
 import { createRequest, RequestError } from '@/utils/request'
+import { tokenCookieOptions } from '@/lib/token'
 
 const blacklist = [
   '/dashboard',
@@ -33,7 +34,7 @@ export async function proxy(request: NextRequest) {
   // 检查是否是受保护的路径
   const isProtectedPath = blacklist.some((path) => pathname.startsWith(path))
 
-  logger.info({ token, isProtectedPath }, `[proxy] => ${pathname}`)
+  logger.info({ isProtectedPath }, `[proxy] => ${pathname}`)
   // 如果是受保护路径但没有 token，重定向到登录页
   if (!token) {
     if (isProtectedPath) {
@@ -57,7 +58,13 @@ export async function proxy(request: NextRequest) {
       logger.fatal('[proxy] has token => redirect(/dashboard)')
       return NextResponse.redirect(url)
     }
-    return NextResponse.next()
+    // Re-issue so cookies set before httpOnly/SameSite existed pick up the current flags.
+    // Skip Server Actions: a Set-Cookie there makes Next re-render the page and drop client state.
+    const res = NextResponse.next()
+    if (!request.headers.has('next-action')) {
+      res.cookies.set(JWT_COOKIE_NAME, token, tokenCookieOptions())
+    }
+    return res
   }
 }
 export const config = {
