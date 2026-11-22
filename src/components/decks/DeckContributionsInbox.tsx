@@ -1,6 +1,7 @@
 'use client'
 
 import AppButton from '@/components/app/AppButton'
+import RubyText from '@/components/app/RubyText'
 import { showFailToast, showSuccessToast } from '@/lib/ui'
 import {
   acceptContributionAction,
@@ -47,11 +48,11 @@ function ContributionDiff({ c }: { c: Contribution }) {
         <>
           <div>
             <DiffLabel>{t('before')}</DiffLabel>
-            <p>{entriesPreview(before)}</p>
+            <p><RubyText text={entriesPreview(before)} /></p>
           </div>
           <div>
             <DiffLabel accent>{t('after')}</DiffLabel>
-            <p className="font-semibold">{entriesPreview(after)}</p>
+            <p className="font-semibold"><RubyText text={entriesPreview(after)} /></p>
           </div>
         </>
       )}
@@ -64,7 +65,7 @@ function ContributionDiff({ c }: { c: Contribution }) {
       {reportedOnly && (
         <div>
           <DiffLabel>{t('reported')}</DiffLabel>
-          <p>{entriesPreview(before)}</p>
+          <p><RubyText text={entriesPreview(before)} /></p>
         </div>
       )}
       {fields && (

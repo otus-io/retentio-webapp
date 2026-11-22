@@ -8,7 +8,10 @@ export default function RubyText({ text }: { text: string }) {
     : (
       <ruby key={index}>
         {segment.base}
+        {/* Parentheses show only where ruby is not laid out, e.g. copied text or some screen readers. */}
+        <rp>(</rp>
         <rt>{segment.reading}</rt>
+        <rp>)</rp>
       </ruby>
     )))
 }

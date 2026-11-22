@@ -1,6 +1,7 @@
 'use client'
 
 import AppButton from '@/components/app/AppButton'
+import RubyText from '@/components/app/RubyText'
 import { showFailToast, showSuccessToast } from '@/lib/ui'
 import {
   getDeckUpdateFactAction,
@@ -33,7 +34,7 @@ function hasContentChanges(s: Summary) {
 
 function EntriesLine({ label, entries }: { label: string, entries?: Entry[] }) {
   const texts = (entries ?? []).map((e) => e.text?.trim()).filter(Boolean)
-  return <p className="text-sm">{`${label}: ${texts.length ? texts.join(' · ') : '—'}`}</p>
+  return <p className="text-sm"><RubyText text={`${label}: ${texts.length ? texts.join(' · ') : '—'}`} /></p>
 }
 
 interface FactTileProps {

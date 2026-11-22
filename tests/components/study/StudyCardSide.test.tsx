@@ -16,7 +16,7 @@ describe('StudyCardSide', () => {
       { image: '/api/media/m2' },
     ] as CardEntry[]
     const { container } = render(<StudyCardSide entries={entries} deckId="d1" factId="f1" imported={false} />)
-    expect(container.querySelector('ruby')!.outerHTML).toBe('<ruby>猫<rt>ねこ</rt></ruby>')
+    expect(container.querySelector('ruby')!.outerHTML).toBe('<ruby>猫<rp>(</rp><rt>ねこ</rt><rp>)</rp></ruby>')
     expect([...container.querySelectorAll('[data-testid="media"]')].map((m) => m.getAttribute('data-alt')))
       .toEqual(['猫がいる', ''])
   })

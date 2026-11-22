@@ -5,7 +5,7 @@ import RubyText from '@/components/app/RubyText'
 describe('RubyText', () => {
   it('shows each reading above its base', () => {
     const { container } = render(<p><RubyText text="[[漢字|かんじ]]を書く" /></p>)
-    expect(container.querySelector('p')!.innerHTML).toBe('<ruby>漢字<rt>かんじ</rt></ruby>を書く')
+    expect(container.querySelector('p')!.innerHTML).toBe('<ruby>漢字<rp>(</rp><rt>かんじ</rt><rp>)</rp></ruby>を書く')
   })
 
   it('renders plain text unchanged', () => {
