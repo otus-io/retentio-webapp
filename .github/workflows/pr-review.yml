@@ -337,6 +337,7 @@ jobs:
             ```
             With no findings at all, keep the header and status line and write
             "No issues found." instead of the table.
+          show_full_output: true
           claude_args: |
             --model claude-sonnet-4-6
             --max-turns 40
