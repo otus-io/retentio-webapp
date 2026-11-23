@@ -95,7 +95,8 @@ This guide walks you through using the Retentio API via Swagger UI.
 > ISO 8601 strings use the `Z` suffix (e.g., `2026-02-08T12:00:00Z`).
 > Unix timestamps are seconds since the Unix epoch
 > (1970-01-01T00:00:00Z). Clients must convert to/from local time
-> on their side.
+> on their side. Exception: fact `created_at` is in **microseconds**
+> (it orders facts, including rows added in the same request).
 >
 > **ID format:** Deck, fact, card, and **tag** IDs are random **lowercase alphanumeric** strings (no underscores or hyphens). Backend generates: **deck_id** 12 characters; **fact_id**, **card_id**, and **tag_id** 8 characters each. Media IDs (e.g. in `[audio:id]`) are 10 characters. Example IDs in this guide follow these lengths.
 
@@ -142,7 +143,7 @@ This guide walks you through using the Retentio API via Swagger UI.
 | `/api/decks/{id}/contributions/{contributionId}/qa-review`            | GET    | **(Sharing)** Author: live status of each sign-off in a `qa_review`.                                                                                                                                                                                                                                                                                                                                                                                                                                                  |
 | `/api/decks/{id}/contributions/{contributionId}/media/{attachmentId}` | GET    | **(Sharing)** Author: download immutable contribution attachment bytes.                                                                                                                                                                                                                                                                                                                                                                                                                                               |
 | `/api/decks/{id}/facts/{operation}`                                   | POST   | Add facts (operation: `append`, `prepend`, `shuffle`, `spread`). Body: `facts` (required), optional `template`, and optional **`tags`** or **`tag_ids`** per fact item (mutually exclusive per item; `tags` = names auto-created if missing, `tag_ids` = existing IDs). Column labels live on the deck (`PATCH /api/decks/{id}` → `fields`), not on each fact. To add a card for an existing fact, use POST `/api/decks/{id}/card` instead. On **imported** decks: private overlay + `local_facts` (no contribution). |
-| `/api/decks/{id}/facts`                                               | GET    | List facts (paged): default `limit` **50**, `offset` **0**; max `limit` **200**. `meta`: `count`, `has_more`, `limit`, `offset`, `total`.                                                                                                                                                                                                                                                                                                                                                                             |
+| `/api/decks/{id}/facts`                                               | GET    | List facts (paged): default `limit` **50**, `offset` **0**; max `limit` **200**. Optional `sort`: `id` (default) or `created_at` (oldest first, newest last; ties and facts without `created_at` by id); other values **400**. `meta`: `count`, `has_more`, `limit`, `offset`, `sort`, `total`. Facts carry `created_at` (unix microseconds) when created after this field was added.                                                                                                                                 |
 | `/api/decks/{id}/facts/ids`                                           | GET    | Full list of fact ids (`data.fact_ids`) sorted ascending; **not paged** (`limit` / `offset` ignored). `meta`: `total`. Skips fact bodies and tags, so an id whose fact record is missing or unparseable is still listed. For QA flows that walk facts and fetch each on demand. Optional `unverified_columns=0,2` lists only facts still needing a human sign-off in those columns — see [Quality stats](#quality-stats).                                                                                             |
 | `/api/decks/{id}/facts/{factId}`                                      | GET    | Get a specific fact                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   |
 | `/api/decks/{id}/facts/{factId}`                                      | PATCH  | Update a fact’s `entries` only (column names are edited on the deck). On **imported** decks: private overlay only (no contribution).                                                                                                                                                                                                                                                                                                                                                                                  |
@@ -2198,12 +2199,13 @@ The add-facts response does **not** echo created fact IDs or tag assignments. Af
 
 **Endpoint:** `GET /api/decks/{id}/facts`
 
-**Query parameters (optional):** `limit` (default **50**, max **200**) and `offset` (default **0**). Omitted keys use those defaults; **`meta` echoes `limit` and `offset`** together with `count`, `has_more`, and `total` (deck fact count).
+**Query parameters (optional):** `limit` (default **50**, max **200**), `offset` (default **0**), and `sort` (default **`id`**). Omitted keys use those defaults; **`meta` echoes `limit`, `offset`, and `sort`** together with `count`, `has_more`, and `total` (deck fact count).
 
-| Name     | Description                                                                      |
-| -------- | -------------------------------------------------------------------------------- |
-| `limit`  | Page size. Invalid or non-positive values → default **50**; above max → **200**. |
-| `offset` | Facts to skip after stable sort by fact **`id`**. Negative → **0**.              |
+| Name     | Description                                                                                                                                |
+| -------- | ------------------------------------------------------------------------------------------------------------------------------------------ |
+| `limit`  | Page size. Invalid or non-positive values → default **50**; above max → **200**.                                                           |
+| `offset` | Facts to skip after sorting (see `sort`). Negative → **0**.                                                                                |
+| `sort`   | **`id`** (ascending) or **`created_at`** (oldest first, newest last; ties and facts without `created_at` by `id`). Other values → **400**. |
 
 **Request example** (first page; omit query string to use default `limit` and `offset`):
 
@@ -2221,6 +2223,7 @@ Authorization: Bearer <token>
       {
         "id": "x9k2m4np",
         "entries": [{ "text": "Apple" }, { "text": "りんご" }],
+        "created_at": 1763846400000000,
         "tags": [
           { "id": "a1b2c3d4", "name": "food", "description": "" },
           { "id": "f6e5d4c3", "name": "noun", "description": "Parts of speech" }
@@ -2239,10 +2242,14 @@ Authorization: Bearer <token>
     "has_more": false,
     "limit": 50,
     "offset": 0,
+    "sort": "id",
     "total": 2
   }
 }
 ```
+
+**`created_at`** is unix **microseconds**, set when the fact is created (facts added in one request keep request order);
+it is omitted on facts created before the field existed.
 
 Each fact always includes **`tags`**: an array of `{ "id", "name", "description" }` objects (empty array when none). A fact can have **many** tags; the list is sorted by **tag name** in list/detail responses. Tags are not stored inside the fact record in Redis; the API resolves them from per-user association keys. **Column labels are not returned on each fact** — use the deck’s **`fields`** from **`GET /api/decks/{id}`** (same order as `entries` indices).
 
@@ -3828,7 +3835,7 @@ Contribution submit/inbox errors: [Deck sharing](#deck-sharing).
 | `/api/decks/{id}`                                 | DELETE      | `{ "data": { "deck_id" }, "meta": { "msg" } }`                                                                                                                                                                                                                                       |
 | `/api/decks/{id}/facts/{op}`                      | POST        | Add facts: body `facts[]` with optional `tags` (names) per item; `{ "data": { "fact_length" }, "meta": { "msg" } }` (no tags in response)                                                                                                                                            |
 | `/api/decks/{id}/card`                            | POST        | Add card from existing fact: `{ "data": { "card_id" }, "meta": { "msg" } }`                                                                                                                                                                                                          |
-| `/api/decks/{id}/facts`                           | GET         | `{ "data": { "facts": [ … ] }, "meta": { "msg", "count", "has_more", "limit", "offset", "total" } }` — defaults `limit` 50, `offset` 0                                                                                                                                               |
+| `/api/decks/{id}/facts`                           | GET         | `{ "data": { "facts": [ … ] }, "meta": { "msg", "count", "has_more", "limit", "offset", "sort", "total" } }` — defaults `limit` 50, `offset` 0, `sort` `id`                                                                                                                          |
 | `/api/decks/{id}/facts/{factId}`                  | GET         | `{ "data": { "fact": { …, "tags": [ … ] } }, "meta": { "msg" } }`                                                                                                                                                                                                                    |
 | `/api/decks/{id}/facts/{factId}`                  | PATCH       | `{ "data": { "fact_id" }, "meta": { "msg" } }`                                                                                                                                                                                                                                       |
 | `/api/decks/{id}/facts/{factId}`                  | DELETE      | `{ "data": { "fact_id" }, "meta": { "msg" } }`                                                                                                                                                                                                                                       |
