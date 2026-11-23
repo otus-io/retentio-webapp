@@ -96,7 +96,8 @@
 > **时间戳规范：** API 中所有时间戳均使用 **UTC** 时区。
 > ISO 8601 字符串使用 `Z` 后缀（例如 `2026-02-08T12:00:00Z`）。
 > Unix 时间戳为自 Unix 纪元（1970-01-01T00:00:00Z）以来的秒数。
-> 客户端需自行进行本地时间的转换。
+> 客户端需自行进行本地时间的转换。例外：词条 `created_at` 为**微秒**
+> （用于词条排序，包括同一请求中添加的多行）。
 >
 > **ID 格式：** 卡组、词条、卡片与**标签** ID 均为随机 **小写字母数字** 字符串（无下划线或连字符）。后端生成：**deck_id** 12 位；**fact_id**、**card_id**、**tag_id** 各 8 位。媒体 ID（如 `[audio:id]` 中的 id）为 10 位。本指南中的示例 ID 均符合上述长度。
 
@@ -143,7 +144,7 @@
 | `/api/decks/{id}/contributions/{contributionId}/qa-review`            | GET    | **（共享）** 作者：查看 `qa_review` 中每条签核的实时状态。                                                                                                                                                                                                                                                                                                                                                         |
 | `/api/decks/{id}/contributions/{contributionId}/media/{attachmentId}` | GET    | **（共享）** 作者：下载不可变贡献附件字节。                                                                                                                                                                                                                                                                                                                                                                        |
 | `/api/decks/{id}/facts/{operation}`                                   | POST   | 添加词条：operation 为 append/prepend/shuffle/spread。请求体：facts（必填）、可选 template，以及每项词条可选 **`tags`** 或 **`tag_ids`**（同一条词条上互斥；`tags` 为名称、不存在则自动创建，`tag_ids` 为已有 ID）。列名在卡组上维护（`PATCH /api/decks/{id}` → `fields`），不在每条词条上。为已有词条添加一张卡请使用 POST `/api/decks/{id}/card`。**导入**卡组：写入私有 overlay + `local_facts`（不创建贡献）。 |
-| `/api/decks/{id}/facts`                                               | GET    | 获取词条（分页）：默认 `limit` **50**、`offset` **0**；`limit` 最大 **200**。`meta` 含 `count`、`has_more`、`limit`、`offset`、`total`。                                                                                                                                                                                                                                                                           |
+| `/api/decks/{id}/facts`                                               | GET    | 获取词条（分页）：默认 `limit` **50**、`offset` **0**；`limit` 最大 **200**。可选 `sort`：`id`（默认）或 `created_at`（最早在前、最新在后；时间相同或无 `created_at` 时按 id）；其他值 **400**。`meta` 含 `count`、`has_more`、`limit`、`offset`、`sort`、`total`。该字段上线后新建的词条带 `created_at`（Unix 微秒）。                                                                                            |
 | `/api/decks/{id}/facts/ids`                                           | GET    | 升序返回全部词条 id（`data.fact_ids`）；**不分页**（忽略 `limit` / `offset`）。`meta`：`total`。不读取词条正文和标签，因此记录缺失或无法解析的 id 仍会列出。用于逐条按需加载词条的 QA 流程。可选 `unverified_columns=0,2` 只列出这些列中仍需人工签核的词条，见 [质量统计](#质量统计)。                                                                                                                             |
 | `/api/decks/{id}/facts/{factId}`                                      | GET    | 获取单个词条                                                                                                                                                                                                                                                                                                                                                                                                       |
 | `/api/decks/{id}/facts/{factId}`                                      | PATCH  | 仅更新词条 `entries`（列名在卡组上改）。**导入**卡组：仅写私有 overlay（不创建贡献）。                                                                                                                                                                                                                                                                                                                             |
@@ -2167,12 +2168,13 @@ ETag: "sha256:abc123"
 
 **接口：** `GET /api/decks/{id}/facts`
 
-**查询参数（可选）：** `limit`（默认 **50**，最大 **200**）、`offset`（默认 **0**）。省略时使用默认值；**`meta` 回显 `limit` 与 `offset`**，并含 `count`、`has_more`、`total`。
+**查询参数（可选）：** `limit`（默认 **50**，最大 **200**）、`offset`（默认 **0**）、`sort`（默认 **`id`**）。省略时使用默认值；**`meta` 回显 `limit`、`offset` 与 `sort`**，并含 `count`、`has_more`、`total`。
 
-| 名称     | 说明                                               |
-| -------- | -------------------------------------------------- |
-| `limit`  | 每页条数。非法或非正数→默认；超过最大→**200**。    |
-| `offset` | 按词条 **`id` 升序**排序后跳过的条数。负数→**0**。 |
+| 名称     | 说明                                                                                                             |
+| -------- | ---------------------------------------------------------------------------------------------------------------- |
+| `limit`  | 每页条数。非法或非正数→默认；超过最大→**200**。                                                                  |
+| `offset` | 排序后（见 `sort`）跳过的条数。负数→**0**。                                                                      |
+| `sort`   | **`id`**（升序）或 **`created_at`**（最早在前、最新在后；时间相同或无 `created_at` 时按 `id`）。其他值→**400**。 |
 
 **请求示例**（首页；省略查询串则使用默认 `limit` 与 `offset`）：
 
@@ -2191,6 +2193,7 @@ Authorization: Bearer <token>
         "id": "x9k2m4np",
         "entries": [{ "text": "Apple" }, { "text": "りんご" }],
         "fields": ["English", "Japanese"],
+        "created_at": 1763846400000000,
         "tags": [
           { "id": "a1b2c3d4", "name": "food", "description": "" },
           { "id": "f6e5d4c3", "name": "noun", "description": "Parts of speech" }
@@ -2209,10 +2212,13 @@ Authorization: Bearer <token>
     "has_more": false,
     "limit": 50,
     "offset": 0,
+    "sort": "id",
     "total": 2
   }
 }
 ```
+
+**`created_at`** 为 Unix **微秒**，在词条创建时写入（同一请求添加的多条保持请求顺序）；该字段上线前创建的词条不返回此字段。
 
 每个词条均包含 **`tags`**：`{ "id", "name", "description" }` 对象数组；无标签时为 `[]`。同一词条可有**多个**标签；列表与详情接口中标签按 **name** 排序。标签不存放在 Redis 的 `fact:{id}` JSON 内，由服务端按用户维度的关联键解析。
 
@@ -3793,7 +3799,7 @@ Accept: application/json
 | `/api/decks/{id}`                                 | DELETE      | `{ "data": { "deck_id" }, "meta": { "msg" } }`                                                                                                                                                                                                                           |
 | `/api/decks/{id}/facts/{op}`                      | POST        | 添加词条：body `facts[]` 每项可选 `tags`（名称）或 `tag_ids`（同条互斥）；`{ "data": { "fact_length" }, "meta": { "msg" } }`（响应不含标签）                                                                                                                             |
 | `/api/decks/{id}/card`                            | POST        | 为已有词条加卡：`{ "data": { "card_id" }, "meta": { "msg" } }`                                                                                                                                                                                                           |
-| `/api/decks/{id}/facts`                           | GET         | `{ "data": { "facts": [ … ] }, "meta": { "msg", "count", "has_more", "limit", "offset", "total" } }` — 默认 `limit` 50、`offset` 0                                                                                                                                       |
+| `/api/decks/{id}/facts`                           | GET         | `{ "data": { "facts": [ … ] }, "meta": { "msg", "count", "has_more", "limit", "offset", "sort", "total" } }` — 默认 `limit` 50、`offset` 0、`sort` `id`                                                                                                                  |
 | `/api/decks/{id}/facts/{factId}`                  | GET         | `{ "data": { "fact": { …, "tags": [ … ] }, "media_versions"?: { … } }, "meta": { "msg" } }`                                                                                                                                                                              |
 | `/api/decks/{id}/facts/{factId}`                  | PATCH       | `{ "data": { "fact_id" }, "meta": { "msg" } }`                                                                                                                                                                                                                           |
 | `/api/decks/{id}/facts/{factId}`                  | DELETE      | `{ "data": { "fact_id" }, "meta": { "msg" } }`                                                                                                                                                                                                                           |
