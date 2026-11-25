@@ -98,6 +98,7 @@
       "subtitle": "すでに Rete を使っている何千人もの学習者に加わり、より多く、より長く覚えましょう。",
       "button": "Apple iOS",
       "androidButton": "Google Android",
+      "apkLink": "Android APK を直接ダウンロード",
       "note": "iOS は TestFlight ベータで利用できます。Android は Google Play の内部テストで提供しています。"
     }
   },

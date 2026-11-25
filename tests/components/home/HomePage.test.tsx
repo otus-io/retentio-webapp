@@ -71,9 +71,10 @@ vi.mock('lucide-react', () => ({
   GitPullRequest: () => <span data-testid="icon-git-pull-request" />,
   GitMerge: () => <span data-testid="icon-git-merge" />,
   RefreshCw: () => <span data-testid="icon-refresh" />,
+  Download: () => <span data-testid="icon-download" />,
 }))
 
-import { PLAY_STORE_URL, TESTFLIGHT_JOIN_URL } from '@/config'
+import { ANDROID_APK_URL, PLAY_STORE_URL, TESTFLIGHT_JOIN_URL } from '@/config'
 import HomePage from '@/components/home/HomePage'
 
 interface ObserverStub {
@@ -166,6 +167,12 @@ describe('HomePage', () => {
     const androidLink = screen.getByText('home.cta.androidButton').closest('a')
     expect(androidLink?.getAttribute('href')).toBe(PLAY_STORE_URL)
     expect(androidLink?.getAttribute('target')).toBe('_blank')
+  })
+
+  it('APK 链接指向最新 GitHub Release', () => {
+    render(<HomePage />)
+    const apkLink = screen.getByText('home.cta.apkLink').closest('a')
+    expect(apkLink?.getAttribute('href')).toBe(ANDROID_APK_URL)
   })
 
   it('Learn More 链接指向背景介绍', () => {

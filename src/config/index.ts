@@ -14,4 +14,6 @@ export const CONTACT_EMAIL = 'research@retentio.app'
 export const TESTFLIGHT_JOIN_URL = 'https://testflight.apple.com/join/46KgYyth'
 /** Google Play Store listing for the Android app. */
 export const PLAY_STORE_URL = 'https://play.google.com/store/apps/details?id=srs.app.retentio'
+/** Always the newest signed APK, published by retentio-frontend's android-release workflow. */
+export const ANDROID_APK_URL = 'https://github.com/otus-io/retentio-frontend/releases/latest/download/retentio.apk'
 
