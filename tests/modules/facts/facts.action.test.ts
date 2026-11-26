@@ -126,6 +126,15 @@ describe('addFactAction', () => {
       .toEqual({ success: true, data: { newFactIds: [], idsUnknown: true } })
   })
 
+  it('returns the new fact id on any deck when asked', async () => {
+    services.createFactsService.mockResolvedValueOnce({ success: true, data: { fact_length: 2 } })
+    services.getFactIdsService
+      .mockResolvedValueOnce({ success: true, data: { fact_ids: ['a'] } })
+      .mockResolvedValueOnce({ success: true, data: { fact_ids: ['a', 'n'] } })
+    expect(await addFactAction('d1', [{ text: 'hola' }], false, false, true))
+      .toEqual({ success: true, data: { newFactIds: ['n'] } })
+  })
+
   it('returns validation and backend errors', async () => {
     expect((await addFactAction('d1', [], false)).success).toBe(false)
     expect(services.createFactsService).not.toHaveBeenCalled()

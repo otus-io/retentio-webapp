@@ -267,6 +267,7 @@ describe('FactsGridPage', () => {
       await settle()
       expect(getFactsPage).toHaveBeenCalledTimes(1)
       expect(h.rows[1].loading).toBe(true)
+      expect(showFailToast).toHaveBeenCalledWith('facts-grid.load-failed')
     })
 
     it('runs once at a time and stops when the page closes', async () => {
@@ -337,6 +338,49 @@ describe('FactsGridPage', () => {
     act(() => h.gridProps.onCellValueChanged({ node: { data: h.rows[260], rowIndex: 260 } }))
     await waitFor(() => expect(updateFact).toHaveBeenCalledTimes(2))
     expect(updateFact).toHaveBeenLastCalledWith('d1', 'f0', { entries: [{ text: 'new' }, { text: 'b' }] })
+  })
+
+  it('runs saves one at a time, so a later edit never lands before an earlier one', async () => {
+    let first!: () => void
+    vi.mocked(updateFact).mockReturnValueOnce(new Promise((r) => { first = () => r(undefined as never) }))
+    renderGrid()
+    h.rows[0].col0 = { text: 'a' }
+    change(0)
+    await waitFor(() => expect(updateFact).toHaveBeenCalledTimes(1))
+    h.rows[0].col0 = { text: 'ab' }
+    change(0)
+    await settle()
+    expect(updateFact).toHaveBeenCalledTimes(1)
+    await act(async () => first())
+    await waitFor(() => expect(updateFact).toHaveBeenCalledTimes(2))
+    expect(updateFact).toHaveBeenLastCalledWith('d1', 'f0', { entries: [{ text: 'ab' }, { text: 'b' }] })
+  })
+
+  it('does not retry a failed save of a fact deleted since', async () => {
+    vi.mocked(updateFact).mockRejectedValueOnce(new Error('offline'))
+    vi.mocked(deleteFactAction).mockResolvedValueOnce({ success: true })
+    renderGrid()
+    h.rows[0].col0 = { text: 'new' }
+    change(0)
+    await waitFor(() => expect(showFailToast).toHaveBeenCalledWith('facts-grid.save-failed'))
+    rightClick({ data: h.rows[0], rowIndex: 0 })
+    act(() => h.modals.menu.onAction('delete'))
+    await act(() => h.modals.delete.action(null, new FormData()))
+    act(() => h.gridProps.onCellValueChanged({ node: { data: h.rows[260], rowIndex: 260 } }))
+    await settle()
+    expect(updateFact).toHaveBeenCalledTimes(1)
+  })
+
+  it('reports a failed column rename and retries it when the header loses focus again', async () => {
+    vi.mocked(updateDeck).mockRejectedValueOnce(new Error('offline'))
+    renderGrid()
+    const header = h.gridProps.columnDefs[1].headerComponent({})
+    const [rowNumber, front, back] = h.gridProps.columnDefs
+    h.liveDefs = [rowNumber, { ...front, headerName: 'Word' }, back]
+    act(() => { header.props.onBlur() })
+    await waitFor(() => expect(showFailToast).toHaveBeenCalledWith('facts-grid.save-failed'))
+    act(() => { header.props.onBlur() })
+    await waitFor(() => expect(updateDeck).toHaveBeenCalledTimes(2))
   })
 
   it('saves renamed field columns to the deck when the header loses focus, and nothing else', async () => {
@@ -470,8 +514,11 @@ describe('FactsGridPage', () => {
       renderGrid()
       ready()
       await waitFor(() => expect(allLoaded()).toBe(true))
-      const row = typed()
-      await waitFor(() => expect(addFactAction).toHaveBeenCalledWith('d1', [{ text: 'new' }, { text: '' }], false, false))
+      // Typed as the server will store it, so nothing is left to save once it is downloaded.
+      h.rows[250].col1 = { text: 'b' }
+      const row = typed('f')
+      await waitFor(() => expect(addFactAction)
+        .toHaveBeenCalledWith('d1', [{ text: 'f' }, { text: 'b' }], false, false, true))
       expect(row.adding).toBe(true)
       // A second edit while it is created does not create it again.
       change(250)
@@ -507,6 +554,39 @@ describe('FactsGridPage', () => {
       }))
       expect(row).toMatchObject({ id: 'f250', col0: { text: 'apple' }, col1: { text: 'ringo' } })
       expect(addFactAction).toHaveBeenCalledTimes(1)
+    })
+
+    it('takes the new fact id from the create, without waiting for the download', async () => {
+      let created!: (v: Awaited<ReturnType<typeof addFactAction>>) => void
+      vi.mocked(addFactAction).mockReturnValueOnce(new Promise((r) => { created = r }))
+      renderGrid()
+      const row = typed('apple')
+      await waitFor(() => expect(addFactAction).toHaveBeenCalledTimes(1))
+      row.col1 = { text: 'ringo' }
+      change(250)
+      await settle()
+      await act(async () => created({ success: true, data: { newFactIds: ['n9'] } }))
+      expect(row.id).toBe('n9')
+      expect(row.loading).toBeFalsy()
+      expect(row[rawSymbol]).toMatchObject({ id: 'n9', fields: [], tags: [] })
+      expect(row[rawSymbol].local).toBeUndefined()
+      // What was typed while it was created is saved to it.
+      await waitFor(() => expect(updateFact).toHaveBeenCalledWith('d1', 'n9', {
+        entries: [{ text: 'apple' }, { text: 'ringo' }],
+      }))
+      expect(getFactsPage).not.toHaveBeenCalled()
+      expect(showFailToast).not.toHaveBeenCalled()
+    })
+
+    it('downloads the new fact when its id is unknown, without a send warning on an own deck', async () => {
+      vi.mocked(addFactAction).mockResolvedValueOnce({ success: true, data: { newFactIds: [], idsUnknown: true } })
+      renderGrid()
+      ready()
+      await waitFor(() => expect(allLoaded()).toBe(true))
+      const row = typed()
+      serverTotal = 251
+      await waitFor(() => expect(row).toMatchObject({ id: 'f250', loading: false }))
+      expect(showFailToast).not.toHaveBeenCalled()
     })
 
     it('unlocks the row when creating the fact fails outright', async () => {
@@ -549,7 +629,7 @@ describe('FactsGridPage', () => {
         typed()
         await waitFor(() => expect(sendToAuthor)
           .toHaveBeenCalledWith('d1', [{ kind: 'fact_add', id: 'n1', preview: expect.any(String) }]))
-        expect(addFactAction).toHaveBeenCalledWith('d1', [{ text: 'new' }, { text: '' }], false, true)
+        expect(addFactAction).toHaveBeenCalledWith('d1', [{ text: 'new' }, { text: '' }], false, true, true)
         await act(() => new Promise((r) => setTimeout(r, 0)))
         expect(showSuccessToast).not.toHaveBeenCalled()
         expect(showFailToast).not.toHaveBeenCalled()

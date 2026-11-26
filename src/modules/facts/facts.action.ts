@@ -141,13 +141,14 @@ export async function updateFactEntriesAction(deckId: string, factId: string, en
 
 /**
  * 逐条添加一个词条（卡组菜单的“添加词条”，同移动端）；verified 记录作者已核验。
- * 导入卡组返回新词条的 ID，供浏览器立即作为贡献发送给作者。
+ * 导入卡组（或 withIds）返回新词条的 ID：导入卡组据此立即作为贡献发送给作者，词条表格据此认出新行。
  */
 export async function addFactAction(
   deckId: string,
   entries: Entry[],
   verified: boolean,
   imported = false,
+  withIds = imported,
 ): Promise<ActionState<{ newFactIds: string[], idsUnknown?: boolean }>> {
   const result = createFactsSchema.safeParse({
     facts: [{ entries }],
@@ -155,12 +156,12 @@ export async function addFactAction(
     verified: verified || undefined,
   })
   if (!result.success) return { success: false, error: z.prettifyError(result.error) }
-  const before = imported ? await getFactIdsService(deckId) : null
+  const before = withIds ? await getFactIdsService(deckId) : null
   const res = await createFactsService(deckId, result.data)
   if (!res.success) return { success: false, error: res.message }
   revalidatePath(`/decks/${deckId}/facts`)
   revalidatePath(`/decks/${deckId}`)
-  if (!imported) return { success: true, data: { newFactIds: [] } }
+  if (!withIds) return { success: true, data: { newFactIds: [] } }
   if (!before?.success) return { success: true, data: { newFactIds: [], idsUnknown: true } }
   // The add response has no ids, so the new fact is the one that was not there before (as on mobile).
   const after = await getFactIdsService(deckId)

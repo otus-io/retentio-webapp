@@ -260,8 +260,11 @@ export default function FactsGridPage({ facts, total: initialTotal, deck }: Fact
           const res = await getFactsPage(deck.id, { limit: FACTS_PAGE_SIZE, offset: start, sort: FACTS_SORT })
           failures = 0
           if (version !== layoutVersionRef.current) continue
-          // Nothing left to fill there (the deck shrank elsewhere): stop rather than ask again.
-          if (!fillRows(start, res.data.facts)) break
+          // Nothing left to fill there (the deck changed elsewhere): stop rather than ask again.
+          if (!fillRows(start, res.data.facts)) {
+            showFailToast(tRef.current('facts-grid.load-failed'))
+            break
+          }
         } catch {
           failures += 1
           if (failures >= MAX_LOAD_FAILURES) {
@@ -305,6 +308,9 @@ export default function FactsGridPage({ facts, total: initialTotal, deck }: Fact
     const index = rowsRef.current.findIndex((row) => rowFact(row)?.id === factId)
     if (index < 0) return
     const [row] = rowsRef.current.splice(index, 1)
+    dirtyNodesRef.current.forEach((node) => {
+      if (node.data === row) dirtyNodesRef.current.delete(node)
+    })
     layoutVersionRef.current += 1
     totalRef.current -= 1
     setTotal(totalRef.current)
@@ -321,12 +327,18 @@ export default function FactsGridPage({ facts, total: initialTotal, deck }: Fact
       .map((e) => e.headerName || '')
     if(JSON.stringify(currentDefs) !== JSON.stringify(lastDecksFields.current)){
       setLoading(true)
-      lastDecksFields.current = currentDefs
-      await updateDeck(deck.id, {
-        ...deck,
-        fields: currentDefs,
-      })
-      setLoading(false)
+      try {
+        await updateDeck(deck.id, {
+          ...deck,
+          fields: currentDefs,
+        })
+        lastDecksFields.current = currentDefs
+      } catch {
+        // Not marked saved, so leaving the header again retries it.
+        showFailToast(tRef.current('facts-grid.save-failed'))
+      } finally {
+        setLoading(false)
+      }
     }
   }, [deck, getCurrentColDefs])
 
@@ -347,22 +359,32 @@ export default function FactsGridPage({ facts, total: initialTotal, deck }: Fact
     const imported = Boolean(deck.source_deck_id)
     try {
       setLoading(true)
-      const res = await addFactAction(deck.id, entries, false, imported).catch(() => ({ success: false as const }))
+      const res = await addFactAction(deck.id, entries, false, imported, true)
+        .catch(() => ({ success: false as const }))
       row.adding = false
       if (!res.success) {
         showFailToast(String(('error' in res && res.error) || '') || tRef.current('add-fact.failed'))
         return
       }
-      // The row is now the newest fact; the loader downloads it (for its id) while it keeps the typed text.
-      row.loading = true
-      row.added = true
+      const newFactIds = res.data?.newFactIds ?? []
+      if (newFactIds.length === 1) {
+        // The row is now this fact; save anything typed into it meanwhile.
+        const [id] = newFactIds
+        const fact: Fact = { id, entries, fields: [], tags: [], ...(imported ? { local: true } : {}) }
+        Object.assign(row, { id, [rawSymbol]: fact })
+        gridRef.current?.api.applyTransaction({ update: [row] })
+        saveEditsRef.current()
+      } else {
+        // Not identified: the loader downloads it (for its id) while the row keeps the typed text.
+        row.loading = true
+        row.added = true
+        runLoader()
+      }
       totalRef.current += 1
       setTotal(totalRef.current)
       syncTrailingRows()
       gridRef.current?.api.ensureIndexVisible(endScrollRow(totalRef.current), 'top')
-      runLoader()
-      const newFactIds = res.data?.newFactIds ?? []
-      if (res.data?.idsUnknown) {
+      if (imported && res.data?.idsUnknown) {
         showFailToast(tRef.current('auto-send.fact-added-not-sent'))
       } else if (imported && newFactIds.length) {
         // A new fact on an imported deck goes to the author right away, as on mobile.
@@ -379,7 +401,7 @@ export default function FactsGridPage({ facts, total: initialTotal, deck }: Fact
     }
   }, [deck.id, deck.source_deck_id, syncTrailingRows, runLoader])
 
-  const handleCellChange = useCallback(async () => {
+  const saveDirtyRows = useCallback(async () => {
     const changedNodes: { node: IRowNode; entries: Entry[] }[] = []
     let newRow: { node: IRowNode; entries: Entry[] } | undefined
     const dirty = [...dirtyNodesRef.current]
@@ -429,9 +451,9 @@ export default function FactsGridPage({ facts, total: initialTotal, deck }: Fact
         node.data[rawSymbol].entries = entries
       })
       if (saved.length < changedNodes.length) {
-        // Retried with the next save; the cells keep the typed text meanwhile.
+        // Retried with the next save (unless deleted meanwhile); the cells keep the typed text.
         changedNodes.forEach(({ node }, i) => {
-          if (results[i].status === 'rejected') dirtyNodesRef.current.add(node)
+          if (results[i].status === 'rejected' && rowsRef.current.includes(node.data)) dirtyNodesRef.current.add(node)
         })
         showFailToast(tRef.current('facts-grid.save-failed'))
       }
@@ -451,6 +473,14 @@ export default function FactsGridPage({ facts, total: initialTotal, deck }: Fact
       setLoading(false)
     }
   }, [deck.id, deck.source_deck_id, getEntriesFromData, addRow])
+
+  // One save at a time, in order: a later edit to a row never lands on the server before an earlier one.
+  const saveQueueRef = useRef<Promise<void>>(Promise.resolve())
+  const handleCellChange = useCallback(() => {
+    const run = saveQueueRef.current.then(saveDirtyRows)
+    saveQueueRef.current = run.catch(() => {})
+    return run
+  }, [saveDirtyRows])
 
   const handleDebouncedCellChange = useDebouncedCallback(handleCellChange, 100)
   useEffect(() => {
