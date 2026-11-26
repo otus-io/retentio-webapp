@@ -8,7 +8,6 @@ import { createFactsSchema, type Entry, type Fact, updateFactSchema } from '@/mo
 import {
   createFactsService,
   deleteFactService,
-  getFactIdsService,
   getFactService,
   updateFactService,
 } from '@/modules/facts/facts.service'
@@ -140,15 +139,15 @@ export async function updateFactEntriesAction(deckId: string, factId: string, en
 }
 
 /**
- * 逐条添加一个词条（卡组菜单的“添加词条”，同移动端）；verified 记录作者已核验。
- * 导入卡组（或 withIds）返回新词条的 ID：导入卡组据此立即作为贡献发送给作者，词条表格据此认出新行。
+ * 逐条添加一个词条（同移动端）；verified 记录作者已核验。返回新词条的 ID（添加响应的 fact_ids）：
+ * 导入卡组据此立即作为贡献发送给作者，词条表格据此认出新行。refreshFacts 为 false 时不刷新词条页（表格自己维护行），
+ * 卡组页仍会刷新（下次进入时显示新的数量）。
  */
 export async function addFactAction(
   deckId: string,
   entries: Entry[],
   verified: boolean,
-  imported = false,
-  withIds = imported,
+  refreshFacts = true,
 ): Promise<ActionState<{ newFactIds: string[], idsUnknown?: boolean }>> {
   const result = createFactsSchema.safeParse({
     facts: [{ entries }],
@@ -156,16 +155,12 @@ export async function addFactAction(
     verified: verified || undefined,
   })
   if (!result.success) return { success: false, error: z.prettifyError(result.error) }
-  const before = withIds ? await getFactIdsService(deckId) : null
   const res = await createFactsService(deckId, result.data)
   if (!res.success) return { success: false, error: res.message }
-  revalidatePath(`/decks/${deckId}/facts`)
+  if (refreshFacts) revalidatePath(`/decks/${deckId}/facts`)
   revalidatePath(`/decks/${deckId}`)
-  if (!withIds) return { success: true, data: { newFactIds: [] } }
-  if (!before?.success) return { success: true, data: { newFactIds: [], idsUnknown: true } }
-  // The add response has no ids, so the new fact is the one that was not there before (as on mobile).
-  const after = await getFactIdsService(deckId)
-  const known = new Set(before.data.fact_ids)
-  if (!after.success) return { success: true, data: { newFactIds: [], idsUnknown: true } }
-  return { success: true, data: { newFactIds: after.data.fact_ids.filter((id) => !known.has(id)) } }
+  const newFactIds = res.data.fact_ids ?? []
+  // One fact was added, so exactly one id identifies it; anything else (e.g. a backend without fact_ids) does not.
+  if (newFactIds.length !== 1) return { success: true, data: { newFactIds: [], idsUnknown: true } }
+  return { success: true, data: { newFactIds } }
 }

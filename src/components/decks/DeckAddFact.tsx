@@ -34,7 +34,7 @@ export default function DeckAddFact({ deck }: { deck: Deck }) {
     setError(null)
     startTransition(async () => {
       const entries = texts.map((text) => ({ text: text.trim() }))
-      const res = await addFactAction(deck.id, entries, verified && !imported, imported)
+      const res = await addFactAction(deck.id, entries, verified && !imported)
       if (!res.success) {
         setError(String(res.error ?? '') || t('failed'))
         return
@@ -42,7 +42,7 @@ export default function DeckAddFact({ deck }: { deck: Deck }) {
       setTexts(fields.map(() => ''))
       setVerified(false)
       const newFactIds = res.data?.newFactIds ?? []
-      if (res.data?.idsUnknown) {
+      if (imported && res.data?.idsUnknown) {
         // Saved, but the new fact could not be identified, so it cannot be sent or queued.
         showFailToast(tSend('fact-added-not-sent'))
         return

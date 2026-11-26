@@ -56,10 +56,13 @@ test.describe('Facts sheet', () => {
       tick()
     })
     const viewport = page.locator('.ag-body-viewport')
-    for (let i = 0; i < 6; i++) {
-      await viewport.evaluate((el, top) => { el.scrollTop = top ? 0 : el.scrollHeight }, i % 2)
-      await page.waitForTimeout(150)
+    // The end, the middle and the top, twice; each target is waited for until its rows render.
+    for (const row of [440, 225, 0, 440, 225, 0]) {
+      await viewport.evaluate((el, top) => { el.scrollTop = top }, row * 32)
+      await expect(factCell(page, row, 0)).toHaveText(`f${row}`)
     }
+    // Only the sheet scrolls, never the page around it.
+    expect(await page.evaluate(() => window.scrollY)).toBe(0)
     const blank = await page.evaluate(() => {
       const w = window as unknown as { blank: number[]; sampling: boolean }
       w.sampling = false
@@ -125,7 +128,7 @@ test.describe('Facts sheet', () => {
     await expect(factCellMenu(page)).toHaveCount(1)
     await page.keyboard.press('Escape')
     await expect(factCellMenu(page)).toHaveCount(0)
-    await expect.poll(() => focusedFactCellText(page)).toBe('f0')
+    await expect(factCell(page, 0, 0)).toBeFocused()
   })
 
   test('right-clicking a row id marks the whole row and offers only delete', async ({ page }) => {
@@ -197,6 +200,9 @@ test.describe('Facts sheet', () => {
   test('typing a new fact across columns saves every column', async ({ page }) => {
     await gotoSeededDeckFacts(page, 'SheetTypeAcross', 3)
     await page.locator('#facts-grid-create-row').click()
+    // The second column is saved with the create or, typed while the fact is created, right after it.
+    const savedRingo = page.waitForResponse((r) => (r.request().postData() ?? '').includes('ringo') && r.ok(),
+      { timeout: 15_000 })
     const editor = page.locator('.ag-cell-inline-editing input')
     await editor.fill('apple')
     await editor.press('Tab')
@@ -204,12 +210,10 @@ test.describe('Facts sheet', () => {
     await page.locator('.ag-cell-inline-editing input').fill('ringo')
     await page.locator('.ag-cell-inline-editing input').press('Enter')
     await expect(page.getByText('All Facts(4)')).toBeVisible()
-    // Saved once the new fact is known; then it survives a reload.
-    await expect.poll(async () => {
-      await page.reload()
-      await expect(factCell(page, 3, 0)).toHaveText('apple')
-      return factCell(page, 3, 1).textContent()
-    }, { timeout: 15_000 }).toBe('ringo')
+    await savedRingo
+    await page.reload()
+    await expect(factCell(page, 3, 0)).toHaveText('apple')
+    await expect(factCell(page, 3, 1)).toHaveText('ringo')
   })
 
   test('a dialog opened from the cell menu keeps the focus, and hands it back when closed', async ({ page }) => {

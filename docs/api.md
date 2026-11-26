@@ -1352,15 +1352,16 @@ Same fact endpoints as [§3 Facts](#3-facts); on import decks they write private
 ```json
 {
   "data": {
-    "fact_length": 121
+    "fact_length": 1,
+    "fact_ids": ["k3x9q2ab"]
   },
   "meta": {
-    "msg": "Added 1 facts successfully"
+    "msg": "operation appended facts successfully, added 1 facts"
   }
 }
 ```
 
-Facts are stored under the import’s private overlay + `local_facts`. List facts afterward to obtain generated IDs.
+Facts are stored under the import’s private overlay + `local_facts`; `fact_ids` are the new local facts' IDs.
 
 ##### Update a private overlay
 
@@ -2105,7 +2106,7 @@ Omit both fields or use `[]` for facts that should have no tags. Sending **`tags
 | Behavior         | Detail                                                                                                                                                                                                              |
 | ---------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | **Storage**      | Tags are **not** embedded in the fact JSON in Redis; associations are stored separately and returned on GET.                                                                                                        |
-| **Add response** | `POST …/facts/{operation}` returns only `fact_length` — **not** tag objects. Use [`GET /api/decks/{id}/facts`](#get-all-facts) or [Get one fact](#get-one-fact) to read tags after create.                          |
+| **Add response** | `POST …/facts/{operation}` returns `fact_length` and `fact_ids` — **not** tag objects. Use [`GET /api/decks/{id}/facts`](#get-all-facts) or [Get one fact](#get-one-fact) to read tags after create.                |
 | **Update**       | [`PATCH /api/decks/{id}/facts/{factId}`](#update-a-fact) does **not** accept `tags` or `tag_ids`; add or remove tags with the [fact tag `PUT`/`DELETE`](#associate-a-tag-with-a-fact) routes or tag at create time. |
 
 ```json
@@ -2188,15 +2189,18 @@ Each fact gets one card with front=0/back=1 and one with front=1/back=0. To add 
 ```json
 {
   "data": {
-    "fact_length": 20
+    "fact_length": 20,
+    "fact_ids": ["fact0001", "fact0002", "…"]
   },
   "meta": {
-    "msg": "Added 20 facts successfully"
+    "msg": "operation appended facts successfully, added 20 facts"
   }
 }
 ```
 
-The add-facts response does **not** echo created fact IDs or tag assignments. After a successful create, call **GET** facts (or GET one fact) if you need `id` and `tags` on each fact.
+`fact_ids` lists the new facts' IDs in request order (on an imported deck, the new `local_facts`), so a client can
+edit, tag or delete them without listing the deck. The response does **not** echo tag assignments: call **GET** facts
+(or GET one fact) if you need `tags` on each fact.
 
 ### Get all facts
 
@@ -3836,7 +3840,7 @@ Contribution submit/inbox errors: [Deck sharing](#deck-sharing).
 | `/api/decks/{id}`                                 | GET         | `{ "data": { deck + stats }, "meta": { "msg" } }`                                                                                                                                                                                                                                    |
 | `/api/decks/{id}`                                 | PATCH       | `{ "data": { "deck_id" }, "meta": { "msg", "updated_at" } }`                                                                                                                                                                                                                         |
 | `/api/decks/{id}`                                 | DELETE      | `{ "data": { "deck_id" }, "meta": { "msg" } }`                                                                                                                                                                                                                                       |
-| `/api/decks/{id}/facts/{op}`                      | POST        | Add facts: body `facts[]` with optional `tags` (names) per item; `{ "data": { "fact_length" }, "meta": { "msg" } }` (no tags in response)                                                                                                                                            |
+| `/api/decks/{id}/facts/{op}`                      | POST        | Add facts: body `facts[]` with optional `tags` (names) per item; `{ "data": { "fact_length", "fact_ids" }, "meta": { "msg" } }` (no tags in response)                                                                                                                                |
 | `/api/decks/{id}/card`                            | POST        | Add card from existing fact: `{ "data": { "card_id" }, "meta": { "msg" } }`                                                                                                                                                                                                          |
 | `/api/decks/{id}/facts`                           | GET         | `{ "data": { "facts": [ … ] }, "meta": { "msg", "count", "has_more", "limit", "offset", "sort", "total" } }` — defaults `limit` 50, `offset` 0, `sort` `id`                                                                                                                          |
 | `/api/decks/{id}/facts/{factId}`                  | GET         | `{ "data": { "fact": { …, "tags": [ … ] } }, "meta": { "msg" } }`                                                                                                                                                                                                                    |

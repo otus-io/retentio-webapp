@@ -92,7 +92,7 @@ export type UpdateFactDTO = z.infer<typeof updateFactSchema>
 /**
  * 添加词条响应 DTO
  */
-export type CreateFactsResponseDTO = BaseApiResult<{ fact_length: number }>
+export type CreateFactsResponseDTO = BaseApiResult<{ fact_length: number; fact_ids?: string[] }>
 
 /** GET /facts order: id ascending, or created_at oldest first */
 export type FactsSort = 'id' | 'created_at'
