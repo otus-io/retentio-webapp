@@ -43,7 +43,7 @@ describe('DeckAddFact', () => {
     type('Meaning', 'hello')
     fireEvent.click(screen.getByText('mark-verified').closest('label')!.querySelector('input')!)
     await act(async () => fireEvent.click(screen.getByText('submit')))
-    expect(addFactAction).toHaveBeenCalledWith('d1', [{ text: 'hola' }, { text: 'hello' }], true, false)
+    expect(addFactAction).toHaveBeenCalledWith('d1', [{ text: 'hola' }, { text: 'hello' }], true)
     expect(toast).toHaveBeenCalledWith('success')
     expect((screen.getByLabelText('Word') as HTMLTextAreaElement).value).toBe('')
     expect((screen.getByText('mark-verified').closest('label')!.querySelector('input') as HTMLInputElement).checked)
@@ -79,7 +79,7 @@ describe('DeckAddFact', () => {
     expect(screen.queryByText('mark-verified')).toBeNull()
     type('#1', 'solo')
     await act(async () => fireEvent.click(screen.getByText('submit')))
-    expect(addFactAction).toHaveBeenCalledWith('d1', [{ text: 'solo' }], false, true)
+    expect(addFactAction).toHaveBeenCalledWith('d1', [{ text: 'solo' }], false)
     expect(sendToAuthor)
       .toHaveBeenCalledWith('d1', [expect.objectContaining({ id: 'fact_add:f9', kind: 'fact_add', preview: 'solo' })])
     expect(toast).toHaveBeenLastCalledWith('fact-added-sent')
@@ -96,6 +96,16 @@ describe('DeckAddFact', () => {
     await act(async () => fireEvent.click(screen.getByText('submit')))
     expect(sendToAuthor).not.toHaveBeenCalled()
     expect(failToast).toHaveBeenLastCalledWith('fact-added-not-sent')
+  })
+
+  it('just confirms the add on an own deck, which sends nothing, even without the new fact id', async () => {
+    addFactAction.mockResolvedValue({ success: true, data: { newFactIds: [], idsUnknown: true } })
+    render(<DeckAddFact deck={deck()} />)
+    type('Word', 'hola')
+    type('Meaning', 'hello')
+    await act(async () => fireEvent.click(screen.getByText('submit')))
+    expect(failToast).not.toHaveBeenCalled()
+    expect(toast).toHaveBeenLastCalledWith('success')
   })
 
   it('just confirms the add when an imported deck reports no new fact id', async () => {

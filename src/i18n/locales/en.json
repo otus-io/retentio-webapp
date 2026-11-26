@@ -228,7 +228,6 @@
     "deck-options": "Deck options",
     "deck-details": "Deck details",
     "total-reviews": "Total reviews",
-    "edit-facts": "Edit Facts",
     "retry": "Retry",
     "login": "Login",
     "logout": "Logout",
@@ -257,7 +256,6 @@
     "placeholder-enter": "Please enter {name}",
     "save": "Save",
     "reset": "Reset",
-    "sync": "Sync",
     "upload": "Upload",
     "close": "Close",
     "continue": "Continue",
@@ -315,6 +313,7 @@
   },
   "term": {
     "decks": "Decks",
+    "id": "ID",
     "facts": "Facts",
     "name": "Name",
     "due": "Due",
@@ -654,5 +653,10 @@
     "unsent": "Saved. Couldn't send it to the author yet; retry from Unsent contributions.",
     "fact-added-sent": "Fact added and sent to the author",
     "fact-added-unsent": "Fact added. Couldn't send it to the author yet; retry from Unsent contributions."
+  },
+  "facts-grid": {
+    "save-failed": "Couldn't save your changes",
+    "load-failed": "Couldn't load all facts. Reload the page to try again.",
+    "delete-failed": "Couldn't delete this fact"
   }
 }

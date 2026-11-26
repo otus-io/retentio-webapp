@@ -1,27 +1,15 @@
 import * as factsApi from '@/api/facts'
-import * as qualityApi from '@/api/quality'
 import { ServiceResponse } from '@/lib/response'
-import type { CreateFactsDTO, UpdateFactDTO } from '@/modules/facts/facts.schema'
+import type { CreateFactsDTO, FactsPageParams, UpdateFactDTO } from '@/modules/facts/facts.schema'
 
 /**
  * 获取词条列表
  */
-export async function getFactsPageService(deckId: string, params?: { limit?: number; offset?: number }) {
+export async function getFactsPageService(deckId: string, params?: FactsPageParams) {
   try {
     return ServiceResponse.success(await factsApi.getFactsPage(deckId, params))
   } catch (e) {
     return ServiceResponse.error('getFactsPageService failed', e)
-  }
-}
-
-/**
- * 卡组全部词条 ID（导入卡组新增词条后，用前后差集找出新词条）
- */
-export async function getFactIdsService(deckId: string) {
-  try {
-    return ServiceResponse.success(await qualityApi.getFactIds(deckId))
-  } catch (e) {
-    return ServiceResponse.error('getFactIdsService failed', e)
   }
 }
 
@@ -66,24 +54,5 @@ export async function deleteFactService(deckId: string, factId: string) {
     return ServiceResponse.success(await factsApi.deleteFact(deckId, factId))
   } catch (e) {
     return ServiceResponse.error('deleteFactService failed', e)
-  }
-}
-
-/**
- * 删除词条批量
- */
-export async function deleteFactsService(deckId: string, factIds: string[]) {
-  try {
-    const results = await Promise.allSettled(factIds.map((factId) => factsApi.deleteFact(deckId, factId)))
-    const failed = results.filter((r) => r.status === 'rejected')
-    if (failed.length > 0) {
-      return ServiceResponse.error(
-        `deleteFactsService failed: ${failed.length}/${factIds.length} deletions failed`,
-        failed[0].reason,
-      )
-    }
-    return ServiceResponse.success({ data: {}, meta: { msg: 'deleteFactsService success' } })
-  } catch (e) {
-    return ServiceResponse.error('deleteFactsService failed', e)
   }
 }

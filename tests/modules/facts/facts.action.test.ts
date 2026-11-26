@@ -3,18 +3,17 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 const services = vi.hoisted(() => ({
   createFactsService: vi.fn(),
   deleteFactService: vi.fn(),
-  deleteFactsService: vi.fn(),
   getFactService: vi.fn(),
-  getFactIdsService: vi.fn(),
   updateFactService: vi.fn(),
 }))
 const revalidatePath = vi.hoisted(() => vi.fn())
 
 vi.mock('@/modules/facts/facts.service', () => services)
 vi.mock('next/cache', () => ({ revalidatePath }))
-vi.mock('next/navigation', () => ({ redirect: vi.fn() }))
+const redirect = vi.hoisted(() => vi.fn())
+vi.mock('next/navigation', () => ({ redirect }))
 
-import { addFactAction, getFactAction, updateFactEntriesAction } from '@/modules/facts/facts.action'
+import { addFactAction, deleteFactAction, getFactAction, updateFactEntriesAction } from '@/modules/facts/facts.action'
 
 describe('study fact actions', () => {
   beforeEach(() => {
@@ -43,6 +42,30 @@ describe('study fact actions', () => {
   })
 })
 
+describe('deleteFactAction', () => {
+  beforeEach(() => {
+    vi.clearAllMocks()
+  })
+
+  it('deletes, refreshes the facts page and does not redirect', async () => {
+    services.deleteFactService.mockResolvedValueOnce({ success: true })
+    expect(await deleteFactAction({ deckId: 'd1', factId: 'f1' }, null, new FormData())).toEqual({ success: true })
+    expect(services.deleteFactService).toHaveBeenCalledWith('d1', 'f1')
+    expect(revalidatePath).toHaveBeenCalledWith('/decks/d1/facts')
+    expect(redirect).not.toHaveBeenCalled()
+  })
+
+  it('returns the service error or a thrown error', async () => {
+    services.deleteFactService.mockResolvedValueOnce({ success: false, message: 'Forbidden' })
+    expect(await deleteFactAction({ deckId: 'd1', factId: 'f1' }, null, new FormData()))
+      .toEqual({ success: false, error: 'Forbidden' })
+    services.deleteFactService.mockRejectedValueOnce(new Error('offline'))
+    expect(await deleteFactAction({ deckId: 'd1', factId: 'f1' }, null, new FormData()))
+      .toMatchObject({ success: false })
+    expect(revalidatePath).not.toHaveBeenCalled()
+  })
+})
+
 describe('updateFactEntriesAction validation', () => {
   beforeEach(() => {
     vi.clearAllMocks()
@@ -68,37 +91,39 @@ describe('addFactAction', () => {
     vi.clearAllMocks()
   })
 
-  it('appends one fact, with the sign-off only when checked', async () => {
-    services.createFactsService.mockResolvedValue({ success: true, data: { fact_length: 1 } })
+  it('appends one fact, with the sign-off only when checked, and returns its id', async () => {
+    services.createFactsService.mockResolvedValue({ success: true, data: { fact_length: 1, fact_ids: ['n1'] } })
     expect(await addFactAction('d1', [{ text: 'hola' }, { text: 'hello' }], true))
-      .toEqual({ success: true, data: { newFactIds: [] } })
-    expect(services.getFactIdsService).not.toHaveBeenCalled()
+      .toEqual({ success: true, data: { newFactIds: ['n1'] } })
     expect(services.createFactsService).toHaveBeenLastCalledWith('d1', {
       facts: [{ entries: [{ text: 'hola' }, { text: 'hello' }] }],
       operation: 'append',
       verified: true,
     })
     expect(revalidatePath).toHaveBeenCalledWith('/decks/d1/facts')
+    expect(revalidatePath).toHaveBeenCalledWith('/decks/d1')
     await addFactAction('d1', [{ text: 'hola' }], false)
     expect(services.createFactsService.mock.lastCall?.[1]).not.toHaveProperty('verified', false)
   })
 
-  it('finds the new fact on an imported deck by comparing ids', async () => {
-    services.createFactsService.mockResolvedValue({ success: true, data: { fact_length: 3 } })
-    services.getFactIdsService
-      .mockResolvedValueOnce({ success: true, data: { fact_ids: ['a', 'b'] } })
-      .mockResolvedValueOnce({ success: true, data: { fact_ids: ['a', 'b', 'c'] } })
-    expect(await addFactAction('i1', [{ text: 'hola' }], false, true))
-      .toEqual({ success: true, data: { newFactIds: ['c'] } })
+  it('skips the facts page refresh when asked, still refreshing the deck page', async () => {
+    services.createFactsService.mockResolvedValueOnce({ success: true, data: { fact_length: 1, fact_ids: ['n1'] } })
+    expect(await addFactAction('d1', [{ text: 'hola' }], false, false))
+      .toEqual({ success: true, data: { newFactIds: ['n1'] } })
+    expect(revalidatePath).toHaveBeenCalledTimes(1)
+    expect(revalidatePath).toHaveBeenCalledWith('/decks/d1')
+  })
 
-    services.getFactIdsService
-      .mockResolvedValueOnce({ success: true, data: { fact_ids: ['a'] } })
-      .mockResolvedValueOnce({ success: false, message: 'x' })
-    expect(await addFactAction('i1', [{ text: 'hola' }], false, true))
+  it('reports the new fact as unknown when the add response has no ids', async () => {
+    services.createFactsService.mockResolvedValueOnce({ success: true, data: { fact_length: 1 } })
+    expect(await addFactAction('d1', [{ text: 'hola' }], false))
       .toEqual({ success: true, data: { newFactIds: [], idsUnknown: true } })
-
-    services.getFactIdsService.mockResolvedValueOnce({ success: false, message: 'x' })
-    expect(await addFactAction('i1', [{ text: 'hola' }], false, true))
+    services.createFactsService.mockResolvedValueOnce({ success: true, data: { fact_length: 1, fact_ids: [] } })
+    expect(await addFactAction('d1', [{ text: 'hola' }], false))
+      .toEqual({ success: true, data: { newFactIds: [], idsUnknown: true } })
+    // More than one id cannot be the single fact just added.
+    services.createFactsService.mockResolvedValueOnce({ success: true, data: { fact_length: 1, fact_ids: ['a', 'b'] } })
+    expect(await addFactAction('d1', [{ text: 'hola' }], false))
       .toEqual({ success: true, data: { newFactIds: [], idsUnknown: true } })
   })
 

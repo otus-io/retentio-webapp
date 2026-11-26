@@ -1,12 +1,12 @@
 import { test, expect } from '@playwright/test'
 import {
-  addColumn,
   addFactRow,
   closeFactTagsModal,
   createDeck,
   createTagInFactModal,
   ensureAndVerifyTagViaLibrary,
-  deleteFirstFactViaRowMenu,
+  chooseFirstFactCellMenuItem,
+  deleteFirstFactViaCellMenu,
   deleteTagViaLibrary,
   editFirstFactCell,
   factModalCreateButton,
@@ -40,16 +40,6 @@ test.describe('Facts', () => {
     await addFactRow(page)
   })
 
-  test('should create a column', async ({ page }) => {
-    const deckName = uniqueName('AddCol')
-    await createDeck(page, deckName)
-    await gotoDeckFacts(page, deckName)
-    const headers = page.locator('.facts-grid-header-renderer')
-    const before = await headers.count()
-    await addColumn(page)
-    await expect(headers).toHaveCount(before + 1)
-  })
-
   test('should update fact cell text', async ({ page }) => {
     const deckName = uniqueName('EditFact')
     await createDeck(page, deckName)
@@ -77,37 +67,22 @@ test.describe('Facts', () => {
     await expect.poll(async () => getColumnHeaderText(page, 0)).toContain(newName)
   })
 
-  test('should delete a fact row via action menu', async ({ page }) => {
+  test('should delete a fact row via cell menu', async ({ page }) => {
     const deckName = uniqueName('DeleteFact')
     await createDeck(page, deckName)
     await gotoDeckFacts(page, deckName)
     await addFactRow(page)
-    await deleteFirstFactViaRowMenu(page)
+    await deleteFirstFactViaCellMenu(page)
   })
 
-  test('should show attachment button after focusing a cell', async ({ page }) => {
+  test('should open attachments from the cell right-click menu', async ({ page }) => {
     const deckName = uniqueName('Attach')
     await createDeck(page, deckName)
     await gotoDeckFacts(page, deckName)
     await addFactRow(page)
-    await addColumn(page)
 
-    // 第一行（center 容器，不含 pinned-right 的 action 列）的最后一个单元格
-    const firstRow = page.locator('.ag-center-cols-container [role="row"]').first()
-    await expect(firstRow).toBeVisible()
-    const lastCell = firstRow.locator('.ag-cell').last()
-
-    // 附件按钮默认 display:none（--cell-display: none），聚焦前不可见
-    const mediaButton = lastCell.locator('.facts-grid-cell-media')
-    await expect(mediaButton).toBeHidden()
-
-    // 点击单元格 → ag-grid 赋予 .ag-cell-focus 且 DOM :focus-within，
-    // globals.css 将 --cell-display 置为 block，附件按钮变为可见
-    await lastCell.click()
-    await expect(mediaButton).toBeVisible()
-
-    // 点击附件按钮
-    await mediaButton.click()
+    await chooseFirstFactCellMenuItem(page, 'attachment')
+    await expect(page.getByRole('dialog', { name: 'Attachment' })).toBeVisible()
   })
 })
 

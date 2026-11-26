@@ -1319,15 +1319,16 @@
 ```json
 {
   "data": {
-    "fact_length": 121
+    "fact_length": 1,
+    "fact_ids": ["k3x9q2ab"]
   },
   "meta": {
-    "msg": "Added 1 facts successfully"
+    "msg": "operation appended facts successfully, added 1 facts"
   }
 }
 ```
 
-词条写入导入卡组的私有 overlay + `local_facts`。之后列出词条以获取生成的 ID。
+词条写入导入卡组的私有 overlay + `local_facts`；`fact_ids` 即新增本地词条的 ID。
 
 ##### 更新私有 overlay
 
@@ -1377,7 +1378,9 @@
 
 **接口：** `GET /api/decks/{importId}/facts?limit=50&offset=0`
 
-**成功（200）：** overlay → 快照解析；包含 `local_facts`；省略 `hidden_facts`。
+**成功（200）：** overlay → 快照解析；包含 `local_facts`；省略 `hidden_facts`。导入者新增的词条（`local_facts`）带
+`"local": true`（否则省略），`GET /api/decks/{importId}/facts/{factId}` 同样如此：这类词条的编辑应以 `fact_add`
+（而非 `fact_edit`）提交给作者。
 
 ```json
 {
@@ -1394,7 +1397,8 @@
       {
         "id": "local001",
         "entries": [{ "text": "Orange" }, { "text": "オレンジ" }],
-        "tags": [{ "id": "tag00001", "name": "food", "description": "" }]
+        "tags": [{ "id": "tag00001", "name": "food", "description": "" }],
+        "local": true
       }
     ]
   },
@@ -2063,11 +2067,11 @@ ETag: "sha256:abc123"
 
 ##### 两种形式共通
 
-| 行为         | 说明                                                                                                                                                                            |
-| ------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **存储**     | 标签**不**写入 Redis 中 `fact:{id}` 的 JSON；关联单独存储，仅在 GET 时返回。                                                                                                    |
-| **添加响应** | `POST …/facts/{operation}` 仅返回 `fact_length`，**不**返回标签对象。创建成功后请用 [`GET /api/decks/{id}/facts`](#获取所有词条) 或 [获取单个词条](#获取单个词条) 查看 `tags`。 |
-| **更新**     | [`PATCH /api/decks/{id}/facts/{factId}`](#更新词条) **不接受** `tags` 或 `tag_ids`；请用 [词条标签 `PUT`/`DELETE`](#将标签关联到词条) 或在添加时传入标签。                      |
+| 行为         | 说明                                                                                                                                                                                        |
+| ------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **存储**     | 标签**不**写入 Redis 中 `fact:{id}` 的 JSON；关联单独存储，仅在 GET 时返回。                                                                                                                |
+| **添加响应** | `POST …/facts/{operation}` 返回 `fact_length` 与 `fact_ids`，**不**返回标签对象。创建成功后请用 [`GET /api/decks/{id}/facts`](#获取所有词条) 或 [获取单个词条](#获取单个词条) 查看 `tags`。 |
+| **更新**     | [`PATCH /api/decks/{id}/facts/{factId}`](#更新词条) **不接受** `tags` 或 `tag_ids`；请用 [词条标签 `PUT`/`DELETE`](#将标签关联到词条) 或在添加时传入标签。                                  |
 
 ```json
 {
@@ -2154,15 +2158,17 @@ ETag: "sha256:abc123"
 ```json
 {
   "data": {
-    "fact_length": 20
+    "fact_length": 20,
+    "fact_ids": ["fact0001", "fact0002", "…"]
   },
   "meta": {
-    "msg": "Added 20 facts successfully"
+    "msg": "operation appended facts successfully, added 20 facts"
   }
 }
 ```
 
-添加词条的响应**不会**返回新建的词条 ID 或标签关联。若需要每条词条的 `id` 与 `tags`，请在创建成功后调用 **GET** 词条列表或单个词条接口。
+`fact_ids` 按请求顺序列出新词条的 ID（导入卡组即新增的 `local_facts`），客户端无需列出卡组即可编辑、打标签或删除它们。
+响应**不会**返回标签关联；若需要每条词条的 `tags`，请在创建成功后调用 **GET** 词条列表或单个词条接口。
 
 ### 获取所有词条
 
@@ -3797,7 +3803,7 @@ Accept: application/json
 | `/api/decks/{id}`                                 | GET         | `{ "data": { 卡组 + 统计 }, "meta": { "msg" } }`                                                                                                                                                                                                                         |
 | `/api/decks/{id}`                                 | PATCH       | `{ "data": { "deck_id" }, "meta": { "msg", "updated_at" } }`                                                                                                                                                                                                             |
 | `/api/decks/{id}`                                 | DELETE      | `{ "data": { "deck_id" }, "meta": { "msg" } }`                                                                                                                                                                                                                           |
-| `/api/decks/{id}/facts/{op}`                      | POST        | 添加词条：body `facts[]` 每项可选 `tags`（名称）或 `tag_ids`（同条互斥）；`{ "data": { "fact_length" }, "meta": { "msg" } }`（响应不含标签）                                                                                                                             |
+| `/api/decks/{id}/facts/{op}`                      | POST        | 添加词条：body `facts[]` 每项可选 `tags`（名称）或 `tag_ids`（同条互斥）；`{ "data": { "fact_length", "fact_ids" }, "meta": { "msg" } }`（响应不含标签）                                                                                                                 |
 | `/api/decks/{id}/card`                            | POST        | 为已有词条加卡：`{ "data": { "card_id" }, "meta": { "msg" } }`                                                                                                                                                                                                           |
 | `/api/decks/{id}/facts`                           | GET         | `{ "data": { "facts": [ … ] }, "meta": { "msg", "count", "has_more", "limit", "offset", "sort", "total" } }` — 默认 `limit` 50、`offset` 0、`sort` `id`                                                                                                                  |
 | `/api/decks/{id}/facts/{factId}`                  | GET         | `{ "data": { "fact": { …, "tags": [ … ] }, "media_versions"?: { … } }, "meta": { "msg" } }`                                                                                                                                                                              |

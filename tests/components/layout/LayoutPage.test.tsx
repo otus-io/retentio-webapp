@@ -43,4 +43,14 @@ describe('LayoutPage', () => {
     render(<LayoutPage><span>内容</span></LayoutPage>)
     expect(screen.queryByTestId('breadcrumbs')).toBeNull()
   })
+
+  it('fullScreen 时填满父容器宽高，去掉内容区最大宽度和最小高度', () => {
+    const { container, rerender } = render(<LayoutPage><span>内容</span></LayoutPage>)
+    expect((container.firstChild as HTMLElement).className).toContain('max-w-content')
+    rerender(<LayoutPage fullScreen><span>内容</span></LayoutPage>)
+    const className = (container.firstChild as HTMLElement).className
+    expect(className).toContain('w-full h-full flex flex-col')
+    expect(className).not.toContain('max-w-content')
+    expect(className).not.toContain('min-h-')
+  })
 })

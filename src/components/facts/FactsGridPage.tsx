@@ -2,40 +2,90 @@
 'use client'
 
 import { AgGridReact } from 'ag-grid-react'
-import type { ColDef, IHeaderParams, IRowNode, SelectionChangedEvent } from 'ag-grid-community'
+import type {
+  CellContextMenuEvent,
+  CellValueChangedEvent,
+  ColDef,
+  GridSizeChangedEvent,
+  IHeaderParams,
+  IRowNode,
+} from 'ag-grid-community'
 import type { Entry, Fact } from '@/modules/facts/facts.schema'
-import { useActionState, useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import type { Deck } from '@/modules/decks/decks.schema'
 import { ModuleRegistry } from 'ag-grid-community'
 import { AllCommunityModule } from 'ag-grid-community'
 import { AgGridProvider } from 'ag-grid-react'
-import FactsGridCellRenderer from '@/components/facts/FactsGridCellRenderer'
 import FactsGridHeaderRenderer from '@/components/facts/FactsGridHeaderRenderer'
 import { themeQuartz, colorSchemeDark, colorSchemeLight } from 'ag-grid-community'
 import { useTheme } from 'next-themes'
-import TablePagination from '@/components/common/TablePagination'
 import { useDebouncedCallback } from 'use-debounce'
 import { updateDeck } from '@/api/decks'
-import type { AppButtonProps } from '@/components/app/AppButton'
 import AppButton from '@/components/app/AppButton'
-import { CircleQuestionMark, Columns4Icon, RefreshCwIcon, Rows4Icon, Trash2Icon } from 'lucide-react'
-import { updateFact } from '@/api/facts'
+import { CircleQuestionMark, Rows4Icon } from 'lucide-react'
+import { getFactsPage, updateFact } from '@/api/facts'
 import FactsMediaModal from '@/components/facts/FactsMediaModal'
 import type { MediaType } from '@/hooks/useFactsCellAttachments'
-import { spliceDeletedFieldFromRow } from '@/components/facts/spliceDeletedFieldFromRow'
-import { actionSymbol, rawSymbol } from '@/components/facts/token'
+import { rawSymbol } from '@/components/facts/token'
 import { useTranslations } from 'next-intl'
-import { sendFactEditsAndNotify } from '@/modules/contributions/auto-send'
+import { showFailToast } from '@/lib/ui'
+import { factContribution, sendFactEdits, sendToAuthor } from '@/modules/contributions/auto-send'
+import { previewFromEntries } from '@/modules/contributions/pending-contributions'
 import LayoutPage from '@/components/layout/LayoutPage'
-import { createFactsAction, deleteFactsAction } from '@/modules/facts/facts.action'
-import { Button } from '@heroui/react'
-import clsx from 'clsx'
+import { addFactAction, deleteFactAction } from '@/modules/facts/facts.action'
 import AppTooltip from '@/components/app/AppTooltip'
 import AppLink from '@/components/app/AppLink'
 import DeleteModal from '@/components/common/DeleteModal'
+import FactsTagsModal from '@/components/facts/FactsTagsModal'
+import type { FactsCellMenuAction } from '@/components/facts/FactsCellContextMenu'
+import FactsCellContextMenu from '@/components/facts/FactsCellContextMenu'
+import { resolveCellEntry } from '@/components/facts/resolveCellEntry'
+import {
+  endScrollRow,
+  FACTS_PAGE_SIZE,
+  FACTS_SORT,
+  nextPageStart,
+  sheetRowCount,
+} from '@/components/facts/factsSheet'
 
-const lightTheme = themeQuartz.withPart(colorSchemeLight)
-const darkTheme = themeQuartz.withPart(colorSchemeDark)
+const ROW_HEIGHT = 32
+// Rows on screen until the grid is measured.
+const DEFAULT_VISIBLE_ROWS = 30
+// A failing background request is retried this often before the loader gives up.
+const MAX_LOAD_FAILURES = 5
+const LOAD_RETRY_MS = 2000
+
+/**
+ * A grid row. `key` never changes, so filling, adding and deleting rows update them in place (an open cell editor
+ * survives). Fact rows carry the fact under rawSymbol and its fields by name; `loading` marks a fact not downloaded
+ * yet; rows with neither are the empty rows below the last fact.
+ */
+type SheetRow = Record<string | symbol, any> & {
+  key: string
+  loading?: boolean
+  adding?: boolean
+  /** Created but not identified yet: the texts it was created with, to recognise it when downloaded. */
+  added?: string[]
+}
+
+let rowKeySeq = 0
+function newRowKey() {
+  rowKeySeq += 1
+  return `row-${rowKeySeq}`
+}
+
+// Spreadsheet look: square corners and a clear line between every row and column.
+const sheetTheme = themeQuartz.withParams({
+  columnBorder: true,
+  headerColumnBorder: true,
+  rowBorder: true,
+  wrapperBorderRadius: 0,
+  borderRadius: 0,
+  // The header column border already marks each edge; hide the extra resize bar (dragging the edge still resizes).
+  headerColumnResizeHandleColor: 'transparent',
+})
+const lightTheme = sheetTheme.withPart(colorSchemeLight)
+const darkTheme = sheetTheme.withPart(colorSchemeDark)
 const modules = [AllCommunityModule]
 ModuleRegistry.registerModules([AllCommunityModule])
 
@@ -43,14 +93,47 @@ function isString(value?: string | symbol): value is string {
   return typeof value === 'string'
 }
 
+/** The fact behind a grid row; undefined for rows not downloaded yet and for empty filler rows. */
+function rowFact(data?: Record<string, any>) {
+  return (data as Record<symbol, Fact | undefined> | undefined)?.[rawSymbol]
+}
+
+/**
+ * A field column's data key, by its position: it never changes when the column is renamed (only the header does),
+ * so rows keep lining up with their columns.
+ */
+function fieldKeyAt(index: number) {
+  return `col${index}`
+}
+
+/** Deck field columns carry a uid; the row-number column does not. */
+function isFieldColumn(def: ColDef) {
+  return Boolean(def.context?.uid)
+}
+
+const rowNumberColDef: ColDef<Record<string, any>> = {
+  colId: 'rowNumber',
+  headerName: '',
+  valueGetter: (params) => (params.node?.rowIndex ?? 0) + 1,
+  pinned: 'left',
+  lockPosition: 'left',
+  suppressMovable: true,
+  resizable: false,
+  sortable: false,
+  width: 64,
+  cellClass: 'text-muted text-xs',
+  context: { isRowNumber: true },
+}
+
 interface FactsGridPageProps {
+  /** First page, rendered on the server; the rest downloads in the background. */
   facts: Fact[]
-  meta: PaginationMeta
+  total: number
   createHref?: string
   deck: Deck
 }
 
-export default function FactsGridPage({ facts, meta, deck }: FactsGridPageProps) {
+export default function FactsGridPage({ facts, total: initialTotal, deck }: FactsGridPageProps) {
   const t = useTranslations()
   // Read through a ref so the cell-save handler (and the grid's callbacks) stay stable across renders.
   const tRef = useRef(t)
@@ -62,99 +145,365 @@ export default function FactsGridPage({ facts, meta, deck }: FactsGridPageProps)
   const [target, setTarget] = useState<{ factId: string; fieldKey: string; entry: Entry }>()
   const gridRef = useRef<AgGridReact>(null)
   const [loading, setLoading] = useState(false)
-  const fullFields = useMemo(() => {
-    return [...deck.fields, actionSymbol]
-  }, [deck.fields])
-  const total = meta.total || 0
-  const totalPages = meta.total ? Math.ceil(meta.total / meta.limit) : 0
-
-  const createRowData = useCallback((fact?: Fact) => {
-    const result: Record<string, any> = {
-      id: fact?.id,
-      [rawSymbol]: fact,
-    }
-    fullFields.forEach((key, index) => {
-      if(typeof key === 'string'){
-        if(!fact){
-          result[key] = { text: key, audio: '', image: '', video: '' }
-        }else{
-          result[key] = fact?.entries[index]
-        }
-      }
-    })
-    return result
-  }, [fullFields])
-
-  const lastDecksFields = useRef<string[]>(fullFields.filter((e) => isString(e)) as string[])
-
-  const rowData = useMemo(() => {
-    const data = facts.map(createRowData)
-    return data
-  }, [facts, createRowData])
+  const [total, setTotal] = useState(initialTotal)
+  // The first empty row sits at index `total`; read by the grid's editable callback.
+  const totalRef = useRef(initialTotal)
+  // Rows that fit on screen, which sets how many empty rows follow the last fact.
+  const visibleRowsRef = useRef(DEFAULT_VISIBLE_ROWS)
+  const gridContainerRef = useRef<HTMLDivElement>(null)
 
   const getCurrentColDefs = useCallback(() => {
     const currentDefs: ColDef<Record<string, any>>[] = gridRef.current?.api.getColumnDefs() ?? []
     return currentDefs
   }, [])
 
-  const handleFieldsChange = useCallback(async (force = false) => {
-    const currentDefs = getCurrentColDefs()
-      .filter((def) => !def.context.isActionColumn)
-      .map((e) => e.headerName || '')
-    if(force || JSON.stringify(currentDefs) !== JSON.stringify(lastDecksFields.current)){
-      setLoading(true)
-      lastDecksFields.current = currentDefs
-      await updateDeck(deck.id, {
-        ...deck,
-        fields: currentDefs,
-      })
-      const lastField = lastDecksFields.current.at(-1)
-      gridRef.current?.api.forEachNode((node) => {
-        if(lastField){
-          // 同步 ag-grid-react 的数据 和 原始数据源 (rawSymbol)
-          const data = node.data
-          const entry = { text: '', audio: '', image: '', video: '' }
-          const rawData = data[rawSymbol]
-          node.setData({
-            ...data,
-            [`${lastField}`]: { ...entry },
-            [rawSymbol]: {
-              ...rawData,
-              entries: [
-                ...rawData.entries,
-                { ...entry },
-              ],
-            },
-          })
+  const createRowData = useCallback((fact: Fact) => {
+    const result: Record<string, any> = {
+      id: fact.id,
+      [rawSymbol]: fact,
+    }
+    deck.fields.forEach((_, index) => {
+      result[fieldKeyAt(index)] = fact.entries[index]
+    })
+    return result
+  }, [deck.fields])
+
+  const lastDecksFields = useRef<string[]>(deck.fields)
+
+  const startEditingRow = useCallback((rowIndex: number) => {
+    const firstField = getCurrentColDefs().find(isFieldColumn)?.field
+    const api = gridRef.current?.api
+    if (!api || !isString(firstField)) return
+    api.setFocusedCell(rowIndex, firstField)
+    api.startEditingCell({ rowIndex, colKey: firstField })
+  }, [getCurrentColDefs])
+
+  // Jump to the first empty row and open it for typing; the fact is created once something is typed.
+  const handleAddRow = useCallback(() => {
+    const api = gridRef.current?.api
+    if (!api) return
+    api.ensureIndexVisible(endScrollRow(totalRef.current), 'top')
+    startEditingRow(totalRef.current)
+  }, [startEditingRow])
+
+  // Every row of the sheet, in grid order; the grid holds the same row objects.
+  const [initialRows] = useState<SheetRow[]>(() => [
+    ...facts.map((fact) => ({ ...createRowData(fact), key: fact.id })),
+    ...Array.from({ length: Math.max(0, initialTotal - facts.length) }, () => ({ key: newRowKey(), loading: true })),
+    ...Array.from(
+      { length: sheetRowCount(initialTotal, DEFAULT_VISIBLE_ROWS) - Math.max(initialTotal, facts.length) },
+      () => ({ key: newRowKey() }),
+    ),
+  ])
+  const rowsRef = useRef<SheetRow[]>(initialRows.slice())
+
+  // Add or drop empty rows at the end, so scrolled to the end the last facts sit at the top.
+  const syncTrailingRows = useCallback(() => {
+    const rows = rowsRef.current
+    const target = sheetRowCount(totalRef.current, visibleRowsRef.current)
+    if (rows.length < target) {
+      const add = Array.from({ length: target - rows.length }, () => ({ key: newRowKey() }))
+      rows.push(...add)
+      gridRef.current?.api.applyTransaction({ add })
+    } else if (rows.length > target) {
+      gridRef.current?.api.applyTransaction({ remove: rows.splice(target) })
+    }
+  }, [])
+
+  // Read through a ref so the loader always fills rows by the live columns.
+  const createRowDataRef = useRef(createRowData)
+  useEffect(() => {
+    createRowDataRef.current = createRowData
+  }, [createRowData])
+
+  // Rows whose cells changed since the last save; only these are compared and saved.
+  const dirtyNodesRef = useRef(new Set<IRowNode>())
+
+  // Settles once no delete is under way: the loader waits on it, so no page is requested while rows may shift.
+  const deletesSettledRef = useRef<Promise<unknown>>(Promise.resolve())
+  // Bumped when a delete starts and when it shifts the rows, so a page requested before is not filled into them.
+  const layoutVersionRef = useRef(0)
+  const unmountedRef = useRef(false)
+  const loaderRunningRef = useRef(false)
+  // The grid's api exists only once it is ready; the loader waits for that.
+  const gridReadyRef = useRef(false)
+
+  // Saves held edits; set once the save handler exists below.
+  const saveEditsRef = useRef<() => void>(() => {})
+
+  /** Fills not-yet-loaded rows from `start` with downloaded facts; returns how many it filled. */
+  const fillRows = useCallback((start: number, loaded: Fact[]) => {
+    const updated: SheetRow[] = []
+    let foreign = false
+    let lostEdits = false
+    loaded.forEach((fact, i) => {
+      const row = rowsRef.current[start + i]
+      if (!row?.loading) return
+      if (row.added) {
+        const created = row.added
+        Object.assign(row, { loading: false, added: undefined })
+        const node = gridRef.current?.api.getRowNode(row.key)
+        const texts = fact.entries.map((entry) => (entry.text ?? '').trim())
+        if (created.some((text, j) => text.trim() !== (texts[j] ?? '')) || texts.slice(created.length).some(Boolean)) {
+          // Not the fact created here (the deck changed elsewhere): never save onto it; the row stays read-only
+          // and a reload shows both facts.
+          if (node && dirtyNodesRef.current.delete(node)) lostEdits = true
+          foreign = true
+        } else {
+          // The fact just added here: keep what was typed (maybe more since it was created), save the difference.
+          Object.assign(row, { id: fact.id, [rawSymbol]: fact })
+          if (node) dirtyNodesRef.current.add(node)
+          saveEditsRef.current()
         }
-      })
-      setLoading(false)
+      } else {
+        Object.assign(row, createRowDataRef.current(fact), { loading: false })
+      }
+      updated.push(row)
+    })
+    if (updated.length) gridRef.current?.api.applyTransaction({ update: updated })
+    if (foreign) showFailToast(tRef.current('facts-grid.load-failed'))
+    if (lostEdits) showFailToast(tRef.current('facts-grid.save-failed'))
+    return updated.length
+  }, [])
+
+  // The server listed nothing at `start`: the rows from there on will never be found. Show them as blank, read-only
+  // rows; new facts among them can no longer be identified, so stop holding their edits and say so.
+  const releaseFrom = useCallback((start: number) => {
+    const stale = rowsRef.current.slice(start).filter((row) => row.loading)
+    const drafts = stale.filter((row) => row.added)
+    stale.forEach((row) => Object.assign(row, { loading: false, added: undefined }))
+    dirtyNodesRef.current.forEach((node) => {
+      if (drafts.includes(node.data)) dirtyNodesRef.current.delete(node)
+    })
+    gridRef.current?.api.applyTransaction({ update: stale })
+    showFailToast(tRef.current('facts-grid.load-failed'))
+    if (drafts.length) showFailToast(tRef.current('facts-grid.save-failed'))
+  }, [])
+
+  // Set when the loader is asked to run while a pass is under way, so a pass about to give up runs once more.
+  const restartRequestedRef = useRef(false)
+
+  // Download every fact in the background, one page at a time, nearest the rows on screen first.
+  const runLoader = useCallback(async () => {
+    if (loaderRunningRef.current) {
+      restartRequestedRef.current = true
+      return
+    }
+    if (!gridReadyRef.current) return
+    loaderRunningRef.current = true
+    restartRequestedRef.current = false
+    let failures = 0
+    try {
+      while (!unmountedRef.current) {
+        await deletesSettledRef.current
+        if (unmountedRef.current) break
+        const rows = rowsRef.current
+        const anchor = gridRef.current?.api.getFirstDisplayedRowIndex() ?? 0
+        const start = nextPageStart((i) => Boolean(rows[i].loading), rows.length, Math.max(0, anchor))
+        if (start === null) break
+        const version = layoutVersionRef.current
+        try {
+          const res = await getFactsPage(deck.id, { limit: FACTS_PAGE_SIZE, offset: start, sort: FACTS_SORT })
+          failures = 0
+          if (version !== layoutVersionRef.current) continue
+          // Nothing left to list from there (the deck changed elsewhere); rows before it keep loading.
+          if (!fillRows(start, res.data.facts)) releaseFrom(start)
+          // Progress made: an earlier request to run again is covered by this pass.
+          restartRequestedRef.current = false
+        } catch {
+          failures += 1
+          if (failures >= MAX_LOAD_FAILURES) {
+            if (restartRequestedRef.current) {
+              // Asked again meanwhile (another add): try once more before giving up.
+              restartRequestedRef.current = false
+              failures = 0
+              continue
+            }
+            // Rows stay pending (a new fact among them may still be identified by a later download).
+            showFailToast(tRef.current('facts-grid.load-failed'))
+            break
+          }
+          await new Promise((resolve) => setTimeout(resolve, LOAD_RETRY_MS))
+        }
+      }
+    } finally {
+      loaderRunningRef.current = false
+    }
+  }, [deck.id, fillRows, releaseFrom])
+
+  // Started when the grid is ready, and again on (re)mount in case a remount stopped it.
+  const handleGridReady = useCallback(() => {
+    gridReadyRef.current = true
+    runLoader()
+  }, [runLoader])
+  useEffect(() => {
+    unmountedRef.current = false
+    runLoader()
+    return () => {
+      unmountedRef.current = true
+    }
+  }, [runLoader])
+
+  const handleGridSizeChanged = useCallback((event: GridSizeChangedEvent) => {
+    const height = gridContainerRef.current?.querySelector('.ag-body-viewport')?.clientHeight
+    if (!height) return
+    // Whole rows only, so the end never scrolls past the third-last fact.
+    const rows = Math.floor(height / ROW_HEIGHT)
+    if (rows === visibleRowsRef.current) return
+    visibleRowsRef.current = rows
+    syncTrailingRows()
+    event.api.refreshCells({ columns: ['rowNumber'], force: true })
+  }, [syncTrailingRows])
+
+  /** Removes a deleted fact's row in place; the rows below move up. */
+  const removeFactRow = useCallback((factId: string) => {
+    const index = rowsRef.current.findIndex((row) => rowFact(row)?.id === factId)
+    if (index < 0) return
+    const [row] = rowsRef.current.splice(index, 1)
+    dirtyNodesRef.current.forEach((node) => {
+      if (node.data === row) dirtyNodesRef.current.delete(node)
+    })
+    layoutVersionRef.current += 1
+    totalRef.current -= 1
+    setTotal(totalRef.current)
+    const api = gridRef.current?.api
+    api?.applyTransaction({ remove: [row] })
+    syncTrailingRows()
+    // Row numbers come from the row index, which shifted for every row below.
+    api?.refreshCells({ columns: ['rowNumber'], force: true })
+  }, [syncTrailingRows])
+
+  const saveFields = useCallback(async () => {
+    const currentDefs = getCurrentColDefs()
+      .filter(isFieldColumn)
+      .map((e) => e.headerName || '')
+    if(JSON.stringify(currentDefs) !== JSON.stringify(lastDecksFields.current)){
+      setLoading(true)
+      try {
+        await updateDeck(deck.id, {
+          ...deck,
+          fields: currentDefs,
+        })
+        lastDecksFields.current = currentDefs
+      } catch {
+        // Not marked saved, so leaving the header again retries it.
+        showFailToast(tRef.current('facts-grid.save-failed'))
+      } finally {
+        setLoading(false)
+      }
     }
   }, [deck, getCurrentColDefs])
+
+  // One header save at a time, each saving the headers shown when it runs: a later rename never lands before an
+  // earlier one, so the saved headers end up matching the shown ones.
+  const fieldsSaveQueueRef = useRef<Promise<void>>(Promise.resolve())
+  const handleFieldsChange = useCallback(() => {
+    fieldsSaveQueueRef.current = fieldsSaveQueueRef.current.then(saveFields)
+    return fieldsSaveQueueRef.current
+  }, [saveFields])
 
   const handleDebouncedFieldsChange = useDebouncedCallback(handleFieldsChange, 100)
 
   const getEntriesFromData = useCallback(
     (data: Record<string, Entry>) => {
       return getCurrentColDefs()
-        .filter((def) => !def.context?.isActionColumn)
-        .map((e) => {
-          const key = e.headerName || ''
-          return (data[key] ?? { text: '' }) as Entry
-        })
+        .filter(isFieldColumn)
+        .map((e) => (data[e.field ?? ''] ?? { text: '' }) as Entry)
     },
     [getCurrentColDefs],
   )
-  const handleCellChange = useCallback(async () => {
+  // Sends to the author run one at a time on their own queue: they keep their order without holding up saves.
+  const sendQueueRef = useRef<Promise<void>>(Promise.resolve())
+  const queueSend = useCallback((
+    send: () => Promise<{ unsent: number }>,
+    unsentMessage: 'auto-send.unsent' | 'auto-send.fact-added-unsent',
+  ) => {
+    sendQueueRef.current = sendQueueRef.current.then(send).then(
+      ({ unsent }) => {
+        // Quiet on success; only a failed send is shown.
+        if (unsent > 0) showFailToast(tRef.current(unsentMessage))
+      },
+      () => {
+        showFailToast(tRef.current(unsentMessage))
+      },
+    )
+  }, [])
+
+  const addRow = useCallback(async (node: IRowNode, entries: Entry[]) => {
+    const row = node.data as SheetRow
+    // Marks the fact as being created, so it is created only once; the row keeps taking typing meanwhile.
+    row.adding = true
+    const imported = Boolean(deck.source_deck_id)
+    try {
+      setLoading(true)
+      // No facts page refresh (the grid keeps its own rows); the deck page still refreshes for its counts.
+      const res = await addFactAction(deck.id, entries, false, false).catch(() => ({ success: false as const }))
+      row.adding = false
+      if (!res.success) {
+        // Not retried on its own (the server may have created it before the connection dropped), not even by an
+        // edit held meanwhile: the row keeps the typed text, and editing it again tries again.
+        dirtyNodesRef.current.delete(node)
+        showFailToast(String(('error' in res && res.error) || '') || tRef.current('add-fact.failed'))
+        return
+      }
+      const newFactIds = res.data?.newFactIds ?? []
+      if (newFactIds.length === 1) {
+        // The row is now this fact; save anything typed into it meanwhile.
+        const [id] = newFactIds
+        const fact: Fact = { id, entries, fields: [], tags: [], ...(imported ? { local: true } : {}) }
+        Object.assign(row, { id, [rawSymbol]: fact })
+        gridRef.current?.api.applyTransaction({ update: [row] })
+        saveEditsRef.current()
+      } else {
+        // Not identified: the loader downloads it (for its id) while the row keeps the typed text.
+        row.loading = true
+        row.added = entries.map((entry) => entry.text ?? '')
+      }
+      // Also picks up rows left pending after an earlier download stopped on network errors.
+      runLoader()
+      totalRef.current += 1
+      setTotal(totalRef.current)
+      syncTrailingRows()
+      gridRef.current?.api.ensureIndexVisible(endScrollRow(totalRef.current), 'top')
+      if (imported && res.data?.idsUnknown) {
+        showFailToast(tRef.current('auto-send.fact-added-not-sent'))
+      } else if (imported && newFactIds.length) {
+        // A new fact on an imported deck goes to the author right away, as on mobile.
+        const preview = previewFromEntries(entries)
+        const contributions = newFactIds.map((id) => factContribution('fact_add', id, preview))
+        queueSend(() => sendToAuthor(deck.id, contributions), 'auto-send.fact-added-unsent')
+      }
+    } finally {
+      setLoading(false)
+    }
+  }, [deck.id, deck.source_deck_id, syncTrailingRows, runLoader, queueSend])
+
+  const saveDirtyRows = useCallback(async () => {
     const changedNodes: { node: IRowNode; entries: Entry[] }[] = []
-    gridRef.current?.api.forEachNode((node) => {
+    let newRow: { node: IRowNode; entries: Entry[] } | undefined
+    const dirty = [...dirtyNodesRef.current]
+    dirtyNodesRef.current.clear()
+    const held: IRowNode[] = []
+    dirty.forEach((node) => {
       const data = node.data
+      // A fact still being created has no id yet: hold its edits until the loader brings the id.
+      if (data?.adding || data?.loading) {
+        held.push(node)
+        return
+      }
+      // Typing in the first empty row makes it a new fact.
+      if (data && !data[rawSymbol] && !data.adding && !data.loading && node.rowIndex === totalRef.current) {
+        const entries = getEntriesFromData(data)
+        if (entries.some((entry) => entry.text)) newRow = { node, entries }
+      }
+      // Skip rows not downloaded yet and the empty filler rows (no fact).
+      if (!data?.[rawSymbol]) return
       const raw = data[rawSymbol] as Fact
       const entries = getEntriesFromData(data)
       const hasChanged = entries.some((entry, i) => {
-        const rawEntry = raw.entries[i]
-        if (!rawEntry) return true
-        return entry.text !== rawEntry.text
+        // A missing entry is an empty one (a new fact comes back without its blank trailing entries).
+        const rawEntry = raw.entries[i] ?? { text: '' }
+        return (entry.text ?? '') !== (rawEntry.text ?? '')
           || entry.audio !== rawEntry.audio
           || entry.image !== rawEntry.image
           || entry.video !== rawEntry.video
@@ -164,46 +513,186 @@ export default function FactsGridPage({ facts, meta, deck }: FactsGridPageProps)
       }
     })
 
+    held.forEach((node) => dirtyNodesRef.current.add(node))
+
+    if (newRow) await addRow(newRow.node, newRow.entries)
     if (!changedNodes.length) return
 
     try {
       setLoading(true)
-      await Promise.all(changedNodes.map(({ node, entries }) => updateFact(deck.id, node.data.id, { entries })))
-      changedNodes.forEach(({ node, entries }) => {
+      const results = await Promise.allSettled(
+        changedNodes.map(({ node, entries }) => updateFact(deck.id, node.data.id, { entries })),
+      )
+      const saved = changedNodes.filter((_, i) => results[i].status === 'fulfilled')
+      saved.forEach(({ node, entries }) => {
         node.data[rawSymbol].entries = entries
       })
-      // Edits on an imported deck go to the author right away, as on mobile.
-      if (deck.source_deck_id) {
-        await sendFactEditsAndNotify(
-          deck.id,
-          changedNodes.map(({ node, entries }) => ({ factId: node.data.id, entries })),
-          { sent: tRef.current('auto-send.sent'), unsent: tRef.current('auto-send.unsent') },
-        )
+      if (saved.length < changedNodes.length) {
+        // Retried with the next save (unless deleted meanwhile); the cells keep the typed text.
+        changedNodes.forEach(({ node }, i) => {
+          if (results[i].status === 'rejected' && rowsRef.current.includes(node.data)) dirtyNodesRef.current.add(node)
+        })
+        showFailToast(tRef.current('facts-grid.save-failed'))
+      }
+      // Edits on an imported deck go to the author right away, as on mobile; only a failed send is shown.
+      if (deck.source_deck_id && saved.length) {
+        const edits = saved.map(({ node, entries }) => ({
+          factId: node.data.id,
+          entries,
+          local: (node.data[rawSymbol] as Fact).local,
+        }))
+        queueSend(() => sendFactEdits(deck.id, edits), 'auto-send.unsent')
       }
     } finally {
       setLoading(false)
     }
-  }, [deck.id, deck.source_deck_id, getEntriesFromData])
+  }, [deck.id, deck.source_deck_id, getEntriesFromData, addRow, queueSend])
+
+  // One save at a time, in order: a later edit to a row never lands on the server before an earlier one.
+  const saveQueueRef = useRef<Promise<void>>(Promise.resolve())
+  const handleCellChange = useCallback(() => {
+    const run = saveQueueRef.current.then(saveDirtyRows)
+    saveQueueRef.current = run.catch(() => {})
+    return run
+  }, [saveDirtyRows])
 
   const handleDebouncedCellChange = useDebouncedCallback(handleCellChange, 100)
+  useEffect(() => {
+    saveEditsRef.current = handleDebouncedCellChange
+  }, [handleDebouncedCellChange])
 
-  const handleDebouncedChange = useDebouncedCallback(() => {
-    handleFieldsChange(true)
-    handleCellChange()
-  }, 100)
+  const handleCellValueChanged = useCallback((event: CellValueChangedEvent) => {
+    dirtyNodesRef.current.add(event.node)
+    handleDebouncedCellChange()
+  }, [handleDebouncedCellChange])
 
-  const handleAttachmentClick = useCallback((fact: Fact, fieldKey: string, entry: Entry) => {
-    setTarget({ factId: fact.id, fieldKey, entry })
-    setIsOpen(true)
-  }, [setIsOpen])
+  const [cellMenu, setCellMenu] = useState<{
+    x: number
+    y: number
+    rowIndex: number
+    fact: Fact
+    fieldKey: string
+    entry: Entry
+    /** Opened on the ID cell: acts on the whole row. */
+    rowMenu: boolean
+  } | null>(null)
+  // Row highlighted while its ID-cell menu, or the delete confirmation opened from it, is showing.
+  const [markedRow, setMarkedRow] = useState<number | null>(null)
+  // A new key per right-click: the menu is replaced at the pointer, never a still-open one left where it was.
+  const [menuKey, setMenuKey] = useState(0)
+  const [menuFact, setMenuFact] = useState<Fact>()
+  const menuCellRef = useRef<{ rowIndex: number; fieldKey: string } | null>(null)
+  const [isTagsOpen, setIsTagsOpen] = useState(false)
+  const [isDeleteOpen, setIsDeleteOpen] = useState(false)
+
+  const handleCellContextMenu = useCallback((event: CellContextMenuEvent<Record<string, any>>) => {
+    const fact = rowFact(event.data)
+    const mouse = event.event as MouseEvent | null
+    const rowMenu = Boolean(event.colDef.context?.isRowNumber)
+    if (!fact || !mouse || event.rowIndex === null || !(rowMenu || isFieldColumn(event.colDef))) return
+    const fieldKey = event.column.getColId()
+    event.api.setFocusedCell(event.rowIndex, fieldKey)
+    setMarkedRow(rowMenu ? event.rowIndex : null)
+    setMenuKey((key) => key + 1)
+    setCellMenu({
+      x: mouse.clientX,
+      y: mouse.clientY,
+      rowIndex: event.rowIndex,
+      fact,
+      fieldKey,
+      entry: resolveCellEntry(event) ?? { text: '' },
+      rowMenu,
+    })
+  }, [])
+
+  // Set when delete is chosen, so the row stays highlighted behind the confirmation.
+  const keepMarkRef = useRef(false)
+  // Set when a menu item opens a dialog: focus then belongs to the dialog, not back on the cell.
+  const actionChosenRef = useRef(false)
+  const handleCellMenuAction = useCallback((action: FactsCellMenuAction) => {
+    if (!cellMenu) return
+    actionChosenRef.current = true
+    setMenuFact(cellMenu.fact)
+    menuCellRef.current = { rowIndex: cellMenu.rowIndex, fieldKey: cellMenu.fieldKey }
+    if (action === 'attachment') {
+      setTarget({ factId: cellMenu.fact.id, fieldKey: cellMenu.fieldKey, entry: cellMenu.entry })
+      setIsOpen(true)
+    } else if (action === 'tag') {
+      setIsTagsOpen(true)
+    } else {
+      keepMarkRef.current = true
+      setIsDeleteOpen(true)
+    }
+  }, [cellMenu])
+
+  const handleCellMenuClose = useCallback(() => {
+    const actionChosen = actionChosenRef.current
+    actionChosenRef.current = false
+    if (cellMenu && !actionChosen) {
+      const { rowIndex, fieldKey } = cellMenu
+      // Return keyboard focus to the cell the menu was opened on, as a spreadsheet does, unless the click that
+      // closed the menu chose another cell: wait a frame for that click to focus it, then leave focus there.
+      requestAnimationFrame(() => {
+        const api = gridRef.current?.api
+        const focused = api?.getFocusedCell()
+        if (focused && (focused.rowIndex !== rowIndex || focused.column.getColId() !== fieldKey)) return
+        api?.setFocusedCell(rowIndex, fieldKey)
+      })
+    }
+    setCellMenu(null)
+    if (!keepMarkRef.current) setMarkedRow(null)
+    keepMarkRef.current = false
+  }, [cellMenu])
+
+  const handleDeleteOpenChange = useCallback((open: boolean) => {
+    setIsDeleteOpen(open)
+    if (!open) setMarkedRow(null)
+  }, [])
+
+  const deleteMenuFact = useMemo<ActionFunction>(() => {
+    const factId = menuFact?.id ?? ''
+    const action = deleteFactAction.bind(null, { deckId: deck.id, factId })
+    return async (state, formData) => {
+      // A page requested before now may be computed after the delete: drop it; the loader waits for this delete
+      // before asking for more.
+      layoutVersionRef.current += 1
+      let settle!: () => void
+      deletesSettledRef.current = Promise.all([deletesSettledRef.current, new Promise<void>((r) => { settle = r })])
+      try {
+        let res: Awaited<ReturnType<typeof action>>
+        try {
+          res = await action(state, formData)
+        } catch {
+          res = { success: false }
+        }
+        if (!res?.success) showFailToast(tRef.current('facts-grid.delete-failed'))
+        if (res?.success) {
+          removeFactRow(factId)
+          // Keep the cursor where the delete happened, like a spreadsheet; the next fact moved into it.
+          const cell = menuCellRef.current
+          if (cell) {
+            gridRef.current?.api.ensureIndexVisible(cell.rowIndex)
+            gridRef.current?.api.setFocusedCell(cell.rowIndex, cell.fieldKey)
+          }
+        }
+        return res
+      } finally {
+        settle()
+      }
+    }
+  }, [deck.id, menuFact?.id, removeFactRow])
 
   const handleAttachmentUpload = useCallback((fileId: string, mediaType: MediaType) => {
     if (!target) return
-    const node = gridRef.current?.api.getRowNode(target.factId)
+    const row = rowsRef.current.find((r) => rowFact(r)?.id === target.factId)
+    const node = row && gridRef.current?.api.getRowNode(row.key)
     if (!node) return
     const prevEntry: Entry = node.data[target.fieldKey] ?? { text: '' }
     const nextEntry: Entry = { ...prevEntry, [mediaType]: fileId }
-    node.updateData({ ...node.data, [target.fieldKey]: nextEntry })
+    // In place: the grid and rowsRef share the row object.
+    node.data[target.fieldKey] = nextEntry
+    gridRef.current?.api.refreshCells({ rowNodes: [node], force: true })
+    dirtyNodesRef.current.add(node)
     handleDebouncedCellChange()
   }, [target, handleDebouncedCellChange])
 
@@ -216,48 +705,17 @@ export default function FactsGridPage({ facts, meta, deck }: FactsGridPageProps)
     }
   }, 100)
 
-  const handleDeleteColDef = useCallback((uid: string) => {
-    const currentDefs = getCurrentColDefs()
-    const contentDefs = currentDefs.filter((def) => !def.context?.isActionColumn)
-    const deleteIndex = contentDefs.findIndex((def) => def.context?.uid === uid)
-    const deletedDef = deleteIndex >= 0 ? contentDefs[deleteIndex] : undefined
-    const deletedFieldKey = deletedDef?.field ?? deletedDef?.headerName
-    const newDefs = currentDefs.filter((def) => def.context?.uid !== uid)
-    gridRef.current?.api.setGridOption('columnDefs', newDefs)
-    if (deleteIndex >= 0) {
-      const fieldKey = typeof deletedFieldKey === 'string' ? deletedFieldKey : undefined
-      gridRef.current?.api.forEachNode((node) => {
-        node.setData(spliceDeletedFieldFromRow(node.data ?? {}, deleteIndex, fieldKey))
-      })
-    }
-    handleDebouncedFieldsChange()
-  }, [getCurrentColDefs, handleDebouncedFieldsChange])
-
-  const createColDef = useCallback((e: string | symbol) => {
-    const isActionColumn = !isString(e)
-    const colId: string = isActionColumn ? 'action' : `${e as string}`
+  const createColDef = useCallback((name: string, index: number) => {
     return {
-      field: colId,
+      field: fieldKeyAt(index),
       sortable: false,
-      autoHeight: true,
-      headerName: isActionColumn ? t('common.actions') : e as string,
+      headerName: name,
       headerComponent: (props: IHeaderParams) => {
         return (
           <FactsGridHeaderRenderer
             {...props}
-            autoFocus={true}
             onChange={handleRenameColDef}
             onBlur={handleDebouncedFieldsChange}
-            onDelete={handleDeleteColDef}
-          />
-        )
-      },
-      cellRenderer: (props: any) => {
-        return (
-          <FactsGridCellRenderer
-            deck={deck}
-            onAttachmentClick={handleAttachmentClick}
-            {...props}
           />
         )
       },
@@ -281,61 +739,31 @@ export default function FactsGridPage({ facts, meta, deck }: FactsGridPageProps)
         }
         return true
       },
-      ...(isActionColumn
-        ? {
-          pinned: 'right',
-          suppressMovable: true,
-          lockPosition: 'right',
-          width: 75,
-          minWidth: 75,
-          maxWidth: 75,
-          resizable: false,
-          context: {
-            isActionColumn: true,
-          },
-        }
-        : {
-          editable: true,
-          flex: 1,
-          minWidth: 100,
-          context: {
-            uid: crypto.randomUUID(),
-          },
-        }),
+      // Of the empty filler rows below the last fact, only the first takes typing (it becomes a new fact).
+      // A new fact keeps taking typing while it is created (its edits are saved once its id comes back); one whose
+      // id is still unknown waits read-only for the download, so nothing typed can be lost if it is not found.
+      editable: (params) => Boolean(rowFact(params.data) || params.data?.adding)
+        || (params.node.rowIndex === totalRef.current && Boolean(params.data) && !params.data?.loading),
+      // Share the page width; past the 200px minimum the grid scrolls sideways. Drag a header edge to resize.
+      flex: 1,
+      minWidth: 200,
+      resizable: true,
+      context: {
+        uid: crypto.randomUUID(),
+      },
     } satisfies ColDef<Record<string, any>>
-  }, [handleRenameColDef, handleDebouncedFieldsChange, handleDeleteColDef, deck, handleAttachmentClick, t])
+  }, [handleRenameColDef, handleDebouncedFieldsChange])
 
-  const handleAddCol = useCallback(() => {
-    const currentDefs = getCurrentColDefs()
-    const uid = `field_${currentDefs.length}`
-    const newCol = createColDef(uid)
-    const actionIndex = currentDefs.findIndex((def) => def.context?.isActionColumn)
-    const newDefs = actionIndex === -1
-      ? [
-        ...currentDefs, newCol,
-      ]
-      : [
-        ...currentDefs.slice(0, actionIndex),
-        newCol,
-        ...currentDefs.slice(actionIndex),
-      ]
-    gridRef.current?.api.setGridOption('columnDefs', newDefs)
-  }, [createColDef, getCurrentColDefs])
-
+  // Keyed by the field names, not the array the server re-sends on every refresh, so unchanged columns are kept.
+  const fieldsKey = JSON.stringify(deck.fields)
   const columnDefs = useMemo(() => {
-    return fullFields.map(createColDef)
-  }, [fullFields, createColDef])
-
-  const [selectIds, setSelectIds] = useState<string[]>([])
-
-  const handleSelectionChanged = useCallback((event:SelectionChangedEvent<Record<string, any>>) => {
-    const ids = event.selectedNodes?.map((e) => e.data?.id).filter((e) => typeof e === 'string')
-    if(ids)
-      setSelectIds(ids)
-  }, [setSelectIds])
+    const fields = JSON.parse(fieldsKey) as string[]
+    return [{ ...rowNumberColDef, headerName: t('term.id') }, ...fields.map((name, i) => createColDef(name, i))]
+  }, [fieldsKey, createColDef, t])
 
   return (
     <LayoutPage
+      fullScreen
       breadcrumbs={[
         { href: '/decks', title: t('term.decks') },
         { href: `/decks/${deck.id}`, title: deck.name },
@@ -356,56 +784,39 @@ export default function FactsGridPage({ facts, meta, deck }: FactsGridPageProps)
 
         <div className="ml-auto"></div>
 
-        {
-          selectIds.length != 0 && (
-            <DeleteButton
-              deckId={deck.id}
-              isPending={loading}
-              factIds={selectIds}
-            />
-          )
-        }
-
-        <CreateColButton
-          isPending={loading}
-          onClick={handleAddCol}
-        />
-
-        <CrateRowButton
-          isPending={loading}
-          deckId={deck.id}
-          fields={fullFields}
-        />
-
-        <SyncButton
-          onClick={handleDebouncedChange}
-          isPending={loading}
-        />
+        <CrateRowButton isPending={loading} onPress={handleAddRow} />
       </div>
       <AgGridProvider modules={modules}>
-        <div style={{ height: 500 }}>
+        {/* Take the rest of the window below the breadcrumbs and toolbar; only the grid scrolls. */}
+        <div ref={gridContainerRef} className="facts-grid flex-1 min-h-0">
+          {/* Styled by row index (in both the pinned ID column and the fields), so the grid needs no redraw. */}
+          {markedRow !== null && (
+            <style>
+              {`.facts-grid .ag-row[row-index="${markedRow}"] {
+                background-color: var(--ag-selected-row-background-color);
+              }`}
+            </style>
+          )}
           <AgGridReact
             ref={gridRef}
             theme={resolvedTheme === 'dark' ? darkTheme : lightTheme}
             suppressDragLeaveHidesColumns
             suppressMovableColumns
-            rowData={rowData}
+            // Every row lives in the grid: rows not downloaded yet show blank until the background loader fills them.
+            rowData={initialRows}
+            rowHeight={ROW_HEIGHT}
+            // Matches the wider .facts-grid scrollbar in globals.css.
+            scrollbarWidth={14}
             columnDefs={columnDefs}
-            getRowId={(p) => p.data.id}
-            onCellValueChanged={handleDebouncedCellChange}
-            onSelectionChanged={handleSelectionChanged}
-            rowSelection={{
-              mode: 'multiRow',
-              checkboxes: true,
-              headerCheckbox: true,
-              enableClickSelection: false,
-            }}
+            getRowId={(p) => p.data.key}
+            onCellValueChanged={handleCellValueChanged}
+            onGridReady={handleGridReady}
+            onGridSizeChanged={handleGridSizeChanged}
+            onCellContextMenu={handleCellContextMenu}
+            preventDefaultOnContextMenu
           />
         </div>
       </AgGridProvider>
-      <TablePagination
-        totalPages={totalPages}
-      />
       <FactsMediaModal
         setIsOpen={setIsOpen}
         isOpen={isOpen}
@@ -416,124 +827,50 @@ export default function FactsGridPage({ facts, meta, deck }: FactsGridPageProps)
         getApi={() => gridRef.current!.api}
         onUpload={handleAttachmentUpload}
       />
+      <FactsCellContextMenu
+        key={menuKey}
+        position={cellMenu && { x: cellMenu.x, y: cellMenu.y }}
+        rowMenu={cellMenu?.rowMenu}
+        onAction={handleCellMenuAction}
+        onClose={handleCellMenuClose}
+      />
+      {menuFact && (
+        <FactsTagsModal
+          key={menuFact.id}
+          deck={deck}
+          fact={menuFact}
+          isOpen={isTagsOpen}
+          setIsOpen={setIsTagsOpen}
+        />
+      )}
+      {/* A fresh dialog per fact: it closes on its own success, which a reused one would only see once. */}
+      <DeleteModal
+        key={`delete-${menuFact?.id ?? ''}`}
+        isOpen={isDeleteOpen}
+        setIsOpen={handleDeleteOpenChange}
+        action={deleteMenuFact}
+      />
     </LayoutPage>
   )
 }
 
 
 
-function CrateRowButton({
-  deckId,
-  fields,
-  isPending: isLoading,
-}: {
-  deckId: string,
-  fields: (string | symbol)[]
-  isPending: boolean
-}){
-  const t = useTranslations()
-  const value = useMemo(() => {
-    const _fields = fields.filter(isString)
-    const facts = [{
-      entries: _fields.map((text) => ({ text })),
-    }]
-    return JSON.stringify(facts)
-  }, [fields])
-
-  const [_state, action, isPending] = useActionState(createFactsAction.bind(null, deckId), null)
-
-  return (
-    <form action={action}>
-      <input type="hidden" name="facts" value={value} />
-      <input type="hidden" name="operation" value="prepend" />
-      <AppTooltip
-        content={t('common.add', { name: t('term.facts') })}
-      >
-        <AppButton
-          size="sm"
-          variant="outline"
-          type="submit"
-          id="facts-grid-create-row"
-          isPending={isPending || isLoading}
-          isIconOnly
-          icon={<Rows4Icon className="size-4 facts-grid-create-row-icon" />}
-        />
-      </AppTooltip>
-    </form>
-  )
-}
-
-
-function CreateColButton({ ...rest }: AppButtonProps){
+function CrateRowButton({ isPending, onPress }: { isPending: boolean, onPress: () => void }){
   const t = useTranslations()
   return (
     <AppTooltip
-      content={t('common.add', { name: t('term.field') })}
+      content={t('common.add', { name: t('term.facts') })}
     >
       <AppButton
-        className="ml-auto"
         size="sm"
         variant="outline"
+        id="facts-grid-create-row"
+        isPending={isPending}
         isIconOnly
-        id="facts-grid-create-col-button"
-        icon={<Columns4Icon className="size-4 facts-grid-create-col-icon" />}
-        {...rest}
+        onPress={onPress}
+        icon={<Rows4Icon className="size-4 facts-grid-create-row-icon" />}
       />
     </AppTooltip>
   )
-}
-
-
-
-function SyncButton({ ...rest }: AppButtonProps){
-  const t = useTranslations()
-  return (
-    <AppTooltip
-      content={t('common.sync')}
-    >
-      <Button
-        size="sm"
-        variant="outline"
-        isIconOnly
-        id="facts-grid-sync-button"
-        {...rest}
-      >
-        {
-          ({ isPending }) => <RefreshCwIcon className={clsx('size-4', isPending && 'animate-spin')} />
-        }
-      </Button>
-    </AppTooltip>
-  )
-}
-
-interface DeleteButtonProps extends AppButtonProps {
-  deckId: string,
-  factIds: string[]
-}
-
-
-function DeleteButton({ factIds, deckId, ...rest } : DeleteButtonProps){
-  const t = useTranslations()
-  const [isOpen, setIsOpen] = useState(false)
-  const action = deleteFactsAction.bind(null, { deckId, factIds })
-  return (
-    <>
-      <AppTooltip
-        content={t('common.delete', { name: t('term.fields') })}
-      >
-        <AppButton
-          className="ml-auto"
-          size="sm"
-          variant="outline"
-          id="facts-grid-delete-button"
-          isIconOnly
-          icon={<Trash2Icon className="size-4" />}
-          onClick={() => setIsOpen(true)}
-          {...rest}
-        />
-      </AppTooltip>
-      <DeleteModal type="multiple" deleteCount={factIds.length} isOpen={isOpen} setIsOpen={setIsOpen} action={action} />
-    </>
-  )
-
 }

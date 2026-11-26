@@ -8,8 +8,6 @@ import { createFactsSchema, type Entry, type Fact, updateFactSchema } from '@/mo
 import {
   createFactsService,
   deleteFactService,
-  deleteFactsService,
-  getFactIdsService,
   getFactService,
   updateFactService,
 } from '@/modules/facts/facts.service'
@@ -118,32 +116,11 @@ export const deleteFactAction: ActionFunctionPayload<{ deckId: string; factId: s
       success: false,
     }
   }
+  // No redirect: the grid stays mounted, so it can keep the cursor where the delete happened.
   revalidatePath(`/decks/${deckId}/facts`)
-  redirect(`/decks/${deckId}/facts`)
+  return { success: true }
 }
 
-
-/**
- * 批量删除词条的 Action
- */
-export const deleteFactsAction: ActionFunctionPayload<{ deckId: string; factIds: string[] }> = async ({ deckId, factIds }) => {
-  try {
-    const res = await deleteFactsService(deckId, factIds)
-    if (!res.success) {
-      return {
-        error: res.message,
-        success: false,
-      }
-    }
-  } catch (error) {
-    return {
-      error: formatErrorMessage(error, 'deleteFactAction failed'),
-      success: false,
-    }
-  }
-  revalidatePath(`/decks/${deckId}/facts`)
-  redirect(`/decks/${deckId}/facts`)
-}
 
 /** 获取单个词条（学习时编辑用） */
 export async function getFactAction(deckId: string, factId: string): Promise<ActionState<Fact>> {
@@ -162,14 +139,15 @@ export async function updateFactEntriesAction(deckId: string, factId: string, en
 }
 
 /**
- * 逐条添加一个词条（卡组菜单的“添加词条”，同移动端）；verified 记录作者已核验。
- * 导入卡组返回新词条的 ID，供浏览器立即作为贡献发送给作者。
+ * 逐条添加一个词条（同移动端）；verified 记录作者已核验。返回新词条的 ID（添加响应的 fact_ids）：
+ * 导入卡组据此立即作为贡献发送给作者，词条表格据此认出新行。refreshFacts 为 false 时不刷新词条页（表格自己维护行），
+ * 卡组页仍会刷新（下次进入时显示新的数量）。
  */
 export async function addFactAction(
   deckId: string,
   entries: Entry[],
   verified: boolean,
-  imported = false,
+  refreshFacts = true,
 ): Promise<ActionState<{ newFactIds: string[], idsUnknown?: boolean }>> {
   const result = createFactsSchema.safeParse({
     facts: [{ entries }],
@@ -177,16 +155,12 @@ export async function addFactAction(
     verified: verified || undefined,
   })
   if (!result.success) return { success: false, error: z.prettifyError(result.error) }
-  const before = imported ? await getFactIdsService(deckId) : null
   const res = await createFactsService(deckId, result.data)
   if (!res.success) return { success: false, error: res.message }
-  revalidatePath(`/decks/${deckId}/facts`)
+  if (refreshFacts) revalidatePath(`/decks/${deckId}/facts`)
   revalidatePath(`/decks/${deckId}`)
-  if (!imported) return { success: true, data: { newFactIds: [] } }
-  if (!before?.success) return { success: true, data: { newFactIds: [], idsUnknown: true } }
-  // The add response has no ids, so the new fact is the one that was not there before (as on mobile).
-  const after = await getFactIdsService(deckId)
-  const known = new Set(before.data.fact_ids)
-  if (!after.success) return { success: true, data: { newFactIds: [], idsUnknown: true } }
-  return { success: true, data: { newFactIds: after.data.fact_ids.filter((id) => !known.has(id)) } }
+  const newFactIds = res.data.fact_ids ?? []
+  // One fact was added, so exactly one id identifies it; anything else (e.g. a backend without fact_ids) does not.
+  if (newFactIds.length !== 1) return { success: true, data: { newFactIds: [], idsUnknown: true } }
+  return { success: true, data: { newFactIds } }
 }

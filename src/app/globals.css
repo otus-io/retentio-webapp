@@ -90,12 +90,47 @@ body {
 }
 
 
-/* AG Grid focus css 处理 */
-.ag-cell-focus:not(.ag-cell-range-selected):focus-within, .ag-cell-range-single-cell, .ag-cell-range-single-cell.ag-cell-range-handle, .ag-context-menu-open .ag-cell-focus:not(.ag-cell-range-selected), .ag-context-menu-open .ag-full-width-row.ag-row-focus .ag-cell-wrapper.ag-row-group, .ag-full-width-row.ag-row-focus:focus .ag-cell-wrapper.ag-row-group{
-   --cell-display: block;
-}
-
-
 .ag-cell-wrapper {
   height: 100%;
+}
+
+/* Facts grid: renaming a field fills the whole header cell with one box, like editing a fact cell. */
+.ag-header-cell:has(.facts-grid-header-input) {
+  padding: 0;
+}
+
+.facts-grid-header-input {
+  width: 100%;
+  height: 100%;
+  padding: 0 calc(var(--ag-cell-horizontal-padding) - 1px);
+  border: var(--ag-cell-editing-border);
+  border-radius: var(--ag-border-radius);
+  box-shadow: var(--ag-cell-editing-shadow);
+  background-color: var(--ag-background-color);
+  font: inherit;
+  outline: none;
+}
+
+/* Facts grid: a wider scrollbar with a long thumb, so it stays easy to grab and drag
+   on decks with thousands of rows. */
+.facts-grid ::-webkit-scrollbar {
+  width: 14px;
+  height: 14px;
+}
+
+.facts-grid ::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.facts-grid ::-webkit-scrollbar-thumb {
+  min-width: 80px;
+  min-height: 80px;
+  border: 3px solid transparent;
+  border-radius: 7px;
+  background-clip: padding-box;
+  background-color: color-mix(in oklab, var(--foreground) 35%, transparent);
+}
+
+.facts-grid ::-webkit-scrollbar-thumb:hover {
+  background-color: color-mix(in oklab, var(--foreground) 55%, transparent);
 }

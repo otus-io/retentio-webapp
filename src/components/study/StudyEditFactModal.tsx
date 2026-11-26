@@ -32,6 +32,8 @@ export default function StudyEditFactModal(
   const [texts, setTexts] = useState<string[]>([])
   /** Entries the fact had when loaded; fields past it are only added when filled in. */
   const [loadedCount, setLoadedCount] = useState(0)
+  /** Imported deck: the fact is one the importer added, so the author gets it as a new fact */
+  const [local, setLocal] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [loadFailed, setLoadFailed] = useState(false)
   const [isPending, startTransition] = useTransition()
@@ -48,6 +50,7 @@ export default function StudyEditFactModal(
       }
       const loaded = res.data.entries
       setLoadedCount(loaded.length)
+      setLocal(Boolean(res.data.local))
       const count = Math.max(fields.length, loaded.length)
       setEntries(Array.from({ length: count }, (_, i) => loaded[i] ?? {}))
       setTexts(Array.from({ length: count }, (_, i) => loaded[i]?.text ?? ''))
@@ -73,7 +76,7 @@ export default function StudyEditFactModal(
       // An edit on an imported deck goes to the author right away, as on mobile.
       await sendFactEditsAndNotify(
         deckId,
-        [{ factId, entries: next }],
+        [{ factId, entries: next, local }],
         { sent: tSend('sent'), unsent: tSend('unsent') },
       )
     })

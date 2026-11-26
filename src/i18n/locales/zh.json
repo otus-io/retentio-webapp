@@ -228,7 +228,6 @@
     "deck-options": "卡组选项",
     "deck-details": "卡组详情",
     "total-reviews": "累计复习",
-    "edit-facts": "编辑词条",
     "retry": "重试",
     "login": "登录",
     "logout": "退出登录",
@@ -257,7 +256,6 @@
     "placeholder-enter": "请输入{name}",
     "save": "保存",
     "reset": "重置",
-    "sync": "同步",
     "upload": "上传",
     "close": "关闭",
     "continue": "继续",
@@ -315,6 +313,7 @@
   },
   "term": {
     "decks": "卡组",
+    "id": "ID",
     "facts": "词条",
     "name": "名称",
     "due": "待复习",
@@ -654,5 +653,10 @@
     "unsent": "已保存，但暂未发送给作者，可在未发送贡献中重试。",
     "fact-added-sent": "词条已添加并发送给作者",
     "fact-added-unsent": "词条已添加，但暂未发送给作者，可在未发送贡献中重试。"
+  },
+  "facts-grid": {
+    "save-failed": "无法保存你的修改",
+    "load-failed": "无法加载全部词条，请刷新页面重试。",
+    "delete-failed": "无法删除该词条"
   }
 }

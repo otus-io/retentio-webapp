@@ -1,4 +1,7 @@
+import fs from 'node:fs'
 import { expect, test, type Page } from '@playwright/test'
+import { API_BASE_URL, JWT_COOKIE_NAME } from '../../src/config/index'
+import { getTestUserAuthStatePath } from './global-setup'
 
 export function skipUnlessE2ECredentials(user: 1 | 2 = 1) {
   const suffix = user === 1 ? '' : `_${user}`
@@ -64,10 +67,7 @@ export async function gotoDeckFacts(page: Page, deckName: string) {
 
   const card = page.locator('[data-slot="card"]').filter({ hasText: deckName }).first()
   await expect(card).toBeVisible()
-  await card.click()
-  await page.waitForURL(/\/decks\/[^/]+$/)
-
-  await page.locator('[data-slot="card"] [data-slot="dropdown-trigger"]').click()
+  await card.locator('[data-slot="dropdown-trigger"]').click()
   await page
     .locator('[data-slot="dropdown-popover"] [data-slot="menu-item"][data-key="facts"]')
     .click()
@@ -91,12 +91,8 @@ export async function gotoFirstDeckFacts(page: Page) {
     await page.waitForLoadState('networkidle')
   }
 
-  // 点击第一个 deck 卡片，进入详情页
-  await cards.first().click()
-  await page.waitForURL(/\/decks\/[^/]+$/)
-
-  // 打开详情页 card 内的下拉菜单，点击 facts 菜单项
-  await page.locator('[data-slot="card"] [data-slot="dropdown-trigger"]').click()
+  // 卡片点击会进入学习页，改为打开第一个 deck 卡片的下拉菜单，点击 facts 菜单项
+  await cards.first().locator('[data-slot="dropdown-trigger"]').click()
   await page
     .locator('[data-slot="dropdown-popover"] [data-slot="menu-item"][data-key="facts"]')
     .click()
@@ -106,42 +102,31 @@ export async function gotoFirstDeckFacts(page: Page) {
   await expect(page.locator('.ag-root')).toBeVisible()
 }
 
+/** facts 页标题里的词条总数（“All Facts(n)”）；表格末尾总有填满屏幕的空行，不能用行数判断 */
+async function factsTotal(page: Page) {
+  const text = await page.getByText(/All Facts\(\d+\)/).textContent()
+  return Number(text?.match(/\((\d+)\)/)?.[1] ?? 0)
+}
+
 /**
- * 在当前 facts 页面新建一行（prepend），等待新行第一格渲染完成
+ * 在当前 facts 页面新建一行：按钮跳到第一个空行并进入编辑，输入文字后保存为新词条，等待总数增加
  */
-export async function addFactRow(page: Page) {
-  const rowsBefore = await page.locator('.ag-center-cols-container [role="row"]').count()
+export async function addFactRow(page: Page, text = 'new fact') {
+  const totalBefore = await factsTotal(page)
   const icon = page.locator('.facts-grid-create-row-icon')
   await expect(icon).toBeVisible()
 
   await page.locator('#facts-grid-create-row').click()
-  await page.waitForURL(/\/decks\/[^/]+\/facts$/)
-  await expect(page.locator('.ag-root')).toBeVisible()
+  const editor = page.locator('.ag-cell-inline-editing input')
+  await expect(editor).toBeVisible()
+  await editor.fill(text)
+  await editor.press('Enter')
 
   await expect(async () => {
-    const rowsAfter = await page.locator('.ag-center-cols-container [role="row"]').count()
-    expect(rowsAfter).toBeGreaterThan(rowsBefore)
+    expect(await factsTotal(page)).toBeGreaterThan(totalBefore)
   }).toPass({ timeout: 10000 })
 
   await expect(page.locator('.facts-grid-create-row-icon')).toBeVisible()
-}
-
-/**
- * 在当前 facts 页面新增一列，确认输入后等待 3 秒
- */
-export async function addColumn(page: Page) {
-  // 点击创建列按钮
-  await page.locator('#facts-grid-create-col-button').click()
-
-  // 获取新增列的输入框
-  const lastInput = page.locator('.facts-grid-header-renderer').last().locator('input')
-  await expect(lastInput).toBeVisible()
-
-  // 确认输入
-  await lastInput.press('Escape')
-
-  // 等待 3 秒以确保列被正确初始化
-  await page.waitForTimeout(3000)
 }
 
 /**
@@ -156,14 +141,14 @@ export async function getColumnHeaderText(page: Page, columnIndex: number): Prom
 }
 
 /**
- * 第一行第一个 fact 数据单元格（跳过 row-selection checkbox 列）
+ * 第一行第一个 fact 数据单元格（行号列固定在左侧容器，不在 center 容器中）
  */
 export function firstFactDataCell(page: Page) {
   return page
     .locator('.ag-center-cols-container [role="row"]')
     .first()
     .locator('.ag-cell')
-    .nth(1)
+    .first()
 }
 
 /**
@@ -195,6 +180,7 @@ export async function editFirstFactCell(page: Page, text: string) {
 export async function renameColumn(page: Page, columnIndex: number, newName: string) {
   const header = page.locator('.facts-grid-header-renderer').nth(columnIndex)
   const input = header.locator('input')
+  await header.dblclick()
   await expect(input).toBeVisible()
 
   const savePromise = page.waitForResponse(
@@ -208,20 +194,28 @@ export async function renameColumn(page: Page, columnIndex: number, newName: str
 }
 
 /**
- * 通过行内 action 菜单删除第一行 fact
+ * 右键第一个 fact 单元格，点击右键菜单项（attachment / tag / delete）
  */
-export async function deleteFirstFactViaRowMenu(page: Page) {
-  const rowsBefore = await page.locator('.ag-center-cols-container [role="row"]').count()
-  const actionCell = page.locator('.ag-pinned-right-cols-container [role="row"]').first()
-  await actionCell.locator('[data-slot="dropdown-trigger"]').click()
-  await page
-    .locator('[data-slot="dropdown-popover"] [data-slot="menu-item"][data-key="delete"]')
-    .click()
+export async function chooseFirstFactCellMenuItem(page: Page, key: 'attachment' | 'tag' | 'delete') {
+  const item = page.locator(`[data-slot="dropdown-popover"] [data-slot="menu-item"][data-key="${key}"]`)
+  // 行数据按块异步加载，加载前右键不会弹出菜单，需重试
+  await expect(async () => {
+    await firstFactDataCell(page).click({ button: 'right' })
+    await expect(item).toBeVisible({ timeout: 1000 })
+  }).toPass({ timeout: 10000 })
+  await item.click()
+}
+
+/**
+ * 通过单元格右键菜单删除第一行 fact
+ */
+export async function deleteFirstFactViaCellMenu(page: Page) {
+  const totalBefore = await factsTotal(page)
+  await chooseFirstFactCellMenuItem(page, 'delete')
   await page.getByRole('button', { name: 'Confirm' }).click()
   await page.waitForURL(/\/decks\/[^/]+\/facts$/)
   await expect(async () => {
-    const rowsAfter = await page.locator('.ag-center-cols-container [role="row"]').count()
-    expect(rowsAfter).toBeLessThan(rowsBefore)
+    expect(await factsTotal(page)).toBeLessThan(totalBefore)
   }).toPass({ timeout: 10000 })
 }
 
@@ -365,7 +359,8 @@ export async function openDeckDetailFromList(page: Page, deckName: string) {
   await page.waitForLoadState('networkidle')
   const card = page.locator('[data-slot="card"]').filter({ hasText: deckName }).first()
   await expect(card).toBeVisible()
-  await card.click()
+  await card.locator('[data-slot="dropdown-trigger"]').click()
+  await page.locator('[data-slot="dropdown-popover"] [data-slot="menu-item"][data-key="details"]').click()
   await page.waitForURL(/\/decks\/[^/]+$/)
 }
 
@@ -421,11 +416,7 @@ export function tagChipOnDeckDetail(page: Page, tagName: string) {
  * 打开第一行 fact 的 tags modal
  */
 export async function openFirstFactTagsModal(page: Page) {
-  const actionCell = page.locator('.ag-pinned-right-cols-container [role="row"]').first()
-  await actionCell.locator('[data-slot="dropdown-trigger"]').click()
-  await page
-    .locator('[data-slot="dropdown-popover"] [data-slot="menu-item"][data-key="tag"]')
-    .click()
+  await chooseFirstFactCellMenuItem(page, 'tag')
   const modal = factTagsModal(page)
   await expect(modal).toBeVisible()
   await expect(modal.locator('[data-slot="spinner"]')).toHaveCount(0, { timeout: 10000 })
@@ -501,3 +492,53 @@ export async function isTagSelectedInFactModal(page: Page, tagName: string): Pro
   const selectedClass = await tag.getAttribute('class')
   return selectedClass?.includes('selected') ?? false
 }
+
+/**
+ * 新建一个 deck，并通过 API 直接追加 count 个词条（fN / bN），然后打开它的 facts 页面
+ */
+export async function gotoSeededDeckFacts(page: Page, prefix: string, count: number) {
+  const deckName = uniqueName(prefix)
+  await createDeck(page, deckName)
+  await gotoDeckFacts(page, deckName)
+  const deckId = page.url().match(/\/decks\/([^/]+)\/facts/)![1]
+  const state = JSON.parse(fs.readFileSync(getTestUserAuthStatePath(1), 'utf8')) as {
+    cookies: { name: string; value: string }[]
+  }
+  const token = state.cookies.find((c) => c.name === JWT_COOKIE_NAME)!.value
+  const facts = Array.from({ length: count }, (_, i) => ({ entries: [{ text: `f${i}` }, { text: `b${i}` }] }))
+  const res = await fetch(`${API_BASE_URL}/api/decks/${deckId}/facts/append`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+    body: JSON.stringify({ facts }),
+  })
+  expect(res.ok).toBe(true)
+  await page.reload()
+  await expect(page.getByText(`All Facts(${count})`)).toBeVisible()
+  return deckId
+}
+
+/** facts 表格中第 row 行、第 col 个字段单元格（不含左侧固定的行号列） */
+export function factCell(page: Page, row: number, col: number) {
+  return page.locator(`.ag-center-cols-container [row-index="${row}"] .ag-cell`).nth(col)
+}
+
+/** facts 表格中第 row 行的行号（ID）单元格 */
+export function factIdCell(page: Page, row: number) {
+  return page.locator(`.ag-pinned-left-cols-container [row-index="${row}"] .ag-cell`)
+}
+
+/** 当前获得焦点的单元格文本 */
+export function focusedFactCellText(page: Page) {
+  return page.evaluate(() => document.querySelector('.ag-cell-focus')?.textContent ?? null)
+}
+
+/** 表格滚动位置对应的第一行行号（每行 32px） */
+export function factsTopRow(page: Page) {
+  return page.locator('.ag-body-viewport').evaluate((el) => Math.round(el.scrollTop / 32))
+}
+
+/** 右键菜单（只会有一个） */
+export function factCellMenu(page: Page) {
+  return page.locator('[data-slot="dropdown-popover"]')
+}
+

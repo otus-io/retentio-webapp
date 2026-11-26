@@ -228,7 +228,6 @@
     "deck-options": "デッキのオプション",
     "deck-details": "デッキ詳細",
     "total-reviews": "総復習数",
-    "edit-facts": "項目を編集",
     "retry": "再試行",
     "login": "ログイン",
     "logout": "ログアウト",
@@ -257,7 +256,6 @@
     "placeholder-enter": "{name}を入力してください",
     "save": "保存",
     "reset": "リセット",
-    "sync": "同期",
     "upload": "アップロード",
     "close": "閉じる",
     "continue": "続ける",
@@ -309,6 +307,7 @@
   },
   "term": {
     "decks": "デッキ",
+    "id": "ID",
     "facts": "項目",
     "name": "名前",
     "due": "要復習",
@@ -648,5 +647,10 @@
     "unsent": "保存しましたが、作成者に送れませんでした。未送信の貢献から再送できます。",
     "fact-added-sent": "項目を追加し、作成者に送りました",
     "fact-added-unsent": "項目を追加しましたが、作成者に送れませんでした。未送信の貢献から再送できます。"
+  },
+  "facts-grid": {
+    "save-failed": "変更を保存できませんでした",
+    "load-failed": "すべての項目を読み込めませんでした。ページを再読み込みしてください。",
+    "delete-failed": "この項目を削除できませんでした"
   }
 }

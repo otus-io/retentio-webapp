@@ -1,5 +1,6 @@
 'use server'
 import FactsGridPage from '@/components/facts/FactsGridPage'
+import { FACTS_FIRST_PAGE_SIZE, FACTS_SORT } from '@/components/facts/factsSheet'
 import { getDeckService } from '@/modules/decks/decks.service'
 import { getFactsPageService } from '@/modules/facts/facts.service'
 import type { Metadata } from 'next'
@@ -12,17 +13,13 @@ export default async function Page(props: PageProps<'/decks/[id]/facts'>) {
   if(!data.success){
     notFound()
   }
-  const searchParams = await props.searchParams
-  const limit = Number(searchParams.limit) || 10
-  const pageNum = Number(searchParams.page) || 1
-  const offset = (pageNum - 1) * limit
-  const page = await getFactsPageService(id, { limit, offset })
+  const page = await getFactsPageService(id, { limit: FACTS_FIRST_PAGE_SIZE, offset: 0, sort: FACTS_SORT })
   if(!page.success){
     notFound()
   }
 
   return (
-    <FactsGridPage deck={data.data} facts={page.data.facts} meta={page.meta} />
+    <FactsGridPage key={id} deck={data.data} facts={page.data.facts} total={page.meta.total} />
   )
 }
 

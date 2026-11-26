@@ -56,7 +56,10 @@ export async function sendToAuthor(deckId: string, contributions: PendingDeckCon
       contributionId: s.contributionId,
       sentAt,
     }))
-    writeContributions(sentKey, [...readContributions(sentKey, isSentContribution), ...newlySent])
+    // A re-send refreshes the same open contribution on the server, so replace its row instead of adding one.
+    const refreshed = new Set(newlySent.map((s) => s.contributionId))
+    const earlier = readContributions(sentKey, isSentContribution).filter((s) => !refreshed.has(s.contributionId))
+    writeContributions(sentKey, [...earlier, ...newlySent])
   }
   return { sent: submitted.length, unsent: contributions.length - submitted.length }
 }
@@ -70,16 +73,26 @@ export function factContribution(
   return { id: `${kind}:${factId}`, kind, factId, preview, savedAt: new Date().toISOString() }
 }
 
-/** Sends saved fact edits on an imported deck to the author, one contribution per fact. */
-export function sendFactEdits(deckId: string, edits: { factId: string, entries: Entry[] }[]) {
-  return sendToAuthor(deckId, edits.map(({ factId, entries }) =>
-    factContribution('fact_edit', factId, previewFromEntries(entries))))
+/** A saved fact edit; `local` marks a fact the importer added, which the author only knows as a fact_add. */
+export interface FactEdit {
+  factId: string
+  entries: Entry[]
+  local?: boolean
+}
+
+/**
+ * Sends saved fact edits on an imported deck to the author, one contribution per fact. An edit to a fact the
+ * importer added re-sends its fact_add (refreshing the open suggestion), as the author has no fact to edit.
+ */
+export function sendFactEdits(deckId: string, edits: FactEdit[]) {
+  return sendToAuthor(deckId, edits.map(({ factId, entries, local }) =>
+    factContribution(local ? 'fact_add' : 'fact_edit', factId, previewFromEntries(entries))))
 }
 
 /** Sends saved fact edits and tells the user whether they reached the author. */
 export async function sendFactEditsAndNotify(
   deckId: string,
-  edits: { factId: string, entries: Entry[] }[],
+  edits: FactEdit[],
   messages: { sent: string, unsent: string },
 ) {
   const { unsent } = await sendFactEdits(deckId, edits)
