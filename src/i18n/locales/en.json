@@ -216,7 +216,7 @@
     "registerCheckEmail": "Check {email} to finish signing up. Your account is created when you open the link in that email.",
     "verifyEmailUsernameTaken": "Someone took that username before you opened the link. Please sign up again with another username.",
     "verifyEmailAccountExists": "This email already belongs to an account. If it is yours, log in or use “Forgot password?” on the login page.",
-    "verifyEmailLinkUsed": "This link has already been used or has expired. If you already verified your email, just log in."
+    "verifyEmailLinkUsed": "This link has already been used or has expired. If you already verified your email, log in. Otherwise, sign up again."
   },
   "tags": {
     "select-placeholder": "Select tags",
