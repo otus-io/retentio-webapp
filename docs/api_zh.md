@@ -1377,7 +1377,9 @@
 
 **接口：** `GET /api/decks/{importId}/facts?limit=50&offset=0`
 
-**成功（200）：** overlay → 快照解析；包含 `local_facts`；省略 `hidden_facts`。
+**成功（200）：** overlay → 快照解析；包含 `local_facts`；省略 `hidden_facts`。导入者新增的词条（`local_facts`）带
+`"local": true`（否则省略），`GET /api/decks/{importId}/facts/{factId}` 同样如此：这类词条的编辑应以 `fact_add`
+（而非 `fact_edit`）提交给作者。
 
 ```json
 {
@@ -1394,7 +1396,8 @@
       {
         "id": "local001",
         "entries": [{ "text": "Orange" }, { "text": "オレンジ" }],
-        "tags": [{ "id": "tag00001", "name": "food", "description": "" }]
+        "tags": [{ "id": "tag00001", "name": "food", "description": "" }],
+        "local": true
       }
     ]
   },

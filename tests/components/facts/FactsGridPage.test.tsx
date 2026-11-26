@@ -47,6 +47,7 @@ const h = vi.hoisted(() => ({
     h.modals[name] = props
   },
   menuMounts: 0,
+  deleteMounts: 0,
 }))
 
 vi.mock('ag-grid-react', () => ({
@@ -81,7 +82,18 @@ function modalMock(name: string) {
 }
 vi.mock('@/components/facts/FactsMediaModal', () => modalMock('media'))
 vi.mock('@/components/facts/FactsTagsModal', () => modalMock('tags'))
-vi.mock('@/components/common/DeleteModal', () => modalMock('delete'))
+vi.mock('@/components/common/DeleteModal', async () => {
+  const { useEffect } = await import('react')
+  return {
+    default: function Delete(props: Record<string, any>) {
+      h.captureModal('delete', props)
+      useEffect(() => {
+        h.deleteMounts += 1
+      }, [])
+      return null
+    },
+  }
+})
 vi.mock('@/components/facts/FactsCellContextMenu', async () => {
   const { useEffect } = await import('react')
   return {
@@ -152,6 +164,7 @@ describe('FactsGridPage', () => {
     h.liveDefs = null
     h.modals = {}
     h.menuMounts = 0
+    h.deleteMounts = 0
     serverTotal = 250
     vi.mocked(getFactsPage).mockImplementation(async (_d, p) => page(p?.offset ?? 0, p?.limit ?? 0))
   })
@@ -166,7 +179,7 @@ describe('FactsGridPage', () => {
     expect(h.gridProps.scrollbarWidth).toBe(14)
     // 250 facts end with the last three at the top of the 30 rows on screen.
     expect(h.rows).toHaveLength(277)
-    expect(h.rows[0]).toMatchObject({ key: 'f0', id: 'f0', Front: { text: 'f' }, Back: { text: 'b' } })
+    expect(h.rows[0]).toMatchObject({ key: 'f0', id: 'f0', col0: { text: 'f' }, col1: { text: 'b' } })
     expect(h.rows[0][rawSymbol]).toEqual(fact('f0'))
     expect(h.rows.slice(1, 250).every((r) => r.loading && !r[rawSymbol])).toBe(true)
     expect(h.rows.slice(250).every((r) => !r.loading && !r[rawSymbol])).toBe(true)
@@ -199,7 +212,7 @@ describe('FactsGridPage', () => {
         { limit: 200, offset: 1, sort: 'created_at' },
         { limit: 200, offset: 201, sort: 'created_at' },
       ])
-      expect(h.rows[249]).toMatchObject({ id: 'f249', loading: false, Front: { text: 'f' } })
+      expect(h.rows[249]).toMatchObject({ id: 'f249', loading: false, col0: { text: 'f' } })
       expect(h.api.applyTransaction).toHaveBeenCalledWith({ update: expect.arrayContaining([h.rows[249]]) })
       // Rows keep their keys, so the grid updates them in place.
       expect(h.rows[249].key).not.toBe('f249')
@@ -213,12 +226,21 @@ describe('FactsGridPage', () => {
       expect(vi.mocked(getFactsPage).mock.calls[0][1]).toMatchObject({ offset: 21 })
     })
 
-    it('fills rows by the live field columns', async () => {
-      renderGrid()
-      h.liveDefs = [{ context: { uid: 'a' } }, { field: 'Renamed', context: { uid: 'b' } }]
+    it('keeps rows lined up with their columns after a column is renamed', async () => {
+      const { rerender } = renderGrid()
+      // The server re-sends the deck with the renamed field after an add or delete.
+      rerender(<FactsGridPage deck={{ ...deck, fields: ['Word', 'Back'] }} facts={[fact('f0')]} total={250} />)
+      expect(h.gridProps.columnDefs[1]).toMatchObject({ field: 'col0', headerName: 'Word' })
+      expect(h.rows[0].col0).toEqual({ text: 'f' })
       ready()
       await waitFor(() => expect(allLoaded()).toBe(true))
-      expect(h.rows[5].Renamed).toEqual({ text: 'b' })
+      expect(h.rows[5].col0).toEqual({ text: 'f' })
+      // Saving reads entries by column, not by header name.
+      h.rows[0].col1 = { text: 'back!' }
+      change(0)
+      await waitFor(() => expect(updateFact).toHaveBeenCalledWith('d1', 'f0', {
+        entries: [{ text: 'f' }, { text: 'back!' }],
+      }))
     })
 
     it('retries a failed page, and gives up after repeated failures', async () => {
@@ -234,6 +256,7 @@ describe('FactsGridPage', () => {
       ready()
       await act(() => vi.advanceTimersByTimeAsync(20000))
       expect(getFactsPage).toHaveBeenCalledTimes(5)
+      expect(showFailToast).toHaveBeenCalledWith('facts-grid.load-failed')
     })
 
     it('stops when the server has nothing left to fill', async () => {
@@ -277,11 +300,11 @@ describe('FactsGridPage', () => {
 
   it('saves only edited fact rows', async () => {
     renderGrid()
-    h.rows[0].Front = { text: 'new' }
+    h.rows[0].col0 = { text: 'new' }
     change(0)
     // A row not downloaded yet and an empty row below the first one change nothing.
     change(5)
-    h.rows[260].Front = { text: 'typed' }
+    h.rows[260].col0 = { text: 'typed' }
     change(260)
     await waitFor(() => expect(updateFact).toHaveBeenCalledWith('d1', 'f0', {
       entries: [{ text: 'new' }, { text: 'b' }],
@@ -293,6 +316,27 @@ describe('FactsGridPage', () => {
     change(0)
     await settle()
     expect(updateFact).toHaveBeenCalledTimes(1)
+  })
+
+  it('does not save a fact whose blank trailing entries the server left out', async () => {
+    render(<FactsGridPage deck={deck} facts={[{ ...fact('f0'), entries: [{ text: 'f' }] }]} total={1} />)
+    h.rows[0].col1 = { text: '' }
+    change(0)
+    await settle()
+    expect(updateFact).not.toHaveBeenCalled()
+  })
+
+  it('reports a failed save and retries it with the next save', async () => {
+    vi.mocked(updateFact).mockRejectedValueOnce(new Error('offline'))
+    renderGrid()
+    h.rows[0].col0 = { text: 'new' }
+    change(0)
+    await waitFor(() => expect(showFailToast).toHaveBeenCalledWith('facts-grid.save-failed'))
+    // Not marked saved: the next save (here, an edit to another cell) sends it again.
+    expect(h.rows[0][rawSymbol].entries[0]).toEqual({ text: 'f' })
+    act(() => h.gridProps.onCellValueChanged({ node: { data: h.rows[260], rowIndex: 260 } }))
+    await waitFor(() => expect(updateFact).toHaveBeenCalledTimes(2))
+    expect(updateFact).toHaveBeenLastCalledWith('d1', 'f0', { entries: [{ text: 'new' }, { text: 'b' }] })
   })
 
   it('saves renamed field columns to the deck when the header loses focus, and nothing else', async () => {
@@ -399,8 +443,8 @@ describe('FactsGridPage', () => {
       renderGrid()
       press()
       expect(h.api.ensureIndexVisible).toHaveBeenCalledWith(247, 'top')
-      expect(h.api.setFocusedCell).toHaveBeenCalledWith(250, 'Front')
-      expect(h.api.startEditingCell).toHaveBeenCalledWith({ rowIndex: 250, colKey: 'Front' })
+      expect(h.api.setFocusedCell).toHaveBeenCalledWith(250, 'col0')
+      expect(h.api.startEditingCell).toHaveBeenCalledWith({ rowIndex: 250, colKey: 'col0' })
       expect(addFactAction).not.toHaveBeenCalled()
     })
 
@@ -415,7 +459,7 @@ describe('FactsGridPage', () => {
   describe('typing in the first empty row', () => {
     const typed = (text = 'new') => {
       const row = h.rows[250]
-      row.Front = { text }
+      row.col0 = { text }
       change(250)
       return row
     }
@@ -442,6 +486,36 @@ describe('FactsGridPage', () => {
       expect(addFactAction).toHaveBeenCalledTimes(1)
       expect(updateFact).not.toHaveBeenCalled()
       expect(sendToAuthor).not.toHaveBeenCalled()
+    })
+
+    it('keeps text typed into the new fact while it is created, and saves it once the fact is known', async () => {
+      let created!: (v: Awaited<ReturnType<typeof addFactAction>>) => void
+      vi.mocked(addFactAction).mockReturnValueOnce(new Promise((r) => { created = r }))
+      renderGrid()
+      ready()
+      await waitFor(() => expect(allLoaded()).toBe(true))
+      const row = typed('apple')
+      await waitFor(() => expect(addFactAction).toHaveBeenCalledTimes(1))
+      // The next column is typed while the fact is still being created.
+      row.col1 = { text: 'ringo' }
+      change(250)
+      await settle()
+      serverTotal = 251
+      await act(async () => created({ success: true, data: { newFactIds: [] } }))
+      await waitFor(() => expect(updateFact).toHaveBeenCalledWith('d1', 'f250', {
+        entries: [{ text: 'apple' }, { text: 'ringo' }],
+      }))
+      expect(row).toMatchObject({ id: 'f250', col0: { text: 'apple' }, col1: { text: 'ringo' } })
+      expect(addFactAction).toHaveBeenCalledTimes(1)
+    })
+
+    it('unlocks the row when creating the fact fails outright', async () => {
+      vi.mocked(addFactAction).mockRejectedValueOnce(new Error('offline'))
+      renderGrid()
+      const row = typed()
+      await waitFor(() => expect(showFailToast).toHaveBeenCalledWith('add-fact.failed'))
+      expect(row.adding).toBe(false)
+      expect(h.gridProps.columnDefs[1].editable({ data: row, node: { rowIndex: 250 } })).toBe(true)
     })
 
     it('ignores the row while it has no text', async () => {
@@ -482,7 +556,7 @@ describe('FactsGridPage', () => {
         vi.mocked(sendToAuthor).mockResolvedValueOnce({ sent: 0, unsent: 1 })
         // The next fact goes into the next empty row.
         const next = h.rows[251]
-        next.Front = { text: 'more' }
+        next.col0 = { text: 'more' }
         change(251)
         await waitFor(() => expect(showFailToast).toHaveBeenCalledWith('auto-send.fact-added-unsent'))
       })
@@ -490,7 +564,7 @@ describe('FactsGridPage', () => {
       it('quietly sends cell edits to the author, warning only when they are not sent', async () => {
         vi.mocked(sendFactEdits).mockResolvedValueOnce({ sent: 1, unsent: 0 })
         renderImported()
-        h.rows[0].Front = { text: 'new' }
+        h.rows[0].col0 = { text: 'new' }
         change(0)
         await waitFor(() => expect(sendFactEdits)
           .toHaveBeenCalledWith('d1', [{ factId: 'f0', entries: [{ text: 'new' }, { text: 'b' }] }]))
@@ -498,7 +572,7 @@ describe('FactsGridPage', () => {
         expect(showSuccessToast).not.toHaveBeenCalled()
         expect(showFailToast).not.toHaveBeenCalled()
         vi.mocked(sendFactEdits).mockResolvedValueOnce({ sent: 0, unsent: 1 })
-        h.rows[0].Front = { text: 'newer' }
+        h.rows[0].col0 = { text: 'newer' }
         change(0)
         await waitFor(() => expect(showFailToast).toHaveBeenCalledWith('auto-send.unsent'))
       })
@@ -506,7 +580,7 @@ describe('FactsGridPage', () => {
       it('marks edits to facts the importer added as local', async () => {
         vi.mocked(sendFactEdits).mockResolvedValueOnce({ sent: 1, unsent: 0 })
         render(<FactsGridPage deck={imported} facts={[{ ...fact('n1'), local: true }]} total={1} />)
-        h.rows[0].Front = { text: 'new' }
+        h.rows[0].col0 = { text: 'new' }
         change(0)
         await waitFor(() => expect(sendFactEdits)
           .toHaveBeenCalledWith('d1', [{ factId: 'n1', entries: [{ text: 'new' }, { text: 'b' }], local: true }]))
@@ -535,7 +609,7 @@ describe('FactsGridPage', () => {
     it('suppresses the browser menu and has no action column or cell renderer', () => {
       renderGrid()
       expect(h.gridProps.preventDefaultOnContextMenu).toBe(true)
-      expect(h.gridProps.columnDefs.map((d: ColDef) => d.field ?? d.colId)).toEqual(['rowNumber', 'Front', 'Back'])
+      expect(h.gridProps.columnDefs.map((d: ColDef) => d.field ?? d.colId)).toEqual(['rowNumber', 'col0', 'col1'])
       expect(h.gridProps.columnDefs.some((d: ColDef) => d.cellRenderer || d.pinned === 'right')).toBe(false)
     })
 
@@ -645,6 +719,20 @@ describe('FactsGridPage', () => {
       expect(h.api.setFocusedCell).toHaveBeenCalledWith(0, 'Front')
     })
 
+    it('uses a fresh delete dialog for each fact, so every successful delete closes it', async () => {
+      vi.mocked(deleteFactAction).mockResolvedValue({ success: true })
+      renderGrid()
+      ready()
+      await waitFor(() => expect(allLoaded()).toBe(true))
+      const mounts = h.deleteMounts
+      rightClick({ data: h.rows[0], rowIndex: 0 })
+      act(() => h.modals.menu.onAction('delete'))
+      await act(() => h.modals.delete.action(null, new FormData()))
+      rightClick({ data: h.rows[0], rowIndex: 0 })
+      act(() => h.modals.menu.onAction('delete'))
+      expect(h.deleteMounts).toBe(mounts + 2)
+    })
+
     it('leaves the rows alone when the deleted fact is not in the sheet', async () => {
       vi.mocked(deleteFactAction).mockResolvedValueOnce({ success: true })
       renderGrid()
@@ -667,10 +755,10 @@ describe('FactsGridPage', () => {
 
     it('puts an uploaded attachment into the cell and saves it', async () => {
       renderGrid()
-      rightClick({ data: h.rows[0], rowIndex: 0 })
+      rightClick({ data: h.rows[0], rowIndex: 0, column: { getColId: () => 'col0' } })
       act(() => h.modals.menu.onAction('attachment'))
       act(() => h.modals.media.onUpload('file1', 'audio'))
-      expect(h.rows[0].Front).toEqual({ text: 'f', audio: 'file1' })
+      expect(h.rows[0].col0).toEqual({ text: 'f', audio: 'file1' })
       expect(h.api.refreshCells)
         .toHaveBeenCalledWith({ rowNodes: [expect.objectContaining({ rowIndex: 0 })], force: true })
       await waitFor(() => expect(updateFact).toHaveBeenCalledWith('d1', 'f0', {

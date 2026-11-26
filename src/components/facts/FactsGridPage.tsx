@@ -60,7 +60,7 @@ const LOAD_RETRY_MS = 2000
  * survives). Fact rows carry the fact under rawSymbol and its fields by name; `loading` marks a fact not downloaded
  * yet; rows with neither are the empty rows below the last fact.
  */
-type SheetRow = Record<string | symbol, any> & { key: string; loading?: boolean; adding?: boolean }
+type SheetRow = Record<string | symbol, any> & { key: string; loading?: boolean; adding?: boolean; added?: boolean }
 
 let rowKeySeq = 0
 function newRowKey() {
@@ -90,6 +90,14 @@ function isString(value?: string | symbol): value is string {
 /** The fact behind a grid row; undefined for rows not downloaded yet and for empty filler rows. */
 function rowFact(data?: Record<string, any>) {
   return (data as Record<symbol, Fact | undefined> | undefined)?.[rawSymbol]
+}
+
+/**
+ * A field column's data key, by its position: it never changes when the column is renamed (only the header does),
+ * so rows keep lining up with their columns.
+ */
+function fieldKeyAt(index: number) {
+  return `col${index}`
 }
 
 /** Deck field columns carry a uid; the row-number column does not. */
@@ -148,16 +156,11 @@ export default function FactsGridPage({ facts, total: initialTotal, deck }: Fact
       id: fact.id,
       [rawSymbol]: fact,
     }
-    // Follow the live columns so blocks loaded after a column rename/delete still line up.
-    const liveKeys = getCurrentColDefs().filter(isFieldColumn).map((def) => def.field)
-    const keys = liveKeys.length ? liveKeys : deck.fields
-    keys.forEach((key, index) => {
-      if (isString(key)) {
-        result[key] = fact.entries[index]
-      }
+    deck.fields.forEach((_, index) => {
+      result[fieldKeyAt(index)] = fact.entries[index]
     })
     return result
-  }, [deck.fields, getCurrentColDefs])
+  }, [deck.fields])
 
   const lastDecksFields = useRef<string[]>(deck.fields)
 
@@ -207,6 +210,9 @@ export default function FactsGridPage({ facts, total: initialTotal, deck }: Fact
     createRowDataRef.current = createRowData
   }, [createRowData])
 
+  // Rows whose cells changed since the last save; only these are compared and saved.
+  const dirtyNodesRef = useRef(new Set<IRowNode>())
+
   // Bumped when a delete shifts the rows, so a page requested before it is not filled into the wrong rows.
   const layoutVersionRef = useRef(0)
   const unmountedRef = useRef(false)
@@ -214,13 +220,24 @@ export default function FactsGridPage({ facts, total: initialTotal, deck }: Fact
   // The grid's api exists only once it is ready; the loader waits for that.
   const gridReadyRef = useRef(false)
 
+  // Saves held edits; set once the save handler exists below.
+  const saveEditsRef = useRef<() => void>(() => {})
+
   /** Fills not-yet-loaded rows from `start` with downloaded facts; returns how many it filled. */
   const fillRows = useCallback((start: number, loaded: Fact[]) => {
     const updated: SheetRow[] = []
     loaded.forEach((fact, i) => {
       const row = rowsRef.current[start + i]
       if (!row?.loading) return
-      Object.assign(row, createRowDataRef.current(fact), { loading: false })
+      if (row.added) {
+        // A fact just added here: keep what was typed (maybe more since it was created) and save the difference.
+        Object.assign(row, { id: fact.id, [rawSymbol]: fact, loading: false, added: false })
+        const node = gridRef.current?.api.getRowNode(row.key)
+        if (node) dirtyNodesRef.current.add(node)
+        saveEditsRef.current()
+      } else {
+        Object.assign(row, createRowDataRef.current(fact), { loading: false })
+      }
       updated.push(row)
     })
     if (updated.length) gridRef.current?.api.applyTransaction({ update: updated })
@@ -247,7 +264,10 @@ export default function FactsGridPage({ facts, total: initialTotal, deck }: Fact
           if (!fillRows(start, res.data.facts)) break
         } catch {
           failures += 1
-          if (failures >= MAX_LOAD_FAILURES) break
+          if (failures >= MAX_LOAD_FAILURES) {
+            showFailToast(tRef.current('facts-grid.load-failed'))
+            break
+          }
           await new Promise((resolve) => setTimeout(resolve, LOAD_RETRY_MS))
         }
       }
@@ -316,10 +336,7 @@ export default function FactsGridPage({ facts, total: initialTotal, deck }: Fact
     (data: Record<string, Entry>) => {
       return getCurrentColDefs()
         .filter(isFieldColumn)
-        .map((e) => {
-          const key = e.headerName || ''
-          return (data[key] ?? { text: '' }) as Entry
-        })
+        .map((e) => (data[e.field ?? ''] ?? { text: '' }) as Entry)
     },
     [getCurrentColDefs],
   )
@@ -330,14 +347,15 @@ export default function FactsGridPage({ facts, total: initialTotal, deck }: Fact
     const imported = Boolean(deck.source_deck_id)
     try {
       setLoading(true)
-      const res = await addFactAction(deck.id, entries, false, imported)
+      const res = await addFactAction(deck.id, entries, false, imported).catch(() => ({ success: false as const }))
       row.adding = false
       if (!res.success) {
-        showFailToast(String(res.error ?? '') || tRef.current('add-fact.failed'))
+        showFailToast(String(('error' in res && res.error) || '') || tRef.current('add-fact.failed'))
         return
       }
       // The row is now the newest fact; the loader downloads it (for its id) while it keeps the typed text.
       row.loading = true
+      row.added = true
       totalRef.current += 1
       setTotal(totalRef.current)
       syncTrailingRows()
@@ -361,16 +379,19 @@ export default function FactsGridPage({ facts, total: initialTotal, deck }: Fact
     }
   }, [deck.id, deck.source_deck_id, syncTrailingRows, runLoader])
 
-  // Rows whose cells changed since the last save; only these are compared and saved.
-  const dirtyNodesRef = useRef(new Set<IRowNode>())
-
   const handleCellChange = useCallback(async () => {
     const changedNodes: { node: IRowNode; entries: Entry[] }[] = []
     let newRow: { node: IRowNode; entries: Entry[] } | undefined
     const dirty = [...dirtyNodesRef.current]
     dirtyNodesRef.current.clear()
+    const held: IRowNode[] = []
     dirty.forEach((node) => {
       const data = node.data
+      // A fact still being created has no id yet: hold its edits until the loader brings the id.
+      if (data?.adding || data?.loading) {
+        held.push(node)
+        return
+      }
       // Typing in the first empty row makes it a new fact.
       if (data && !data[rawSymbol] && !data.adding && !data.loading && node.rowIndex === totalRef.current) {
         const entries = getEntriesFromData(data)
@@ -381,9 +402,9 @@ export default function FactsGridPage({ facts, total: initialTotal, deck }: Fact
       const raw = data[rawSymbol] as Fact
       const entries = getEntriesFromData(data)
       const hasChanged = entries.some((entry, i) => {
-        const rawEntry = raw.entries[i]
-        if (!rawEntry) return true
-        return entry.text !== rawEntry.text
+        // A missing entry is an empty one (a new fact comes back without its blank trailing entries).
+        const rawEntry = raw.entries[i] ?? { text: '' }
+        return (entry.text ?? '') !== (rawEntry.text ?? '')
           || entry.audio !== rawEntry.audio
           || entry.image !== rawEntry.image
           || entry.video !== rawEntry.video
@@ -393,20 +414,32 @@ export default function FactsGridPage({ facts, total: initialTotal, deck }: Fact
       }
     })
 
+    held.forEach((node) => dirtyNodesRef.current.add(node))
+
     if (newRow) await addRow(newRow.node, newRow.entries)
     if (!changedNodes.length) return
 
     try {
       setLoading(true)
-      await Promise.all(changedNodes.map(({ node, entries }) => updateFact(deck.id, node.data.id, { entries })))
-      changedNodes.forEach(({ node, entries }) => {
+      const results = await Promise.allSettled(
+        changedNodes.map(({ node, entries }) => updateFact(deck.id, node.data.id, { entries })),
+      )
+      const saved = changedNodes.filter((_, i) => results[i].status === 'fulfilled')
+      saved.forEach(({ node, entries }) => {
         node.data[rawSymbol].entries = entries
       })
+      if (saved.length < changedNodes.length) {
+        // Retried with the next save; the cells keep the typed text meanwhile.
+        changedNodes.forEach(({ node }, i) => {
+          if (results[i].status === 'rejected') dirtyNodesRef.current.add(node)
+        })
+        showFailToast(tRef.current('facts-grid.save-failed'))
+      }
       // Edits on an imported deck go to the author right away, as on mobile; only a failed send is shown.
-      if (deck.source_deck_id) {
+      if (deck.source_deck_id && saved.length) {
         const { unsent } = await sendFactEdits(
           deck.id,
-          changedNodes.map(({ node, entries }) => ({
+          saved.map(({ node, entries }) => ({
             factId: node.data.id,
             entries,
             local: (node.data[rawSymbol] as Fact).local,
@@ -420,6 +453,9 @@ export default function FactsGridPage({ facts, total: initialTotal, deck }: Fact
   }, [deck.id, deck.source_deck_id, getEntriesFromData, addRow])
 
   const handleDebouncedCellChange = useDebouncedCallback(handleCellChange, 100)
+  useEffect(() => {
+    saveEditsRef.current = handleDebouncedCellChange
+  }, [handleDebouncedCellChange])
 
   const handleCellValueChanged = useCallback((event: CellValueChangedEvent) => {
     dirtyNodesRef.current.add(event.node)
@@ -545,11 +581,11 @@ export default function FactsGridPage({ facts, total: initialTotal, deck }: Fact
     }
   }, 100)
 
-  const createColDef = useCallback((field: string) => {
+  const createColDef = useCallback((name: string, index: number) => {
     return {
-      field,
+      field: fieldKeyAt(index),
       sortable: false,
-      headerName: field,
+      headerName: name,
       headerComponent: (props: IHeaderParams) => {
         return (
           <FactsGridHeaderRenderer
@@ -596,7 +632,7 @@ export default function FactsGridPage({ facts, total: initialTotal, deck }: Fact
   const fieldsKey = JSON.stringify(deck.fields)
   const columnDefs = useMemo(() => {
     const fields = JSON.parse(fieldsKey) as string[]
-    return [{ ...rowNumberColDef, headerName: t('term.id') }, ...fields.map(createColDef)]
+    return [{ ...rowNumberColDef, headerName: t('term.id') }, ...fields.map((name, i) => createColDef(name, i))]
   }, [fieldsKey, createColDef, t])
 
   return (
@@ -675,7 +711,13 @@ export default function FactsGridPage({ facts, total: initialTotal, deck }: Fact
       {menuFact && (
         <FactsTagsModal key={menuFact.id} deck={deck} fact={menuFact} isOpen={isTagsOpen} setIsOpen={setIsTagsOpen} />
       )}
-      <DeleteModal isOpen={isDeleteOpen} setIsOpen={handleDeleteOpenChange} action={deleteMenuFact} />
+      {/* A fresh dialog per fact: it closes on its own success, which a reused one would only see once. */}
+      <DeleteModal
+        key={menuFact?.id}
+        isOpen={isDeleteOpen}
+        setIsOpen={handleDeleteOpenChange}
+        action={deleteMenuFact}
+      />
     </LayoutPage>
   )
 }

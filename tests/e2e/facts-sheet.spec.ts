@@ -1,6 +1,8 @@
 import { test, expect, type Page } from '@playwright/test'
 import {
   factCell,
+  renameColumn,
+  uniqueName,
   factCellMenu,
   factIdCell,
   factsTopRow,
@@ -18,13 +20,16 @@ async function rightClickCell(page: Page, cell: ReturnType<typeof factCell>) {
   return { x, y }
 }
 
-/** The menu items, after checking exactly one menu is open, next to the pointer. */
+/**
+ * The items of the open menu when exactly one is open, next to the pointer; otherwise a short reason, so
+ * `expect.poll` keeps retrying while a replaced menu is still on its way out.
+ */
 async function menuItemsAt(page: Page, pointer: { x: number; y: number }) {
   const menu = factCellMenu(page)
-  await expect(menu).toHaveCount(1)
-  const box = (await menu.boundingBox())!
-  expect(Math.abs(box.x - pointer.x)).toBeLessThan(30)
-  expect(Math.abs(box.y - pointer.y)).toBeLessThan(30)
+  if (await menu.count() !== 1) return `menus: ${await menu.count()}`
+  const box = await menu.boundingBox()
+  if (!box) return 'menu not laid out'
+  if (Math.abs(box.x - pointer.x) >= 30 || Math.abs(box.y - pointer.y) >= 30) return 'menu away from the pointer'
   return menu.locator('[data-slot="menu-item"]').allTextContents()
 }
 
@@ -82,7 +87,8 @@ test.describe('Facts sheet', () => {
     await expect.poll(() => factsTopRow(page)).toBe(58)
 
     // The new fact got its id, so it saves when edited again.
-    const saved = page.waitForResponse((r) => r.request().method() === 'PATCH' && /\/facts\/[^/]+$/.test(r.url()))
+    const saved = page.waitForResponse((r) => r.request().method() === 'PATCH'
+      && /\/facts\/[^/]+$/.test(r.url()) && (r.request().postData() ?? '').includes('added-back'))
     await factCell(page, 60, 1).dblclick()
     await page.locator('.ag-cell-inline-editing input').fill('added-back')
     await page.locator('.ag-cell-inline-editing input').press('Enter')
@@ -151,5 +157,58 @@ test.describe('Facts sheet', () => {
     const numbers = await page.locator('.ag-pinned-left-cols-container [role="row"]').evaluateAll((rows) =>
       rows.map((r) => [Number(r.getAttribute('row-index')), r.textContent?.trim()] as const))
     expect(numbers.every(([index, text]) => text === String(index + 1))).toBe(true)
+  })
+
+  test('every delete closes its confirmation, not only the first', async ({ page }) => {
+    await gotoSeededDeckFacts(page, 'SheetDeleteTwice', 5)
+    for (const remaining of [4, 3]) {
+      // A deleted row slides out while the next one moves into its place; wait for that to settle.
+      await expect(factIdCell(page, 1)).toHaveCount(1)
+      await rightClickCell(page, factIdCell(page, 1))
+      await factCellMenu(page).locator('[data-key="delete"]').click()
+      await page.getByRole('button', { name: 'Confirm' }).click()
+      await expect(page.getByText(`All Facts(${remaining})`)).toBeVisible()
+      await expect(page.getByRole('button', { name: 'Confirm' })).toHaveCount(0)
+    }
+    await expect(factCell(page, 1, 0)).toHaveText('f3')
+  })
+
+  test('a renamed column keeps its values after adding a fact, and later edits keep them too', async ({ page }) => {
+    await gotoSeededDeckFacts(page, 'SheetRename', 3)
+    await renameColumn(page, 0, uniqueName('Word'))
+    await page.locator('#facts-grid-create-row').click()
+    const editor = page.locator('.ag-cell-inline-editing input')
+    await editor.fill('added')
+    await editor.press('Enter')
+    await expect(page.getByText('All Facts(4)')).toBeVisible()
+    await expect(factCell(page, 0, 0)).toHaveText('f0')
+
+    const saved = page.waitForResponse((r) => r.request().method() === 'PATCH'
+      && /\/facts\/[^/]+$/.test(r.url()) && (r.request().postData() ?? '').includes('back!'))
+    await factCell(page, 1, 1).dblclick()
+    await page.locator('.ag-cell-inline-editing input').fill('back!')
+    await page.locator('.ag-cell-inline-editing input').press('Enter')
+    expect((await saved).ok()).toBe(true)
+    await page.reload()
+    await expect(factCell(page, 1, 0)).toHaveText('f1')
+    await expect(factCell(page, 1, 1)).toHaveText('back!')
+  })
+
+  test('typing a new fact across columns saves every column', async ({ page }) => {
+    await gotoSeededDeckFacts(page, 'SheetTypeAcross', 3)
+    await page.locator('#facts-grid-create-row').click()
+    const editor = page.locator('.ag-cell-inline-editing input')
+    await editor.fill('apple')
+    await editor.press('Tab')
+    await expect(page.locator('.ag-cell-inline-editing input')).toBeVisible()
+    await page.locator('.ag-cell-inline-editing input').fill('ringo')
+    await page.locator('.ag-cell-inline-editing input').press('Enter')
+    await expect(page.getByText('All Facts(4)')).toBeVisible()
+    // Saved once the new fact is known; then it survives a reload.
+    await expect.poll(async () => {
+      await page.reload()
+      await expect(factCell(page, 3, 0)).toHaveText('apple')
+      return factCell(page, 3, 1).textContent()
+    }, { timeout: 15_000 }).toBe('ringo')
   })
 })

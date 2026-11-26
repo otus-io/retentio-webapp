@@ -111,7 +111,8 @@ body {
   outline: none;
 }
 
-/* Facts grid: a wider scrollbar with a long thumb, so it stays easy to grab and drag on decks with thousands of rows. */
+/* Facts grid: a wider scrollbar with a long thumb, so it stays easy to grab and drag
+   on decks with thousands of rows. */
 .facts-grid ::-webkit-scrollbar {
   width: 14px;
   height: 14px;

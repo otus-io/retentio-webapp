@@ -651,5 +651,9 @@
     "unsent": "Saved. Couldn't send it to the author yet; retry from Unsent contributions.",
     "fact-added-sent": "Fact added and sent to the author",
     "fact-added-unsent": "Fact added. Couldn't send it to the author yet; retry from Unsent contributions."
+  },
+  "facts-grid": {
+    "save-failed": "Couldn't save your changes",
+    "load-failed": "Couldn't load all facts. Reload the page to try again."
   }
 }
