@@ -30,9 +30,13 @@ vi.mock('@heroui/react', () => {
     <div>{typeof children === 'function' ? items?.map((item) => children(item)) : children}</div>
   )
   const compound = new Proxy(Pass, { get: (target, prop) => (prop in target ? Reflect.get(target, prop) : Pass) })
-  const TableContent = ({ children, onSelectionChange }: { children?: ReactNode, onSelectionChange: (s: 'all') => void }) => (
+  const TableContent = ({ children, onSelectionChange }: {
+    children?: ReactNode
+    onSelectionChange: (s: 'all' | Set<string>) => void
+  }) => (
     <div>
       <button type="button" onClick={() => onSelectionChange('all')}>select all</button>
+      <button type="button" onClick={() => onSelectionChange(new Set(['deck_tags']))}>select tags</button>
       {children}
     </div>
   )
@@ -163,5 +167,50 @@ describe('DeckContributionsPanel proposals', () => {
     await saveDeckTags()
     await waitFor(() => expect(showFailToast).toHaveBeenCalledWith('auto-send.unsent'))
     expect(JSON.parse(localStorage.getItem(`retentio_pending_contribs_v2:${deck.id}`)!)).toHaveLength(1)
+  })
+})
+
+describe('DeckContributionsPanel discard', () => {
+  const rename = { id: 'field_rename', kind: 'field_rename', proposedFields: ['W'], preview: 'W', savedAt: '2026-01-01T00:00:00Z' }
+  const key = `retentio_pending_contribs_v2:${deck.id}`
+
+  beforeEach(() => {
+    vi.clearAllMocks()
+    const store = new Map<string, string>()
+    vi.stubGlobal('localStorage', {
+      getItem: (k: string) => store.get(k) ?? null,
+      setItem: (k: string, value: string) => { store.set(k, value) },
+    })
+    localStorage.setItem(key, JSON.stringify([pending, rename]))
+  })
+  afterEach(() => {
+    cleanup()
+    vi.unstubAllGlobals()
+  })
+
+  async function discard(selectButton: string) {
+    render(<DeckContributionsPanel deck={deck} />)
+    await screen.findByText('+a')
+    const discardButton = screen.getByRole('button', { name: 'outbox.discard-selected' })
+    expect((discardButton as HTMLButtonElement).disabled).toBe(true)
+    fireEvent.click(screen.getAllByRole('button', { name: selectButton })[0])
+    fireEvent.click(discardButton)
+  }
+
+  it('drops every selected unsent contribution without sending it', async () => {
+    await discard('select all')
+    await waitFor(() => expect(screen.queryByText('+a')).toBeNull())
+    expect(screen.queryByText('W')).toBeNull()
+    expect(JSON.parse(localStorage.getItem(key)!)).toEqual([])
+    expect(showSuccessToast).toHaveBeenCalledWith('outbox.discarded:2')
+    expect(submitDeckContributionsBatchAction).not.toHaveBeenCalled()
+  })
+
+  it('keeps the contributions that were not selected', async () => {
+    await discard('select tags')
+    await waitFor(() => expect(screen.queryByText('+a')).toBeNull())
+    screen.getByText('W')
+    expect(JSON.parse(localStorage.getItem(key)!)).toEqual([rename])
+    expect(showSuccessToast).toHaveBeenCalledWith('outbox.discarded:1')
   })
 })

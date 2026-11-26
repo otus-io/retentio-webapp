@@ -632,12 +632,12 @@
     "message-hint": "Optional message for the author",
     "send-selected": "Send selected",
     "send-selected-count": "Send selected ({count})",
-    "dismiss-selected": "Dismiss selected",
+    "discard-selected": "Discard selected",
     "clear-all": "Clear all",
     "select-all": "Select all ({count})",
     "empty": "Nothing pending. Proposals you save for this imported deck show up here until you send them.",
     "sent-empty": "No sent contributions stored in this browser yet.",
-    "dismissed": "{count, plural, =1 {Dismissed 1 item} other {Dismissed # items}}",
+    "discarded": "{count, plural, =1 {Discarded 1 item} other {Discarded # items}}",
     "cleared": "{count, plural, =1 {Cleared 1 pending item} other {Cleared # pending items}}"
   },
   "add-fact": {

@@ -111,7 +111,7 @@ describe('DeckContributionsOutbox', () => {
     expect((screen.getByPlaceholderText('message-hint') as HTMLInputElement).value).toBe('')
   })
 
-  it('selects all, dismisses the selection and clears everything', async () => {
+  it('selects all, discards the selection and clears everything', async () => {
     seed([tags, rename])
     render(<DeckContributionsOutbox deck={deck} />)
     const selectAll = (await screen.findByText('select-all:{"count":2}')).closest('label')!.querySelector('input')!
@@ -121,8 +121,8 @@ describe('DeckContributionsOutbox', () => {
     expect(screen.getByText('send-selected')).toBeTruthy()
 
     fireEvent.click(screen.getByText('Word → Term').closest('label')!.querySelector('input')!)
-    fireEvent.click(screen.getByText('dismiss-selected'))
-    expect(screen.getByText('dismissed:{"count":1}')).toBeTruthy()
+    fireEvent.click(screen.getByText('discard-selected'))
+    expect(screen.getByText('discarded:{"count":1}')).toBeTruthy()
     expect(stored('retentio_pending_contribs_v2')).toEqual([tags])
 
     fireEvent.click(screen.getByText('+noun').closest('label')!.querySelector('input')!)
