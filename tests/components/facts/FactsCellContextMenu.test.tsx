@@ -22,6 +22,11 @@ describe('FactsCellContextMenu', () => {
     ])
   })
 
+  it('lists only delete for a row menu', () => {
+    render(<FactsCellContextMenu position={{ x: 0, y: 0 }} rowMenu onAction={vi.fn()} onClose={vi.fn()} />)
+    expect(screen.getAllByRole('menuitem').map((el) => el.textContent)).toEqual(['common.delete'])
+  })
+
   it('reports the chosen action and closes', () => {
     const onAction = vi.fn()
     const onClose = vi.fn()
