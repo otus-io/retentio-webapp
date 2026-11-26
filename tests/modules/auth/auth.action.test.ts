@@ -586,6 +586,13 @@ describe('verifyEmailAction', () => {
     }
   })
 
+  it('marks an already used or expired link as spent', async () => {
+    verifyEmailServiceMock.mockResolvedValue({
+      success: false, message: 'Invalid or expired verification token', status: 400,
+    })
+    expect(await verifyEmailAction('tok')).toEqual({ error: 'verifyEmailLinkUsed', linkUsed: true, success: false })
+  })
+
   it('does not treat inherited object keys as conflicts', async () => {
     verifyEmailServiceMock.mockResolvedValue({ success: false, message: 'constructor', status: 400 })
     expect(await verifyEmailAction('tok')).toEqual({ error: 'constructor', success: false })
