@@ -1,5 +1,5 @@
 import { Card, Separator } from '@heroui/react'
-import { Calendar, Mail, User } from 'lucide-react'
+import { BadgeCheck, Calendar, Mail, User } from 'lucide-react'
 import { getTranslations } from 'next-intl/server'
 import AppAvatar from '@/components/app/AppAvatar'
 import ProfileActions from '@/components/auth/ProfileActions'
@@ -51,7 +51,18 @@ export default async function Profile({ user }: ProfileProps) {
               {user.data.username.charAt(0).toUpperCase()}
             </AppAvatar>
             <p className="mt-3 text-lg font-semibold">{user.data.username}</p>
-            <p className="text-sm text-muted">{user.data.email}</p>
+            <p className="flex items-center gap-1 text-sm text-muted">
+              {user.data.email}
+              {user.data.email_verified && (
+                <BadgeCheck
+                  className="size-4 text-accent shrink-0"
+                  role="img"
+                  aria-label={t('emailVerified')}
+                >
+                  <title>{t('emailVerified')}</title>
+                </BadgeCheck>
+              )}
+            </p>
           </div>
 
           <Separator className="my-4" />

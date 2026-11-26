@@ -9,6 +9,7 @@
     "title": "プロフィール",
     "username": "ユーザー名",
     "email": "メールアドレス",
+    "emailVerified": "メール確認済み",
     "memberSince": "登録日"
   },
   "theme": {
@@ -214,7 +215,8 @@
     "usernameOrEmailPlaceholder": "ユーザー名またはメールアドレスを入力",
     "registerCheckEmail": "{email} に届くメールで登録を完了してください。メール内のリンクを開くとアカウントが作成されます。",
     "verifyEmailUsernameTaken": "リンクを開く前に、そのユーザー名は他の人に使われました。別のユーザー名で登録し直してください。",
-    "verifyEmailAccountExists": "このメールアドレスは既にアカウントで使われています。ご自身のものであれば、ログインするか、ログイン画面の「パスワードをお忘れですか？」をご利用ください。"
+    "verifyEmailAccountExists": "このメールアドレスは既にアカウントで使われています。ご自身のものであれば、ログインするか、ログイン画面の「パスワードをお忘れですか？」をご利用ください。",
+    "verifyEmailLinkUsed": "このリンクは使用済みか、期限切れです。確認済みの場合は、そのままログインしてください。"
   },
   "tags": {
     "select-placeholder": "タグを選択",

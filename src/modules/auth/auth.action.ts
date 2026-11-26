@@ -159,10 +159,17 @@ export const resetPasswordAction: ActionFunction = async (_, formData) => {
   redirect(LOGIN_PATH)
 }
 
-/** Verify-email 409s: another account claimed the username or email before the link was opened. */
-const VERIFY_CONFLICT_KEYS: Record<string, 'verifyEmailUsernameTaken' | 'verifyEmailAccountExists'> = {
+/**
+ * Verify-email errors after which the link no longer exists: the 409s (another account claimed the username or
+ * email first) and the 400 for a link already used or expired.
+ */
+const VERIFY_LINK_USED_KEYS: Record<
+  string,
+  'verifyEmailUsernameTaken' | 'verifyEmailAccountExists' | 'verifyEmailLinkUsed'
+> = {
   'Username already exists; sign up again with another username': 'verifyEmailUsernameTaken',
   'An account with this email already exists': 'verifyEmailAccountExists',
+  'Invalid or expired verification token': 'verifyEmailLinkUsed',
 }
 
 export async function verifyEmailAction(token: string) {
@@ -176,9 +183,9 @@ export async function verifyEmailAction(token: string) {
   }
   const res = await verifyEmailService(result.data)
   if (!res.success) {
-    if (Object.hasOwn(VERIFY_CONFLICT_KEYS, res.message)) {
-      // The backend spends the link on these conflicts, so retrying it cannot succeed.
-      return { error: t(VERIFY_CONFLICT_KEYS[res.message]), linkUsed: true, success: false as const }
+    if (Object.hasOwn(VERIFY_LINK_USED_KEYS, res.message)) {
+      // The link is spent or gone, so retrying it cannot succeed.
+      return { error: t(VERIFY_LINK_USED_KEYS[res.message]), linkUsed: true, success: false as const }
     }
     return {
       error: res.message,
