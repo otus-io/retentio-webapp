@@ -233,6 +233,7 @@ export default function FactsGridPage({ facts, total: initialTotal, deck }: Fact
   const fillRows = useCallback((start: number, loaded: Fact[]) => {
     const updated: SheetRow[] = []
     let foreign = false
+    let lostEdits = false
     loaded.forEach((fact, i) => {
       const row = rowsRef.current[start + i]
       if (!row?.loading) return
@@ -244,7 +245,7 @@ export default function FactsGridPage({ facts, total: initialTotal, deck }: Fact
         if (created.some((text, j) => text.trim() !== (texts[j] ?? '')) || texts.slice(created.length).some(Boolean)) {
           // Not the fact created here (the deck changed elsewhere): never save onto it; the row stays read-only
           // and a reload shows both facts.
-          if (node) dirtyNodesRef.current.delete(node)
+          if (node && dirtyNodesRef.current.delete(node)) lostEdits = true
           foreign = true
         } else {
           // The fact just added here: keep what was typed (maybe more since it was created), save the difference.
@@ -258,19 +259,20 @@ export default function FactsGridPage({ facts, total: initialTotal, deck }: Fact
       updated.push(row)
     })
     if (updated.length) gridRef.current?.api.applyTransaction({ update: updated })
-    if (foreign) {
-      showFailToast(tRef.current('facts-grid.load-failed'))
-      showFailToast(tRef.current('facts-grid.save-failed'))
-    }
+    if (foreign) showFailToast(tRef.current('facts-grid.load-failed'))
+    if (lostEdits) showFailToast(tRef.current('facts-grid.save-failed'))
     return updated.length
   }, [])
 
   // The loader stopped with rows left: say so, and that typing into a new fact not yet identified is not saved.
-  const giveUp = useCallback(() => {
+  // `release` when the server has nothing more to list (the new facts will never be found); after network errors
+  // the rows stay pending, so a later download (the next add) can still identify them and save their edits.
+  const giveUp = useCallback((release: boolean) => {
     showFailToast(tRef.current('facts-grid.load-failed'))
     const unknown = rowsRef.current.filter((row) => row.added)
     if (!unknown.length) return
     showFailToast(tRef.current('facts-grid.save-failed'))
+    if (!release) return
     // Read-only until a reload: they can no longer be saved, so stop holding their edits.
     unknown.forEach((row) => Object.assign(row, { loading: false, added: undefined }))
     dirtyNodesRef.current.forEach((node) => {
@@ -297,13 +299,13 @@ export default function FactsGridPage({ facts, total: initialTotal, deck }: Fact
           if (version !== layoutVersionRef.current) continue
           // Nothing left to fill there (the deck changed elsewhere): stop rather than ask again.
           if (!fillRows(start, res.data.facts)) {
-            giveUp()
+            giveUp(true)
             break
           }
         } catch {
           failures += 1
           if (failures >= MAX_LOAD_FAILURES) {
-            giveUp()
+            giveUp(false)
             break
           }
           await new Promise((resolve) => setTimeout(resolve, LOAD_RETRY_MS))
@@ -398,8 +400,9 @@ export default function FactsGridPage({ facts, total: initialTotal, deck }: Fact
         .catch(() => ({ success: false as const }))
       row.adding = false
       if (!res.success) {
-        // Not retried on its own (the server may have created it before the connection dropped): the row keeps
-        // the typed text, and editing it again tries again.
+        // Not retried on its own (the server may have created it before the connection dropped), not even by an
+        // edit held meanwhile: the row keeps the typed text, and editing it again tries again.
+        dirtyNodesRef.current.delete(node)
         showFailToast(String(('error' in res && res.error) || '') || tRef.current('add-fact.failed'))
         return
       }
@@ -622,7 +625,7 @@ export default function FactsGridPage({ facts, total: initialTotal, deck }: Fact
       } catch {
         res = { success: false }
       }
-      if (!res?.success) showFailToast(String(res?.error || '') || tRef.current('facts-grid.delete-failed'))
+      if (!res?.success) showFailToast(tRef.current('facts-grid.delete-failed'))
       if (res?.success) {
         removeFactRow(factId)
         // Keep the cursor where the delete happened, like a spreadsheet; the next fact moved into it.

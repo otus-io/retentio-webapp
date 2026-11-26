@@ -22,8 +22,8 @@ const h = vi.hoisted(() => ({
       if (key === 'columnDefs') h.liveDefs = value
     },
     getRowNode: (key: string) => {
-      const rowIndex = h.rows.findIndex((r) => r.key === key)
-      return rowIndex < 0 ? undefined : { data: h.rows[rowIndex], rowIndex }
+      const row = h.rows.find((r) => r.key === key)
+      return row && h.nodeOf(row)
     },
     applyTransaction: vi.fn((tx: { add?: Row[]; remove?: Row[]; update?: Row[] }) => {
       if (tx.remove) h.rows = h.rows.filter((r) => !tx.remove!.includes(r))
@@ -48,6 +48,16 @@ const h = vi.hoisted(() => ({
   },
   menuMounts: 0,
   deleteMounts: 0,
+  // One node per row, like AG Grid, whose row nodes are stable objects.
+  nodes: new WeakMap<object, { data: Row; rowIndex: number }>(),
+  nodeOf: (row: Row) => {
+    let node = h.nodes.get(row)
+    if (!node) {
+      node = { data: row, get rowIndex() { return h.rows.indexOf(row) } }
+      h.nodes.set(row, node)
+    }
+    return node
+  },
 }))
 
 vi.mock('ag-grid-react', () => ({
@@ -137,7 +147,7 @@ function renderGrid(total = 250) {
 const ready = () => act(() => h.gridProps.onGridReady())
 const loaded = (row: Row) => Boolean(row[rawSymbol]) && !row.loading
 const allLoaded = () => h.rows.slice(0, serverTotal).every(loaded)
-const nodeAt = (rowIndex: number) => ({ data: h.rows[rowIndex], rowIndex })
+const nodeAt = (rowIndex: number) => h.nodeOf(h.rows[rowIndex])
 const change = (rowIndex: number) => act(() => h.gridProps.onCellValueChanged({ node: nodeAt(rowIndex) }))
 const settle = () => act(() => new Promise((r) => setTimeout(r, 150)))
 
@@ -598,29 +608,70 @@ describe('FactsGridPage', () => {
       renderGrid()
       ready()
       await waitFor(() => expect(allLoaded()).toBe(true))
-      const row = typed('mine')
       serverTotal = 251
       // Another device's fact sits at that position.
       serverFacts[250] = fact('other', 'theirs', '')
+      const row = typed('mine')
       await waitFor(() => expect(showFailToast).toHaveBeenCalledWith('facts-grid.load-failed'))
-      expect(showFailToast).toHaveBeenCalledWith('facts-grid.save-failed')
-      expect(showFailToast).toHaveBeenCalledTimes(2)
+      // Nothing was typed after creating it, so nothing is unsaved.
+      expect(showFailToast).toHaveBeenCalledTimes(1)
       expect(row.id).toBeUndefined()
       expect(row.loading).toBe(false)
       // Read-only from now on.
       expect(h.gridProps.columnDefs[1].editable({ data: row, node: { rowIndex: 250 } })).toBe(false)
       await settle()
       expect(updateFact).not.toHaveBeenCalled()
+    })
 
-      // Also when the found fact is shorter than what was typed.
-      const next = h.rows[251]
-      next.col0 = { text: 'a' }
-      next.col1 = { text: 'b' }
-      change(251)
-      serverTotal = 252
-      serverFacts[251] = { ...fact('short', 'a'), entries: [{ text: 'a' }] }
-      await waitFor(() => expect(showFailToast).toHaveBeenCalledTimes(4))
-      expect(next.id).toBeUndefined()
+    it('says typing is lost when a different fact is found, and compares the whole entries', async () => {
+      let created!: (v: Awaited<ReturnType<typeof addFactAction>>) => void
+      vi.mocked(addFactAction).mockReturnValueOnce(new Promise((r) => { created = r }))
+      renderGrid()
+      ready()
+      await waitFor(() => expect(allLoaded()).toBe(true))
+      const row = h.rows[250]
+      row.col0 = { text: 'a' }
+      row.col1 = { text: 'b' }
+      change(250)
+      await waitFor(() => expect(addFactAction).toHaveBeenCalledTimes(1))
+      row.col1 = { text: 'b2' }
+      change(250)
+      await settle()
+      serverTotal = 251
+      // Shorter than what was created.
+      serverFacts[250] = { ...fact('short', 'a'), entries: [{ text: 'a' }] }
+      await act(async () => created({ success: true, data: { newFactIds: [] } }))
+      await waitFor(() => expect(showFailToast).toHaveBeenCalledWith('facts-grid.save-failed'))
+      expect(row.id).toBeUndefined()
+      expect(updateFact).not.toHaveBeenCalled()
+    })
+
+    it('keeps a new row pending after network errors, so a later download can still find it', async () => {
+      vi.useFakeTimers()
+      vi.mocked(addFactAction).mockResolvedValue({ success: true, data: { newFactIds: [] } })
+      vi.mocked(getFactsPage).mockRejectedValue(new Error('offline'))
+      render(<FactsGridPage deck={deck} facts={[fact('f0')]} total={1} />)
+      ready()
+      const row = h.rows[1]
+      row.col0 = { text: 'new' }
+      act(() => h.gridProps.onCellValueChanged({ node: { data: row, rowIndex: 1 } }))
+      await act(() => vi.advanceTimersByTimeAsync(20000))
+      expect(showFailToast).toHaveBeenCalledWith('facts-grid.save-failed')
+      expect(row).toMatchObject({ loading: true, added: ['new', ''] })
+    })
+
+    it('does not resend a failed add for an edit held while it was being created', async () => {
+      let created!: (v: Awaited<ReturnType<typeof addFactAction>>) => void
+      vi.mocked(addFactAction).mockReturnValueOnce(new Promise((r) => { created = r }))
+      renderGrid()
+      const row = typed('apple')
+      await waitFor(() => expect(addFactAction).toHaveBeenCalledTimes(1))
+      row.col1 = { text: 'ringo' }
+      change(250)
+      await settle()
+      await act(async () => created({ success: false, error: 'boom' }))
+      await settle()
+      expect(addFactAction).toHaveBeenCalledTimes(1)
     })
 
     it('says typing is not saved when the download gives up before the new fact is known', async () => {
@@ -895,7 +946,7 @@ describe('FactsGridPage', () => {
       await act(() => h.modals.delete.action(null, new FormData()))
       expect(h.api.setFocusedCell).not.toHaveBeenCalled()
       expect(h.rows).toHaveLength(277)
-      expect(showFailToast).toHaveBeenCalledWith('boom')
+      expect(showFailToast).toHaveBeenCalledWith('facts-grid.delete-failed')
     })
 
     it('reports a delete that fails outright', async () => {

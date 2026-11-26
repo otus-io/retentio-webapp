@@ -212,7 +212,7 @@ test.describe('Facts sheet', () => {
     }, { timeout: 15_000 }).toBe('ringo')
   })
 
-  test('a dialog opened from the cell menu keeps the focus, and hands it back to the cell when closed', async ({ page }) => {
+  test('a dialog opened from the cell menu keeps the focus, and hands it back when closed', async ({ page }) => {
     await gotoSeededDeckFacts(page, 'SheetDialogFocus', 3)
     await rightClickCell(page, factCell(page, 1, 0))
     await factCellMenu(page).locator('[data-key="tag"]').click()
