@@ -58,7 +58,7 @@ function DeckStat({ value, label, emphasis = false }: { value: number, label: st
   )
 }
 
-/** My Decks card: the deck name starts studying; the rest of the card opens the deck's details. */
+/** My Decks card: clicking anywhere on it starts studying; details are in the deck menu. */
 export default function DecksCard({
   deck,
   highlight = '',
@@ -78,7 +78,7 @@ export default function DecksCard({
     <Card
       variant="default"
       className="cursor-pointer gap-3 transition-shadow hover:shadow-md"
-      onClick={() => router.push(`/decks/${deck.id}`)}
+      onClick={() => router.push(studyHref)}
     >
       <div className="flex items-center gap-2">
         <AppLink
@@ -91,7 +91,7 @@ export default function DecksCard({
         {deck.visibility === 'public' && (
           <Chip size="sm" variant="primary" color="accent">{t('term.public')}</Chip>
         )}
-        {/* Badge, menu and sheet clicks must not open the deck details (the card's own click). */}
+        {/* Badge, menu and sheet clicks must not start studying (the card's own click). */}
         <span className="flex items-center" onClick={(e) => e.stopPropagation()}>
           {publishedSource && sharing?.openContributions && (
             <DeckBadge label={t('deck-menu.contributions-inbox')} onPress={() => setSheet('inbox')}>

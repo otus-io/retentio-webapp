@@ -17,7 +17,9 @@ export function resolveCellEntry(props: {
     : undefined
 
   const fact = props.data?.[rawSymbol]
-  const allColumns = (props.api?.getColumnDefs?.() ?? []) as ColDef<Record<string, unknown>>[]
+  // Entries line up with field columns only; the pinned row-number column has no entry.
+  const allColumns = ((props.api?.getColumnDefs?.() ?? []) as ColDef<Record<string, unknown>>[])
+    .filter((col) => !col.context?.isRowNumber)
   const fieldIndex = fieldKey
     ? allColumns.findIndex((col) => (col.field ?? col.colId) === fieldKey)
     : -1

@@ -1410,7 +1410,9 @@ Snapshot facts soft-hide privately; local-only facts are removed from the import
 
 **Endpoint:** `GET /api/decks/{importId}/facts?limit=50&offset=0`
 
-**Success (200):** Overlay → snapshot resolution; includes `local_facts`; omits `hidden_facts`.
+**Success (200):** Overlay → snapshot resolution; includes `local_facts`; omits `hidden_facts`. Facts the
+importer added (`local_facts`) carry `"local": true` (omitted otherwise), here and on
+`GET /api/decks/{importId}/facts/{factId}`: send their edits to the author as `fact_add`, not `fact_edit`.
 
 ```json
 {
@@ -1427,7 +1429,8 @@ Snapshot facts soft-hide privately; local-only facts are removed from the import
       {
         "id": "local001",
         "entries": [{ "text": "Orange" }, { "text": "オレンジ" }],
-        "tags": [{ "id": "tag00001", "name": "food", "description": "" }]
+        "tags": [{ "id": "tag00001", "name": "food", "description": "" }],
+        "local": true
       }
     ]
   },

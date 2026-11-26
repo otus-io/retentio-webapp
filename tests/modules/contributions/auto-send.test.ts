@@ -39,6 +39,23 @@ describe('sendToAuthor', () => {
       .toMatchObject([{ kind: 'fact_edit', preview: 'hola', contributionId: 'c1' }])
   })
 
+  it('replaces the sent row when a re-send refreshes the same contribution', async () => {
+    const reply = (localId: string, contributionId: string) => ({
+      success: true,
+      data: { submitted: [{ localId, kind: 'fact_add', contributionId }], failed: [] },
+    })
+    submitDeckContributionsBatchAction.mockResolvedValueOnce(reply('fact_add:f1', 'c1'))
+    await sendToAuthor('i1', [factContribution('fact_add', 'f1', 'one')])
+    submitDeckContributionsBatchAction.mockResolvedValueOnce(reply('fact_add:f2', 'c2'))
+    await sendToAuthor('i1', [factContribution('fact_add', 'f2', 'other')])
+    submitDeckContributionsBatchAction.mockResolvedValueOnce(reply('fact_add:f1', 'c1'))
+    await sendToAuthor('i1', [factContribution('fact_add', 'f1', 'two')])
+    expect(stored('retentio_sent_contribs_v1')).toMatchObject([
+      { contributionId: 'c2', preview: 'other' },
+      { contributionId: 'c1', preview: 'two' },
+    ])
+  })
+
   it('keeps unsent changes queued, replacing an older queued copy of the same fact', async () => {
     submitDeckContributionsBatchAction.mockResolvedValue({ success: false, error: 'Offline' })
     await sendToAuthor('i1', [factContribution('fact_edit', 'f1', 'first')])
@@ -75,6 +92,18 @@ describe('sendToAuthor', () => {
     await sendFactEdits('i1', [{ factId: 'f1', entries: [{ text: 'hola' }, { text: 'hello' }] }])
     expect(submitDeckContributionsBatchAction.mock.calls[0][0].contributions)
       .toEqual([expect.objectContaining({ id: 'fact_edit:f1', factId: 'f1', preview: 'hola · hello' })])
+  })
+
+  it('sendFactEdits re-sends an edit to a fact the importer added as its fact_add', async () => {
+    submitDeckContributionsBatchAction.mockResolvedValue({ success: false })
+    await sendFactEdits('i1', [
+      { factId: 'f1', entries: [{ text: 'hola' }], local: true },
+      { factId: 'f2', entries: [{ text: 'adios' }], local: false },
+    ])
+    expect(submitDeckContributionsBatchAction.mock.calls[0][0].contributions).toEqual([
+      expect.objectContaining({ id: 'fact_add:f1', kind: 'fact_add', factId: 'f1' }),
+      expect.objectContaining({ id: 'fact_edit:f2', kind: 'fact_edit', factId: 'f2' }),
+    ])
   })
 
   it('sendFactEditsAndNotify tells the user whether the edits reached the author', async () => {

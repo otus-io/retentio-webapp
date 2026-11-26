@@ -40,6 +40,8 @@ export interface Fact {
   fields: string[];
   /** 标签列表 */
   tags: TagInfo[];
+  /** Imported deck only: a fact the importer added (local_facts); its edits go to the author as fact_add */
+  local?: boolean;
 }
 
 /**
@@ -91,6 +93,15 @@ export type UpdateFactDTO = z.infer<typeof updateFactSchema>
  * 添加词条响应 DTO
  */
 export type CreateFactsResponseDTO = BaseApiResult<{ fact_length: number }>
+
+/** GET /facts order: id ascending, or created_at oldest first */
+export type FactsSort = 'id' | 'created_at'
+
+export interface FactsPageParams {
+  limit?: number
+  offset?: number
+  sort?: FactsSort
+}
 
 /**
  * 获取词条列表响应 DTO

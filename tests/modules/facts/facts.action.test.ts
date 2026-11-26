@@ -3,7 +3,6 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 const services = vi.hoisted(() => ({
   createFactsService: vi.fn(),
   deleteFactService: vi.fn(),
-  deleteFactsService: vi.fn(),
   getFactService: vi.fn(),
   getFactIdsService: vi.fn(),
   updateFactService: vi.fn(),
@@ -12,9 +11,10 @@ const revalidatePath = vi.hoisted(() => vi.fn())
 
 vi.mock('@/modules/facts/facts.service', () => services)
 vi.mock('next/cache', () => ({ revalidatePath }))
-vi.mock('next/navigation', () => ({ redirect: vi.fn() }))
+const redirect = vi.hoisted(() => vi.fn())
+vi.mock('next/navigation', () => ({ redirect }))
 
-import { addFactAction, getFactAction, updateFactEntriesAction } from '@/modules/facts/facts.action'
+import { addFactAction, deleteFactAction, getFactAction, updateFactEntriesAction } from '@/modules/facts/facts.action'
 
 describe('study fact actions', () => {
   beforeEach(() => {
@@ -40,6 +40,30 @@ describe('study fact actions', () => {
 
     services.updateFactService.mockResolvedValueOnce({ success: false, message: 'Forbidden' })
     expect(await updateFactEntriesAction('d1', 'f1', entries)).toEqual({ success: false, error: 'Forbidden' })
+  })
+})
+
+describe('deleteFactAction', () => {
+  beforeEach(() => {
+    vi.clearAllMocks()
+  })
+
+  it('deletes, refreshes the facts page and does not redirect', async () => {
+    services.deleteFactService.mockResolvedValueOnce({ success: true })
+    expect(await deleteFactAction({ deckId: 'd1', factId: 'f1' }, null, new FormData())).toEqual({ success: true })
+    expect(services.deleteFactService).toHaveBeenCalledWith('d1', 'f1')
+    expect(revalidatePath).toHaveBeenCalledWith('/decks/d1/facts')
+    expect(redirect).not.toHaveBeenCalled()
+  })
+
+  it('returns the service error or a thrown error', async () => {
+    services.deleteFactService.mockResolvedValueOnce({ success: false, message: 'Forbidden' })
+    expect(await deleteFactAction({ deckId: 'd1', factId: 'f1' }, null, new FormData()))
+      .toEqual({ success: false, error: 'Forbidden' })
+    services.deleteFactService.mockRejectedValueOnce(new Error('offline'))
+    expect(await deleteFactAction({ deckId: 'd1', factId: 'f1' }, null, new FormData()))
+      .toMatchObject({ success: false })
+    expect(revalidatePath).not.toHaveBeenCalled()
   })
 })
 

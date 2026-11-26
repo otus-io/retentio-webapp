@@ -8,7 +8,6 @@ import { createFactsSchema, type Entry, type Fact, updateFactSchema } from '@/mo
 import {
   createFactsService,
   deleteFactService,
-  deleteFactsService,
   getFactIdsService,
   getFactService,
   updateFactService,
@@ -118,32 +117,11 @@ export const deleteFactAction: ActionFunctionPayload<{ deckId: string; factId: s
       success: false,
     }
   }
+  // No redirect: the grid stays mounted, so it can keep the cursor where the delete happened.
   revalidatePath(`/decks/${deckId}/facts`)
-  redirect(`/decks/${deckId}/facts`)
+  return { success: true }
 }
 
-
-/**
- * 批量删除词条的 Action
- */
-export const deleteFactsAction: ActionFunctionPayload<{ deckId: string; factIds: string[] }> = async ({ deckId, factIds }) => {
-  try {
-    const res = await deleteFactsService(deckId, factIds)
-    if (!res.success) {
-      return {
-        error: res.message,
-        success: false,
-      }
-    }
-  } catch (error) {
-    return {
-      error: formatErrorMessage(error, 'deleteFactAction failed'),
-      success: false,
-    }
-  }
-  revalidatePath(`/decks/${deckId}/facts`)
-  redirect(`/decks/${deckId}/facts`)
-}
 
 /** 获取单个词条（学习时编辑用） */
 export async function getFactAction(deckId: string, factId: string): Promise<ActionState<Fact>> {

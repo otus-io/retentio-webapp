@@ -5,6 +5,7 @@ import type {
   DeleteFactResponseDTO,
   FactResponseDTO,
   FactsListResponseDTO,
+  FactsPageParams,
   UpdateFactDTO,
   UpdateFactResponseDTO,
 } from '@/modules/facts/facts.schema'
@@ -12,10 +13,11 @@ import type {
 /**
  * 分页获取词条列表
  */
-export function getFactsPage(deckId: string, params?: { limit?: number; offset?: number }) {
+export function getFactsPage(deckId: string, params?: FactsPageParams) {
   const query = new URLSearchParams()
   if (params?.limit !== undefined) query.set('limit', String(params.limit))
   if (params?.offset !== undefined) query.set('offset', String(params.offset))
+  if (params?.sort !== undefined) query.set('sort', params.sort)
   const qs = query.toString()
   return request<FactsListResponseDTO>(`/api/decks/${deckId}/facts${qs ? `?${qs}` : ''}`)
 }

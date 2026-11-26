@@ -226,7 +226,6 @@
     "deck-options": "卡组选项",
     "deck-details": "卡组详情",
     "total-reviews": "累计复习",
-    "edit-facts": "编辑词条",
     "retry": "重试",
     "login": "登录",
     "logout": "退出登录",
@@ -313,6 +312,7 @@
   },
   "term": {
     "decks": "卡组",
+    "id": "ID",
     "facts": "词条",
     "name": "名称",
     "due": "待复习",

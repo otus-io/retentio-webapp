@@ -226,7 +226,6 @@
     "deck-options": "Deck options",
     "deck-details": "Deck details",
     "total-reviews": "Total reviews",
-    "edit-facts": "Edit Facts",
     "retry": "Retry",
     "login": "Login",
     "logout": "Logout",
@@ -313,6 +312,7 @@
   },
   "term": {
     "decks": "Decks",
+    "id": "ID",
     "facts": "Facts",
     "name": "Name",
     "due": "Due",

@@ -95,7 +95,7 @@ export default function DecksAction({ deck, actions, onOpenSheet }: DecksActionP
                 <Dropdown.Item id="facts" textValue="facts" variant="default">
                   <div className="flex items-center gap-1">
                     <BookA className="size-3.5 text-muted-foreground" />
-                    <Label>{t('common.edit-facts')}</Label>
+                    <Label>{t('common.add', { name: t('term.facts') })}</Label>
                   </div>
                 </Dropdown.Item>
               )

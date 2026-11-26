@@ -122,8 +122,27 @@ describe('StudyEditFactModal', () => {
     setup(['Word'], true)
     fireEvent.change(await screen.findByLabelText('Word'), { target: { value: 'hola!' } })
     await act(async () => fireEvent.click(screen.getByText('save')))
-    expect(sendFactEditsAndNotify)
-      .toHaveBeenCalledWith('d1', [{ factId: 'f1', entries: [{ text: 'hola!' }] }], { sent: 'sent', unsent: 'unsent' })
+    expect(sendFactEditsAndNotify).toHaveBeenCalledWith(
+      'd1',
+      [{ factId: 'f1', entries: [{ text: 'hola!' }], local: false }],
+      { sent: 'sent', unsent: 'unsent' },
+    )
+  })
+
+  it('marks an edit to a fact the importer added as local', async () => {
+    actions.getFactAction.mockResolvedValue({
+      success: true,
+      data: { id: 'f1', entries: [{ text: 'hola' }], local: true },
+    })
+    actions.updateFactEntriesAction.mockResolvedValue({ success: true })
+    setup(['Word'], true)
+    fireEvent.change(await screen.findByLabelText('Word'), { target: { value: 'hola!' } })
+    await act(async () => fireEvent.click(screen.getByText('save')))
+    expect(sendFactEditsAndNotify).toHaveBeenCalledWith(
+      'd1',
+      [{ factId: 'f1', entries: [{ text: 'hola!' }], local: true }],
+      { sent: 'sent', unsent: 'unsent' },
+    )
   })
 
   it('does not send edits on your own deck', async () => {
