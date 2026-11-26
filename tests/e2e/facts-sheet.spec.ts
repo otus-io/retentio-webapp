@@ -211,4 +211,19 @@ test.describe('Facts sheet', () => {
       return factCell(page, 3, 1).textContent()
     }, { timeout: 15_000 }).toBe('ringo')
   })
+
+  test('a dialog opened from the cell menu keeps the focus, so typing never edits the cell', async ({ page }) => {
+    await gotoSeededDeckFacts(page, 'SheetDialogFocus', 3)
+    await rightClickCell(page, factCell(page, 1, 0))
+    await factCellMenu(page).locator('[data-key="tag"]').click()
+    const dialog = page.getByRole('dialog').filter({ has: page.getByRole('heading', { name: 'Tags' }) })
+    await expect(dialog).toBeVisible()
+    // Past the frame in which a closing menu would hand focus back to its cell.
+    await page.waitForTimeout(300)
+    expect(await page.evaluate(() => Boolean(document.activeElement?.closest('[role="dialog"]')))).toBe(true)
+    await page.keyboard.type('zz')
+    await expect(page.locator('.ag-cell-inline-editing')).toHaveCount(0)
+    await expect(factCell(page, 1, 0)).toHaveText('f1')
+  })
 })
+

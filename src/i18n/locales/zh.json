@@ -654,6 +654,7 @@
   },
   "facts-grid": {
     "save-failed": "无法保存你的修改",
-    "load-failed": "无法加载全部词条，请刷新页面重试。"
+    "load-failed": "无法加载全部词条，请刷新页面重试。",
+    "delete-failed": "无法删除该词条"
   }
 }

@@ -120,11 +120,12 @@ const fact = (id: string, front = 'f', back = 'b'): Fact => ({
   tags: [],
 })
 
-// Facts on the server; pages are cut from these by offset.
+// Facts on the server; pages are cut from these by offset (`serverFacts` replaces the fact at an offset).
 let serverTotal = 250
+let serverFacts: Record<number, Fact> = {}
 function page(offset: number, limit: number, prefix = 'f') {
   const facts = Array.from({ length: Math.max(0, Math.min(limit, serverTotal - offset)) }, (_, i) =>
-    fact(`${prefix}${offset + i}`))
+    serverFacts[offset + i] ?? fact(`${prefix}${offset + i}`))
   const meta = { msg: 'ok', count: facts.length, has_more: false, limit, offset, total: serverTotal }
   return { data: { facts }, meta }
 }
@@ -166,6 +167,7 @@ describe('FactsGridPage', () => {
     h.menuMounts = 0
     h.deleteMounts = 0
     serverTotal = 250
+    serverFacts = {}
     vi.mocked(getFactsPage).mockImplementation(async (_d, p) => page(p?.offset ?? 0, p?.limit ?? 0))
   })
 
@@ -548,6 +550,7 @@ describe('FactsGridPage', () => {
       change(250)
       await settle()
       serverTotal = 251
+      serverFacts[250] = fact('f250', 'apple', '')
       await act(async () => created({ success: true, data: { newFactIds: [] } }))
       await waitFor(() => expect(updateFact).toHaveBeenCalledWith('d1', 'f250', {
         entries: [{ text: 'apple' }, { text: 'ringo' }],
@@ -585,8 +588,58 @@ describe('FactsGridPage', () => {
       await waitFor(() => expect(allLoaded()).toBe(true))
       const row = typed()
       serverTotal = 251
+      serverFacts[250] = { ...fact('f250', 'new'), entries: [{ text: 'new' }] }
       await waitFor(() => expect(row).toMatchObject({ id: 'f250', loading: false }))
       expect(showFailToast).not.toHaveBeenCalled()
+    })
+
+    it('never saves onto a different fact found where the new one was expected', async () => {
+      vi.mocked(addFactAction).mockResolvedValue({ success: true, data: { newFactIds: [] } })
+      renderGrid()
+      ready()
+      await waitFor(() => expect(allLoaded()).toBe(true))
+      const row = typed('mine')
+      serverTotal = 251
+      // Another device's fact sits at that position.
+      serverFacts[250] = fact('other', 'theirs', '')
+      await waitFor(() => expect(showFailToast).toHaveBeenCalledWith('facts-grid.load-failed'))
+      expect(row.id).toBeUndefined()
+      expect(row.loading).toBe(false)
+      await settle()
+      expect(updateFact).not.toHaveBeenCalled()
+
+      // Also when the found fact is shorter than what was typed.
+      const next = h.rows[251]
+      next.col0 = { text: 'a' }
+      next.col1 = { text: 'b' }
+      change(251)
+      serverTotal = 252
+      serverFacts[251] = { ...fact('short', 'a'), entries: [{ text: 'a' }] }
+      await waitFor(() => expect(showFailToast).toHaveBeenCalledTimes(2))
+      expect(next.id).toBeUndefined()
+    })
+
+    it('says typing is not saved when the download gives up before the new fact is known', async () => {
+      vi.mocked(addFactAction).mockResolvedValue({ success: true, data: { newFactIds: [] } })
+      renderGrid()
+      ready()
+      await waitFor(() => expect(allLoaded()).toBe(true))
+      // The server does not list the new fact (yet), so the download stops.
+      typed()
+      await waitFor(() => expect(showFailToast).toHaveBeenCalledWith('facts-grid.save-failed'))
+      expect(showFailToast).toHaveBeenCalledWith('facts-grid.load-failed')
+    })
+
+    it('retries a failed add with the next save', async () => {
+      vi.mocked(addFactAction).mockResolvedValueOnce({ success: false, error: 'boom' })
+        .mockResolvedValueOnce({ success: true, data: { newFactIds: ['n1'] } })
+      renderGrid()
+      typed()
+      await waitFor(() => expect(showFailToast).toHaveBeenCalledWith('boom'))
+      // Any later save sends it again.
+      act(() => h.gridProps.onCellValueChanged({ node: { data: h.rows[260], rowIndex: 260 } }))
+      await waitFor(() => expect(addFactAction).toHaveBeenCalledTimes(2))
+      await waitFor(() => expect(h.rows[250].id).toBe('n1'))
     })
 
     it('unlocks the row when creating the fact fails outright', async () => {
@@ -831,6 +884,7 @@ describe('FactsGridPage', () => {
       await act(() => h.modals.delete.action(null, new FormData()))
       expect(h.api.setFocusedCell).not.toHaveBeenCalled()
       expect(h.rows).toHaveLength(277)
+      expect(showFailToast).toHaveBeenCalledWith('facts-grid.delete-failed')
     })
 
     it('puts an uploaded attachment into the cell and saves it', async () => {
@@ -878,6 +932,21 @@ describe('FactsGridPage', () => {
       expect(h.api.setFocusedCell).toHaveBeenCalledTimes(1)
       await waitFor(() => expect(h.api.setFocusedCell).toHaveBeenCalledTimes(2))
       expect(h.api.setFocusedCell).toHaveBeenLastCalledWith(3, 'Front')
+    })
+
+    it('leaves focus to the dialog a menu item opens', async () => {
+      renderGrid()
+      rightClick()
+      act(() => h.modals.menu.onAction('tag'))
+      act(() => h.modals.menu.onClose())
+      await act(() => new Promise((r) => requestAnimationFrame(r)))
+      await act(() => new Promise((r) => requestAnimationFrame(r)))
+      // Only the right-click focused the cell.
+      expect(h.api.setFocusedCell).toHaveBeenCalledTimes(1)
+      // A later menu closed without an action refocuses as usual.
+      rightClick()
+      act(() => h.modals.menu.onClose())
+      await waitFor(() => expect(h.api.setFocusedCell).toHaveBeenCalledTimes(3))
     })
 
     it('refocuses the cell when focus is still on it', async () => {

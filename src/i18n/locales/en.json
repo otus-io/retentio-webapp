@@ -654,6 +654,7 @@
   },
   "facts-grid": {
     "save-failed": "Couldn't save your changes",
-    "load-failed": "Couldn't load all facts. Reload the page to try again."
+    "load-failed": "Couldn't load all facts. Reload the page to try again.",
+    "delete-failed": "Couldn't delete this fact"
   }
 }
