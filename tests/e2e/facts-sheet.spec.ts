@@ -212,7 +212,7 @@ test.describe('Facts sheet', () => {
     }, { timeout: 15_000 }).toBe('ringo')
   })
 
-  test('a dialog opened from the cell menu keeps the focus, so typing never edits the cell', async ({ page }) => {
+  test('a dialog opened from the cell menu keeps the focus, and hands it back to the cell when closed', async ({ page }) => {
     await gotoSeededDeckFacts(page, 'SheetDialogFocus', 3)
     await rightClickCell(page, factCell(page, 1, 0))
     await factCellMenu(page).locator('[data-key="tag"]').click()
@@ -224,6 +224,13 @@ test.describe('Facts sheet', () => {
     await page.keyboard.type('zz')
     await expect(page.locator('.ag-cell-inline-editing')).toHaveCount(0)
     await expect(factCell(page, 1, 0)).toHaveText('f1')
+
+    // Closing it hands focus back to the cell, so the keyboard keeps working in the grid.
+    await page.keyboard.press('Escape')
+    await expect(dialog).toHaveCount(0)
+    await expect.poll(() => focusedFactCellText(page)).toBe('f1')
+    await page.keyboard.press('ArrowDown')
+    await expect.poll(() => focusedFactCellText(page)).toBe('f2')
   })
 })
 

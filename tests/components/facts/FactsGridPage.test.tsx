@@ -603,8 +603,12 @@ describe('FactsGridPage', () => {
       // Another device's fact sits at that position.
       serverFacts[250] = fact('other', 'theirs', '')
       await waitFor(() => expect(showFailToast).toHaveBeenCalledWith('facts-grid.load-failed'))
+      expect(showFailToast).toHaveBeenCalledWith('facts-grid.save-failed')
+      expect(showFailToast).toHaveBeenCalledTimes(2)
       expect(row.id).toBeUndefined()
       expect(row.loading).toBe(false)
+      // Read-only from now on.
+      expect(h.gridProps.columnDefs[1].editable({ data: row, node: { rowIndex: 250 } })).toBe(false)
       await settle()
       expect(updateFact).not.toHaveBeenCalled()
 
@@ -615,7 +619,7 @@ describe('FactsGridPage', () => {
       change(251)
       serverTotal = 252
       serverFacts[251] = { ...fact('short', 'a'), entries: [{ text: 'a' }] }
-      await waitFor(() => expect(showFailToast).toHaveBeenCalledTimes(2))
+      await waitFor(() => expect(showFailToast).toHaveBeenCalledTimes(4))
       expect(next.id).toBeUndefined()
     })
 
@@ -625,21 +629,28 @@ describe('FactsGridPage', () => {
       ready()
       await waitFor(() => expect(allLoaded()).toBe(true))
       // The server does not list the new fact (yet), so the download stops.
-      typed()
+      const row = typed()
       await waitFor(() => expect(showFailToast).toHaveBeenCalledWith('facts-grid.save-failed'))
       expect(showFailToast).toHaveBeenCalledWith('facts-grid.load-failed')
+      // Released as read-only, no longer holding edits that cannot be saved.
+      expect(row).toMatchObject({ loading: false })
+      expect(row.added).toBeUndefined()
+      expect(h.api.applyTransaction).toHaveBeenLastCalledWith({ update: [row] })
     })
 
-    it('retries a failed add with the next save', async () => {
+    it('tries a failed add again only when its row is edited again', async () => {
       vi.mocked(addFactAction).mockResolvedValueOnce({ success: false, error: 'boom' })
         .mockResolvedValueOnce({ success: true, data: { newFactIds: ['n1'] } })
       renderGrid()
       typed()
       await waitFor(() => expect(showFailToast).toHaveBeenCalledWith('boom'))
-      // Any later save sends it again.
+      // Another row's save does not resend it (the server may have created it before the connection dropped).
       act(() => h.gridProps.onCellValueChanged({ node: { data: h.rows[260], rowIndex: 260 } }))
-      await waitFor(() => expect(addFactAction).toHaveBeenCalledTimes(2))
+      await settle()
+      expect(addFactAction).toHaveBeenCalledTimes(1)
+      typed('new!')
       await waitFor(() => expect(h.rows[250].id).toBe('n1'))
+      expect(addFactAction).toHaveBeenCalledTimes(2)
     })
 
     it('unlocks the row when creating the fact fails outright', async () => {
@@ -884,7 +895,17 @@ describe('FactsGridPage', () => {
       await act(() => h.modals.delete.action(null, new FormData()))
       expect(h.api.setFocusedCell).not.toHaveBeenCalled()
       expect(h.rows).toHaveLength(277)
+      expect(showFailToast).toHaveBeenCalledWith('boom')
+    })
+
+    it('reports a delete that fails outright', async () => {
+      vi.mocked(deleteFactAction).mockRejectedValueOnce(new Error('offline'))
+      renderGrid()
+      rightClick({ data: h.rows[0], rowIndex: 0 })
+      act(() => h.modals.menu.onAction('delete'))
+      expect(await act(() => h.modals.delete.action(null, new FormData()))).toEqual({ success: false })
       expect(showFailToast).toHaveBeenCalledWith('facts-grid.delete-failed')
+      expect(h.rows).toHaveLength(277)
     })
 
     it('puts an uploaded attachment into the cell and saves it', async () => {
@@ -941,7 +962,7 @@ describe('FactsGridPage', () => {
       act(() => h.modals.menu.onClose())
       await act(() => new Promise((r) => requestAnimationFrame(r)))
       await act(() => new Promise((r) => requestAnimationFrame(r)))
-      // Only the right-click focused the cell.
+      // Only the right-click focused the cell: the dialog has the focus.
       expect(h.api.setFocusedCell).toHaveBeenCalledTimes(1)
       // A later menu closed without an action refocuses as usual.
       rightClick()

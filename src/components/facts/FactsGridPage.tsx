@@ -232,6 +232,7 @@ export default function FactsGridPage({ facts, total: initialTotal, deck }: Fact
   /** Fills not-yet-loaded rows from `start` with downloaded facts; returns how many it filled. */
   const fillRows = useCallback((start: number, loaded: Fact[]) => {
     const updated: SheetRow[] = []
+    let foreign = false
     loaded.forEach((fact, i) => {
       const row = rowsRef.current[start + i]
       if (!row?.loading) return
@@ -239,11 +240,12 @@ export default function FactsGridPage({ facts, total: initialTotal, deck }: Fact
         const created = row.added
         Object.assign(row, { loading: false, added: undefined })
         const node = gridRef.current?.api.getRowNode(row.key)
-        if (fact.entries.some((entry, j) => (entry.text ?? '') !== (created[j] ?? ''))
-          || created.length > fact.entries.length && created.slice(fact.entries.length).some(Boolean)) {
-          // Not the fact created here (the deck changed elsewhere): never save onto it; a reload shows both.
+        const texts = fact.entries.map((entry) => (entry.text ?? '').trim())
+        if (created.some((text, j) => text.trim() !== (texts[j] ?? '')) || texts.slice(created.length).some(Boolean)) {
+          // Not the fact created here (the deck changed elsewhere): never save onto it; the row stays read-only
+          // and a reload shows both facts.
           if (node) dirtyNodesRef.current.delete(node)
-          showFailToast(tRef.current('facts-grid.load-failed'))
+          foreign = true
         } else {
           // The fact just added here: keep what was typed (maybe more since it was created), save the difference.
           Object.assign(row, { id: fact.id, [rawSymbol]: fact })
@@ -256,13 +258,25 @@ export default function FactsGridPage({ facts, total: initialTotal, deck }: Fact
       updated.push(row)
     })
     if (updated.length) gridRef.current?.api.applyTransaction({ update: updated })
+    if (foreign) {
+      showFailToast(tRef.current('facts-grid.load-failed'))
+      showFailToast(tRef.current('facts-grid.save-failed'))
+    }
     return updated.length
   }, [])
 
   // The loader stopped with rows left: say so, and that typing into a new fact not yet identified is not saved.
   const giveUp = useCallback(() => {
     showFailToast(tRef.current('facts-grid.load-failed'))
-    if (rowsRef.current.some((row) => row.added)) showFailToast(tRef.current('facts-grid.save-failed'))
+    const unknown = rowsRef.current.filter((row) => row.added)
+    if (!unknown.length) return
+    showFailToast(tRef.current('facts-grid.save-failed'))
+    // Read-only until a reload: they can no longer be saved, so stop holding their edits.
+    unknown.forEach((row) => Object.assign(row, { loading: false, added: undefined }))
+    dirtyNodesRef.current.forEach((node) => {
+      if (unknown.includes(node.data)) dirtyNodesRef.current.delete(node)
+    })
+    gridRef.current?.api.applyTransaction({ update: unknown })
   }, [])
 
   // Download every fact in the background, one page at a time, nearest the rows on screen first.
@@ -384,8 +398,8 @@ export default function FactsGridPage({ facts, total: initialTotal, deck }: Fact
         .catch(() => ({ success: false as const }))
       row.adding = false
       if (!res.success) {
-        // Retried with the next save; the row keeps the typed text meanwhile.
-        dirtyNodesRef.current.add(node)
+        // Not retried on its own (the server may have created it before the connection dropped): the row keeps
+        // the typed text, and editing it again tries again.
         showFailToast(String(('error' in res && res.error) || '') || tRef.current('add-fact.failed'))
         return
       }
@@ -602,8 +616,13 @@ export default function FactsGridPage({ facts, total: initialTotal, deck }: Fact
     const factId = menuFact?.id ?? ''
     const action = deleteFactAction.bind(null, { deckId: deck.id, factId })
     return async (state, formData) => {
-      const res = await action(state, formData)
-      if (!res?.success) showFailToast(tRef.current('facts-grid.delete-failed'))
+      let res: Awaited<ReturnType<typeof action>>
+      try {
+        res = await action(state, formData)
+      } catch {
+        res = { success: false }
+      }
+      if (!res?.success) showFailToast(String(res?.error || '') || tRef.current('facts-grid.delete-failed'))
       if (res?.success) {
         removeFactRow(factId)
         // Keep the cursor where the delete happened, like a spreadsheet; the next fact moved into it.
@@ -768,7 +787,13 @@ export default function FactsGridPage({ facts, total: initialTotal, deck }: Fact
         onClose={handleCellMenuClose}
       />
       {menuFact && (
-        <FactsTagsModal key={menuFact.id} deck={deck} fact={menuFact} isOpen={isTagsOpen} setIsOpen={setIsTagsOpen} />
+        <FactsTagsModal
+          key={menuFact.id}
+          deck={deck}
+          fact={menuFact}
+          isOpen={isTagsOpen}
+          setIsOpen={setIsTagsOpen}
+        />
       )}
       {/* A fresh dialog per fact: it closes on its own success, which a reused one would only see once. */}
       <DeleteModal
