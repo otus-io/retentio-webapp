@@ -646,18 +646,31 @@ describe('FactsGridPage', () => {
       expect(updateFact).not.toHaveBeenCalled()
     })
 
-    it('keeps a new row pending after network errors, so a later download can still find it', async () => {
+    it('keeps a new row pending after network errors, and finds it with the next add', async () => {
       vi.useFakeTimers()
-      vi.mocked(addFactAction).mockResolvedValue({ success: true, data: { newFactIds: [] } })
+      vi.mocked(addFactAction).mockResolvedValueOnce({ success: true, data: { newFactIds: [] } })
+        .mockResolvedValueOnce({ success: true, data: { newFactIds: ['n2'] } })
       vi.mocked(getFactsPage).mockRejectedValue(new Error('offline'))
       render(<FactsGridPage deck={deck} facts={[fact('f0')]} total={1} />)
       ready()
       const row = h.rows[1]
       row.col0 = { text: 'new' }
-      act(() => h.gridProps.onCellValueChanged({ node: { data: row, rowIndex: 1 } }))
+      change(1)
       await act(() => vi.advanceTimersByTimeAsync(20000))
-      expect(showFailToast).toHaveBeenCalledWith('facts-grid.save-failed')
+      expect(showFailToast).toHaveBeenCalledWith('facts-grid.load-failed')
+      // The edits may still be saved, so no "not saved" warning yet.
+      expect(showFailToast).not.toHaveBeenCalledWith('facts-grid.save-failed')
       expect(row).toMatchObject({ loading: true, added: ['new', ''] })
+
+      // Back online: the next add (whose id is known) restarts the download, which finds the pending row.
+      serverTotal = 3
+      serverFacts[1] = { ...fact('n1', 'new'), entries: [{ text: 'new' }] }
+      vi.mocked(getFactsPage).mockImplementation(async (_d, p) => page(p?.offset ?? 0, p?.limit ?? 0))
+      h.rows[2].col0 = { text: 'next' }
+      change(2)
+      await act(() => vi.advanceTimersByTimeAsync(1000))
+      expect(row).toMatchObject({ id: 'n1', loading: false })
+      expect(h.rows[2].id).toBe('n2')
     })
 
     it('does not resend a failed add for an edit held while it was being created', async () => {

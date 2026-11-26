@@ -270,9 +270,8 @@ export default function FactsGridPage({ facts, total: initialTotal, deck }: Fact
   const giveUp = useCallback((release: boolean) => {
     showFailToast(tRef.current('facts-grid.load-failed'))
     const unknown = rowsRef.current.filter((row) => row.added)
-    if (!unknown.length) return
+    if (!unknown.length || !release) return
     showFailToast(tRef.current('facts-grid.save-failed'))
-    if (!release) return
     // Read-only until a reload: they can no longer be saved, so stop holding their edits.
     unknown.forEach((row) => Object.assign(row, { loading: false, added: undefined }))
     dirtyNodesRef.current.forEach((node) => {
@@ -418,8 +417,9 @@ export default function FactsGridPage({ facts, total: initialTotal, deck }: Fact
         // Not identified: the loader downloads it (for its id) while the row keeps the typed text.
         row.loading = true
         row.added = entries.map((entry) => entry.text ?? '')
-        runLoader()
       }
+      // Also picks up rows left pending after an earlier download stopped on network errors.
+      runLoader()
       totalRef.current += 1
       setTotal(totalRef.current)
       syncTrailingRows()
