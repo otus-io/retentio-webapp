@@ -33,7 +33,7 @@ function Row({ checked, onChange, children }: { checked: boolean, onChange: () =
 
 /**
  * Unsent contributions for an imported deck, as on mobile: Pending / Sent, an optional message, send or
- * dismiss the selected items, clear all. Field renames and deck tags can be proposed from here too.
+ * discard the selected items, clear all. Field renames and deck tags can be proposed from here too.
  */
 export default function DeckContributionsOutbox({ deck }: { deck: Deck }) {
   const t = useTranslations('outbox')
@@ -106,10 +106,10 @@ export default function DeckContributionsOutbox({ deck }: { deck: Deck }) {
     })
   }
 
-  const dismissSelected = () => {
+  const discardSelected = () => {
     const count = selected.size
     savePending(pending.filter((item) => !selected.has(item.id)))
-    setNotice(t('dismissed', { count }))
+    setNotice(t('discarded', { count }))
   }
 
   const clearAll = () => {
@@ -217,9 +217,9 @@ export default function DeckContributionsOutbox({ deck }: { deck: Deck }) {
                 variant="secondary"
                 className="flex-1"
                 isDisabled={isSubmitting || selected.size === 0}
-                onPress={dismissSelected}
+                onPress={discardSelected}
               >
-                {t('dismiss-selected')}
+                {t('discard-selected')}
               </AppButton>
               <AppButton size="sm" variant="ghost" className="flex-1" isDisabled={isSubmitting} onPress={clearAll}>
                 {t('clear-all')}

@@ -54,10 +54,14 @@ interface PendingTableProps {
   isSubmitting: boolean
   onSelectionChange: (selection: Selection) => void
   onSubmit: () => void
+  onDiscard: () => void
 }
 
-function PendingContributionsTable({ contributions, selectedKeys, isSubmitting, onSelectionChange, onSubmit }: PendingTableProps) {
+function PendingContributionsTable({
+  contributions, selectedKeys, isSubmitting, onSelectionChange, onSubmit, onDiscard,
+}: PendingTableProps) {
   const t = useTranslations('contributions')
+  const tOutbox = useTranslations('outbox')
   const selectedCount = selectedKeys === 'all'
     ? contributions.length
     : contributions.filter((item) => selectedKeys.has(item.id)).length
@@ -110,7 +114,10 @@ function PendingContributionsTable({ contributions, selectedKeys, isSubmitting, 
           </Table.Content>
         </Table.ScrollContainer>
       </Table>
-      <div className="mt-4 flex justify-end">
+      <div className="mt-4 flex justify-end gap-2">
+        <AppButton variant="secondary" isDisabled={selectedCount === 0 || isSubmitting} onPress={onDiscard}>
+          {tOutbox('discard-selected')}
+        </AppButton>
         <AppButton
           variant="primary"
           isDisabled={selectedCount === 0 || isSubmitting}
@@ -322,6 +329,7 @@ export default function DeckContributionsPanel({ deck }: DeckContributionsPanelP
   const t = useTranslations('contributions')
   const tAuth = useTranslations('auth')
   const tSend = useTranslations('auto-send')
+  const tOutbox = useTranslations('outbox')
   const pendingKey = pendingStorageKey(deck.id)
   const sentKey = sentStorageKey(deck.id)
   const [selectedTab, setSelectedTab] = useState('pending')
@@ -393,6 +401,15 @@ export default function DeckContributionsPanel({ deck }: DeckContributionsPanelP
     })
   }
 
+  const discardSelected = () => {
+    const remaining = selectedKeys === 'all' ? [] : pendingContributions.filter((item) => !selectedKeys.has(item.id))
+    const count = pendingContributions.length - remaining.length
+    setPendingContributions(remaining)
+    setSelectedKeys(new Set())
+    writeContributions(pendingKey, remaining)
+    showSuccessToast(tOutbox('discarded', { count }))
+  }
+
   const handleSelectionChange = (keys: Selection) => {
     setSelectedKeys(keys)
   }
@@ -456,6 +473,7 @@ export default function DeckContributionsPanel({ deck }: DeckContributionsPanelP
                 isSubmitting={isSubmitting}
                 onSelectionChange={handleSelectionChange}
                 onSubmit={submitSelected}
+                onDiscard={discardSelected}
               />
             </Tabs.Panel>
             <Tabs.Panel id="sent">

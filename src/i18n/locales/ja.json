@@ -627,12 +627,12 @@
     "message-hint": "作者への任意メッセージ",
     "send-selected": "選択したものを送信",
     "send-selected-count": "選択したものを送信（{count}）",
-    "dismiss-selected": "選択したものを却下",
+    "discard-selected": "選択したものを破棄",
     "clear-all": "すべてクリア",
     "select-all": "すべて選択（{count}）",
     "empty": "送信待ちはありません。インポートしたデッキで保存した提案は、送信するまでここに表示されます。",
     "sent-empty": "このブラウザにはまだ送信済みの記録がありません。",
-    "dismissed": "{count, plural, =1 {1件を却下しました} other {#件を却下しました}}",
+    "discarded": "{count, plural, =1 {1件を破棄しました} other {#件を破棄しました}}",
     "cleared": "{count, plural, =1 {送信待ち1件をクリアしました} other {送信待ち#件をクリアしました}}"
   },
   "add-fact": {
