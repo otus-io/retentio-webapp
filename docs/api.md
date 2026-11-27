@@ -2,9 +2,9 @@
 
 ---
 
-# Quick Start Guide - Swagger UI Tutorial
+# Retentio API Guide
 
-This guide walks you through using the Retentio API via Swagger UI.
+This guide is the Retentio REST API contract: endpoints, request bodies, and responses.
 
 ## Table of Contents
 
@@ -87,9 +87,10 @@ This guide walks you through using the Retentio API via Swagger UI.
 
 ## Prerequisites
 
-- Open Swagger UI at:
-  - **Local**: <http://localhost:8080/docs>
-  - **Production**: <https://api.retentio.app:8443/docs>
+- Base URL:
+  - **Local**: <http://localhost:8080>
+  - **Production**: <https://api.retentio.app:8443>
+- Any HTTP client works (curl, HTTPie, Postman, …).
 
 > **Timestamp convention:** All timestamps in the API use **UTC**.
 > ISO 8601 strings use the `Z` suffix (e.g., `2026-02-08T12:00:00Z`).
@@ -115,7 +116,7 @@ This guide walks you through using the Retentio API via Swagger UI.
 | `/auth/resend-verification`                                           | POST   | Resend verification email (anti-enumeration)                                                                                                                                                                                                                                                                                                                                                                                                                                                                          |
 | `/api/profile`                                                        | GET    | Get current user profile                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
 | `/api/profile`                                                        | DELETE | Delete the authenticated account (body: `password`). Account keys are removed first (gates the JWT), then unpublished source decks and import decks are removed; published source decks are anonymized (owner `deleted`). Failed password attempts: 5 / 15 min. See [Delete Account](#delete-account).                                                                                                                                                                                                                |
-| `/api/profile/email`                                                  | PATCH  | Change email (body: `email`, `password`); new address starts unverified. See [Change Email](#change-email).                                                                                                                                                                                                                                                                                                                                                                                                           |
+| `/api/profile/email`                                                  | PATCH  | Start an email change (body: `email`, `password`); applied when the link mailed to the new address is opened. See [Change Email](#change-email).                                                                                                                                                                                                                                                                                                                                                                      |
 | `/api/decks`                                                          | POST   | Create deck. Body: `name`, **`fields`** (≥1 column name, required), **`rate`** (required, 1–1000), optional **`tags`**.                                                                                                                                                                                                                                                                                                                                                                                               |
 | `/api/decks`                                                          | GET    | List all decks                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        |
 | `/api/decks/{id}`                                                     | GET    | Get deck details. Source decks include `visibility`, `published_version`. Import decks include `source_deck_id`, `source_version`, `imported_at`.                                                                                                                                                                                                                                                                                                                                                                     |
@@ -194,9 +195,24 @@ This guide walks you through using the Retentio API via Swagger UI.
 }
 ```
 
+`username` must not contain whitespace or `@` (**400**). A taken username returns **409**.
+
+Register does not create the account. It emails a verification link, and the account is created when that
+link is opened (`POST /auth/verify-email`). A taken email gets the same **201** response, and the address
+owner gets a "You already have a Rete account" email instead. Register sends at most one email per address
+per 60 s. This keeps register from revealing which emails have accounts. Clients should not log in right after
+register: show "check your email", then log in after verifying. Exception: with `ENV=development` and no
+`RESEND_API_KEY`, register creates the account right away, already verified, so clients can log in directly
+without `POST /auth/verify-email`. See
+[signup-verify-before-create.md](signup-verify-before-create.md).
+
 ### Login
 
 **Endpoint:** `POST /auth/login`
+
+`username` accepts a username or the account's email address (case-insensitive). Usernames cannot contain
+`@`, so input containing `@` is looked up as an email. Unknown accounts and wrong passwords both return the
+same **401** `Invalid credentials`, after the same bcrypt work.
 
 ```json
 {
@@ -220,11 +236,11 @@ This guide walks you through using the Retentio API via Swagger UI.
 
 ### Authorize
 
-1. Click the **"Authorize"** button (top right corner of Swagger UI)
-2. Paste the token from the login response
-3. Click **"Authorize"** to save
+Send the token from the login response on every `/api/*` request:
 
-Now all subsequent requests will include your authentication token.
+```http
+Authorization: Bearer <token>
+```
 
 ### Logout
 
@@ -326,6 +342,11 @@ Requires the `Authorization: Bearer <token>` header. Invalidates the token so it
 }
 ```
 
+A token from a register email creates the account (verified); a token from an email-change email applies the
+change. If another sign-up claimed the username or email
+first, it returns **409** `Username already exists; sign up again with another username` or **409**
+`An account with this email already exists`.
+
 > Soft verification: login and most routes work before verify. Publishing and submitting contributions return
 > **403** with `"code": "email_not_verified"` until the email is verified (see
 > [Email verification required](#email-verification-required)). Registration sends a verification email when Resend
@@ -375,20 +396,25 @@ Requires the `Authorization: Bearer <token>` header. Lets a user fix a mistyped 
 {
   "data": {
     "username": "swagger",
-    "email": "new@example.com",
-    "email_verified": false
+    "email": "old@example.com",
+    "email_verified": true,
+    "pending_email": "new@example.com"
   },
   "meta": null
 }
 ```
 
-- The email is trimmed and lowercased. The new address starts **unverified**, so the
-  [verified-email routes](#email-verification-required) return **403** until it is verified.
-- A verification link is mailed to the new address, unless that address is in its ~60s resend cooldown. Verify and
-  reset links mailed to the old address stop working.
+- The email is trimmed and lowercased. Nothing changes yet: `email` and `email_verified` are the current values.
+- A confirmation link is mailed to the new address. Opening it (`POST /auth/verify-email`) switches the account to
+  the new address, already verified; verify and reset links mailed to the old address then stop working. If
+  another account claimed the address first, verify returns **409** `An account with this email already exists`.
+- Only the latest request's link works: a new request, a password reset or another email change makes older links
+  return **400** `Invalid or expired verification token`.
+- A taken address gets the same **200** response; its owner is emailed "You already have a Rete account" instead.
+  Register and email change share one limit of one email per address per ~60s.
 - Failed password confirmations share the [Delete Account](#delete-account) limit: **5 attempts / 15 minutes** per
   username → **429** `Too many attempts. Try again later.`
-- **400** when the new email equals the current one; **409** when another account uses it.
+- **400** when the new email equals the current one.
 
 ### Delete Account
 
@@ -841,7 +867,9 @@ Example: `GET /api/decks/catalog?limit=20&offset=0&query=JLPT`
         "fact_count": 120,
         "deck_tag_names": ["JLPT N5", "verbs"],
         "published_at": "2026-05-22T12:00:00Z",
-        "qa_verified": true
+        "qa_verified": true,
+        "import_count": 42,
+        "importer_count": 37
       }
     ]
   },
@@ -856,15 +884,17 @@ Example: `GET /api/decks/catalog?limit=20&offset=0&query=JLPT`
 }
 ```
 
-| Field                           | Meaning                                                                         |
-| ------------------------------- | ------------------------------------------------------------------------------- |
-| `id`                            | Source deck ID — pass as `source_deck_id` to `POST /api/decks/import`.          |
-| `name`, `description`, `fields` | From the latest published snapshot manifest (`description` omitted when empty). |
-| `owner`                         | Author username.                                                                |
-| `published_version`             | Latest published snapshot version on the source.                                |
-| `fact_count`                    | Number of facts in that snapshot.                                               |
-| `deck_tag_names`                | Tag names on the deck in that snapshot (omitted when empty).                    |
-| `published_at`                  | UTC timestamp when that snapshot was created.                                   |
+| Field                           | Meaning                                                                                                        |
+| ------------------------------- | -------------------------------------------------------------------------------------------------------------- |
+| `id`                            | Source deck ID — pass as `source_deck_id` to `POST /api/decks/import`.                                         |
+| `name`, `description`, `fields` | From the latest published snapshot manifest (`description` omitted when empty).                                |
+| `owner`                         | Author username.                                                                                               |
+| `published_version`             | Latest published snapshot version on the source.                                                               |
+| `fact_count`                    | Number of facts in that snapshot.                                                                              |
+| `deck_tag_names`                | Tag names on the deck in that snapshot (omitted when empty).                                                   |
+| `published_at`                  | UTC timestamp when that snapshot was created.                                                                  |
+| `import_count`                  | Total successful imports, all time. Not decremented when an import deck is deleted, so re-imports count again. |
+| `importer_count`                | Users who currently hold an import of this deck (drops when an importer deletes the import or the account).    |
 
 **Inclusion rules** (same as import eligibility):
 
@@ -886,7 +916,7 @@ Unpublished or non-public decks do not appear. Private decks never appear even i
 
 **Who:** Anyone (no `Authorization` header required).
 
-**Purpose:** Load **one** importable catalog row by **source deck ID** — same fields as a list entry (`id`, `name`, `description`, `owner`, `fields`, `published_version`, `fact_count`, `deck_tag_names`, `published_at`, `qa_verified`). Use for catalog detail pages or direct links without paging the full list.
+**Purpose:** Load **one** importable catalog row by **source deck ID** — same fields as a list entry (`id`, `name`, `description`, `owner`, `fields`, `published_version`, `fact_count`, `deck_tag_names`, `published_at`, `qa_verified`, `import_count`, `importer_count`). Use for catalog detail pages or direct links without paging the full list.
 
 **Path parameter:** `{id}` — source deck ID (same value as `source_deck_id` for `POST /api/decks/import`).
 
@@ -907,6 +937,8 @@ Example: `GET /api/decks/catalog/a1b2c3d4e5f6`
     "deck_tag_names": ["JLPT N5", "verbs"],
     "published_at": "2026-05-22T12:00:00Z",
     "qa_verified": true,
+    "import_count": 42,
+    "importer_count": 37,
     "contributors": ["bob", "carol"],
     "contributor_count": 2
   },
@@ -1512,6 +1544,11 @@ Upload private audio/images first via `POST /api/media` with `deck_id={importId}
 
 `{factId}` must be in `local_facts`. Optional `message`.
 
+The contribution's `add_tags` holds the names of the importer's tags on the fact at submit time; accepting it
+creates the fact on the source deck with those tags (created by name for the author if missing). The author has
+no fact to receive a `fact_tag_update` for, so after changing a local fact's tags, submit `fact_add` again: it
+refreshes the open contribution's entries and tags.
+
 **Request:**
 
 ```json
@@ -1572,6 +1609,9 @@ On accept, the author receives the **same** `fact_id` (no remapping).
 ##### Fact tags
 
 **Endpoint:** `POST /api/decks/{importId}/contributions/facts/{factId}/tags`
+
+`{factId}` must be in the pinned snapshot. A fact in `local_facts` returns **400**
+`fact is in local_facts: its tags go with fact_add`: re-submit its `fact_add` instead.
 
 **Request:**
 
@@ -1665,8 +1705,10 @@ On accept, the author receives the **same** `fact_id` (no remapping).
 
 **Endpoint:** `POST /api/decks/{importId}/contributions/description`
 
-`proposed_description` is trimmed, required, at most 500 bytes, and must differ from the pinned
+`proposed_description` is trimmed, required, at most 500 characters, and must differ from the pinned
 snapshot description. On accept the source working-copy description is replaced; publish and sync propagate it.
+
+**Request:**
 
 ```json
 {
@@ -3217,6 +3259,34 @@ Returns the media file (binary) for user-owned media by ID. Requires `Authorizat
 
 **Published media:** Any authenticated user may download immutable published bytes by passing **`?v=<version>`** with a positive version. Without `v`, only the media owner may download the working copy. Import-deck card responses include the pinned `?v=` in media URLs automatically.
 
+### Download media in batch
+
+**Endpoint:** `POST /api/media/batch`
+
+Downloads up to 500 files in one response, for offline deck downloads. Each item gets the same access rule as
+**Download media**: the owner's working copy without `v`, or published version `v` for any authenticated user.
+
+**Request:**
+
+```json
+{
+  "items": [
+    { "id": "eloc-44obppwy-2-24285-564681508124", "v": 4 },
+    { "id": "my-own-media-id" }
+  ]
+}
+```
+
+**Response:** `200` with `Content-Type: multipart/mixed; boundary=...`, one part per item in request order. Every
+part has `X-Media-Id`, `X-Media-Version` (only when `v` was sent) and `X-Media-Status`:
+
+- `200`: the part body is the file, with `Content-Type` and `Content-Length`.
+- `403` / `404`: empty part (not the owner, or the media or its file is missing).
+
+A body that ends without the closing boundary was cut short (a file failed mid-copy); keep the complete parts and
+request the rest again. `400` when the body is not JSON, `items` is empty or holds more than 500 entries, an `id` is
+empty, or a `v` is not positive.
+
 ### Delete media
 
 **Endpoint:** `DELETE /api/media/{id}`
@@ -3453,13 +3523,13 @@ Deck-wide list/filter: [Quality catalog](#quality-catalog). Typical errors: [Qua
 
 Importer **submit** routes use the **import** deck id. Author **inbox** routes use the **source** deck id. Overlay `PATCH`/`POST` facts do **not** create a contribution. Daily quota: max **200** new rows per source / UTC day (`contributionDailyLimit` in `api/deck/contribution.go`); refresh of an open dedupe target does not consume quota → **429** `daily contribution limit exceeded`.
 
-| Internal `type`                                                         | Submit route (import id)                     | Quality effect                                                                                                                                   |
-| ----------------------------------------------------------------------- | -------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `fact_edit`                                                             | `POST …/contributions/facts/{factId}/edit`   | Proposed overlay; author can **accept**. Optional `message`, `entry_index`. Dedupe `fact_edit:{factId}`.                                         |
-| `report`                                                                | `POST …/contributions/facts/{factId}/report` | Message-only; **cannot accept**. No server dedupe.                                                                                               |
-| `fact_add`                                                              | `POST …/contributions/facts/{factId}/add`    | New local fact.                                                                                                                                  |
-| `fact_tag_update` / `deck_tag_update` / `template_add` / `field_rename` | See catalog above                            | Structure/tags, not scores.                                                                                                                      |
-| `qa_review`                                                             | `POST …/contributions/qa-review`             | On accept, the author signs off the importer's matching sign-offs. Dedupe `qa_review` per importer. See [QA review request](#qa-review-request). |
+| Internal `type`                                                                              | Submit route (import id)                     | Quality effect                                                                                                                                   |
+| -------------------------------------------------------------------------------------------- | -------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `fact_edit`                                                                                  | `POST …/contributions/facts/{factId}/edit`   | Proposed overlay; author can **accept**. Optional `message`, `entry_index`. Dedupe `fact_edit:{factId}`.                                         |
+| `report`                                                                                     | `POST …/contributions/facts/{factId}/report` | Message-only; **cannot accept**. No server dedupe.                                                                                               |
+| `fact_add`                                                                                   | `POST …/contributions/facts/{factId}/add`    | New local fact.                                                                                                                                  |
+| `fact_tag_update` / `deck_tag_update` / `template_add` / `field_rename` / `description_edit` | See catalog above                            | Structure/tags, not scores.                                                                                                                      |
+| `qa_review`                                                                                  | `POST …/contributions/qa-review`             | On accept, the author signs off the importer's matching sign-offs. Dedupe `qa_review` per importer. See [QA review request](#qa-review-request). |
 
 **`fact_edit` (QA edits):** overlay must exist and differ from the snapshot. Body does not include `entries` — the server freezes overlay as `proposed_entries`. Full example: [Fact edit (current overlay)](#fact-edit-current-overlay).
 
@@ -3538,7 +3608,6 @@ These routes need a verified email. Unverified callers get **403**
 | `POST /auth/register`        | **400** | `Invalid request payload`                                                                                                                                                                                                                                                                                                                                                |
 |                              | **400** | `Username, password, and email are required`, `Username must be between 2 and 32 characters`, `Username must not contain whitespace`, `Invalid email address`, `Password must be at least 8 characters`, `Password must not contain whitespace`, `Password must be at most 64 characters`, `Password is too long when encoded (contains too many multi-byte characters)` |
 |                              | **409** | `Username already exists`                                                                                                                                                                                                                                                                                                                                                |
-|                              | **409** | `Email already in use`                                                                                                                                                                                                                                                                                                                                                   |
 |                              | **500** | `Error checking username`, `Error checking email`, `Could not hash password`, `Error serializing user data`, `Error creating user`                                                                                                                                                                                                                                       |
 | `POST /auth/login`           | **400** | `Invalid request payload`                                                                                                                                                                                                                                                                                                                                                |
 |                              | **400** | `Username and password are required`, `Username must not contain whitespace`                                                                                                                                                                                                                                                                                             |
@@ -3554,6 +3623,7 @@ These routes need a verified email. Unverified callers get **403**
 > **`POST /auth/forgot-password`** always returns **200** when the email is unknown (anti-enumeration). No error body in that case. Same for **`POST /auth/resend-verification`**.
 
 | `POST /auth/verify-email` | **400** | `Invalid request payload`, `Token is required`, `Invalid or expired verification token`, `User not found for verification token` |
+| `POST /auth/verify-email` | **409** | `Username already exists; sign up again with another username`, `An account with this email already exists` (register token) |
 | `POST /auth/resend-verification` | **400** | `Invalid request payload`, `Email is required` |
 
 ---
@@ -3572,7 +3642,6 @@ These routes need a verified email. Unverified callers get **403**
 | `PATCH /api/profile/email` | **400** | `Invalid request payload`, `Email and password are required`, `Invalid email address`, `New email matches current email` |
 |                            | **401** | `Invalid credentials`                                                                                                    |
 |                            | **404** | `User not found`                                                                                                         |
-|                            | **409** | `Email already in use`                                                                                                   |
 |                            | **429** | `Too many attempts. Try again later.`                                                                                    |
 |                            | **500** | `Error changing email`                                                                                                   |
 
@@ -3834,7 +3903,7 @@ Contribution submit/inbox errors: [Deck sharing](#deck-sharing).
 | `/auth/resend-verification`                       | POST        | `{ "data": { "msg" }, "meta": null }` (always 200 when email valid shape)                                                                                                                                                                                                            |
 | `/api/profile`                                    | GET         | `{ "data": { user profile }, "meta": { "msg" } }`                                                                                                                                                                                                                                    |
 | `/api/profile`                                    | DELETE      | `{ "data": { "msg": "Account deleted successfully", "username", "deleted_decks", "anonymized_published_decks" }, "meta": null }`                                                                                                                                                     |
-| `/api/profile/email`                              | PATCH       | `{ "data": { "username", "email", "email_verified": false }, "meta": null }`                                                                                                                                                                                                         |
+| `/api/profile/email`                              | PATCH       | `{ "data": { "username", "email", "email_verified", "pending_email" }, "meta": null }`                                                                                                                                                                                               |
 | `/api/decks`                                      | POST        | `{ "data": { "deck_id" }, "meta": { "msg" } }`                                                                                                                                                                                                                                       |
 | `/api/decks`                                      | GET         | `{ "data": { "decks": [ … ] }, "meta": { "total", "msg" } }`                                                                                                                                                                                                                         |
 | `/api/decks/{id}`                                 | GET         | `{ "data": { deck + stats }, "meta": { "msg" } }`                                                                                                                                                                                                                                    |
@@ -3858,7 +3927,7 @@ Contribution submit/inbox errors: [Deck sharing](#deck-sharing).
 | `/api/decks/{id}/cards/{cardId}`                  | DELETE      | `{ "data": { "card_id" }, "meta": { "msg" } }`                                                                                                                                                                                                                                       |
 | `/api/decks/{id}/reschedule`                      | POST        | **Not wired** — **404** (typically no JSON `{ "msg" }` body). See [Reschedule deck](#reschedule-deck).                                                                                                                                                                               |
 | `/api/decks/catalog`                              | GET         | `{ "data": { "decks": [ … ] }, "meta": { "msg", "count", "total", "limit", "offset", "has_more" } }` — defaults `limit` 50, `offset` 0; optional `query`                                                                                                                             |
-| `/api/decks/catalog/{id}`                         | GET         | `{ "data": { "id", "name", "description", "owner", "fields", "published_version", "fact_count", "deck_tag_names", "published_at", "qa_verified" }, "meta": { "msg" } }` — one catalog row; **404** if not importable                                                                 |
+| `/api/decks/catalog/{id}`                         | GET         | `{ "data": { "id", "name", "description", "owner", "fields", "published_version", "fact_count", "deck_tag_names", "published_at", "qa_verified", "import_count", "importer_count" }, "meta": { "msg" } }` — one catalog row; **404** if not importable                               |
 | `/api/decks/import`                               | POST        | **201** — `{ "data": { "id", "source_deck_id", "source_version", "imported_at" }, "meta": { "msg" } }`                                                                                                                                                                               |
 | `/api/decks/{id}/publish`                         | POST        | `{ "data": { "published_version", "visibility" }, "meta": { "msg": "published" } }`                                                                                                                                                                                                  |
 | `/api/decks/{id}/publish-preview`                 | GET         | `{ "data": { "published_version", "has_unpublished_changes", "facts", "media", "tags", … }, "meta": { "msg": "ok" } }` — optional `?detail=1`                                                                                                                                        |
@@ -3880,7 +3949,7 @@ Contribution submit/inbox errors: [Deck sharing](#deck-sharing).
 | `/api/decks/{id}/facts/{factId}/tags/{tagId}`     | PUT, DELETE | `{ "data": { "tags": [ … ] }, "meta": { "msg" } }`                                                                                                                                                                                                                                   |
 | `/api/decks/{id}/facts/{factId}/tags`             | GET         | `{ "data": { "tags": [ … ] }, "meta": { "msg" } }`                                                                                                                                                                                                                                   |
 | `/api/media`                                      | POST        | `{ "data": { id, owner, filename, mime, size, checksum, created_at }, "meta": { "msg" } }`                                                                                                                                                                                           |
-| `/api/media`                                      | GET         | `{ "data": [ MediaSwagger, … ], "meta": { "count", "has_more" } }`                                                                                                                                                                                                                   |
+| `/api/media`                                      | GET         | `{ "data": [ media, … ], "meta": { "count", "has_more" } }`                                                                                                                                                                                                                          |
 | `/api/media/{id}/meta`                            | GET         | `{ "data": { id, owner, filename, mime, size, checksum, created_at }, "meta": { "msg" } }`                                                                                                                                                                                           |
 | `/api/media/{id}`                                 | GET         | Download media (binary)                                                                                                                                                                                                                                                              |
 | `/api/media/{id}`                                 | DELETE      | `{ "data": { "msg": "media deleted" } }`                                                                                                                                                                                                                                             |

@@ -2,7 +2,7 @@
 import AppLink from '@/components/app/AppLink'
 import type { DeckCatalogItem } from '@/modules/deck-sharing/deck-sharing.schema'
 import { Card } from '@heroui/react'
-import { User, Layers, CalendarDays } from 'lucide-react'
+import { User, Layers, CalendarDays, Download } from 'lucide-react'
 import { useTranslations } from 'next-intl'
 import { useActionState, useCallback, useEffect, useMemo } from 'react'
 import type { FormEventHandler } from 'react'
@@ -95,6 +95,10 @@ export default function SharedDecksDetail({
             <div className="flex items-center gap-1.5 shrink-0">
               <CalendarDays className="size-3 shrink-0" />
               <span>{publishedAt}</span>
+            </div>
+            <div className="flex items-center gap-1.5 shrink-0">
+              <Download className="size-3 shrink-0" />
+              <span>{t('deck-sharing.import-count', { count: deck.import_count ?? 0 })}</span>
             </div>
             {ownedDeckId
               ? (

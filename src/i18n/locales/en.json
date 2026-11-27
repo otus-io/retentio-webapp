@@ -442,6 +442,7 @@
     "heading": "Shared deck catalog",
     "subtitle": "Browse published decks from the community. Open a deck for details and import.",
     "search-placeholder": "Search by deck name, creator or tag",
+    "import-count": "{count, plural, one {# import} other {# imports}}",
     "creator": "Creator",
     "published-at": "Published",
     "facts-count": "{count} facts",

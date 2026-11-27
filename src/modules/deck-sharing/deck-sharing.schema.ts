@@ -42,6 +42,10 @@ export interface DeckCatalogItem {
   deck_tag_names?: string[]
   /** 该快照创建的 UTC 时间 */
   published_at: string
+  /** 累计成功导入次数（删除导入卡组不会减少） */
+  import_count?: number
+  /** 当前持有该卡组导入副本的用户数（导入者删除导入卡组或注销账号时减少） */
+  importer_count?: number
 }
 
 /**
