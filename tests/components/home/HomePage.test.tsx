@@ -74,7 +74,7 @@ vi.mock('lucide-react', () => ({
   Download: () => <span data-testid="icon-download" />,
 }))
 
-import { ANDROID_APK_URL, PLAY_STORE_URL, TESTFLIGHT_JOIN_URL } from '@/config'
+import { ANDROID_APK_URL, ANDROID_INSTALL_PATH, TESTFLIGHT_JOIN_URL } from '@/config'
 import HomePage from '@/components/home/HomePage'
 
 interface ObserverStub {
@@ -159,14 +159,15 @@ describe('HomePage', () => {
     expect(screen.getByText('home.about.description')).toBeDefined()
   })
 
-  it('下载链接指向 TestFlight 与 Google Play', () => {
+  it('下载链接指向 TestFlight 与 Android 安装指南', () => {
     render(<HomePage />)
     const iosLink = screen.getByText('home.cta.button').closest('a')
     expect(iosLink?.getAttribute('href')).toBe(TESTFLIGHT_JOIN_URL)
     expect(iosLink?.getAttribute('target')).toBe('_blank')
     const androidLink = screen.getByText('home.cta.androidButton').closest('a')
-    expect(androidLink?.getAttribute('href')).toBe(PLAY_STORE_URL)
-    expect(androidLink?.getAttribute('target')).toBe('_blank')
+    expect(androidLink?.getAttribute('href')).toBe(ANDROID_INSTALL_PATH)
+    // The Android button opens our install guide in the same tab.
+    expect(androidLink?.getAttribute('target')).toBeNull()
   })
 
   it('APK 链接指向最新 GitHub Release', () => {

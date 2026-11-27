@@ -5,7 +5,7 @@ import { useTranslations } from 'next-intl'
 import { useEffect, useRef, useState, useTransition } from 'react'
 import {
   LOGIN_PATH,
-  PLAY_STORE_URL,
+  ANDROID_INSTALL_PATH,
   TESTFLIGHT_JOIN_URL,
   VERIFY_EMAIL_PATH,
 } from '@/config'
@@ -101,9 +101,7 @@ export default function VerifyEmailPanel({
                       {t('verifyEmailGetIos')}
                     </a>
                     <a
-                      href={PLAY_STORE_URL}
-                      target="_blank"
-                      rel="noopener noreferrer"
+                      href={ANDROID_INSTALL_PATH}
                       className={buttonVariants({ size: 'lg', fullWidth: true, variant: 'outline' })}
                     >
                       {t('verifyEmailGetAndroid')}

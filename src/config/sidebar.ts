@@ -43,6 +43,7 @@ export const guideSidebarConfig: SidebarNavItem[] = [
   {
     titleKey: 'guide-sidebar.get-started',
     items: [
+      { titleKey: 'guide-sidebar.install-android', href: '/guide/get-started/install-android' },
       { titleKey: 'guide-sidebar.login-registration', href: '/guide/get-started/login-registration' },
       { titleKey: 'guide-sidebar.import-an-existing-deck', href: '/guide/get-started/import-an-existing-deck' },
       { titleKey: 'guide-sidebar.create-your-deck', href: '/guide/get-started/create-your-deck' },

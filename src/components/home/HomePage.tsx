@@ -10,7 +10,7 @@ import {
 import clsx from 'clsx'
 import AppLink from '@/components/app/AppLink'
 import { AppButtonLink } from '@/components/app/AppButtonLink'
-import { ANDROID_APK_URL, PLAY_STORE_URL, TESTFLIGHT_JOIN_URL } from '@/config'
+import { ANDROID_APK_URL, ANDROID_INSTALL_PATH, TESTFLIGHT_JOIN_URL } from '@/config'
 
 function AppleIcon({ className }: { className?: string }) {
   return (
@@ -154,9 +154,7 @@ export default function HomePage({ children }:{ children?: ReactNode }) {
               {t('home.cta.button')}
             </a>
             <a
-              href={PLAY_STORE_URL}
-              target="_blank"
-              rel="noopener noreferrer"
+              href={ANDROID_INSTALL_PATH}
               className="inline-flex items-center gap-2 px-5 sm:px-8 py-3.5 rounded-xl bg-accent text-white font-medium text-base sm:text-lg hover:opacity-90 transition-opacity whitespace-nowrap"
             >
               <GooglePlayIcon className="size-5 shrink-0" />
