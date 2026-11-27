@@ -201,7 +201,9 @@ Register does not create the account. It emails a verification link, and the acc
 link is opened (`POST /auth/verify-email`). A taken email gets the same **201** response, and the address
 owner gets a "You already have a Rete account" email instead. Register sends at most one email per address
 per 60 s. This keeps register from revealing which emails have accounts. Clients should not log in right after
-register: show "check your email", then log in after verifying. See
+register: show "check your email", then log in after verifying. Exception: with `ENV=development` and no
+`RESEND_API_KEY`, register creates the account right away, already verified, so clients can log in directly
+without `POST /auth/verify-email`. See
 [signup-verify-before-create.md](signup-verify-before-create.md).
 
 ### Login
@@ -3606,7 +3608,6 @@ These routes need a verified email. Unverified callers get **403**
 | `POST /auth/register`        | **400** | `Invalid request payload`                                                                                                                                                                                                                                                                                                                                                |
 |                              | **400** | `Username, password, and email are required`, `Username must be between 2 and 32 characters`, `Username must not contain whitespace`, `Invalid email address`, `Password must be at least 8 characters`, `Password must not contain whitespace`, `Password must be at most 64 characters`, `Password is too long when encoded (contains too many multi-byte characters)` |
 |                              | **409** | `Username already exists`                                                                                                                                                                                                                                                                                                                                                |
-|                              | **409** | `Email already in use`                                                                                                                                                                                                                                                                                                                                                   |
 |                              | **500** | `Error checking username`, `Error checking email`, `Could not hash password`, `Error serializing user data`, `Error creating user`                                                                                                                                                                                                                                       |
 | `POST /auth/login`           | **400** | `Invalid request payload`                                                                                                                                                                                                                                                                                                                                                |
 |                              | **400** | `Username and password are required`, `Username must not contain whitespace`                                                                                                                                                                                                                                                                                             |

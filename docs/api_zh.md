@@ -20,6 +20,8 @@
   - [验证邮箱](#验证邮箱)
   - [重发验证邮件](#重发验证邮件)
 - [1.1 用户资料](#11-用户资料)
+  - [修改邮箱](#修改邮箱)
+  - [注销账号](#注销账号)
 - [2. 卡组](#2-卡组)
   - [创建卡组](#创建卡组)
   - [获取单个卡组](#获取单个卡组)
@@ -113,6 +115,8 @@
 | `/auth/verify-email`                                                  | POST   | 使用验证邮件中的令牌验证邮箱                                                                                                                                                                                                                                                                                                                                                                                       |
 | `/auth/resend-verification`                                           | POST   | 重发验证邮件（防枚举）                                                                                                                                                                                                                                                                                                                                                                                             |
 | `/api/profile`                                                        | GET    | 获取当前用户资料                                                                                                                                                                                                                                                                                                                                                                                                   |
+| `/api/profile`                                                        | DELETE | 注销当前账号（body：`password`）。先删除账号键（使 JWT 立即失效），再删除未发布的源卡组和导入卡组；已发布的源卡组会匿名化（owner 设为 `deleted`）。密码错误限流：5 次 / 15 分钟。见 [注销账号](#注销账号)。                                                                                                                                                                                                        |
+| `/api/profile/email`                                                  | PATCH  | 发起修改邮箱（body：`email`、`password`）；打开发往新邮箱的链接后生效。见 [修改邮箱](#修改邮箱)。                                                                                                                                                                                                                                                                                                                  |
 | `/api/decks`                                                          | POST   | 创建卡组。请求体：`name`、**`fields`**（≥1 列名，必填）、**`rate`**（必填，1–1000）、可选 **`tags`**。                                                                                                                                                                                                                                                                                                             |
 | `/api/decks`                                                          | GET    | 获取所有卡组                                                                                                                                                                                                                                                                                                                                                                                                       |
 | `/api/decks/{id}`                                                     | GET    | 获取卡组详情。源卡组含 `visibility`、`published_version`；导入卡组含 `source_deck_id`、`source_version`、`imported_at`。                                                                                                                                                                                                                                                                                           |
@@ -189,6 +193,10 @@
   "username": "swagger"
 }
 ```
+
+`username` 不得包含空白或 `@`（**400**）。用户名已被占用返回 **409**。
+
+注册不会立即创建账号。服务端会发送验证链接，账号在打开该链接时创建（`POST /auth/verify-email`）。已被占用的邮箱同样返回 **201**，该邮箱所有者会收到“You already have a Rete account”邮件。同一邮箱每 60 秒最多发送一封注册邮件。这样注册接口不会泄露哪些邮箱已有账号。客户端不应在注册后立即登录：先提示“请查收邮件”，用户完成邮箱验证后再登录。例外：当 `ENV=development` 且未设置 `RESEND_API_KEY` 时，注册会立即创建已验证的账号，客户端可直接登录，无需 `POST /auth/verify-email`。见 [signup-verify-before-create.md](signup-verify-before-create.md)。
 
 ### 登录
 
@@ -320,7 +328,12 @@ Authorization: Bearer <token>
 }
 ```
 
-> 软验证：验证前仍可登录。注册成功后会发送验证邮件（已配置 Resend 时）。
+注册邮件中的令牌会创建账号（已验证）；修改邮箱邮件中的令牌会应用该修改。若用户名或邮箱已被其他注册抢先占用，返回 **409** `Username already exists; sign up again with another username` 或 **409** `An account with this email already exists`。
+
+> 软验证：账号创建后，验证前即可登录，大多数接口也可使用。发布卡组和提交贡献在邮箱验证前返回 **403**，body 含
+> `"code": "email_not_verified"`（见 [需要已验证邮箱](#需要已验证邮箱)）。配置 Resend 时注册会发送验证邮件；
+> 当 `ENV=development` 且未设置 `RESEND_API_KEY` 时，新账号直接为已验证状态。
+> 发往账号已不再使用的邮箱的链接（见 [修改邮箱](#修改邮箱)）返回 **400** `Invalid or expired verification token`。
 
 ### 重发验证邮件
 
@@ -352,6 +365,87 @@ Authorization: Bearer <token>
 **接口：** `GET /api/profile`
 
 需在请求头中携带 `Authorization: Bearer <token>`。返回当前用户的资料（用户名、邮箱、`email_verified`）。
+
+### 修改邮箱
+
+**接口：** `PATCH /api/profile/email`
+
+需在请求头中携带 `Authorization: Bearer <token>`。用户可在登录状态下修正输错的邮箱。
+
+```json
+{
+  "email": "new@example.com",
+  "password": "123456"
+}
+```
+
+**响应：**
+
+```json
+{
+  "data": {
+    "username": "swagger",
+    "email": "old@example.com",
+    "email_verified": true,
+    "pending_email": "new@example.com"
+  },
+  "meta": null
+}
+```
+
+- 邮箱会去除首尾空白并转为小写。此时尚未修改：`email` 与 `email_verified` 仍为当前值。
+- 确认链接会发送到新邮箱。打开该链接（`POST /auth/verify-email`）后账号切换为新邮箱，且为已验证状态；
+  发往旧邮箱的验证和重置链接随即失效。若该邮箱已被其他账号抢先占用，验证返回 **409**
+  `An account with this email already exists`。
+- 仅最近一次请求的链接有效：新的修改请求、密码重置或再次修改邮箱都会使旧链接返回 **400**
+  `Invalid or expired verification token`。
+- 已被占用的邮箱同样返回 **200**，该邮箱所有者会收到“You already have a Rete account”邮件。
+  注册与修改邮箱共用同一限流：每个邮箱约 60 秒最多一封邮件。
+- 密码确认失败与 [注销账号](#注销账号) 共用限流：每个用户名 **5 次 / 15 分钟** →
+  **429** `Too many attempts. Try again later.`
+- 新邮箱与当前邮箱相同返回 **400**。
+
+### 注销账号
+
+**接口：** `DELETE /api/profile`
+
+需在请求头中携带 `Authorization: Bearer <token>`。确认密码后永久删除当前账号。用于应用内注销账号（如 Apple App Store 审核指南 5.1.1(v)）。
+
+```json
+{
+  "password": "123456"
+}
+```
+
+**响应：**
+
+```json
+{
+  "data": {
+    "msg": "Account deleted successfully",
+    "username": "swagger",
+    "deleted_decks": 3,
+    "anonymized_published_decks": 1
+  },
+  "meta": null
+}
+```
+
+成功时服务端会：
+
+- 先删除账号键（`user:{username}`、邮箱索引、验证冷却、删除尝试计数）。`JwtAuthMiddleware` 会检查用户键是否存在，因此即使后续内容清理失败，账号也会立即失效。
+- 删除该用户的所有**导入**卡组和所有**未发布**的源卡组（`published_version == 0`），包括其词条、卡片、标签关联和用户自有媒体。
+- **匿名化已发布的源卡组**（`published_version > 0`）：保留卡组、快照和目录条目，但 `owner` 设为 `deleted`，并从该用户的卡组集合中移除。导入者继续学习其钉住的快照。仍被匿名卡组引用的媒体会改归 `deleted` 所有，而不是删除。
+- 清理残留的标签、用户媒体索引和每日计数。
+- 将当前 JWT 加入黑名单（与 [登出](#登出) 机制相同），该 token 无法再使用。
+
+说明：
+
+- 非幂等：使用同一 token 再次调用返回 **401**（token 已拉黑 / 用户已不存在）。
+- 密码确认失败按用户名限流：**5 次 / 15 分钟** → **429** `Too many delete attempts. Try again later.`（限流窗口内正确密码也会被拒绝）。该计数与 [修改邮箱](#修改邮箱) 共用。
+- 若删除账号键后内容清理失败（**500**），账号保持失效且 token 已拉黑，客户端无法重试。孤立的卡组/媒体可能残留，直到运维对账任务（不属于本 API）清理 `owner` 已无 `user:{username}` 键的卡组。宁可留下孤立内容，也不保留卡组已被删除的活跃账号。
+- `deleted` 是保留用户名，不可注册。
+- 之后可以用相同的邮箱或用户名重新注册；已匿名化的已发布卡组**不会**重新关联到新账号。
 
 ---
 
@@ -1150,7 +1244,7 @@ Authorization: Bearer <token>
 
 #### 导入者的媒体
 
-- 导入者可通过 `GET /api/media/{id}?v=<version>` 下载作者已发布的媒体。
+- 导入者可通过 `GET /api/media/{id}?v=<version>` 下载作者已发布的媒体。所需版本来自词条列表（`GET /api/decks/{importId}/facts`）返回的 `data.media_versions`（`{ mediaId: pinnedVersion }`）；不要用卡组 `source_version` 当作 `v`（媒体 copy-on-write 可能钉在更旧的版本）。下一张卡片响应已在媒体 URL 中嵌入 `?v=`。
 - 返回**版本化**二进制，非作者工作副本。
 - 非所有者必须提供 `v`，且 `v` 必须为正整数。
 - 导入者可用 `POST /api/media` 且 `deck_id={importId}` 上传**自己的**媒体，用于私有 overlay / 贡献。
@@ -2096,6 +2190,12 @@ Authorization: Bearer <token>
 
 每个词条均包含 **`tags`**：`{ "id", "name", "description" }` 对象数组；无标签时为 `[]`。同一词条可有**多个**标签；列表与详情接口中标签按 **name** 排序。标签不存放在 Redis 的 `fact:{id}` JSON 内，由服务端按用户维度的关联键解析。
 
+**导入卡组：** `data` 还包含 **`media_versions`**，将本页词条中的每个媒体 id 映射到其钉住的快照版本（下载地址为 `/api/media/{mediaId}?v={version}`）。不在映射中的 id（如本地词条的媒体）不带 `v` 获取。自有卡组，以及快照清单不可用的导入卡组，省略该字段。
+
+```json
+{ "media_versions": { "eloc-x9k2m4np-0-16762-1787232390671": 15 } }
+```
+
 ### 获取单个词条
 
 **接口：** `GET /api/decks/{id}/facts/{factId}`
@@ -3028,7 +3128,7 @@ Accept: application/json
 
 按 ID 返回用户拥有的媒体文件（二进制）。需在请求头中携带 `Authorization: Bearer <token>`。响应头包含 `Content-Type`、`Content-Length` 和 `ETag`（与 `checksum` 一致）。请求头中携带 `If-None-Match: <ETag>` 可在文件未变更时获得 `304 Not Modified`。**获取下一张卡片** 接口会在每个正面/背面词条对象的 `audio`、`image`、`video` 字段中给出完整 URL（如 `https://api.retentio.app:8443/api/media/{id}`）；使用该 URL 并携带相同认证头即可加载文件。
 
-**已发布媒体：** 任何已认证用户均可通过正整数 **`?v=<version>`** 下载不可变的已发布字节。不提供 `v` 时，仅媒体所有者可下载工作副本。导入卡组的卡片响应会自动在媒体 URL 中包含钉住的 `?v=`。
+**已发布媒体：** 任何已认证用户均可通过正整数 **`?v=<version>`** 下载不可变的已发布字节。不提供 `v` 时，仅媒体所有者可下载工作副本。导入卡组的卡片响应会自动在媒体 URL 中包含钉住的 `?v=`；词条列表通过 `data.media_versions` 给出每个媒体 id 的钉住版本（见 [获取所有词条](#获取所有词条)）。
 
 ### 批量下载媒体
 
@@ -3365,7 +3465,6 @@ Accept: application/json
 | `POST /auth/register`        | **400** | `Invalid request payload`                                                                                                                                                                                                                                                                                                                                                |
 |                              | **400** | `Username, password, and email are required`、`Username must be between 2 and 32 characters`、`Username must not contain whitespace`、`Invalid email address`、`Password must be at least 8 characters`、`Password must not contain whitespace`、`Password must be at most 64 characters`、`Password is too long when encoded (contains too many multi-byte characters)` |
 |                              | **409** | `Username already exists`                                                                                                                                                                                                                                                                                                                                                |
-|                              | **409** | `Email already in use`                                                                                                                                                                                                                                                                                                                                                   |
 |                              | **500** | `Error checking username`、`Error checking email`、`Could not hash password`、`Error serializing user data`、`Error creating user`                                                                                                                                                                                                                                       |
 | `POST /auth/login`           | **400** | `Invalid request payload`                                                                                                                                                                                                                                                                                                                                                |
 |                              | **400** | `Username and password are required`、`Username must not contain whitespace`                                                                                                                                                                                                                                                                                             |
@@ -3381,16 +3480,27 @@ Accept: application/json
 > **`POST /auth/forgot-password`** 在邮箱不存在时仍返回 **200**（防枚举）。该情况下无错误 body。**`POST /auth/resend-verification`** 同理。
 
 | `POST /auth/verify-email` | **400** | `Invalid request payload`、`Token is required`、`Invalid or expired verification token`、`User not found for verification token` |
+| `POST /auth/verify-email` | **409** | `Username already exists; sign up again with another username`、`An account with this email already exists`（注册令牌） |
 | `POST /auth/resend-verification` | **400** | `Invalid request payload`、`Email is required` |
 
 ---
 
 ### 用户资料
 
-| 接口               | 状态    | `msg`                                                      |
-| ------------------ | ------- | ---------------------------------------------------------- |
-| `GET /api/profile` | **404** | `User not found`                                           |
-|                    | **500** | `Error retrieving user profile`、`Error parsing user data` |
+| 接口                       | 状态    | `msg`                                                                                                                    |
+| -------------------------- | ------- | ------------------------------------------------------------------------------------------------------------------------ |
+| `GET /api/profile`         | **404** | `User not found`                                                                                                         |
+|                            | **500** | `Error retrieving user profile`、`Error parsing user data`                                                               |
+| `DELETE /api/profile`      | **400** | `Invalid request payload`、`Password is required`                                                                        |
+|                            | **401** | `Invalid credentials`                                                                                                    |
+|                            | **404** | `User not found`                                                                                                         |
+|                            | **429** | `Too many delete attempts. Try again later.`                                                                             |
+|                            | **500** | `Error deleting account`                                                                                                 |
+| `PATCH /api/profile/email` | **400** | `Invalid request payload`、`Email and password are required`、`Invalid email address`、`New email matches current email` |
+|                            | **401** | `Invalid credentials`                                                                                                    |
+|                            | **404** | `User not found`                                                                                                         |
+|                            | **429** | `Too many attempts. Try again later.`                                                                                    |
+|                            | **500** | `Error changing email`                                                                                                   |
 
 另受 [JWT 中间件错误](#通用错误) 约束。
 
@@ -3606,16 +3716,14 @@ Accept: application/json
 |                                                 | **403** | `Not authorized to access this deck`                                                                                                          |
 |                                                 | **404** | `Deck not found`、`Fact not found`                                                                                                            |
 |                                                 | **500** | `Error retrieving fact`、`Error parsing fact data`、`Error serializing quality data`、`Error saving quality`、`Error checking fact existence` |
-| `GET /api/decks/{id}/facts/{factId}/quality`    | **400** | `fact quality is only available on source decks`                                                                                              |
-|                                                 | **403** | `Not authorized to access this deck`                                                                                                          |
+| `GET /api/decks/{id}/facts/{factId}/quality`    | **403** | `Not authorized to access this deck`                                                                                                          |
 |                                                 | **404** | `Deck not found`、`Fact not found`、`Quality not found`                                                                                       |
 |                                                 | **500** | `Error retrieving quality`、`Error parsing quality data`、`Error checking fact existence`                                                     |
 | `DELETE /api/decks/{id}/facts/{factId}/quality` | **400** | `fact quality is only available on source decks`                                                                                              |
 |                                                 | **403** | `Not authorized to access this deck`                                                                                                          |
 |                                                 | **404** | `Deck not found`、`Fact not found`                                                                                                            |
 |                                                 | **500** | `Error deleting quality`、`Error checking fact existence`                                                                                     |
-| `GET /api/decks/{id}/quality`                   | **400** | `fact quality is only available on source decks`                                                                                              |
-|                                                 | **400** | `max_score must be between 1 and 10`                                                                                                          |
+| `GET /api/decks/{id}/quality`                   | **400** | `max_score must be between 1 and 10`                                                                                                          |
 |                                                 | **400** | `entry must be a non-negative integer`                                                                                                        |
 |                                                 | **400** | `aspect must be text or audio`                                                                                                                |
 |                                                 | **403** | `Not authorized to access this deck`                                                                                                          |
@@ -3651,6 +3759,8 @@ Accept: application/json
 | `/auth/verify-email`                              | POST        | `{ "data": { "msg": "Email verified successfully" }, "meta": null }`                                                                                                                                                                                                     |
 | `/auth/resend-verification`                       | POST        | `{ "data": { "msg" }, "meta": null }`（邮箱格式合法时恒为 200）                                                                                                                                                                                                          |
 | `/api/profile`                                    | GET         | `{ "data": { 用户资料 }, "meta": { "msg" } }`                                                                                                                                                                                                                            |
+| `/api/profile`                                    | DELETE      | `{ "data": { "msg": "Account deleted successfully", "username", "deleted_decks", "anonymized_published_decks" }, "meta": null }`                                                                                                                                         |
+| `/api/profile/email`                              | PATCH       | `{ "data": { "username", "email", "email_verified", "pending_email" }, "meta": null }`                                                                                                                                                                                   |
 | `/api/decks`                                      | POST        | `{ "data": { "deck_id" }, "meta": { "msg" } }`                                                                                                                                                                                                                           |
 | `/api/decks`                                      | GET         | `{ "data": { "decks": [ … ] }, "meta": { "total", "msg" } }`                                                                                                                                                                                                             |
 | `/api/decks/{id}`                                 | GET         | `{ "data": { 卡组 + 统计 }, "meta": { "msg" } }`                                                                                                                                                                                                                         |
