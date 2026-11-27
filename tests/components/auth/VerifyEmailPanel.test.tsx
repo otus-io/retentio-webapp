@@ -1,7 +1,7 @@
 import { describe, expect, it, vi, beforeEach } from 'vitest'
 import { act, render, screen, waitFor } from '@testing-library/react'
 import type { ReactNode } from 'react'
-import { PLAY_STORE_URL, TESTFLIGHT_JOIN_URL } from '@/config'
+import { ANDROID_INSTALL_PATH, TESTFLIGHT_JOIN_URL } from '@/config'
 
 const verifyEmailActionMock = vi.fn()
 const replaceStateMock = vi.fn()
@@ -96,8 +96,9 @@ describe('VerifyEmailPanel', () => {
       TESTFLIGHT_JOIN_URL,
     )
     expect(screen.getByRole('link', { name: 'verifyEmailGetAndroid' }).getAttribute('href')).toBe(
-      PLAY_STORE_URL,
+      ANDROID_INSTALL_PATH,
     )
+    expect(screen.getByRole('link', { name: 'verifyEmailGetAndroid' }).getAttribute('target')).toBe('_blank')
   })
 
   it('does not show store links before verification succeeds', () => {

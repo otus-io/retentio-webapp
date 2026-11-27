@@ -12,8 +12,6 @@ export const JWT_COOKIE_NAME = 'retentio_token'
 export const CONTACT_EMAIL = 'research@retentio.app'
 /** Public TestFlight invite while the iOS app is in beta. */
 export const TESTFLIGHT_JOIN_URL = 'https://testflight.apple.com/join/46KgYyth'
-/** Google Play Store listing for the Android app. */
-export const PLAY_STORE_URL = 'https://play.google.com/store/apps/details?id=srs.app.retentio'
-/** Always the newest signed APK, published by retentio-frontend's android-release workflow. */
-export const ANDROID_APK_URL = 'https://github.com/otus-io/retentio-frontend/releases/latest/download/retentio.apk'
+/** Guide page explaining how to join Google Play testing and install the Android app. */
+export const ANDROID_INSTALL_PATH = '/guide/get-started/install-android'
 
