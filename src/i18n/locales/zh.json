@@ -442,6 +442,7 @@
     "heading": "共享卡组目录",
     "subtitle": "浏览社区发布的卡组，打开卡组查看详情并导入。",
     "search-placeholder": "搜索卡组名称、创建者或标签",
+    "import-count": "{count} 次导入",
     "creator": "创建者",
     "published-at": "发布日期",
     "facts-count": "{count} 词条",

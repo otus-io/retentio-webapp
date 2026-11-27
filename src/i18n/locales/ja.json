@@ -436,6 +436,7 @@
     "heading": "共有デッキカタログ",
     "subtitle": "コミュニティが公開したデッキを閲覧し、詳細を確認してインポートできます。",
     "search-placeholder": "デッキ名、作成者、タグで検索",
+    "import-count": "{count} 回インポート",
     "creator": "作成者",
     "published-at": "公開日",
     "facts-count": "{count} 項目",
