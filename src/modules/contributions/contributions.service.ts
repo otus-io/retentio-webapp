@@ -115,9 +115,15 @@ export async function submitDeckContributionsBatchService(
               proposed_description: contribution.proposedDescription,
               ...note,
             })
-            : contribution.kind === 'fact_edit'
-              ? await submitFactEditContributionService(importDeckId, contribution.factId, note)
-              : await submitFactAddContributionService(importDeckId, contribution.factId, note)
+            : contribution.kind === 'fact_tags'
+              ? await submitFactTagContributionService(importDeckId, contribution.factId, {
+                add_tags: contribution.addTags,
+                remove_tags: contribution.removeTags,
+                ...note,
+              })
+              : contribution.kind === 'fact_edit'
+                ? await submitFactEditContributionService(importDeckId, contribution.factId, note)
+                : await submitFactAddContributionService(importDeckId, contribution.factId, note)
 
       if (response.success) {
         result.submitted.push({

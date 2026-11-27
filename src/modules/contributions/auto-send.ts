@@ -73,6 +73,17 @@ export function factContribution(
   return { id: `${kind}:${factId}`, kind, factId, preview, savedAt: new Date().toISOString() }
 }
 
+/** A fact's tag changes, by tag name, for [sendToAuthor]. */
+export function factTagsContribution(
+  factId: string,
+  preview: string,
+  addTags: string[],
+  removeTags: string[],
+): PendingDeckContribution {
+  const savedAt = new Date().toISOString()
+  return { id: `fact_tags:${factId}`, kind: 'fact_tags', factId, preview, addTags, removeTags, savedAt }
+}
+
 /** A saved fact edit; `local` marks a fact the importer added, which the author only knows as a fact_add. */
 export interface FactEdit {
   factId: string

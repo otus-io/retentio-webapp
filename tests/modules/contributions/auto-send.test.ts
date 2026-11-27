@@ -7,6 +7,7 @@ vi.mock('@/lib/ui', () => toast)
 
 import {
   factContribution,
+  factTagsContribution,
   sendFactEdits,
   sendFactEditsAndNotify,
   sendToAuthor,
@@ -104,6 +105,18 @@ describe('sendToAuthor', () => {
       expect.objectContaining({ id: 'fact_add:f1', kind: 'fact_add', factId: 'f1' }),
       expect.objectContaining({ id: 'fact_edit:f2', kind: 'fact_edit', factId: 'f2' }),
     ])
+  })
+
+  it('factTagsContribution queues a fact\'s tag changes under its id', () => {
+    expect(factTagsContribution('f1', 'hola', ['noun'], ['verb'])).toEqual({
+      id: 'fact_tags:f1',
+      kind: 'fact_tags',
+      factId: 'f1',
+      preview: 'hola',
+      addTags: ['noun'],
+      removeTags: ['verb'],
+      savedAt: expect.any(String),
+    })
   })
 
   it('sendFactEditsAndNotify tells the user whether the edits reached the author', async () => {

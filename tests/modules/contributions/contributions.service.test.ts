@@ -10,6 +10,7 @@ vi.mock('@/api/contributions', () => ({
   submitDescriptionContribution: vi.fn(),
   submitFactEditContribution: vi.fn(),
   submitFactAddContribution: vi.fn(),
+  submitFactTagContribution: vi.fn(),
 }))
 
 describe('submitDeckContributionsBatchService', () => {
@@ -94,5 +95,16 @@ describe('submitDeckContributionsBatchService', () => {
     expect(res.success && res.data.submitted.map((s) => s.contributionId)).toEqual(['e1', 'a1'])
     expect(contributionsApi.submitFactEditContribution).toHaveBeenCalledWith('import-1', 'f1', { message: 'note' })
     expect(contributionsApi.submitFactAddContribution).toHaveBeenCalledWith('import-1', 'f2', { message: 'note' })
+  })
+
+  it('sends queued fact tag changes to the fact tags endpoint', async () => {
+    vi.mocked(contributionsApi.submitFactTagContribution).mockResolvedValue({ data: { contribution_id: 't1' } } as never)
+    const tags = {
+      id: 'fact_tags:f1', kind: 'fact_tags', factId: 'f1', addTags: ['noun'], removeTags: ['verb'],
+    } as unknown as PendingDeckContribution
+    const res = await submitDeckContributionsBatchService('import-1', [tags])
+    expect(res.success && res.data.submitted).toEqual([{ localId: 'fact_tags:f1', kind: 'fact_tags', contributionId: 't1' }])
+    expect(contributionsApi.submitFactTagContribution)
+      .toHaveBeenCalledWith('import-1', 'f1', { add_tags: ['noun'], remove_tags: ['verb'] })
   })
 })
