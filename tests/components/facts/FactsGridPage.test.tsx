@@ -961,37 +961,15 @@ describe('FactsGridPage', () => {
       ])
     })
 
-    it('sends a big paste in batches, stopping at a failed one', async () => {
+    it('creates a big paste in one request', async () => {
       vi.mocked(addFactsAction).mockImplementationOnce(async (_d, list) => ({
         success: true, data: { newFactIds: list.map((_, i) => `n${i}`) },
-      })).mockResolvedValueOnce({ success: false, error: 'boom' })
+      }))
       renderGrid(0, deck, [])
       ready()
       paste(0, Array.from({ length: 450 }, (_, i) => [`w${i}`, '']))
-      await waitFor(() => expect(showFailToast).toHaveBeenCalledWith('boom'))
-      await settle()
-      expect(vi.mocked(addFactsAction).mock.calls.map((c) => c[1].length)).toEqual([200, 200])
-      expect(vi.mocked(addFactsAction).mock.calls[1][1][0]).toEqual([{ text: 'w200' }, { text: '' }])
-    })
-
-    it('sends each batch only the rows still there with text, keeping later batches meanwhile', async () => {
-      let first!: (v: Awaited<ReturnType<typeof addFactsAction>>) => void
-      vi.mocked(addFactsAction).mockReturnValueOnce(new Promise((r) => { first = r }))
-        .mockImplementation(async (_d, list) => ({ success: true, data: { newFactIds: list.map((_, i) => `m${i}`) } }))
-      renderGrid(0, deck, [])
-      ready()
-      paste(0, Array.from({ length: 401 }, (_, i) => [`w${i}`, '']))
       await waitFor(() => expect(addFactsAction).toHaveBeenCalledTimes(1))
-      // Rows of later batches cleared while the first is created: kept in the sheet, not sent.
-      edit(300, 0, '')
-      edit(400, 0, '')
-      act(() => h.props.onVisibleRowsChange(1))
-      expect(h.sheet[400]).toEqual(['', ''])
-      await act(async () => first({ success: true, data: { newFactIds: Array.from({ length: 200 }, (_, i) => `n${i}`) } }))
-      await waitFor(() => expect(addFactsAction).toHaveBeenCalledTimes(2))
-      const second = vi.mocked(addFactsAction).mock.calls[1][1]
-      expect(second).toHaveLength(199)
-      expect(second.some((entries) => entries[0].text === 'w300')).toBe(false)
+      expect(vi.mocked(addFactsAction).mock.calls[0][1]).toHaveLength(450)
     })
 
     it('keeps a row being created even if it is emptied meanwhile', async () => {

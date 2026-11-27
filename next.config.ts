@@ -8,6 +8,10 @@ const nextConfig: NextConfig = {
     // 16.2.2 defaults this on; it grows RAM/CPU until OOM in `next dev`.
     // https://github.com/vercel/next.js/issues/91396
     turbopackServerFastRefresh: false,
+    // A paste of many rows into the facts sheet creates them in one server action (default limit: 1 MB).
+    serverActions: {
+      bodySizeLimit: '10mb',
+    },
   },
   outputFileTracingIncludes: {
     '/guide/*': ['./content/**/*'],
