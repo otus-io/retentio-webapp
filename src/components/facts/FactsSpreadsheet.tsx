@@ -88,9 +88,11 @@ function createWorksheet(lib: Library, sheet: HTMLElement, host: HTMLElement, pr
     parseFormulas: false,
     contextMenu: (ws, x, y, event, _items, role) => {
       event.preventDefault()
-      // A right-clicked row number selects that row (unless it is in rows already picked): rows, not cells.
+      // A right-clicked row number picks just that row, unless it is in rows already picked by their numbers (a block
+      // of cells around it is not kept: its other rows are not what was clicked).
       const selection = ws as unknown as RowSelection
       if (role === 'row' && (selection.selectedRow == null || selection.selectedRow === false)) {
+        ws.updateSelectionFromCoords(0, Number(y), propsRef.current.headers.length - 1, Number(y))
         selection.selectedRow = Number(y)
       }
       if (role === 'cell' || role === 'row') {
@@ -213,13 +215,17 @@ function sheetApi(lib: Library, worksheet: Worksheet, host: HTMLElement, propsRe
     headers.forEach((_, x) => worksheet.setReadOnly(lib.helpers.getCellNameFromCoords(x, y), readOnly))
   }
   const api: FactsSheetApi = {
-    setRow: (y, texts, readOnly = false) => quietly(() => {
-      // A cell being typed into keeps what is typed (null leaves a cell as it is).
+    setRow: (y, texts, readOnly = false) => {
+      // A cell being typed into keeps what is typed (null leaves a cell as it is). Locking its row closes the editor
+      // first, keeping the text (reported as the user's edit).
       const editing = worksheet.edition
       const editingX = editing && Number(editing[3]) === y ? Number(editing[2]) : -1
-      worksheet.setRowData(y, texts.map((text, x) => (x === editingX ? null : text)), true)
-      setReadOnly(y, readOnly)
-    }),
+      if (readOnly && editingX >= 0) worksheet.closeEditor(editing![0], true)
+      quietly(() => {
+        worksheet.setRowData(y, texts.map((text, x) => (x === editingX ? null : text)), true)
+        setReadOnly(y, readOnly)
+      })
+    },
     appendRows: (count) => {
       worksheet.insertRow(count)
     },

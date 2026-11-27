@@ -213,6 +213,17 @@ describe('FactsSpreadsheet', () => {
       expect(props.onCellsChange).toHaveBeenLastCalledWith(expect.arrayContaining([{ x: 1, y: 2, value: '' }]))
     })
 
+    it('keeps what was typed when locking the row being typed in', async () => {
+      const { api, worksheet, td, props } = await ready()
+      act(() => worksheet.openEditor(td(1, 0)))
+      const input = td(1, 0).querySelector('input, textarea') as HTMLInputElement
+      input.value = 'typed'
+      act(() => api.setRow(0, ['f0', ''], true))
+      expect(props.onCellsChange).toHaveBeenCalledWith([{ x: 1, y: 0, value: 'typed' }])
+      expect(td(1, 0).textContent).toBe('typed')
+      expect(td(1, 0).classList.contains('readonly')).toBe(true)
+    })
+
     it('leaves a cell being typed into alone when writing its row', async () => {
       const { api, worksheet, td } = await ready()
       act(() => worksheet.openEditor(td(1, 0)))
@@ -366,6 +377,17 @@ describe('FactsSpreadsheet', () => {
         fireEvent.contextMenu(number)
       })
       expect(api.selectedRows()).toEqual([1, 2, 3])
+      // Inside a block of cells: just that row.
+      act(() => {
+        fireEvent.mouseDown(td(0, 1), { buttons: 1 })
+        fireEvent.mouseDown(td(1, 3), { buttons: 1, shiftKey: true })
+        fireEvent.mouseUp(document.body)
+      })
+      act(() => {
+        fireEvent.mouseDown(number, { buttons: 2 })
+        fireEvent.contextMenu(number)
+      })
+      expect(api.selectedRows()).toEqual([2])
     })
 
     it('are no longer selected once the page selects a cell', async () => {
