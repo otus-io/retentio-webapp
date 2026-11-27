@@ -130,7 +130,8 @@ test.describe('Facts sheet', () => {
       { cell: factCell(page, 1, 1), items: fieldItems, focused: 'b1' },
       { cell: factCell(page, 1, 0), items: fieldItems, focused: 'f1' },
       { cell: factIdCell(page, 1), items: ['Copy', 'Paste', 'Delete'], focused: 'f1' },
-      { cell: factCell(page, 1, 1), items: fieldItems, focused: 'b1' },
+      // Inside the row just picked by its number: the row stays selected, as in a spreadsheet.
+      { cell: factCell(page, 1, 1), items: fieldItems, focused: 'f1' },
       { cell: factCell(page, 3, 0), items: fieldItems, focused: 'f3' },
     ]
     for (const step of steps) {

@@ -92,7 +92,9 @@ function createWorksheet(lib: Library, sheet: HTMLElement, host: HTMLElement, pr
       // of cells around it is not kept: its other rows are not what was clicked).
       const selection = ws as unknown as RowSelection
       if (role === 'row' && (selection.selectedRow == null || selection.selectedRow === false)) {
-        ws.updateSelectionFromCoords(0, Number(y), propsRef.current.headers.length - 1, Number(y))
+        // As the library selects a row-number row itself (no columns given).
+        const none = null as unknown as number
+        ws.updateSelectionFromCoords(none, Number(y), none, Number(y))
         selection.selectedRow = Number(y)
       }
       if (role === 'cell' || role === 'row') {
