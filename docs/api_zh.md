@@ -2,9 +2,9 @@
 
 ---
 
-# 快速入门指南 - Swagger UI 教程
+# Retentio API 指南
 
-本指南将帮助您通过 Swagger UI 使用 Retentio API。
+本指南是 Retentio REST API 的契约文档：端点、请求体与响应。
 
 ## 目录
 
@@ -18,10 +18,8 @@
   - [忘记密码](#忘记密码)
   - [重置密码](#重置密码)
   - [验证邮箱](#验证邮箱)
-  - [重新发送验证邮件](#重新发送验证邮件)
+  - [重发验证邮件](#重发验证邮件)
 - [1.1 用户资料](#11-用户资料)
-  - [修改邮箱](#修改邮箱)
-  - [注销账号](#注销账号)
 - [2. 卡组](#2-卡组)
   - [创建卡组](#创建卡组)
   - [获取单个卡组](#获取单个卡组)
@@ -32,7 +30,6 @@
   - [卡组共享（概述）](#卡组共享概述)
   - [卡组目录](#卡组目录)
   - [发布卡组](#发布卡组)
-  - [发布预览（未发布的改动）](#发布预览未发布的改动)
   - [导入已发布卡组](#导入已发布卡组)
   - [获取导入更新（差异）](#获取导入更新差异)
   - [同步导入卡组](#同步导入卡组)
@@ -89,9 +86,10 @@
 
 ## 前提条件
 
-- 打开 Swagger UI：
-  - **本地**: <http://localhost:8080/docs>
-  - **生产环境**: <https://api.retentio.app:8443/docs>
+- 基础 URL：
+  - **本地**: <http://localhost:8080>
+  - **生产环境**: <https://api.retentio.app:8443>
+- 任意 HTTP 客户端均可（curl、HTTPie、Postman 等）。
 
 > **时间戳规范：** API 中所有时间戳均使用 **UTC** 时区。
 > ISO 8601 字符串使用 `Z` 后缀（例如 `2026-02-08T12:00:00Z`）。
@@ -110,13 +108,11 @@
 | `/auth/register`                                                      | POST   | 注册用户                                                                                                                                                                                                                                                                                                                                                                                                           |
 | `/auth/login`                                                         | POST   | 登录                                                                                                                                                                                                                                                                                                                                                                                                               |
 | `/auth/logout`                                                        | POST   | 登出（使令牌失效）                                                                                                                                                                                                                                                                                                                                                                                                 |
-| `/auth/forgot-password`                                               | POST   | 请求密码重置令牌                                                                                                                                                                                                                                                                                                                                                                                                   |
+| `/auth/forgot-password`                                               | POST   | 请求密码重置（发送邮件链接；见[忘记密码](#忘记密码)）                                                                                                                                                                                                                                                                                                                                                              |
 | `/auth/reset-password`                                                | POST   | 使用令牌重置密码                                                                                                                                                                                                                                                                                                                                                                                                   |
-| `/auth/verify-email`                                                  | POST   | 使用验证邮件中的 token 验证邮箱                                                                                                                                                                                                                                                                                                                                                                                    |
-| `/auth/resend-verification`                                           | POST   | 重新发送验证邮件（防枚举）                                                                                                                                                                                                                                                                                                                                                                                         |
+| `/auth/verify-email`                                                  | POST   | 使用验证邮件中的令牌验证邮箱                                                                                                                                                                                                                                                                                                                                                                                       |
+| `/auth/resend-verification`                                           | POST   | 重发验证邮件（防枚举）                                                                                                                                                                                                                                                                                                                                                                                             |
 | `/api/profile`                                                        | GET    | 获取当前用户资料                                                                                                                                                                                                                                                                                                                                                                                                   |
-| `/api/profile`                                                        | DELETE | 注销当前账号（body：`password`）。先删除账号键（使 JWT 立即失效），再删除未发布的源卡组和导入卡组；已发布的源卡组会匿名化（owner 设为 `deleted`）。密码错误限流：5 次 / 15 分钟。见 [注销账号](#注销账号)。                                                                                                                                                                                                        |
-| `/api/profile/email`                                                  | PATCH  | 修改邮箱（body：`email`、`password`）；新邮箱为未验证状态。见 [修改邮箱](#修改邮箱)。                                                                                                                                                                                                                                                                                                                              |
 | `/api/decks`                                                          | POST   | 创建卡组。请求体：`name`、**`fields`**（≥1 列名，必填）、**`rate`**（必填，1–1000）、可选 **`tags`**。                                                                                                                                                                                                                                                                                                             |
 | `/api/decks`                                                          | GET    | 获取所有卡组                                                                                                                                                                                                                                                                                                                                                                                                       |
 | `/api/decks/{id}`                                                     | GET    | 获取卡组详情。源卡组含 `visibility`、`published_version`；导入卡组含 `source_deck_id`、`source_version`、`imported_at`。                                                                                                                                                                                                                                                                                           |
@@ -124,9 +120,9 @@
 | `/api/decks/{id}`                                                     | DELETE | 删除卡组。源卡组若 `published_version > 0` → **409**。导入卡组删除时撤销媒体授权。                                                                                                                                                                                                                                                                                                                                 |
 | `/api/decks/import`                                                   | POST   | **（共享）** 从已发布的公开源卡组创建导入学习副本。请求体：`source_deck_id`。**201**。                                                                                                                                                                                                                                                                                                                             |
 | `/api/decks/catalog`                                                  | GET    | **（共享）** 列出可导入的公开已发布源卡组。**无需登录。** 查询：`limit`、`offset`，可选 `query`（名称、描述、所有者、卡组标签名）。按最新发布时间排序。`POST /api/decks/import` 导入仍需 JWT。                                                                                                                                                                                                                     |
-| `/api/decks/catalog/{id}`                                             | GET    | **（共享）** 按源卡组 ID 获取一条公开已发布目录记录（字段与列表行相同）。**无需登录。** 不可导入时 **404**。                                                                                                                                                                                                                                                                                                       |
+| `/api/decks/catalog/{id}`                                             | GET    | **（共享）** 按源卡组 ID 获取一条公开已发布目录记录（字段与列表行相同，另含 `contributors`：作者已接受其贡献的导入者，最多 10 人，`contributor_count` 为总数）。**无需登录。** 不可导入时 **404**。                                                                                                                                                                                                                |
 | `/api/decks/{id}/publish`                                             | POST   | **（共享）** 作者：将工作副本快照为下一 `published_version`。首次发布须 `visibility: "public"`。**200**。                                                                                                                                                                                                                                                                                                          |
-| `/api/decks/{id}/publish-preview`                                     | GET    | **（共享）** 作者：对比工作副本与上次发布（默认返回计数；`?detail=1` 返回 id/预览）。仅限源卡组。**200**。                                                                                                                                                                                                                                                                                                         |
+| `/api/decks/{id}/publish-preview`                                     | GET    | **（共享）** 作者：工作副本相对上次发布的差异（计数；`?detail=1` 含 id/预览）。仅源卡组。**200**。                                                                                                                                                                                                                                                                                                                 |
 | `/api/decks/{id}/updates`                                             | GET    | **（共享）** 导入者：对比钉住的 `source_version` 与源卡组最新发布（含 overlay / `aligned` / `card_template_changes`）。仅导入卡组。                                                                                                                                                                                                                                                                                |
 | `/api/decks/{id}/sync`                                                | POST   | **（共享）** 导入者：推进钉住快照（可选 `target_version`，可选按词条 `decisions[]`）。仅导入卡组。**200**。                                                                                                                                                                                                                                                                                                        |
 | `/api/decks/{id}/contributions/facts/{factId}/edit`                   | POST   | **（共享）** 导入者：将当前私有 overlay 提交为 `fact_edit`。**201**。见 [导入 overlay 与贡献](#导入-overlay-与贡献)。                                                                                                                                                                                                                                                                                              |
@@ -137,28 +133,27 @@
 | `/api/decks/{id}/contributions/deck-tags`                             | POST   | **（共享）** 导入者：提交卡组标签增删为 `deck_tag_update`。**201**。                                                                                                                                                                                                                                                                                                                                               |
 | `/api/decks/{id}/contributions/fields/rename`                         | POST   | **（共享）** 导入者：提交等长 `proposed_fields` 为 `field_rename`。**201**。                                                                                                                                                                                                                                                                                                                                       |
 | `/api/decks/{id}/contributions/description`                           | POST   | **（共享）** 导入者：提交 `proposed_description` 为 `description_edit`。**201**。                                                                                                                                                                                                                                                                                                                                  |
-| `/api/decks/{id}/contributions/qa-review`                             | POST   | **（共享）** 导入者：以 `qa_review` 请求作者采纳其 QA 签核。**201**。见 [QA 审核请求](#qa-审核请求)。                                                                                                                                                                                                                                                                                                              |
+| `/api/decks/{id}/contributions/qa-review`                             | POST   | **（共享）** 导入者：请作者采纳自己的 QA 校验，类型 `qa_review`。**201**。见 [QA 校验审核请求](#qa-校验审核请求)。                                                                                                                                                                                                                                                                                                 |
 | `/api/decks/{id}/contributions`                                       | GET    | **（共享）** 作者在**源**卡组上的贡献收件箱。查询：`status`、`type`、`reporter`、`fact_id`、`media_type`、`limit`、`offset`。                                                                                                                                                                                                                                                                                      |
 | `/api/decks/{id}/contributions/{contributionId}`                      | PATCH  | **（共享）** 作者：将状态设为 `open` / `resolved` / `dismissed`。                                                                                                                                                                                                                                                                                                                                                  |
 | `/api/decks/{id}/contributions/{contributionId}/accept`               | POST   | **（共享）** 作者：接受进工作副本（之后仍需发布）。**200**。                                                                                                                                                                                                                                                                                                                                                       |
-| `/api/decks/{id}/contributions/{contributionId}/qa-review`            | GET    | **（共享）** 作者：查看 `qa_review` 中每条签核的实时状态。                                                                                                                                                                                                                                                                                                                                                         |
+| `/api/decks/{id}/contributions/{contributionId}/qa-review`            | GET    | **（共享）** 作者：查看 `qa_review` 中每项校验的实时状态。                                                                                                                                                                                                                                                                                                                                                         |
 | `/api/decks/{id}/contributions/{contributionId}/media/{attachmentId}` | GET    | **（共享）** 作者：下载不可变贡献附件字节。                                                                                                                                                                                                                                                                                                                                                                        |
 | `/api/decks/{id}/facts/{operation}`                                   | POST   | 添加词条：operation 为 append/prepend/shuffle/spread。请求体：facts（必填）、可选 template，以及每项词条可选 **`tags`** 或 **`tag_ids`**（同一条词条上互斥；`tags` 为名称、不存在则自动创建，`tag_ids` 为已有 ID）。列名在卡组上维护（`PATCH /api/decks/{id}` → `fields`），不在每条词条上。为已有词条添加一张卡请使用 POST `/api/decks/{id}/card`。**导入**卡组：写入私有 overlay + `local_facts`（不创建贡献）。 |
 | `/api/decks/{id}/facts`                                               | GET    | 获取词条（分页）：默认 `limit` **50**、`offset` **0**；`limit` 最大 **200**。可选 `sort`：`id`（默认）或 `created_at`（最早在前、最新在后；时间相同或无 `created_at` 时按 id）；其他值 **400**。`meta` 含 `count`、`has_more`、`limit`、`offset`、`sort`、`total`。该字段上线后新建的词条带 `created_at`（Unix 微秒）。                                                                                            |
-| `/api/decks/{id}/facts/ids`                                           | GET    | 升序返回全部词条 id（`data.fact_ids`）；**不分页**（忽略 `limit` / `offset`）。`meta`：`total`。不读取词条正文和标签，因此记录缺失或无法解析的 id 仍会列出。用于逐条按需加载词条的 QA 流程。可选 `unverified_columns=0,2` 只列出这些列中仍需人工签核的词条，见 [质量统计](#质量统计)。                                                                                                                             |
 | `/api/decks/{id}/facts/{factId}`                                      | GET    | 获取单个词条                                                                                                                                                                                                                                                                                                                                                                                                       |
 | `/api/decks/{id}/facts/{factId}`                                      | PATCH  | 仅更新词条 `entries`（列名在卡组上改）。**导入**卡组：仅写私有 overlay（不创建贡献）。                                                                                                                                                                                                                                                                                                                             |
 | `/api/decks/{id}/facts/{factId}`                                      | DELETE | 删除词条。**导入**卡组：软隐藏快照词条或删除仅本地词条（不创建贡献）。                                                                                                                                                                                                                                                                                                                                             |
-| `/api/decks/{id}/facts/{factId}/quality`                              | PUT    | 写入词条的编辑质量评分（整条记录替换）。卡组所有者（源卡组或导入卡组）；导入卡组要求词条在固定快照中。见 [7. 质量](#7-质量)。                                                                                                                                                                                                                                                                                      |
-| `/api/decks/{id}/facts/{factId}/quality`                              | GET    | 获取词条的质量记录；未存储时返回 **404**。                                                                                                                                                                                                                                                                                                                                                                         |
-| `/api/decks/{id}/facts/{factId}/quality`                              | DELETE | 清除词条的质量记录（未存储时也成功）。                                                                                                                                                                                                                                                                                                                                                                             |
-| `/api/decks/{id}/quality`                                             | GET    | **（质量目录）** 列出有质量记录的词条，只保留匹配的条目。查询参数：`max_score`、`entry`、`aspect`、`model`、`limit`、`offset`。`meta`：`effective_score`、`total_entries`、`has_more`、`limit`、`offset`（无 `count`/`total`）。见 [质量目录](#质量目录)。                                                                                                                                                         |
-| `/api/decks/{id}/quality/stats`                                       | GET    | 人工验证计数与 QA 续查游标。见 [质量统计](#质量统计)。                                                                                                                                                                                                                                                                                                                                                             |
+| `/api/decks/{id}/facts/{factId}/quality`                              | PUT    | 整条替换写入词条编辑质量分。卡组所有者（源或导入）；导入须为钉住快照中的词条。见 [7. 质量](#7-质量)。                                                                                                                                                                                                                                                                                                              |
+| `/api/decks/{id}/facts/{factId}/quality`                              | GET    | 获取词条质量记录；无记录时 **404**。                                                                                                                                                                                                                                                                                                                                                                               |
+| `/api/decks/{id}/facts/{factId}/quality`                              | DELETE | 清除词条质量记录（无记录时仍成功）。                                                                                                                                                                                                                                                                                                                                                                               |
+| `/api/decks/{id}/quality`                                             | GET    | **（质量目录）** 列出带质量记录的词条，仅保留匹配条目。查询：`max_score`、`entry`、`aspect`、`model`、`limit`、`offset`。`meta`：`effective_score`、`total_entries`、`has_more`、`limit`、`offset`（无 `count`/`total`）。见 [质量目录](#质量目录)。                                                                                                                                                               |
+| `/api/decks/{id}/quality/stats`                                       | GET    | 人工核验计数与 QA 续读游标。见 [质量统计](#质量统计)。                                                                                                                                                                                                                                                                                                                                                             |
 | `/api/decks/{id}/card`                                                | GET    | 获取最紧急卡片。可选查询：`tag_id`，仅在当前卡组中从带该标签的词条对应卡片里选取下一张。                                                                                                                                                                                                                                                                                                                           |
 | `/api/decks/{id}/card`                                                | POST   | 为已有词条添加一张卡（如反向卡）。请求体：fact_id、template，可选 operation。                                                                                                                                                                                                                                                                                                                                      |
 | `/api/decks/{id}/card`                                                | PATCH  | 更新卡片间隔或可见性（按 card_id）                                                                                                                                                                                                                                                                                                                                                                                 |
 | `/api/decks/{id}/cards`                                               | GET    | 获取卡片统计（嵌套 `stats`，形状与 GET /api/decks/{id} 相同）及 `cards` 数组。可选查询：`tag_id`，按当前卡组中该标签对应词条过滤卡片；`stats_only=true` 时省略 `cards`。                                                                                                                                                                                                                                           |
-| `/api/decks/{id}/reviews/by-day`                                      | GET    | 最近 `days` 个日历日（默认 **7**，最大 **366**）按 UTC 日的连续复习计数；无复习的日期为 `count: 0`。见 [按日复习统计](#按日复习统计)。                                                                                                                                                                                                                                                                             |
+| `/api/decks/{id}/reviews/by-day`                                      | GET    | 最近 `days` 个 UTC 日历日的稠密复习次数序列（默认 **7**，最大 **366**）。无数据的日期 `count` 为 0。见 [按日复习统计](#按日复习统计)。                                                                                                                                                                                                                                                                             |
 | `/api/decks/{id}/cards/{cardId}`                                      | DELETE | 删除单张卡片（词条及其他卡片不变）                                                                                                                                                                                                                                                                                                                                                                                 |
 | `/api/decks/{id}/reschedule`                                          | POST   | **未挂载** — 当前服务端未注册该路由；**404**（通常无 JSON `{ "msg" }` body）。见 [假期模式（平移复习计划）](#假期模式平移复习计划)。                                                                                                                                                                                                                                                                               |
 | `/api/tags`                                                           | POST   | 创建标签（`name`、可选 `description`）。成功时 **201**。                                                                                                                                                                                                                                                                                                                                                           |
@@ -221,11 +216,11 @@
 
 ### 授权
 
-1. 点击 Swagger UI 右上角的 **"Authorize"** 按钮
-2. 粘贴登录响应中的 token
-3. 点击 **"Authorize"** 保存
+每个 `/api/*` 请求都需携带登录响应中的 token：
 
-现在所有后续请求都会自动包含您的身份验证令牌。
+```http
+Authorization: Bearer <token>
+```
 
 ### 登出
 
@@ -254,7 +249,18 @@
 }
 ```
 
-**响应:**
+**响应（生产 / 已配置 Resend）：**
+
+```json
+{
+  "data": {
+    "msg": "If the email exists, a reset link has been sent"
+  },
+  "meta": null
+}
+```
+
+**响应（仅开发环境且未设置 `RESEND_API_KEY`）：**
 
 ```json
 {
@@ -267,7 +273,7 @@
 }
 ```
 
-> 重置令牌在 15 分钟后过期。在生产环境中，此令牌将通过电子邮件发送，而不是在响应中返回。
+> 重置令牌在 15 分钟后过期。配置 Resend 后，链接由 `noreply@retentio.app` 发送，响应中**不**返回 `reset_token`。详见 [`docs/email-resend.md`](email-resend.md)。
 
 ### 重置密码
 
@@ -293,11 +299,9 @@
 
 > 重置后，请使用新密码登录。重置令牌为一次性使用，不能重复使用。
 
----
-
 ### 验证邮箱
 
-**接口：** `POST /auth/verify-email`
+**接口:** `POST /auth/verify-email`
 
 ```json
 {
@@ -305,7 +309,7 @@
 }
 ```
 
-**响应：**
+**响应:**
 
 ```json
 {
@@ -316,14 +320,11 @@
 }
 ```
 
-> 软验证：验证前可以登录，大多数接口也可使用。发布卡组和提交贡献在邮箱验证前返回 **403**，body 含
-> `"code": "email_not_verified"`（见 [需要已验证邮箱](#需要已验证邮箱)）。配置 Resend 时注册会发送验证邮件；
-> 当 `ENV=development` 且未设置 `RESEND_API_KEY` 时，新账号直接为已验证状态。
-> 发往账号已不再使用的邮箱的链接（见 [修改邮箱](#修改邮箱)）返回 **400** `Invalid or expired verification token`。
+> 软验证：验证前仍可登录。注册成功后会发送验证邮件（已配置 Resend 时）。
 
-### 重新发送验证邮件
+### 重发验证邮件
 
-**接口：** `POST /auth/resend-verification`
+**接口:** `POST /auth/resend-verification`
 
 ```json
 {
@@ -331,7 +332,7 @@
 }
 ```
 
-**响应：**
+**响应:**
 
 ```json
 {
@@ -342,88 +343,15 @@
 }
 ```
 
-> 始终返回 **200**（防枚举）。按邮箱限流（约 60 秒）。
+> 始终返回 **200**（防枚举）。同一邮箱约 60 秒内限流。
+
+---
 
 ## 1.1 用户资料
 
 **接口：** `GET /api/profile`
 
 需在请求头中携带 `Authorization: Bearer <token>`。返回当前用户的资料（用户名、邮箱、`email_verified`）。
-
-### 修改邮箱
-
-**接口：** `PATCH /api/profile/email`
-
-需在请求头中携带 `Authorization: Bearer <token>`。用户可在登录状态下修正输错的邮箱。
-
-```json
-{
-  "email": "new@example.com",
-  "password": "123456"
-}
-```
-
-**响应：**
-
-```json
-{
-  "data": {
-    "username": "swagger",
-    "email": "new@example.com",
-    "email_verified": false
-  },
-  "meta": null
-}
-```
-
-- 邮箱会去除首尾空白并转为小写。新邮箱为**未验证**状态，因此在验证前
-  [需要已验证邮箱的接口](#需要已验证邮箱) 返回 **403**。
-- 会向新邮箱发送验证链接（若该邮箱处于约 60 秒的重发冷却期则跳过）。发往旧邮箱的验证和重置链接随即失效。
-- 密码确认失败与 [注销账号](#注销账号) 共用限流：每个用户名 **5 次 / 15 分钟** →
-  **429** `Too many attempts. Try again later.`
-- 新邮箱与当前邮箱相同返回 **400**；已被其他账号使用返回 **409**。
-
-### 注销账号
-
-**接口：** `DELETE /api/profile`
-
-需在请求头中携带 `Authorization: Bearer <token>`。确认密码后永久删除当前账号。用于应用内注销账号（如 Apple App Store 审核指南 5.1.1(v)）。
-
-```json
-{
-  "password": "123456"
-}
-```
-
-**响应：**
-
-```json
-{
-  "data": {
-    "msg": "Account deleted successfully",
-    "username": "swagger",
-    "deleted_decks": 3,
-    "anonymized_published_decks": 1
-  },
-  "meta": null
-}
-```
-
-成功时服务端会：
-
-- 先删除账号键（`user:{username}`、邮箱索引、验证冷却、删除尝试计数）。`JwtAuthMiddleware` 会检查用户键是否存在，因此即使后续内容清理失败，账号也会立即失效。
-- 删除该用户的所有**导入**卡组和所有**未发布**的源卡组（`published_version == 0`），包括其词条、卡片、标签关联和用户自有媒体。
-- **匿名化已发布的源卡组**（`published_version > 0`）：保留卡组、快照和目录条目，但 `owner` 设为 `deleted`，并从该用户的卡组集合中移除。导入者继续学习其固定的快照。仍被匿名卡组引用的媒体会改归 `deleted` 所有，而不是删除。
-- 清理残留的标签、用户媒体索引和每日计数。
-- 将当前 JWT 加入黑名单（与 [登出](#登出) 机制相同），该 token 无法再使用。
-
-说明：
-
-- 非幂等：使用同一 token 再次调用返回 **401**（token 已拉黑 / 用户已不存在）。
-- 密码确认失败按用户名限流：**5 次 / 15 分钟** → **429** `Too many delete attempts. Try again later.`（限流窗口内正确密码也会被拒绝）。该计数与 [修改邮箱](#修改邮箱) 共用。
-- 若删除账号键后内容清理失败（**500**），账号保持失效且 token 已拉黑，客户端无法重试。孤立的卡组/媒体可能残留，直到运维对账任务（不属于本 API）清理 `owner` 已无 `user:{username}` 键的卡组。宁可留下孤立内容，也不保留卡组已被删除的活跃账号。
-- `deleted` 是保留用户名，不可注册。
-- 之后可以用相同的邮箱或用户名重新注册；已匿名化的已发布卡组**不会**重新关联到新账号。
 
 ---
 
@@ -570,7 +498,9 @@
       "due_cards": 0,
       "hidden_cards": 0,
       "new_cards_today": 0,
-      "last_reviewed_at": 0
+      "last_reviewed_at": 0,
+      "total_reviews": 0,
+      "total_reviews_today": 0
     },
     "created_at": "2026-02-08T12:00:00Z",
     "updated_at": "2026-02-08T12:00:00Z",
@@ -622,7 +552,9 @@
           "due_cards": 0,
           "hidden_cards": 0,
           "new_cards_today": 0,
-          "last_reviewed_at": 0
+          "last_reviewed_at": 0,
+          "total_reviews": 0,
+          "total_reviews_today": 0
         },
         "created_at": "2026-02-08T12:00:00Z",
         "updated_at": "2026-02-08T12:00:00Z"
@@ -647,16 +579,22 @@
 
 > **理解 `stats`（统计信息）：**
 >
-> | 字段                               | 说明                                           |
-> | ---------------------------------- | ---------------------------------------------- |
-> | `cards_count`（卡片总数）          | 卡组中的卡片总数                               |
-> | `facts_count`（词条总数）          | 卡组中的词条总数                               |
-> | `unseen_cards`（未学习卡片）       | 从未复习过的新卡片数量                         |
-> | `reviewed_cards`（已学习卡片）     | 已学习过至少一次的卡片数量                     |
-> | `due_cards`（待复习卡片）          | 当前待复习的卡片数量（due_date <= 当前时间）   |
-> | `hidden_cards`（已隐藏卡片）       | 被用户隐藏的卡片数量                           |
-> | `new_cards_today`（今日新增卡片）  | 今天添加的卡片数量（从午夜开始计算）           |
-> | `last_reviewed_at`（上次复习时间） | 最近一次复习的 Unix 时间戳（未复习过则为 `0`） |
+> | 字段                                  | 说明                                           |
+> | ------------------------------------- | ---------------------------------------------- |
+> | `cards_count`（卡片总数）             | 卡组中的卡片总数                               |
+> | `facts_count`（词条总数）             | 卡组中的词条总数                               |
+> | `unseen_cards`（未学习卡片）          | 从未复习过的新卡片数量                         |
+> | `reviewed_cards`（已学习卡片）        | 已学习过至少一次的卡片数量                     |
+> | `due_cards`（待复习卡片）             | 当前待复习的卡片数量（due_date <= 当前时间）   |
+> | `hidden_cards`（已隐藏卡片）          | 被用户隐藏的卡片数量                           |
+> | `new_cards_today`（今日新增卡片）     | 今天添加的卡片数量（从午夜开始计算）           |
+> | `last_reviewed_at`（上次复习时间）    | 最近一次复习的 Unix 时间戳（未复习过则为 `0`） |
+> | `total_reviews`（累计复习次数）       | 该卡组的历史复习次数                           |
+> | `total_reviews_today`（今日复习次数） | 该卡组自 UTC 午夜以来的复习次数                |
+>
+> 与上面的卡片计数不同，`total_reviews` / `total_reviews_today` 统计的是**复习动作**：每次通过 `PATCH /api/decks/{id}/card` 更新间隔计 1 次。隐藏卡片不算复习；此功能上线前的复习不会回填，计数从 `0` 开始。即使 `tag_id` 缩小了其他统计范围，这两个计数始终是整个卡组的。
+>
+> `new_cards_today` 与 `total_reviews_today` 以 **UTC** 午夜为界。按日复习桶见 `deck:{id}:reviews_by_day`；可用 [按日复习统计](#按日复习统计)（`GET /api/decks/{id}/reviews/by-day?days=7`）读取稠密序列。
 >
 > 统计信息是实时计算的。对于刚创建的空卡组，所有值都为 `0`。
 > 添加词条后，`cards_count` 和 `unseen_cards` 会增加。
@@ -814,7 +752,9 @@
         "published_version": 3,
         "fact_count": 120,
         "deck_tag_names": ["JLPT N5", "verbs"],
-        "published_at": "2026-05-22T12:00:00Z"
+        "published_at": "2026-05-22T12:00:00Z",
+        "import_count": 42,
+        "importer_count": 37
       }
     ]
   },
@@ -829,15 +769,17 @@
 }
 ```
 
-| 字段                            | 含义                                                              |
-| ------------------------------- | ----------------------------------------------------------------- |
-| `id`                            | 源卡组 ID — 作为 `source_deck_id` 传给 `POST /api/decks/import`。 |
-| `name`, `description`, `fields` | 来自最新已发布快照清单（`description` 为空时省略）。              |
-| `owner`                         | 作者用户名。                                                      |
-| `published_version`             | 源卡组上的最新发布版本号。                                        |
-| `fact_count`                    | 该快照中的词条数。                                                |
-| `deck_tag_names`                | 快照中的卡组标签名（无标签时可省略）。                            |
-| `published_at`                  | 该快照创建的 UTC 时间。                                           |
+| 字段                            | 含义                                                                   |
+| ------------------------------- | ---------------------------------------------------------------------- |
+| `id`                            | 源卡组 ID — 作为 `source_deck_id` 传给 `POST /api/decks/import`。      |
+| `name`, `description`, `fields` | 来自最新已发布快照清单（`description` 为空时省略）。                   |
+| `owner`                         | 作者用户名。                                                           |
+| `published_version`             | 源卡组上的最新发布版本号。                                             |
+| `fact_count`                    | 该快照中的词条数。                                                     |
+| `deck_tag_names`                | 快照中的卡组标签名（无标签时可省略）。                                 |
+| `published_at`                  | 该快照创建的 UTC 时间。                                                |
+| `import_count`                  | 累计成功导入次数。删除导入卡组不会减少，重新导入会再次计数。           |
+| `importer_count`                | 当前持有该卡组导入副本的用户数（导入者删除导入卡组或注销账号时减少）。 |
 
 **收录条件**（与导入资格相同）：
 
@@ -878,7 +820,9 @@
     "published_version": 3,
     "fact_count": 120,
     "deck_tag_names": ["JLPT N5", "verbs"],
-    "published_at": "2026-05-22T12:00:00Z"
+    "published_at": "2026-05-22T12:00:00Z",
+    "import_count": 42,
+    "importer_count": 37
   },
   "meta": {
     "msg": "ok"
@@ -942,50 +886,6 @@
 | **403** | `Not authorized`                                                                                                                                 |
 | **404** | `Deck not found`                                                                                                                                 |
 | **409** | `no changes to publish`（工作副本与上一快照相同）                                                                                                |
-
----
-
-### 发布预览（未发布的改动）
-
-**接口：** `GET /api/decks/{id}/publish-preview`
-
-**调用者：** **源**卡组的所有者（非导入卡组）。
-
-**用途：** 对比作者的**工作副本**与上次发布的快照。客户端用它提示"有未发布的改动"，并在 `POST /publish` 前展示摘要。见 [publish-preview-and-update-indicators.md](publish-preview-and-update-indicators.md)。
-
-**查询参数：** 可选 `detail=1`（或 `true`）——附带词条 id/预览行和 `media_changes`。
-
-**成功（200）——计数（默认）：**
-
-```json
-{
-  "data": {
-    "published_version": 3,
-    "has_unpublished_changes": true,
-    "facts": { "added": 1, "edited": 3, "removed": 0 },
-    "media": { "added": 2, "updated": 1, "deleted": 1 },
-    "tags": {
-      "deck": { "added": 1, "removed": 0 },
-      "facts": { "added": 4, "removed": 2, "facts_changed": 3 }
-    },
-    "card_templates_changed": 1,
-    "meta_changed": false
-  },
-  "meta": { "msg": "ok" }
-}
-```
-
-对于已发布过的卡组，`has_unpublished_changes` 与 `POST /publish` 能否成功一致：`false` 表示再次发布会返回 **409**（没有改动）。从未发布的卡组（`published_version == 0`）因为没有可对比的快照，预览为干净状态（`has_unpublished_changes: false`，计数全为 0），但其首次 `POST /publish` 仍会成功。
-
-卡组的 **name**、**description**、**fields** 和/或 **rate** 与上次清单不同时，`meta_changed` 为 true。所有卡组元数据都计入发布指纹，因此仅修改元数据也会使 `has_unpublished_changes: true`，`POST /publish` 可以成功。
-
-**错误：**
-
-| 状态    | 常见 `msg`                                           |
-| ------- | ---------------------------------------------------- |
-| **400** | `publish preview is only available for source decks` |
-| **403** | `Not authorized`                                     |
-| **404** | `Deck not found`                                     |
 
 ---
 
@@ -1206,7 +1106,7 @@
 }
 ```
 
-**服务端行为：** 提升钉住版本；按目标清单重建导入词条集；按 decisions 保留私有 overlay / `local_facts` / `hidden_facts`；仅当导入者对删除执行 **accept** 时才移除对应导入者卡片；为新接受的词条添加卡片。同时将目标快照清单中的 **`name`**、**`fields`**、**`rate`** 写入导入卡组行（会覆盖导入者此前通过 PATCH 设置的 `rate`）。模板移除不会删除导入者拥有的卡片。
+**服务端行为：** 提升钉住版本；按目标清单重建导入词条集；按 decisions 保留私有 overlay / `local_facts` / `hidden_facts`；仅当导入者对删除执行 **accept** 时才移除对应导入者卡片；为新接受的词条添加卡片。同时将目标快照清单中的 **`name`**、**`fields`** 写入导入卡组行。**`rate`** 属于导入者自有的学习节奏，同步**不会**覆盖它（导入者此前通过 PATCH 设置的 `rate` 会保留）。模板移除不会删除导入者拥有的卡片。
 
 **错误：**
 
@@ -1253,7 +1153,6 @@
 - 导入者可通过 `GET /api/media/{id}?v=<version>` 下载作者已发布的媒体。
 - 返回**版本化**二进制，非作者工作副本。
 - 非所有者必须提供 `v`，且 `v` 必须为正整数。
-- 词条列表/详情的 `entries` 中仍是原始媒体 id。单条 `GET …/facts/{factId}` 可能在同级返回 `data.media_versions`（`{ mediaId: pinnedVersion }`），用于拼 `GET /api/media/{id}?v=…`。不要用卡组 `source_version` 当作 `v`（媒体 copy-on-write 可能钉在更旧的版本）。下一张卡片响应已在媒体 URL 中嵌入 `?v=`。
 - 导入者可用 `POST /api/media` 且 `deck_id={importId}` 上传**自己的**媒体，用于私有 overlay / 贡献。
 - 导入者不能上传或删除他人工作副本媒体。
 
@@ -1274,7 +1173,7 @@
 - overlay 写入（POST/PATCH/DELETE 词条）从不创建或更新贡献。
 - 提交请求体不含 `type` — 服务端由路由推导内部 `type`。
 - 接受贡献仅更新作者**工作副本**；作者仍须 [发布](#发布卡组) 后，导入者才能通过 updates/sync 看到变更。
-- 每日配额：每个源卡组每个 UTC 日最多 **20 条新**贡献（刷新已有 open 去重目标不占配额）→ **429** `daily contribution limit exceeded`。
+- 每日配额：每个源卡组每个 UTC 日最多 **200 条新**贡献（刷新已有 open 去重目标不占配额）→ **429** `daily contribution limit exceeded`。
 
 | 内部 `type`        | 提交路由（导入卡组 id）                                               |
 | ------------------ | --------------------------------------------------------------------- |
@@ -1286,6 +1185,7 @@
 | `field_rename`     | `POST …/contributions/fields/rename`                                  |
 | `description_edit` | `POST …/contributions/description`                                    |
 | `report`           | `POST …/contributions/facts/{factId}/report`（仅收件箱；不可 accept） |
+| `qa_review`        | `POST …/contributions/qa-review`（作者采纳导入者的 QA 校验）          |
 
 #### 私有 overlay 词条变更
 
@@ -1425,9 +1325,6 @@
         { "text": "りんご" }
       ],
       "tags": []
-    },
-    "media_versions": {
-      "impaud0001": 2
     }
   },
   "meta": {
@@ -1481,6 +1378,9 @@
 **接口：** `POST /api/decks/{importId}/contributions/facts/{factId}/add`
 
 `{factId}` 必须在 `local_facts` 中。可选 `message`。
+
+贡献的 `add_tags` 为提交时导入者在该词条上的标签名；接受后在源卡组创建该词条并带上这些标签（作者没有同名标签时按名称创建）。
+作者那边还没有这个词条，无法接收 `fact_tag_update`，所以本地词条的标签改动后请重新提交 `fact_add`：它会刷新未处理贡献的词条内容和标签。
 
 **请求：**
 
@@ -1542,6 +1442,9 @@
 ##### 词条标签
 
 **接口：** `POST /api/decks/{importId}/contributions/facts/{factId}/tags`
+
+`{factId}` 必须在固定快照中。`local_facts` 中的词条返回 **400**
+`fact is in local_facts: its tags go with fact_add`：请改为重新提交其 `fact_add`。
 
 **请求：**
 
@@ -1631,11 +1534,13 @@
 }
 ```
 
-##### 卡组简介
+##### 卡组描述
 
 **接口：** `POST /api/decks/{importId}/contributions/description`
 
-`proposed_description` 去除首尾空白后必填，最多 500 字节，且须与钉住快照的简介不同。作者接受后替换源工作副本简介；发布与同步后传播。
+`proposed_description` 会去除首尾空白，必填，最多 500 字符，且须与钉住快照的描述不同。作者接受后替换源工作副本描述；发布与同步后传播。
+
+**请求：**
 
 ```json
 {
@@ -1686,67 +1591,28 @@
 | **404** | `deck not found`、`fact not found`、`source deck not found`                                                                                                                                                                                |
 | **429** | `daily contribution limit exceeded`                                                                                                                                                                                                        |
 
-##### QA 审核请求
-
-**接口：** `POST /api/decks/{importId}/contributions/qa-review`
-
-**调用者：** 导入卡组所有者。**请求体：** 可选 `{ "message": "…" }`。
-
-请求作者采纳调用者的 QA 签核，使其计入目录徽章。服务端收集调用者在该导入卡组 QA 词条上（不含本地词条）
-所有内容 `fingerprint` 与作者**当前**内容一致的人工签核，并把该列表冻结在贡献上。每个导入者每个卡组只有一条
-未处理的请求：再次调用会刷新它（新列表、更新 `updated_at`、不占配额）。设计说明：
-[`qa-review-requests.md`](qa-review-requests.md)。
-
-**成功（201）：**
-
-```json
-{
-  "data": {
-    "contribution_id": "cont0009",
-    "source_deck_id": "srcdeck12345",
-    "type": "qa_review",
-    "status": "open",
-    "qa_review": { "facts": 120, "aspects": 240 }
-  },
-  "meta": { "msg": "contribution submitted" }
-}
-```
-
-| 状态    | `msg`                                                                                                                                                                                    |
-| ------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **400** | `nothing to review`（没有可转移的签核）、`cannot request review of your own deck`、`contributions are only available on imported decks`、`message must be between 1 and 2000 characters` |
-| **429** | `daily contribution limit exceeded`（仅限新请求）                                                                                                                                        |
-
-**预览（作者）：** `GET /api/decks/{sourceId}/contributions/{contributionId}/qa-review` 实时评估每条冻结的签核：
-`ready`（内容一致，作者尚未签核）、`changed`（作者的内容不同或条目已不存在）、`verified`（作者已签核）、
-`removed`（词条已不在卡组中）。任何状态的贡献都可预览。其他贡献类型返回 **400**。
-
-```json
-{
-  "data": {
-    "summary": { "ready": 230, "changed": 6, "verified": 4, "removed": 0 },
-    "facts": [
-      {
-        "fact_id": "fact0001",
-        "preview": "Apple",
-        "aspects": [
-          { "entry": 0, "aspect": "text", "status": "ready" },
-          { "entry": 0, "aspect": "audio", "status": "changed" }
-        ]
-      }
-    ]
-  },
-  "meta": { "msg": "ok" }
-}
-```
-
-**接受：** [接受贡献](#接受贡献) 会以作者名义签核所有 `ready` 的签核并跳过其余；响应的 `qa_review` 增加
-`signed_aspects` 和 `skipped_aspects`。再次接受已接受的 `qa_review` → **400** `cannot modify accepted contribution`。
-收件箱行带有 `qa_review` 摘要，没有 `fact_id`。
-
 #### 作者贡献收件箱
 
 所有作者路由使用**源**卡组 id（`srcdeck12345`）。
+
+##### QA 校验审核请求
+
+**接口：** `POST /api/decks/{importId}/contributions/qa-review`
+
+**调用方：** 导入卡组所有者。**请求体：** 可选 `{ "message": "…" }`。
+
+请作者采纳调用者的 QA 校验，使其计入目录徽章。服务端收集调用者在导入卡组 QA 词条（不含本地词条）上的人工校验：须带内容
+`fingerprint`，且与作者**当前**内容一致；该列表在提交时冻结。每个导入者每个卡组最多一个未处理请求，再次调用会刷新它（重新收集，
+更新 `updated_at`，不占配额）。无可转交的校验 → **400** `nothing to review`；调用者是源卡组作者 → **400**
+`cannot request review of your own deck`。成功响应 **201**，`data.qa_review` 为 `{ "facts", "aspects" }`。设计说明：
+[`qa-review-requests.md`](qa-review-requests.md)。
+
+**预览（作者）：** `GET /api/decks/{sourceId}/contributions/{contributionId}/qa-review` 实时评估每项冻结的校验：`ready`
+（内容一致且作者尚未校验）、`changed`（作者内容已变或条目已删）、`verified`（作者已校验）、`removed`（词条已不在卡组）。
+返回 `summary` 计数和按词条分组的 `facts`（`fact_id`、`preview`、`aspects`）。其他贡献类型 → **400**。
+
+**接受：** [接受贡献](#接受贡献) 以作者名义签署所有 `ready` 项，其余跳过；响应的 `qa_review` 增加 `signed_aspects` 与
+`skipped_aspects`。已接受的 `qa_review` 再次接受 → **400** `cannot modify accepted contribution`。
 
 ##### 列出贡献
 
@@ -2022,6 +1888,8 @@ ETag: "sha256:abc123"
 
 ## 3. 词条
 
+编辑**质量**与导入者**贡献**见 [7. 质量](#7-质量)。
+
 ### 添加词条
 
 **接口:** `POST /api/decks/{id}/facts/{operation}`
@@ -2240,33 +2108,11 @@ Authorization: Bearer <token>
     "fact": {
       "id": "x9k2m4np",
       "entries": [{ "text": "Apple" }, { "text": "りんご" }],
+      "fields": ["English", "Japanese"],
       "tags": [
         { "id": "a1b2c3d4", "name": "food", "description": "" },
         { "id": "f6e5d4c3", "name": "noun", "description": "Parts of speech" }
       ]
-    }
-  },
-  "meta": { "msg": "Fact retrieved successfully" }
-}
-```
-
-在**导入卡组**上，当钉住快照把该词条中的用户媒体 id 映射到正整数已发布版本时，`data` 还会同级包含 **`media_versions`**：`{ "<mediaId>": <pinnedVersion>, … }`。为空或源卡组时省略。`entries` 仍为原始媒体 id（非 URL）。下载使用 `GET /api/media/{id}?v={media_versions[id]}`——不要用卡组 `source_version` 当作 `v`（媒体 copy-on-write 可能钉在更旧版本）。词条**列表**（`GET …/facts`）不返回 `media_versions`。
-
-**导入卡组示例**（存在 pin 时）：
-
-```json
-{
-  "data": {
-    "fact": {
-      "id": "fact0001",
-      "entries": [
-        { "text": "Apple", "audio": "impaud0001" },
-        { "text": "りんご" }
-      ],
-      "tags": []
-    },
-    "media_versions": {
-      "impaud0001": 2
     }
   },
   "meta": { "msg": "Fact retrieved successfully" }
@@ -3055,25 +2901,23 @@ Accept: application/json
 }
 ```
 
----
-
 ### 按日复习统计
 
 **接口：** `GET /api/decks/{id}/reviews/by-day`
 
-**调用者：** 卡组所有者（源卡组或导入卡组）。计数**按卡组 ID** 统计——导入者的直方图在其导入卡组上，作者的在源卡组上，两者不合并。
+**调用方：** 卡组所有者（源卡组或导入卡组）。计数按**卡组 ID** 分开 — 导入者的直方图在其导入卡组上，作者的在源卡组上，互不合并。
 
-**用途：** 用于图表的活动直方图。返回截至今天（含）的**连续** UTC 日历日序列，无复习的日期也以 `count: 0` 出现。在更新卡片间隔时写入（带 `interval` 的 `PATCH /api/decks/{id}/card`）；仅修改可见性不计入。与 `stats.total_reviews` / `stats.total_reviews_today` 使用相同的计数。
+**用途：** 活动直方图。返回以今天（含）结尾的 **稠密** UTC 日历日序列；无复习的日期仍返回且 `count` 为 `0`。在卡片间隔更新时写入（`PATCH /api/decks/{id}/card` 带 `interval`）；可见性更新不计次。与 `stats.total_reviews` / `stats.total_reviews_today` 同源。
 
 **查询参数：**
 
-| 参数   | 说明                                                                    |
-| ------ | ----------------------------------------------------------------------- |
-| `days` | 截至今天的 UTC 日历日数量。默认 **7**，范围 **1–366**。省略即用默认值。 |
+| 参数   | 说明                                                                  |
+| ------ | --------------------------------------------------------------------- |
+| `days` | 截止今天的 UTC 日历日数。默认 **7**。范围 **1–366**。省略则用默认值。 |
 
 示例：`GET /api/decks/{id}/reviews/by-day?days=7`
 
-**GET——成功（200）：**
+**GET — 成功（200）：**
 
 ```json
 {
@@ -3093,14 +2937,14 @@ Accept: application/json
 }
 ```
 
-| 字段           | 含义                                        |
-| -------------- | ------------------------------------------- |
-| `days`         | 从旧到新。长度等于查询参数 `days`（或 7）。 |
-| `days[].day`   | UTC 日期 `YYYYMMDD`                         |
-| `days[].count` | 当天的复习次数（无记录为 `0`）              |
-| `timezone`     | 固定为 `"UTC"`                              |
+| 字段           | 含义                                            |
+| -------------- | ----------------------------------------------- |
+| `days`         | 从旧到新。长度等于查询参数 `days`（或默认 7）。 |
+| `days[].day`   | UTC 日期 `YYYYMMDD`                             |
+| `days[].count` | 当日复习次数（无存储则为 `0`）                  |
+| `timezone`     | 恒为 `"UTC"`                                    |
 
-| 状态    | 常见 `msg`                                                                          |
+| 状态    | 典型 `msg`                                                                          |
 | ------- | ----------------------------------------------------------------------------------- |
 | **400** | `days must be between 1 and 366`                                                    |
 | **403** | `Not authorized to access this deck`                                                |
@@ -3184,7 +3028,34 @@ Accept: application/json
 
 按 ID 返回用户拥有的媒体文件（二进制）。需在请求头中携带 `Authorization: Bearer <token>`。响应头包含 `Content-Type`、`Content-Length` 和 `ETag`（与 `checksum` 一致）。请求头中携带 `If-None-Match: <ETag>` 可在文件未变更时获得 `304 Not Modified`。**获取下一张卡片** 接口会在每个正面/背面词条对象的 `audio`、`image`、`video` 字段中给出完整 URL（如 `https://api.retentio.app:8443/api/media/{id}`）；使用该 URL 并携带相同认证头即可加载文件。
 
-**已发布媒体：** 任何已认证用户均可通过正整数 **`?v=<version>`** 下载不可变的已发布字节。不提供 `v` 时，仅媒体所有者可下载工作副本。导入卡组的卡片响应会自动在媒体 URL 中包含钉住的 `?v=`。无卡片 URL、仅有词条详情/表格播放时，应从 GetFact 的 `media_versions` 取 `v`，不要用卡组 `source_version`。
+**已发布媒体：** 任何已认证用户均可通过正整数 **`?v=<version>`** 下载不可变的已发布字节。不提供 `v` 时，仅媒体所有者可下载工作副本。导入卡组的卡片响应会自动在媒体 URL 中包含钉住的 `?v=`。
+
+### 批量下载媒体
+
+**接口：** `POST /api/media/batch`
+
+一次响应下载最多 500 个文件，供离线下载卡组使用。每一项的访问规则与 **下载媒体** 相同：不带 `v` 时仅所有者可下载工作副本；带正整数
+`v` 时任何已认证用户均可下载对应已发布版本。
+
+**请求：**
+
+```json
+{
+  "items": [
+    { "id": "eloc-44obppwy-2-24285-564681508124", "v": 4 },
+    { "id": "my-own-media-id" }
+  ]
+}
+```
+
+**响应：** `200`，`Content-Type: multipart/mixed; boundary=...`，按请求顺序每项一个 part。每个 part 都带
+`X-Media-Id`、`X-Media-Version`（仅在请求带 `v` 时）和 `X-Media-Status`：
+
+- `200`：part 内容为文件本身，并带 `Content-Type` 和 `Content-Length`。
+- `403` / `404`：空 part（非所有者，或媒体及其文件不存在）。
+
+响应体若没有结束分隔符即结束，表示中途被截断（某文件复制失败）；保留已完整的 part，其余重新请求。请求体不是 JSON、`items`
+为空或超过 500 项、`id` 为空或 `v` 不是正整数时返回 `400`。
 
 ### 删除媒体
 
@@ -3208,47 +3079,47 @@ Accept: application/json
 
 ## 7. 质量
 
-两套独立的存储，不要混用：
+两套独立存储，请勿混用：
 
-| 层级     | 衡量内容                                                        | 写入者                                         | 按列？                                      |
-| -------- | --------------------------------------------------------------- | ---------------------------------------------- | ------------------------------------------- |
-| **质量** | 编辑评分 + 生成方 `model`（`claude`、`elevenlabs`、`human` 等） | 源卡组**所有者**或导入卡组**所有者** `PUT`     | 是（`entries["0"].text` / `.audio`）        |
-| **贡献** | 导入者向作者收件箱提交的修改建议和问题报告                      | 导入者 `POST …/contributions/…`；作者接受/处理 | `fact_edit` 冻结 overlay；`report` 仅含留言 |
+| 层                        | 衡量什么                                                      | 谁写入                                               | 按列？                                    |
+| ------------------------- | ------------------------------------------------------------- | ---------------------------------------------------- | ----------------------------------------- |
+| **质量（Quality）**       | 编辑分 + 生成方 `model`（`claude`、`elevenlabs`、`human` 等） | 源**所有者**或导入**所有者** `PUT`                   | 是（`entries["0"].text` / `.audio`）      |
+| **贡献（Contributions）** | 导入者提案与问题报告进作者收件箱                              | 导入者 `POST …/contributions/…`；作者 accept/resolve | `fact_edit` 冻结 overlay；`report` 仅留言 |
 
-质量不属于学习内容，也不会发布。贡献的请求体中不包含 `type`（由路由决定）。设计说明：[`fact-quality.md`](fact-quality.md)、[`import-local-overlays-contributions.md`](import-local-overlays-contributions.md)。
+质量不是学习内容，也不会发布。贡献请求体从不带 `type`（由路由设定）。设计说明：[`fact-quality.md`](fact-quality.md)、[`import-local-overlays-contributions.md`](import-local-overlays-contributions.md)。
 
 ### 质量目录
 
 **接口：** `GET /api/decks/{id}/quality`
 
-**调用者：** **源**卡组或**导入**卡组的所有者（`Authorization: Bearer <token>`）。
+**调用方：** **源**或**导入**卡组的所有者（`Authorization: Bearer <token>`）。
 
-**用途：** 以**重新生成队列**的形式浏览已存储的编辑质量——条目方面与筛选条件匹配的词条，最低分优先。单个词条的写入/读取/清除见 [词条质量](#词条质量)。导入者的修改建议见 [贡献（与质量相关）](#贡献与质量相关)。设计说明：[`fact-quality.md`](fact-quality.md)。
+**用途：** 将已存编辑质量当作**再生队列**浏览 — 条目方面匹配筛选条件的词条，分数最差优先。按词条读写/清除见 [词条质量](#词条质量)。导入者提案见 [贡献（与质量相关）](#贡献与质量相关)。设计说明：[`fact-quality.md`](fact-quality.md)。
 
-**没有**质量记录或没有匹配方面的词条会被省略。`items` 为空数组时仍返回 **200**。每个返回项是扁平结构（`fact_id`、`entries`、`updated_at`），没有嵌套的 `quality` 包装。匹配的项**只**保留匹配的索引/方面。
+**无**质量记录、或无匹配方面的词条会被省略。空的 `items` 数组仍为 **200**。每条返回项为扁平结构（`fact_id`、`entries`、`updated_at`）— 无嵌套 `quality` 包装。匹配项**仅保留**匹配的索引/方面。
 
 **查询参数：**
 
-| 参数        | 默认值                    | 说明                                                                         |
-| ----------- | ------------------------- | ---------------------------------------------------------------------------- |
-| `max_score` | _（省略 = 所有已存方面）_ | 保留评分 **≤** 该整数（**1–10**）的方面。                                    |
-| `entry`     | _（所有索引）_            | 仅此条目索引（非负整数；会规范化，`02` 匹配 `"2"`）。                        |
-| `aspect`    | _（text 和 audio）_       | 仅 `text` 或 `audio`。                                                       |
-| `model`     | _（所有 model）_          | 仅 `model` 等于该字符串的方面（去除首尾空白；区分大小写）。                  |
-| `limit`     | `50`                      | 每页**词条**数（至少有 1 个匹配条目的词条；最大 **200**；非正数回退为 50）。 |
-| `offset`    | `0`                       | 排序后跳过的词条数（负数/无效值 → `0`）。                                    |
+| 参数        | 默认                      | 说明                                                                                |
+| ----------- | ------------------------- | ----------------------------------------------------------------------------------- |
+| `max_score` | _（省略 = 全部已存方面）_ | 仅保留分数 **≤** 该整数的方面（**1–10**）。                                         |
+| `entry`     | _（全部索引）_            | 仅该 entry 索引（非负整数；会规范化，故 `02` 匹配 `"2"`）。                         |
+| `aspect`    | _（text 与 audio）_       | 仅 `text` 或 `audio`。                                                              |
+| `model`     | _（全部 model）_          | 仅 `model` 等于该字符串的方面（去首尾空白；区分大小写）。                           |
+| `limit`     | `50`                      | 分页大小，单位为**至少有 1 个匹配 entry 的词条**（最大 **200**；非正数回退为 50）。 |
+| `offset`    | `0`                       | 排序后跳过的词条数（负数/无效 → `0`）。                                             |
 
 示例：`GET /api/decks/a1b2c3d4e5f6/quality?max_score=2&aspect=audio&model=elevenlabs&limit=50&offset=0`
 
-**匹配规则：** 方面的 `score` ≤ `max_score`（若设置）且通过 `entry` / `aspect` / `model` 筛选即为匹配。条目索引至少有一个匹配方面时才会包含。排序：最低匹配方面评分，其次 `fact_id`。该最小值仅用于排序，不会返回。
+**匹配规则：** 当方面的 `score` ≤ `max_score`（若设置）且通过 `entry` / `aspect` / `model` 时匹配。某 entry 索引至少有一个匹配方面才会被包含。排序：最低匹配方面分，再按 `fact_id`。该最小值仅用于排序，不返回。
 
-单个词条在 `max_score=2` 时的示例：
+`max_score=2` 在单条词条上的示例：
 
-| 已存储                               | 返回的 `entries`                                             |
-| ------------------------------------ | ------------------------------------------------------------ |
-| `0.audio=1`、`2.text=1`、`2.audio=3` | `"0": { audio: 1 }`、`"2": { text: 1 }`——不含 `2.audio`（3） |
-| `2.text=4`、`2.audio=5`              | 省略该词条                                                   |
-| 无质量键                             | 省略                                                         |
+| 已存                                 | 返回的 `entries`                                              |
+| ------------------------------------ | ------------------------------------------------------------- |
+| `0.audio=1`，`2.text=1`，`2.audio=3` | `"0": { audio: 1 }`，`"2": { text: 1 }` — 不含 `2.audio`（3） |
+| `2.text=4`，`2.audio=5`              | 整条词条省略                                                  |
+| 无质量键                             | 省略                                                          |
 
 **成功（200）：**
 
@@ -3277,23 +3148,23 @@ Accept: application/json
 }
 ```
 
-| 字段         | 含义                                                   |
-| ------------ | ------------------------------------------------------ |
-| `fact_id`    | 词条 id                                                |
-| `entries`    | 仅匹配的条目索引/方面                                  |
-| `updated_at` | 来自已存储的质量记录（词条缩短导致索引被删除时不更新） |
+| 字段         | 含义                                           |
+| ------------ | ---------------------------------------------- |
+| `fact_id`    | 词条 id                                        |
+| `entries`    | 仅匹配的 entry 索引/方面                       |
+| `updated_at` | 来自已存质量记录（词条缩短丢弃索引时不会抬升） |
 
-| Meta 字段                       | 含义                                                                       |
-| ------------------------------- | -------------------------------------------------------------------------- |
-| `effective_score`               | 回显请求的 `max_score`。请求未带 `max_score` 时**省略**。                  |
-| `total_entries`                 | 整个卡组中**匹配的条目索引**数（不是词条数）。本例一个词条两个索引 → `2`。 |
-| `has_more` / `limit` / `offset` | 对 `items` 中**词条**的分页                                                |
+| Meta 字段                       | 含义                                                                    |
+| ------------------------------- | ----------------------------------------------------------------------- |
+| `effective_score`               | 回显请求的 `max_score`。请求未带 `max_score` 时**省略**。               |
+| `total_entries`                 | 全卡组**匹配 entry 索引**总数（非词条数）。此处一条词条两个索引 → `2`。 |
+| `has_more` / `limit` / `offset` | 对 `items` 中**词条**的分页                                             |
 
-该列表**不**包含 `count` / `total`——匹配索引总数请用 `total_entries`。开销与卡组大小相关（对卡组中每个 `fact:{id}:quality` 执行 `MGET`，再筛选/排序），与 `limit` 无关；按数千词条量级的创作卡组设计。
+本列表**不含** `count` / `total` — 匹配索引总数请用 `total_entries`。开销随卡组规模（对卡组内每个 `fact:{id}:quality` 做 `MGET`，再过滤/排序），与 `limit` 无关；适合作者卡组约数千词条量级。
 
 **错误：**
 
-| 状态    | 常见 `msg`                                                                     |
+| 状态码  | 典型 `msg`                                                                     |
 | ------- | ------------------------------------------------------------------------------ |
 | **403** | `Not authorized to access this deck`                                           |
 | **400** | `max_score must be between 1 and 10`                                           |
@@ -3306,11 +3177,11 @@ Accept: application/json
 
 **接口：** `GET /api/decks/{id}/quality/stats`
 
-**调用者：** **源**卡组或**导入**卡组的所有者。
+**调用方：** **源**或**导入**卡组的所有者。
 
-**用途：** QA 进度标题（人工验证的方面/词条计数）和服务端存储的续查游标（`last_fact_id`）。计数由词条条目加已存储的质量计算；导入卡组的条目结构来自**固定快照**。设计说明：[`fact-quality.md`](fact-quality.md)。
+**用途：** QA 进度抬头（人工核验的方面/词条计数）与服务端存储的续读游标（`last_fact_id`）。计数由词条 entries 加已存质量算出；导入卡组上，entry 形态取自**钉住快照**。设计说明：[`fact-quality.md`](fact-quality.md)。
 
-**GET——成功（200）：**
+**GET — 成功（200）：**
 
 ```json
 {
@@ -3327,54 +3198,52 @@ Accept: application/json
 }
 ```
 
-| 字段                                 | 含义                                                                                                                               |
-| ------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------- |
-| `verified_aspects` / `total_aspects` | 人工/10 分的可评分 text/audio 方面 vs 所有非空 text/audio 字段。只计卡组所有者的签核（导入卡组还计源作者）；不含导入卡组的本地词条 |
-| `verified_facts` / `total_facts`     | 完全人工验证的词条 vs 至少有 1 个可评分方面的词条                                                                                  |
-| `last_fact_id`                       | 旧版整卡组 QA 续查游标；未设置时省略                                                                                               |
-| `cursors`                            | 按列续查映射（`"0"` → 词条 id）；为空时省略                                                                                        |
-| `last_fact_updated_at`               | 游标最后写入的 UTC RFC3339 时间                                                                                                    |
+| 字段                                 | 含义                                                            |
+| ------------------------------------ | --------------------------------------------------------------- |
+| `verified_aspects` / `total_aspects` | 人工/10 的可打分 text/audio 方面 vs 全部非空 text/audio 字段    |
+| `verified_facts` / `total_facts`     | 全部可打分方面均已人工核验的词条 vs 至少有 1 个可打分方面的词条 |
+| `last_fact_id`                       | 旧版卡组级 QA 续读游标；未设置时省略                            |
+| `cursors`                            | 按列续读映射（`"0"` → fact id）；为空时省略                     |
+| `last_fact_updated_at`               | 游标上次写入时间（UTC RFC3339）                                 |
 
-**`PUT …/facts/{factId}/quality`** 成功后会把 `last_fact_id` 设为该词条（无需单独写统计）。可选请求体 `columns` 会推进这些列的游标（只前进）。保留游标是为了兼容旧客户端；新的 QA 流程改用 `GET /api/decks/{id}/facts/ids?unverified_columns=0,2`，它（升序）只列出这些列中有 text/audio 方面且尚无可信签核者验证的词条。超出卡组 `fields` 范围的列索引 → **400** `unverified_columns must be deck field indexes`。
+**`PUT …/facts/{factId}/quality`** 成功时将该词条写入 `last_fact_id`（无需单独写 stats）。可选请求体 `columns` 会前进对应列的续读游标（仅向前）。
 
-**签核（`by`）：** 每个 `model: human` 方面都在 `by` 中保存签核者。PUT 时，未改动的签核原样回传 `by` 即可保留；其他人工方面一律记为调用者。在导入卡组上，源作者的签核在导入者 PUT 后仍保留。每次新的人工签核还会保存服务端生成的 `fingerprint`，记录签核者看到的内容（忽略客户端传值）；回传的签核保留原有指纹。接受 `fact_add` / `fact_edit` 贡献会以作者名义签核其改动的 text 和 audio；编辑源词条会清除其改动的 text/audio 的签核。
-
-| 状态    | 常见 `msg`                                                     |
+| 状态码  | 典型 `msg`                                                     |
 | ------- | -------------------------------------------------------------- |
 | **403** | `Not authorized to access this deck`                           |
 | **404** | `Deck not found`                                               |
 | **500** | `Error retrieving quality stats`、`Error saving quality stats` |
 
-相关接口（详见下方各小节）：
+相关路由（细节见下方各小节）：
 
-| 接口                                                                  | 方法   | 调用者                         | 说明                                                                                                                                                                                                          |
-| --------------------------------------------------------------------- | ------ | ------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `/api/decks/{id}/facts/{factId}/quality`                              | PUT    | 卡组所有者（源卡组或导入卡组） | 替换整条质量记录。导入卡组：仅限固定快照中的词条；索引按快照校验。任一方面使用 `model: human` 时设置 `verified_by`，并为每个人工方面设置 `by`。成功后推进卡组 QA `last_fact_id`（见 [质量统计](#质量统计)）。 |
-| `/api/decks/{id}/facts/{factId}/quality`                              | GET    | 卡组所有者                     | 单个词条；未存储时 **404**。源卡组或导入卡组。                                                                                                                                                                |
-| `/api/decks/{id}/facts/{factId}/quality`                              | DELETE | 源卡组所有者                   | 清除质量（不存在也成功）。                                                                                                                                                                                    |
-| `/api/decks/{id}/quality`                                             | GET    | 卡组所有者                     | 本目录（重新生成队列）。源卡组或导入卡组。                                                                                                                                                                    |
-| `/api/decks/{id}/contributions/facts/{factId}/edit`                   | POST   | 导入卡组所有者                 | `fact_edit`——冻结 overlay。**201**。                                                                                                                                                                          |
-| `/api/decks/{id}/contributions/facts/{factId}/add`                    | POST   | 导入卡组所有者                 | `fact_add`。**201**。                                                                                                                                                                                         |
-| `/api/decks/{id}/contributions/facts/{factId}/tags`                   | POST   | 导入卡组所有者                 | `fact_tag_update`。**201**。                                                                                                                                                                                  |
-| `/api/decks/{id}/contributions/facts/{factId}/templates`              | POST   | 导入卡组所有者                 | `template_add`。**201**。                                                                                                                                                                                     |
-| `/api/decks/{id}/contributions/facts/{factId}/report`                 | POST   | 导入卡组所有者                 | `report`（不可接受）。**201**。                                                                                                                                                                               |
-| `/api/decks/{id}/contributions/deck-tags`                             | POST   | 导入卡组所有者                 | `deck_tag_update`。**201**。                                                                                                                                                                                  |
-| `/api/decks/{id}/contributions/fields/rename`                         | POST   | 导入卡组所有者                 | `field_rename`。**201**。                                                                                                                                                                                     |
-| `/api/decks/{id}/contributions/description`                           | POST   | 导入卡组所有者                 | `description_edit`。**201**。                                                                                                                                                                                 |
-| `/api/decks/{id}/contributions/qa-review`                             | POST   | 导入卡组所有者                 | `qa_review`——请求作者采纳 QA 签核。**201**。                                                                                                                                                                  |
-| `/api/decks/{id}/contributions`                                       | GET    | 源卡组所有者                   | 作者收件箱。查询参数：`status`、`type`、`reporter`、`fact_id`、`media_type`、`limit`、`offset`。                                                                                                              |
-| `/api/decks/{id}/contributions/{contributionId}`                      | PATCH  | 源卡组所有者                   | 状态 `open` / `resolved` / `dismissed`。                                                                                                                                                                      |
-| `/api/decks/{id}/contributions/{contributionId}/accept`               | POST   | 源卡组所有者                   | 接受到工作副本（之后再 [发布](#发布卡组)）。                                                                                                                                                                  |
-| `/api/decks/{id}/contributions/{contributionId}/qa-review`            | GET    | 源卡组所有者                   | `qa_review` 中签核的实时状态。                                                                                                                                                                                |
-| `/api/decks/{id}/contributions/{contributionId}/media/{attachmentId}` | GET    | 源卡组所有者                   | 下载贡献附件的字节。                                                                                                                                                                                          |
+| 接口                                                                  | 方法   | 调用方                 | 摘要                                                                                                                                                                 |
+| --------------------------------------------------------------------- | ------ | ---------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `/api/decks/{id}/facts/{factId}/quality`                              | PUT    | 卡组所有者（源或导入） | 整条替换质量记录。导入：仅钉住快照词条；索引按快照校验。任一方面 `model: human` 时设置 `verified_by`。成功后推进卡组 QA `last_fact_id`（见 [质量统计](#质量统计)）。 |
+| `/api/decks/{id}/facts/{factId}/quality`                              | GET    | 卡组所有者             | 单条词条；无记录 **404**。源或导入。                                                                                                                                 |
+| `/api/decks/{id}/facts/{factId}/quality`                              | DELETE | 源所有者               | 清除质量（缺失亦可）。                                                                                                                                               |
+| `/api/decks/{id}/quality`                                             | GET    | 卡组所有者             | 本目录（再生队列）。源或导入。                                                                                                                                       |
+| `/api/decks/{id}/contributions/facts/{factId}/edit`                   | POST   | 导入所有者             | `fact_edit` — 冻结 overlay。**201**。                                                                                                                                |
+| `/api/decks/{id}/contributions/facts/{factId}/add`                    | POST   | 导入所有者             | `fact_add`。**201**。                                                                                                                                                |
+| `/api/decks/{id}/contributions/facts/{factId}/tags`                   | POST   | 导入所有者             | `fact_tag_update`。**201**。                                                                                                                                         |
+| `/api/decks/{id}/contributions/facts/{factId}/templates`              | POST   | 导入所有者             | `template_add`。**201**。                                                                                                                                            |
+| `/api/decks/{id}/contributions/facts/{factId}/report`                 | POST   | 导入所有者             | `report`（不可 accept）。**201**。                                                                                                                                   |
+| `/api/decks/{id}/contributions/deck-tags`                             | POST   | 导入所有者             | `deck_tag_update`。**201**。                                                                                                                                         |
+| `/api/decks/{id}/contributions/fields/rename`                         | POST   | 导入所有者             | `field_rename`。**201**。                                                                                                                                            |
+| `/api/decks/{id}/contributions/description`                           | POST   | 导入所有者             | `description_edit`。**201**。                                                                                                                                        |
+| `/api/decks/{id}/contributions/qa-review`                             | POST   | 导入所有者             | `qa_review`：请作者采纳 QA 校验。**201**。                                                                                                                           |
+| `/api/decks/{id}/contributions`                                       | GET    | 源所有者               | 作者收件箱。查询：`status`、`type`、`reporter`、`fact_id`、`media_type`、`limit`、`offset`。                                                                         |
+| `/api/decks/{id}/contributions/{contributionId}`                      | PATCH  | 源所有者               | 状态 `open` / `resolved` / `dismissed`。                                                                                                                             |
+| `/api/decks/{id}/contributions/{contributionId}/accept`               | POST   | 源所有者               | 接受进工作副本（之后仍需 [发布](#发布卡组)）。                                                                                                                       |
+| `/api/decks/{id}/contributions/{contributionId}/qa-review`            | GET    | 源所有者               | `qa_review` 各项校验的实时状态。                                                                                                                                     |
+| `/api/decks/{id}/contributions/{contributionId}/media/{attachmentId}` | GET    | 源所有者               | 下载贡献附件字节。                                                                                                                                                   |
 
-贡献的请求/响应示例：[导入 overlay 与贡献](#导入-overlay-与贡献)。错误：见 [错误响应参考](#错误响应参考) 中的 [质量错误](#质量错误) 和 [卡组共享](#卡组共享)。
+贡献请求/响应示例：[导入 overlay 与贡献](#导入-overlay-与贡献)。错误：[质量错误](#质量错误) 与 [卡组共享](#卡组共享)（见 [错误响应参考](#错误响应参考)）。
 
 ### 词条质量
 
-用于找出值得重新生成的内容（例句质量差、音频不好）的编辑评分。不属于学习内容，也不进入发布快照。**PUT**：源卡组或导入卡组的所有者（导入卡组：词条必须在固定快照中；条目索引按快照校验）。**GET** / 列表：源卡组或导入卡组的所有者。**DELETE** 仍仅限源卡组所有者（导入卡组 → **400** `fact quality is only available on source decks`）。列表/筛选：[质量目录](#质量目录)。设计说明：[`fact-quality.md`](fact-quality.md)。
+用于发现值得再生的内容（弱例句、差音频）的编辑分。不是学习内容，也不在发布快照中。**PUT** 为源或导入卡组所有者（导入：词条须在钉住快照中；entry 索引按快照校验）。**GET** / 列表：源或导入卡组所有者。**DELETE** 仍仅源所有者（导入 → **400** `fact quality is only available on source decks`）。列表/筛选：[质量目录](#质量目录)。设计说明：[`fact-quality.md`](fact-quality.md)。
 
-每个条目索引（`"0"`、`"2"` 等，对应词条 `entries` 的位置）可以为 `text` 和/或 `audio` 评分，`score` 为 **1–10**（1 最差），并附 `model`（`claude`、`elevenlabs`、`human` 等）。删除词条或卡组会删除其质量（例外：从已发布卡组删除词条时，导入者在同步前仍拥有该词条，因此保留记录）；缩短 `entries` 会删除已不存在索引的评分。**PUT 替换整条记录**；服务端设置 `fact_id`、`updated_at` 和 `verified_by`（任一方面使用 `model: human` 时为 JWT 用户名；请求体中不要包含）。成功后还会把卡组的 QA 续查游标（`last_fact_id`）设为该词条。可选 `columns`（条目索引）会把这些列的续查游标推进到该词条，只前进——见 [质量统计](#质量统计)。`entries` 为空、某索引缺少 `text`/`audio`、非规范键（`"02"`）、索引越界、`model` 为空或评分不在 1–10 → **400**。在导入卡组上，固定快照之外的词条 → **400** `fact not in pinned snapshot`。
+各 entry 索引（`"0"`、`"2"`，…，对应词条 `entries` 位置）可为 `text` 和/或 `audio` 打分，`score` **1–10**（1 最差），`model`（`claude`、`elevenlabs`、`human` 等）。删除词条或卡组会删除其质量；缩短 `entries` 会丢弃已不存在索引的分数。**PUT 整条替换**；服务器设置 `fact_id`、`updated_at` 与 `verified_by`（任一方面 `model: human` 时为 JWT 用户名；勿放在请求体）。成功时还将卡组 QA 续读游标（`last_fact_id`）设为该词条 — 见 [质量统计](#质量统计)。空 `entries`、某索引缺少 `text`/`audio`、非规范键（`"02"`）、越界索引、空 `model`、或分数不在 1–10 → **400**。导入卡组上，钉住快照外的词条 → **400** `fact not in pinned snapshot`。
 
 **接口：** `PUT /api/decks/{id}/facts/{factId}/quality`
 
@@ -3386,8 +3255,7 @@ Accept: application/json
       "text": { "score": 1, "model": "claude" },
       "audio": { "score": 3, "model": "elevenlabs" }
     }
-  },
-  "columns": [0, 2]
+  }
 }
 ```
 
@@ -3412,29 +3280,29 @@ Accept: application/json
 }
 ```
 
-**接口：** `GET /api/decks/{id}/facts/{factId}/quality`——`data.quality` 结构相同；`meta.msg` 为 `Quality retrieved successfully`。未存储时 **404** `Quality not found`。
+**接口：** `GET /api/decks/{id}/facts/{factId}/quality` — 相同 `data.quality` 形状；`meta.msg` 为 `Quality retrieved successfully`。无记录时 **404** `Quality not found`。
 
-**接口：** `DELETE /api/decks/{id}/facts/{factId}/quality`——返回 `{ "data": { "fact_id": "x9k2m4np" }, "meta": { "msg": "Quality deleted successfully" } }`，即使没有存储任何内容。
+**接口：** `DELETE /api/decks/{id}/facts/{factId}/quality` — `{ "data": { "fact_id": "x9k2m4np" }, "meta": { "msg": "Quality deleted successfully" } }`，即使无已存记录。
 
-整卡组列表/筛选：[质量目录](#质量目录)。常见错误：见 [错误响应参考](#错误响应参考) 中的 [质量错误](#质量错误)。
+全卡组列表/筛选：[质量目录](#质量目录)。典型错误：[错误响应参考](#错误响应参考) 下的 [质量错误](#质量错误)。
 
 ### 贡献（与质量相关）
 
-导入者**提交**接口使用**导入**卡组 id，作者**收件箱**接口使用**源**卡组 id。overlay 的 `PATCH`/`POST` 词条**不会**创建贡献。每日配额：每个源卡组每个 UTC 日最多 **200** 条新记录（`api/deck/contribution.go` 中的 `contributionDailyLimit`）；刷新已存在的去重目标不消耗配额 → **429** `daily contribution limit exceeded`。
+导入者**提交**路由使用**导入**卡组 id。作者**收件箱**路由使用**源**卡组 id。对词条的 overlay `PATCH`/`POST` **不会**创建贡献。每日配额：每个源卡组 / UTC 日最多 **200** 条新行（`api/deck/contribution.go` 中的 `contributionDailyLimit`）；刷新已有 open 去重目标不占配额 → **429** `daily contribution limit exceeded`。
 
-| 内部 `type`                                                             | 提交接口（导入卡组 id）                      | 对质量的影响                                                                                         |
-| ----------------------------------------------------------------------- | -------------------------------------------- | ---------------------------------------------------------------------------------------------------- |
-| `fact_edit`                                                             | `POST …/contributions/facts/{factId}/edit`   | 提议的 overlay；作者可**接受**。可选 `message`、`entry_index`。去重键 `fact_edit:{factId}`。         |
-| `report`                                                                | `POST …/contributions/facts/{factId}/report` | 仅留言；**不可接受**。服务端不去重。                                                                 |
-| `fact_add`                                                              | `POST …/contributions/facts/{factId}/add`    | 新的本地词条。                                                                                       |
-| `fact_tag_update` / `deck_tag_update` / `template_add` / `field_rename` | 见上方目录                                   | 结构/标签，与评分无关。                                                                              |
-| `qa_review`                                                             | `POST …/contributions/qa-review`             | 接受后，作者会签核导入者中内容匹配的签核。按导入者去重 `qa_review`。见 [QA 审核请求](#qa-审核请求)。 |
+| 内部 `type`                                                                                  | 提交路由（导入 id）                          | 对质量的影响                                                                                  |
+| -------------------------------------------------------------------------------------------- | -------------------------------------------- | --------------------------------------------------------------------------------------------- |
+| `fact_edit`                                                                                  | `POST …/contributions/facts/{factId}/edit`   | 提案 overlay；作者可 **accept**。可选 `message`、`entry_index`。去重键 `fact_edit:{factId}`。 |
+| `report`                                                                                     | `POST …/contributions/facts/{factId}/report` | 仅留言；**不可 accept**。服务端不去重。                                                       |
+| `qa_review`                                                                                  | `POST …/contributions/qa-review`             | 接受时作者签署导入者内容一致的校验。每个导入者按 `qa_review` 去重。                           |
+| `fact_add`                                                                                   | `POST …/contributions/facts/{factId}/add`    | 新本地词条。                                                                                  |
+| `fact_tag_update` / `deck_tag_update` / `template_add` / `field_rename` / `description_edit` | 见上方目录                                   | 结构/标签，非分数。                                                                           |
 
-**`fact_edit`（QA 修改）：** overlay 必须存在且与快照不同。请求体不包含 `entries`——服务端把 overlay 冻结为 `proposed_entries`。完整示例：[词条编辑（当前 overlay）](#词条编辑当前-overlay)。
+**`fact_edit`（QA 编辑）：** overlay 须存在且与快照不同。请求体不含 `entries` — 服务器将 overlay 冻结为 `proposed_entries`。完整示例：[词条编辑（当前 overlay）](#词条编辑当前-overlay)。
 
-**`report`（QA 不得用它表示"已验证"）：** 请求体 `{ "message": "…" }`（必填）。增加 `reports` 并降低 `p_good`。完整示例：[仅留言举报](#仅留言举报)。
+**`report`（QA 勿用此表示「已核验」）：** 请求体 `{ "message": "…" }`（必填）。递增 `reports` 并降低 `p_good`。完整示例：[仅留言举报](#仅留言举报)。
 
-**收件箱：** `GET /api/decks/{sourceId}/contributions?type=fact_edit|report&reporter=…`。接受：`POST …/contributions/{id}/accept`（`report` 不可）。处理/驳回：`PATCH …/contributions/{id}`。完整示例：[作者贡献收件箱](#作者贡献收件箱)。
+**收件箱：** `GET /api/decks/{sourceId}/contributions?type=fact_edit|report&reporter=…`。接受：`POST …/contributions/{id}/accept`（`report` 不可）。解决/驳回：`PATCH …/contributions/{id}`。完整示例：[作者贡献收件箱](#作者贡献收件箱)。
 
 ---
 
@@ -3490,61 +3358,39 @@ Accept: application/json
 
 ---
 
-### 需要已验证邮箱
-
-以下接口需要已验证的邮箱。未验证的调用者收到 **403**
-`{ "msg": "Email verification required", "code": "email_not_verified" }`；客户端应提供
-[重新发送验证邮件](#重新发送验证邮件)。邮箱验证功能上线前创建的账号视为已验证。
-
-- `POST /api/decks/{id}/publish`
-- `POST /api/decks/{id}/contributions/facts/{factId}/edit`、`/add`、`/tags`、`/templates`、`/report`
-- `POST /api/decks/{id}/contributions/deck-tags`、`/fields/rename`、`/description`、`/qa-review`
-
----
-
 ### 身份验证（`/auth/*`）
 
-| 接口                             | 状态    | `msg`                                                                                                                                                                                                                                                                                                                                                                    |
-| -------------------------------- | ------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `POST /auth/register`            | **400** | `Invalid request payload`                                                                                                                                                                                                                                                                                                                                                |
-|                                  | **400** | `Username, password, and email are required`、`Username must be between 2 and 32 characters`、`Username must not contain whitespace`、`Invalid email address`、`Password must be at least 8 characters`、`Password must not contain whitespace`、`Password must be at most 64 characters`、`Password is too long when encoded (contains too many multi-byte characters)` |
-|                                  | **409** | `Username already exists`                                                                                                                                                                                                                                                                                                                                                |
-|                                  | **409** | `Email already in use`                                                                                                                                                                                                                                                                                                                                                   |
-|                                  | **500** | `Error checking username`、`Error checking email`、`Could not hash password`、`Error serializing user data`、`Error creating user`                                                                                                                                                                                                                                       |
-| `POST /auth/login`               | **400** | `Invalid request payload`                                                                                                                                                                                                                                                                                                                                                |
-|                                  | **400** | `Username and password are required`、`Username must not contain whitespace`                                                                                                                                                                                                                                                                                             |
-|                                  | **401** | `Invalid credentials`                                                                                                                                                                                                                                                                                                                                                    |
-|                                  | **500** | `Error retrieving user data`、`Error parsing user data`、`Could not generate token`                                                                                                                                                                                                                                                                                      |
-| `POST /auth/logout`              | **401** | `Authorization token required`、`Invalid or expired token`                                                                                                                                                                                                                                                                                                               |
-|                                  | **500** | `Error logging out`                                                                                                                                                                                                                                                                                                                                                      |
-| `POST /auth/forgot-password`     | **400** | `Invalid request payload`、`Email is required`                                                                                                                                                                                                                                                                                                                           |
-|                                  | **500** | `Error generating reset token`、`Error storing reset token`                                                                                                                                                                                                                                                                                                              |
-| `POST /auth/reset-password`      | **400** | `Invalid request payload`、`Token and new password are required`、`Password must be at least 8 characters`、`Password must not contain whitespace`、`Password must be at most 64 characters`、`Password is too long when encoded (contains too many multi-byte characters)`、`Invalid or expired reset token`、`User not found for reset token`                          |
-|                                  | **500** | `Error validating reset token`、`Error retrieving user data`、`Error parsing user data`、`Could not hash password`、`Error serializing user data`、`Error resetting password`                                                                                                                                                                                            |
-| `POST /auth/verify-email`        | **400** | `Invalid request payload`、`Token is required`、`Invalid or expired verification token`、`User not found for verification token`                                                                                                                                                                                                                                         |
-| `POST /auth/resend-verification` | **400** | `Invalid request payload`、`Email is required`                                                                                                                                                                                                                                                                                                                           |
+| 接口                         | 状态    | `msg`                                                                                                                                                                                                                                                                                                                                                                    |
+| ---------------------------- | ------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `POST /auth/register`        | **400** | `Invalid request payload`                                                                                                                                                                                                                                                                                                                                                |
+|                              | **400** | `Username, password, and email are required`、`Username must be between 2 and 32 characters`、`Username must not contain whitespace`、`Invalid email address`、`Password must be at least 8 characters`、`Password must not contain whitespace`、`Password must be at most 64 characters`、`Password is too long when encoded (contains too many multi-byte characters)` |
+|                              | **409** | `Username already exists`                                                                                                                                                                                                                                                                                                                                                |
+|                              | **409** | `Email already in use`                                                                                                                                                                                                                                                                                                                                                   |
+|                              | **500** | `Error checking username`、`Error checking email`、`Could not hash password`、`Error serializing user data`、`Error creating user`                                                                                                                                                                                                                                       |
+| `POST /auth/login`           | **400** | `Invalid request payload`                                                                                                                                                                                                                                                                                                                                                |
+|                              | **400** | `Username and password are required`、`Username must not contain whitespace`                                                                                                                                                                                                                                                                                             |
+|                              | **401** | `Invalid credentials`                                                                                                                                                                                                                                                                                                                                                    |
+|                              | **500** | `Error retrieving user data`、`Error parsing user data`、`Could not generate token`                                                                                                                                                                                                                                                                                      |
+| `POST /auth/logout`          | **401** | `Authorization token required`、`Invalid or expired token`                                                                                                                                                                                                                                                                                                               |
+|                              | **500** | `Error logging out`                                                                                                                                                                                                                                                                                                                                                      |
+| `POST /auth/forgot-password` | **400** | `Invalid request payload`、`Email is required`                                                                                                                                                                                                                                                                                                                           |
+|                              | **500** | `Error generating reset token`、`Error storing reset token`                                                                                                                                                                                                                                                                                                              |
+| `POST /auth/reset-password`  | **400** | `Invalid request payload`、`Token and new password are required`、`Password must be at least 8 characters`、`Password must not contain whitespace`、`Password must be at most 64 characters`、`Password is too long when encoded (contains too many multi-byte characters)`、`Invalid or expired reset token`、`User not found for reset token`                          |
+|                              | **500** | `Error validating reset token`、`Error retrieving user data`、`Error parsing user data`、`Could not hash password`、`Error serializing user data`、`Error resetting password`                                                                                                                                                                                            |
 
 > **`POST /auth/forgot-password`** 在邮箱不存在时仍返回 **200**（防枚举）。该情况下无错误 body。**`POST /auth/resend-verification`** 同理。
+
+| `POST /auth/verify-email` | **400** | `Invalid request payload`、`Token is required`、`Invalid or expired verification token`、`User not found for verification token` |
+| `POST /auth/resend-verification` | **400** | `Invalid request payload`、`Email is required` |
 
 ---
 
 ### 用户资料
 
-| 接口                       | 状态    | `msg`                                                                                                                    |
-| -------------------------- | ------- | ------------------------------------------------------------------------------------------------------------------------ |
-| `GET /api/profile`         | **404** | `User not found`                                                                                                         |
-|                            | **500** | `Error retrieving user profile`、`Error parsing user data`                                                               |
-| `DELETE /api/profile`      | **400** | `Invalid request payload`、`Password is required`                                                                        |
-|                            | **401** | `Invalid credentials`                                                                                                    |
-|                            | **404** | `User not found`                                                                                                         |
-|                            | **429** | `Too many delete attempts. Try again later.`                                                                             |
-|                            | **500** | `Error deleting account`                                                                                                 |
-| `PATCH /api/profile/email` | **400** | `Invalid request payload`、`Email and password are required`、`Invalid email address`、`New email matches current email` |
-|                            | **401** | `Invalid credentials`                                                                                                    |
-|                            | **404** | `User not found`                                                                                                         |
-|                            | **409** | `Email already in use`                                                                                                   |
-|                            | **429** | `Too many attempts. Try again later.`                                                                                    |
-|                            | **500** | `Error changing email`                                                                                                   |
+| 接口               | 状态    | `msg`                                                      |
+| ------------------ | ------- | ---------------------------------------------------------- |
+| `GET /api/profile` | **404** | `User not found`                                           |
+|                    | **500** | `Error retrieving user profile`、`Error parsing user data` |
 
 另受 [JWT 中间件错误](#通用错误) 约束。
 
@@ -3716,6 +3562,10 @@ Accept: application/json
 |                                         | **500** | `Error checking card`、`Error deleting card`                                                                                                                                                       |
 | `GET /api/decks/{id}/cards`             | **404** | `tag not found`（设置了 `tag_id` 查询参数时）                                                                                                                                                      |
 |                                         | **500** | `Error retrieving cards`、`Error retrieving facts`、`Error retrieving tag`                                                                                                                         |
+| `GET /api/decks/{id}/reviews/by-day`    | **400** | `days must be between 1 and 366`                                                                                                                                                                   |
+|                                         | **403** | `Not authorized to access this deck`                                                                                                                                                               |
+|                                         | **404** | `Deck not found`                                                                                                                                                                                   |
+|                                         | **500** | `Error retrieving deck`、`Error parsing deck data`、`Error retrieving review stats`                                                                                                                |
 
 > **成功（200）但无待复习卡：** `GET …/card` 可能返回 `"card": []`，`meta.msg` 为 `No cards in this deck` 或 `No cards found, please add some facts to your deck` — **不是**错误。
 
@@ -3741,36 +3591,41 @@ Accept: application/json
 
 ### 质量错误
 
-另受 [JWT 中间件错误](#通用错误) 约束。质量的 GET/列表允许源卡组和导入卡组的所有者；质量 DELETE 对导入卡组返回 **400**；PUT 质量需要卡组所有者（源卡组或导入卡组）。
+亦受 [通用错误](#通用错误)（JWT 中间件）约束。质量 GET/列表允许源与导入卡组所有者；质量 DELETE 对导入卡组返回 **400**；PUT 质量要求卡组所有者（源或导入）。
 
 | 接口                                            | 状态    | `msg`                                                                                                                                         |
 | ----------------------------------------------- | ------- | --------------------------------------------------------------------------------------------------------------------------------------------- |
 | `PUT /api/decks/{id}/facts/{factId}/quality`    | **400** | `Invalid request payload`                                                                                                                     |
 |                                                 | **400** | `at least one entry is required`                                                                                                              |
-|                                                 | **400** | `entry "{i}": index must be a non-negative integer`（包括 `"02"` 这类非规范键）                                                               |
+|                                                 | **400** | `entry "{i}": index must be a non-negative integer`（含非规范键如 `"02"`）                                                                    |
 |                                                 | **400** | `entry "{i}": index out of range for a fact with {n} entries`                                                                                 |
 |                                                 | **400** | `entry "{i}": text or audio is required`                                                                                                      |
 |                                                 | **400** | `entry "{i}" text\|audio: score must be between 1 and 10`                                                                                     |
 |                                                 | **400** | `entry "{i}" text\|audio: model is required`                                                                                                  |
-|                                                 | **400** | `fact not in pinned snapshot`（导入卡组；词条不在固定清单中）                                                                                 |
+|                                                 | **400** | `fact not in pinned snapshot`（导入卡组；词条不在钉住清单）                                                                                   |
 |                                                 | **403** | `Not authorized to access this deck`                                                                                                          |
 |                                                 | **404** | `Deck not found`、`Fact not found`                                                                                                            |
 |                                                 | **500** | `Error retrieving fact`、`Error parsing fact data`、`Error serializing quality data`、`Error saving quality`、`Error checking fact existence` |
-| `GET /api/decks/{id}/facts/{factId}/quality`    | **403** | `Not authorized to access this deck`                                                                                                          |
+| `GET /api/decks/{id}/facts/{factId}/quality`    | **400** | `fact quality is only available on source decks`                                                                                              |
+|                                                 | **403** | `Not authorized to access this deck`                                                                                                          |
 |                                                 | **404** | `Deck not found`、`Fact not found`、`Quality not found`                                                                                       |
 |                                                 | **500** | `Error retrieving quality`、`Error parsing quality data`、`Error checking fact existence`                                                     |
 | `DELETE /api/decks/{id}/facts/{factId}/quality` | **400** | `fact quality is only available on source decks`                                                                                              |
 |                                                 | **403** | `Not authorized to access this deck`                                                                                                          |
 |                                                 | **404** | `Deck not found`、`Fact not found`                                                                                                            |
 |                                                 | **500** | `Error deleting quality`、`Error checking fact existence`                                                                                     |
-| `GET /api/decks/{id}/quality`                   | **400** | `max_score must be between 1 and 10`                                                                                                          |
+| `GET /api/decks/{id}/quality`                   | **400** | `fact quality is only available on source decks`                                                                                              |
+|                                                 | **400** | `max_score must be between 1 and 10`                                                                                                          |
 |                                                 | **400** | `entry must be a non-negative integer`                                                                                                        |
 |                                                 | **400** | `aspect must be text or audio`                                                                                                                |
 |                                                 | **403** | `Not authorized to access this deck`                                                                                                          |
 |                                                 | **404** | `Deck not found`                                                                                                                              |
 |                                                 | **500** | `Error retrieving quality`                                                                                                                    |
+| `GET /api/decks/{id}/quality/stats`             | **403** | `Not authorized to access this deck`                                                                                                          |
+|                                                 | **404** | `Deck not found`                                                                                                                              |
+|                                                 | **500** | `Error retrieving quality stats`、`Error saving quality stats`                                                                                |
 
-贡献提交/收件箱错误：[卡组共享](#卡组共享)。
+贡献提交/收件箱错误见 [卡组共享](#卡组共享)。
 
 ---
 
@@ -3791,13 +3646,11 @@ Accept: application/json
 | `/auth/register`                                  | POST        | `{ "data": { … }, "meta": { "msg": "..." } }` — 见 [创建用户](#创建用户)                                                                                                                                                                                                 |
 | `/auth/login`                                     | POST        | `{ "data": { "token", "expires" }, "meta": { "expires" } }`                                                                                                                                                                                                              |
 | `/auth/logout`                                    | POST        | `{ "data": { "msg": "Logged out successfully" }, "meta": null }`                                                                                                                                                                                                         |
-| `/auth/forgot-password`                           | POST        | `{ "data": { "reset_token" }, "meta": { "expires_in" } }`                                                                                                                                                                                                                |
+| `/auth/forgot-password`                           | POST        | 已配置 Resend：`{ "data": { "msg" } }`；开发无 key：`{ "data": { "reset_token" }, "meta": { "expires_in" } }`                                                                                                                                                            |
 | `/auth/reset-password`                            | POST        | `{ "data": { "msg": "Password reset successfully" }, "meta": null }`                                                                                                                                                                                                     |
 | `/auth/verify-email`                              | POST        | `{ "data": { "msg": "Email verified successfully" }, "meta": null }`                                                                                                                                                                                                     |
-| `/auth/resend-verification`                       | POST        | `{ "data": { "msg" }, "meta": null }`（邮箱格式合法时始终 200）                                                                                                                                                                                                          |
+| `/auth/resend-verification`                       | POST        | `{ "data": { "msg" }, "meta": null }`（邮箱格式合法时恒为 200）                                                                                                                                                                                                          |
 | `/api/profile`                                    | GET         | `{ "data": { 用户资料 }, "meta": { "msg" } }`                                                                                                                                                                                                                            |
-| `/api/profile`                                    | DELETE      | `{ "data": { "msg": "Account deleted successfully", "username", "deleted_decks", "anonymized_published_decks" }, "meta": null }`                                                                                                                                         |
-| `/api/profile/email`                              | PATCH       | `{ "data": { "username", "email", "email_verified": false }, "meta": null }`                                                                                                                                                                                             |
 | `/api/decks`                                      | POST        | `{ "data": { "deck_id" }, "meta": { "msg" } }`                                                                                                                                                                                                                           |
 | `/api/decks`                                      | GET         | `{ "data": { "decks": [ … ] }, "meta": { "total", "msg" } }`                                                                                                                                                                                                             |
 | `/api/decks/{id}`                                 | GET         | `{ "data": { 卡组 + 统计 }, "meta": { "msg" } }`                                                                                                                                                                                                                         |
@@ -3806,25 +3659,25 @@ Accept: application/json
 | `/api/decks/{id}/facts/{op}`                      | POST        | 添加词条：body `facts[]` 每项可选 `tags`（名称）或 `tag_ids`（同条互斥）；`{ "data": { "fact_length", "fact_ids" }, "meta": { "msg" } }`（响应不含标签）                                                                                                                 |
 | `/api/decks/{id}/card`                            | POST        | 为已有词条加卡：`{ "data": { "card_id" }, "meta": { "msg" } }`                                                                                                                                                                                                           |
 | `/api/decks/{id}/facts`                           | GET         | `{ "data": { "facts": [ … ] }, "meta": { "msg", "count", "has_more", "limit", "offset", "sort", "total" } }` — 默认 `limit` 50、`offset` 0、`sort` `id`                                                                                                                  |
-| `/api/decks/{id}/facts/{factId}`                  | GET         | `{ "data": { "fact": { …, "tags": [ … ] }, "media_versions"?: { … } }, "meta": { "msg" } }`                                                                                                                                                                              |
+| `/api/decks/{id}/facts/{factId}`                  | GET         | `{ "data": { "fact": { …, "tags": [ … ] } }, "meta": { "msg" } }`                                                                                                                                                                                                        |
 | `/api/decks/{id}/facts/{factId}`                  | PATCH       | `{ "data": { "fact_id" }, "meta": { "msg" } }`                                                                                                                                                                                                                           |
 | `/api/decks/{id}/facts/{factId}`                  | DELETE      | `{ "data": { "fact_id" }, "meta": { "msg" } }`                                                                                                                                                                                                                           |
 | `/api/decks/{id}/facts/{factId}/quality`          | PUT         | `{ "data": { "quality": { "fact_id", "entries", "updated_at" } }, "meta": { "msg": "Quality updated successfully" } }`                                                                                                                                                   |
-| `/api/decks/{id}/facts/{factId}/quality`          | GET         | 同 `data.quality`；`meta.msg` 为 `Quality retrieved successfully`；未存储时 **404** `Quality not found`                                                                                                                                                                  |
-| `/api/decks/{id}/facts/{factId}/quality`          | DELETE      | `{ "data": { "fact_id" }, "meta": { "msg": "Quality deleted successfully" } }`——未存储时也返回 200                                                                                                                                                                       |
-| `/api/decks/{id}/quality`                         | GET         | `{ "data": { "items": [ { "fact_id", "entries", "updated_at" } ] }, "meta": { "msg": "ok", "effective_score"?, "total_entries", "has_more", "limit", "offset" } }`——无 `count`/`total`；默认 `limit` 50、`offset` 0                                                      |
-| `/api/decks/{id}/quality/stats`                   | GET         | `{ "data": { "verified_aspects", "total_aspects", "verified_facts", "total_facts", "last_fact_id"?, "last_fact_updated_at"?, "cursors"? }, "meta": { "msg": "ok" } }`——见 [质量统计](#质量统计)                                                                          |
+| `/api/decks/{id}/facts/{factId}/quality`          | GET         | 相同 `data.quality`；`meta.msg` `Quality retrieved successfully`；无记录时 **404** `Quality not found`                                                                                                                                                                   |
+| `/api/decks/{id}/facts/{factId}/quality`          | DELETE      | `{ "data": { "fact_id" }, "meta": { "msg": "Quality deleted successfully" } }` — 无记录时仍 200                                                                                                                                                                          |
+| `/api/decks/{id}/quality`                         | GET         | `{ "data": { "items": [ { "fact_id", "entries", "updated_at" } ] }, "meta": { "msg": "ok", "effective_score"?, "total_entries", "has_more", "limit", "offset" } }` — 无 `count`/`total`；默认 `limit` 50、`offset` 0                                                     |
+| `/api/decks/{id}/quality/stats`                   | GET         | `{ "data": { "verified_aspects", "total_aspects", "verified_facts", "total_facts", "last_fact_id"?, "last_fact_updated_at"?, "cursors"? }, "meta": { "msg": "ok" } }` — 见 [质量统计](#质量统计)                                                                         |
 | `/api/decks/{id}/card`                            | GET         | 可选查询 `tag_id`。形状不变：`{ "data": { "card": { id, fact_id, template, …, front[], back[] }, "urgency" }, "meta": { "msg", … } }`                                                                                                                                    |
 | `/api/decks/{id}/card`                            | PATCH       | 间隔：`{ "data": { "last_review", "due_date", "new_interval" }, "meta": { "msg" } }`；可见性：`{ "data": { "hidden_status" }, "meta": { "msg" } }`                                                                                                                       |
 | `/api/decks/{id}/cards`                           | GET         | 可选查询 `tag_id`、`stats_only`。`{ "data": { "stats", "cards"? }, "meta": { "msg" } }` — `stats` 与 GET /api/decks/{id} 相同；`stats_only=true` 时省略 `cards`                                                                                                          |
-| `/api/decks/{id}/reviews/by-day`                  | GET         | 可选查询参数 `days`（默认 7，最大 366）。`{ "data": { "days": [ { "day", "count" } ], "timezone": "UTC" }, "meta": { "msg": "ok" } }`——见 [按日复习统计](#按日复习统计)                                                                                                  |
+| `/api/decks/{id}/reviews/by-day`                  | GET         | 可选查询 `days`（默认 7，最大 366）。`{ "data": { "days": [ { "day", "count" } ], "timezone": "UTC" }, "meta": { "msg": "ok" } }` — 见 [按日复习统计](#按日复习统计)                                                                                                     |
 | `/api/decks/{id}/cards/{cardId}`                  | DELETE      | `{ "data": { "card_id" }, "meta": { "msg" } }`                                                                                                                                                                                                                           |
 | `/api/decks/{id}/reschedule`                      | POST        | **未挂载** — **404**（通常无 JSON `{ "msg" }` body）。见 [假期模式（平移复习计划）](#假期模式平移复习计划)。                                                                                                                                                             |
 | `/api/decks/catalog`                              | GET         | `{ "data": { "decks": [ … ] }, "meta": { "msg", "count", "total", "limit", "offset", "has_more" } }` — 默认 `limit` 50、`offset` 0；可选 `query`                                                                                                                         |
-| `/api/decks/catalog/{id}`                         | GET         | `{ "data": { "id", "name", "description", "owner", "fields", "published_version", "fact_count", "deck_tag_names", "published_at" }, "meta": { "msg" } }` — 单条目录记录；不可导入时 **404**                                                                              |
+| `/api/decks/catalog/{id}`                         | GET         | `{ "data": { "id", "name", "description", "owner", "fields", "published_version", "fact_count", "deck_tag_names", "published_at", "import_count", "importer_count" }, "meta": { "msg" } }` — 单条目录记录；不可导入时 **404**                                            |
 | `/api/decks/import`                               | POST        | **201** — `{ "data": { "id", "source_deck_id", "source_version", "imported_at" }, "meta": { "msg" } }`                                                                                                                                                                   |
 | `/api/decks/{id}/publish`                         | POST        | `{ "data": { "published_version", "visibility" }, "meta": { "msg": "published" } }`                                                                                                                                                                                      |
-| `/api/decks/{id}/publish-preview`                 | GET         | `{ "data": { "published_version", "has_unpublished_changes", "facts", "media", "tags", … }, "meta": { "msg": "ok" } }`——可选 `?detail=1`                                                                                                                                 |
+| `/api/decks/{id}/publish-preview`                 | GET         | `{ "data": { "published_version", "has_unpublished_changes", "facts", "media", "tags", … }, "meta": { "msg": "ok" } }` — optional `?detail=1`                                                                                                                            |
 | `/api/decks/{id}/updates`                         | GET         | `{ "data": { "source_version", "latest_version", "added_facts", "removed_facts", "edited_facts", "media_changes", "card_template_changes", … }, "meta": { "msg" } }` — 见 [获取导入更新（差异）](#获取导入更新差异)                                                      |
 | `/api/decks/{id}/sync`                            | POST        | 请求体可选 `target_version`、`decisions[]`；`{ "data": { "source_version" }, "meta": { "msg": "synced" } }`                                                                                                                                                              |
 | `/api/decks/{id}/contributions/facts/…` 等        | POST        | **201** — `{ "data": { "contribution_id", "source_deck_id", "type", "status", … }, "meta": { "msg": "contribution submitted" } }` — 见 [导入 overlay 与贡献](#导入-overlay-与贡献)                                                                                       |
@@ -3843,7 +3696,7 @@ Accept: application/json
 | `/api/decks/{id}/facts/{factId}/tags/{tagId}`     | PUT, DELETE | `{ "data": { "tags": [ … ] }, "meta": { "msg" } }`                                                                                                                                                                                                                       |
 | `/api/decks/{id}/facts/{factId}/tags`             | GET         | `{ "data": { "tags": [ … ] }, "meta": { "msg" } }`                                                                                                                                                                                                                       |
 | `/api/media`                                      | POST        | `{ "data": { id, owner, filename, mime, size, checksum, created_at }, "meta": { "msg" } }`                                                                                                                                                                               |
-| `/api/media`                                      | GET         | `{ "data": [ MediaSwagger, … ], "meta": { "count", "has_more" } }`                                                                                                                                                                                                       |
+| `/api/media`                                      | GET         | `{ "data": [ media, … ], "meta": { "count", "has_more" } }`                                                                                                                                                                                                              |
 | `/api/media/{id}/meta`                            | GET         | `{ "data": { id, owner, filename, mime, size, checksum, created_at }, "meta": { "msg" } }`                                                                                                                                                                               |
 | `/api/media/{id}`                                 | GET         | 下载媒体（二进制）                                                                                                                                                                                                                                                       |
 | `/api/media/{id}`                                 | DELETE      | `{ "data": { "msg": "media deleted" } }`                                                                                                                                                                                                                                 |
@@ -3855,6 +3708,7 @@ Accept: application/json
 ## 后续步骤
 
 - 通过 **[卡组共享](#卡组共享概述)** 分享卡组（发布 → 导入 → overlay / 贡献 → 查看更新 → 同步）
+- 使用 **[7. 质量](#7-质量)** 做编辑打分与 QA 续读游标
 - 使用 **[标签](#4-标签)** 在卡组与词条维度整理内容
 - 在 [卡片](#5-卡片) 中重复 **获取下一张最紧急卡片** 与 **复习卡片** 步骤以持续复习
 - **离线同步** — 恢复联网后同步数据（规划中）
