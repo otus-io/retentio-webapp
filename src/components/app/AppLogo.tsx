@@ -28,7 +28,7 @@ export default function AppLogo({
                 className="block h-10 w-auto shrink-0"
                 unoptimized
                 width={473}
-                height={402}
+                height={344}
               />
               <span className="text-lg font-bold tracking-tight leading-none ">{APP_NAME}</span>
             </>
@@ -39,7 +39,7 @@ export default function AppLogo({
               unoptimized
               alt={APP_NAME}
               width={473}
-              height={402}
+              height={344}
               className="block h-10 w-auto shrink-0"
             />
           )
