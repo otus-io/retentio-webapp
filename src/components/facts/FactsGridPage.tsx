@@ -41,6 +41,8 @@ type SheetRow = Record<string | symbol, any> & {
   added?: string[]
   /** Its create failed (the server may still have made it): tried again only once a failed row is edited again. */
   addFailed?: boolean
+  /** Being created: kept in the sheet even if emptied meanwhile, since its fact is on its way. */
+  creating?: boolean
 }
 
 function rowFact(data?: Record<string | symbol, any>) {
@@ -117,7 +119,7 @@ export default function FactsGridPage({ facts, total: initialTotal, deck }: Fact
     // The sheet reports the rows it adds (handleRowsInsert).
     if (rows.length < target) sheet.appendRows(target - rows.length)
     const columns = headersRef.current.length
-    const empty = (row: SheetRow) => !rowFact(row) && !row.loading && !hasText(row, columns)
+    const empty = (row: SheetRow) => !rowFact(row) && !row.loading && !row.creating && !hasText(row, columns)
     while (rows.length > target && empty(rows[rows.length - 1]) && empty(rows[rows.length - 2])) {
       rows.pop()
       sheet.deleteRow(rows.length)
@@ -348,10 +350,16 @@ export default function FactsGridPage({ facts, total: initialTotal, deck }: Fact
     // The rows keep taking typing while they are created; a later save sends what changed.
     const createdTexts = rows.map(rowTexts)
     const imported = Boolean(deck.source_deck_id)
+    rows.forEach((row) => {
+      row.creating = true
+    })
     try {
       setLoading(true)
       // No facts page refresh (the sheet keeps its own rows); the deck page still refreshes for its counts.
       const res = await addFactsAction(deck.id, entriesList, false, false).catch(() => ({ success: false as const }))
+      rows.forEach((row) => {
+        row.creating = false
+      })
       if (!res.success) {
         // Not retried on its own (the server may have created them before the connection dropped), not even by an
         // edit held meanwhile or typing in another row: the rows keep the text, and editing one again tries again.
@@ -459,9 +467,12 @@ export default function FactsGridPage({ facts, total: initialTotal, deck }: Fact
     if (emptied) showFailToast(tRef.current('facts-grid.empty-fact'))
 
     if (typedBelow) {
-      // Saves run one at a time, so no earlier new fact is still being created.
+      // Saves run one at a time, so no earlier new fact is still being created. A big paste goes in batches (a
+      // request has a size limit); a failed batch stops the rest, which then wait as it does.
       const newRows = takeNewRows()
-      if (newRows.length) await addRows(newRows)
+      for (let i = 0; i < newRows.length && !newRows[i - 1]?.addFailed; i += FACTS_PAGE_SIZE) {
+        await addRows(newRows.slice(i, i + FACTS_PAGE_SIZE))
+      }
     }
     if (!changedRows.length) return
 
@@ -639,9 +650,14 @@ export default function FactsGridPage({ facts, total: initialTotal, deck }: Fact
       const { rowIndex, fieldKey } = cellMenu
       const column = Number(fieldKey.slice(3))
       requestAnimationFrame(() => {
-        const selected = sheetRef.current?.selectedCell()
-        if (selected && (selected.x !== column || selected.y !== rowIndex)) return
-        sheetRef.current?.focusCell(column, rowIndex)
+        const range = sheetRef.current?.selectedRange()
+        if (!range) {
+          sheetRef.current?.focusCell(column, rowIndex)
+          return
+        }
+        // Still selected (a block right-clicked inside, or the cell itself): keep the selection.
+        const kept = column >= range.x1 && column <= range.x2 && rowIndex >= range.y1 && rowIndex <= range.y2
+        if (kept) sheetRef.current?.focusSheet()
       })
     }
     setCellMenu(null)

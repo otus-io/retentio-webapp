@@ -178,9 +178,9 @@ describe('FactsSpreadsheet', () => {
 
     it('selects a cell and gives the sheet the keyboard until focus moves elsewhere', async () => {
       const { api, td, props } = await ready()
-      expect(api.selectedCell()).toBeNull()
+      expect(api.selectedRange()).toBeNull()
       act(() => api.focusCell(1, 2))
-      expect(api.selectedCell()).toEqual({ x: 1, y: 2 })
+      expect(api.selectedRange()).toEqual({ x1: 1, y1: 2, x2: 1, y2: 2 })
       expect(td(1, 2).classList.contains('highlight')).toBe(true)
       // Focus inside the sheet keeps the keyboard: Delete clears the selected cell.
       fireEvent.focusIn(td(0, 0))
@@ -194,6 +194,33 @@ describe('FactsSpreadsheet', () => {
       fireEvent.keyDown(document, { key: 'Delete', keyCode: 46, which: 46 })
       expect(td(1, 2).textContent).toBe('b2')
       outside.remove()
+    })
+
+    it('gives the keyboard back keeping a block selected', async () => {
+      const { api, worksheet, props } = await ready()
+      act(() => worksheet.updateSelectionFromCoords(1, 3, 0, 2))
+      expect(api.selectedRange()).toEqual({ x1: 0, y1: 2, x2: 1, y2: 3 })
+      const outside = document.createElement('input')
+      document.body.appendChild(outside)
+      fireEvent.focusIn(outside)
+      outside.remove()
+      act(() => api.focusSheet())
+      expect(api.selectedRange()).toEqual({ x1: 0, y1: 2, x2: 1, y2: 3 })
+      // The keyboard works again: Delete clears the block.
+      act(() => api.setRow(2, ['f2', 'b2']))
+      fireEvent.keyDown(document.body, { key: 'Delete', keyCode: 46, which: 46 })
+      expect(props.onCellsChange).toHaveBeenLastCalledWith(expect.arrayContaining([{ x: 1, y: 2, value: '' }]))
+    })
+
+    it('leaves a cell being typed into alone when writing its row', async () => {
+      const { api, worksheet, td } = await ready()
+      act(() => worksheet.openEditor(td(1, 0)))
+      act(() => api.setRow(0, ['new front', 'new back']))
+      expect(td(0, 0).textContent).toBe('new front')
+      expect(td(1, 0).querySelector('input, textarea')).not.toBeNull()
+      // Other rows are written whole.
+      act(() => api.setRow(2, ['x', 'y']))
+      expect(td(1, 2).textContent).toBe('y')
     })
 
     it('marks the given rows, replacing the rows marked before', async () => {
@@ -232,43 +259,60 @@ describe('FactsSpreadsheet', () => {
   })
 
   describe('rows selected by their numbers', () => {
+    // A row-number click, and a shift-click to extend, as the user does them.
     const pickRows = (worksheet: any, from: number, to: number) => {
+      const number = (y: number) => worksheet.rows[y].element.children[0]
       act(() => {
-        worksheet.selectedRow = from
-        worksheet.updateSelectionFromCoords(null, from, null, to)
+        fireEvent.mouseDown(number(from), { buttons: 1 })
+        fireEvent.mouseUp(document.body)
+        if (to !== from) {
+          fireEvent.mouseDown(number(to), { buttons: 1, shiftKey: true })
+          fireEvent.mouseUp(document.body)
+        }
       })
     }
     const press = (key: string) => fireEvent.keyDown(document.body, { key })
 
     it('are listed, unlike a block of cells', async () => {
-      const { api, worksheet } = await ready()
+      const { api, worksheet, td } = await ready()
       expect(api.selectedRows()).toEqual([])
       pickRows(worksheet, 0, 2)
       expect(api.selectedRows()).toEqual([0, 1, 2])
       // A block of cells, even one as wide as the rows.
-      act(() => { worksheet.selectedRow = null })
-      expect(api.selectedRows()).toEqual([])
       act(() => {
-        worksheet.selectedRow = 0
-        worksheet.updateSelectionFromCoords(0, 0, 0, 1)
+        fireEvent.mouseDown(td(0, 0), { buttons: 1 })
+        fireEvent.mouseDown(td(1, 2), { buttons: 1, shiftKey: true })
+        fireEvent.mouseUp(document.body)
       })
-      expect(api.selectedRows()).toEqual([])
-      act(() => { worksheet.selectedRow = false })
       expect(api.selectedRows()).toEqual([])
     })
 
+    it('stop being rows once the keyboard moves the selection, so Delete clears the cell', async () => {
+      const { api, worksheet, td, props } = await ready()
+      pickRows(worksheet, 0, 0)
+      act(() => {
+        fireEvent.keyDown(document.body, { key: 'ArrowDown', keyCode: 40, which: 40 })
+      })
+      expect(api.selectedRange()).toEqual({ x1: 0, y1: 1, x2: 0, y2: 1 })
+      expect(api.selectedRows()).toEqual([])
+      act(() => api.setRow(1, ['f1', 'b1']))
+      fireEvent.keyDown(document.body, { key: 'Delete', keyCode: 46, which: 46 })
+      expect(td(0, 1).textContent).toBe('')
+      expect(props.onRowsDelete).not.toHaveBeenCalled()
+    })
+
     it('are handed to the page for deleting when Delete or Backspace is pressed', async () => {
-      const { props, worksheet, api, td } = await ready()
-      pickRows(worksheet, 1, 2)
-      act(() => api.focusCell(0, 1))
+      const { props, worksheet, td } = await ready()
       pickRows(worksheet, 1, 2)
       press('Delete')
       press('Backspace')
       expect(props.onRowsDelete.mock.calls).toEqual([[[1, 2]], [[1, 2]]])
       // Other keys, cells instead of rows, an open editor, or the keyboard elsewhere: nothing.
       press('a')
-      act(() => worksheet.updateSelectionFromCoords(0, 0, 0, 0))
-      act(() => { worksheet.selectedRow = null })
+      act(() => {
+        fireEvent.mouseDown(td(0, 0), { buttons: 1 })
+        fireEvent.mouseUp(document.body)
+      })
       press('Delete')
       pickRows(worksheet, 1, 2)
       act(() => worksheet.openEditor(td(0, 2)))
@@ -290,8 +334,7 @@ describe('FactsSpreadsheet', () => {
     })
 
     it('stops listening for Delete when it unmounts', async () => {
-      const { props, worksheet, view, api } = await ready()
-      act(() => api.focusCell(0, 1))
+      const { props, worksheet, view } = await ready()
       pickRows(worksheet, 1, 1)
       view.unmount()
       press('Delete')

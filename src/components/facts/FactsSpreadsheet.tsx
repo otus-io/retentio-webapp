@@ -23,8 +23,10 @@ export interface FactsSheetApi {
   scrollToRow: (y: number) => void
   /** Selects the cell and gives the sheet the keyboard. */
   focusCell: (x: number, y: number) => void
-  /** The selected cell (the first of a selected block); null when nothing is selected. */
-  selectedCell: () => { x: number; y: number } | null
+  /** The selected block of cells, top-left to bottom-right; null when nothing is selected. */
+  selectedRange: () => { x1: number; y1: number; x2: number; y2: number } | null
+  /** Gives the sheet the keyboard back, keeping its selection. */
+  focusSheet: () => void
   /** The rows selected by their row numbers; none when cells are selected. */
   selectedRows: () => number[]
   /** Highlights these rows (none: no highlight). */
@@ -70,10 +72,16 @@ interface FactsSheetProps {
 
 type Library = typeof jspreadsheet
 interface PropsRef { current: FactsSheetProps }
-/** Set while the page writes to the sheet, so its own writes are not reported as edits. */
-interface Quiet { on: boolean }
+interface SheetState {
+  /** Set while the page writes to the sheet, so its own writes are not reported as edits. */
+  quiet: boolean
+  /** A mouse press on a row number is selecting rows. */
+  rowClick: boolean
+  /** The selection is rows picked by their numbers, not a block of cells. */
+  byNumber: boolean
+}
 
-function createWorksheet(lib: Library, sheet: HTMLElement, host: HTMLElement, propsRef: PropsRef, quiet: Quiet) {
+function createWorksheet(lib: Library, sheet: HTMLElement, host: HTMLElement, propsRef: PropsRef, state: SheetState) {
   const { headers, rows } = propsRef.current
   const [worksheet] = lib(sheet as HTMLDivElement, {
     // Text stays text: no formulas, no HTML.
@@ -92,7 +100,7 @@ function createWorksheet(lib: Library, sheet: HTMLElement, host: HTMLElement, pr
       return false as unknown as null
     },
     onafterchanges: (_ws, changes) => {
-      if (quiet.on) return
+      if (state.quiet) return
       // A read-only cell in a paste, cut or Delete keeps its text: the library reports it with no value.
       const changed = changes.filter((change) => change.value !== undefined)
       if (!changed.length) return
@@ -101,6 +109,13 @@ function createWorksheet(lib: Library, sheet: HTMLElement, host: HTMLElement, pr
         y: Number(change.y),
         value: String(change.value),
       })))
+    },
+    // Rows stay picked by their numbers only until the selection moves some other way (a cell click, the keyboard).
+    onselection: (ws) => {
+      state.byNumber = state.rowClick
+      state.rowClick = false
+      // The library's own flag outlives keyboard moves, and then Delete stops clearing cells.
+      if (!state.byNumber) (ws as unknown as RowSelection).selectedRow = null
     },
     oninsertrow: (_ws, inserted) => {
       // Always reported, even for the page's own rows, so its rows stay in step with the sheet's.
@@ -124,6 +139,8 @@ function createWorksheet(lib: Library, sheet: HTMLElement, host: HTMLElement, pr
       columnSorting: false,
       columnDrag: false,
       rowDrag: false,
+      // Rows keep one height (a press near a row number's bottom edge would otherwise resize it).
+      rowResize: false,
     }],
   })
   // No undo: it could bring back a row whose fact was deleted on the server.
@@ -167,26 +184,21 @@ function sheetLayout(worksheet: Worksheet, host: HTMLElement, propsRef: PropsRef
 /** Set by a row-number click, cleared by a cell click; left out of the library's types. */
 interface RowSelection { selectedRow?: number | false | null }
 
-/** Rows picked by their numbers (the whole width, from a row-number click), not a block of cells. */
-function selectedRowsOf(worksheet: Worksheet, columns: number) {
-  const selected = worksheet.selectedCell
-  const { selectedRow } = worksheet as unknown as RowSelection
-  if (!selected || selectedRow == null || selectedRow === false) return []
-  const [x1, , x2] = selected.map(Number)
-  if (Math.min(x1, x2) !== 0 || Math.max(x1, x2) !== columns - 1) return []
-  return worksheet.getSelectedRows()
+/** Rows picked by their numbers, not a block of cells. */
+function selectedRowsOf(worksheet: Worksheet, state: SheetState) {
+  return state.byNumber ? worksheet.getSelectedRows() : []
 }
 
-function sheetApi(lib: Library, worksheet: Worksheet, host: HTMLElement, propsRef: PropsRef, quiet: Quiet) {
+function sheetApi(lib: Library, worksheet: Worksheet, host: HTMLElement, propsRef: PropsRef, state: SheetState) {
   const { headers } = propsRef.current
   const content = host.querySelector<HTMLElement>('.jss_content')!
   const thead = host.querySelector('thead')!
   const quietly = (write: () => void) => {
-    quiet.on = true
+    state.quiet = true
     try {
       write()
     } finally {
-      quiet.on = false
+      state.quiet = false
     }
   }
   const setReadOnly = (y: number, readOnly: boolean) => {
@@ -194,7 +206,10 @@ function sheetApi(lib: Library, worksheet: Worksheet, host: HTMLElement, propsRe
   }
   const api: FactsSheetApi = {
     setRow: (y, texts, readOnly = false) => quietly(() => {
-      worksheet.setRowData(y, texts, true)
+      // A cell being typed into keeps what is typed (null leaves a cell as it is).
+      const editing = worksheet.edition
+      const editingX = editing && Number(editing[3]) === y ? Number(editing[2]) : -1
+      worksheet.setRowData(y, texts.map((text, x) => (x === editingX ? null : text)), true)
       setReadOnly(y, readOnly)
     }),
     appendRows: (count) => {
@@ -218,14 +233,17 @@ function sheetApi(lib: Library, worksheet: Worksheet, host: HTMLElement, propsRe
     focusCell: (x, y) => {
       lib.current = worksheet
       worksheet.updateSelectionFromCoords(x, y, x, y)
-      // A cell now, not rows picked by their numbers.
-      ;(worksheet as unknown as RowSelection).selectedRow = null
     },
-    selectedCell: () => {
+    focusSheet: () => {
+      lib.current = worksheet
+    },
+    selectedRange: () => {
       const selected = worksheet.selectedCell
-      return selected ? { x: Number(selected[0]), y: Number(selected[1]) } : null
+      if (!selected) return null
+      const [x1, y1, x2, y2] = selected.map(Number)
+      return { x1: Math.min(x1, x2), y1: Math.min(y1, y2), x2: Math.max(x1, x2), y2: Math.max(y1, y2) }
     },
-    selectedRows: () => selectedRowsOf(worksheet, headers.length),
+    selectedRows: () => selectedRowsOf(worksheet, state),
     copySelection: () => worksheet.copy(),
     pasteAtSelection: (text) => {
       const selected = worksheet.selectedCell
@@ -259,7 +277,7 @@ export default function FactsSpreadsheet(props: FactsSheetProps) {
     let cancelled = false
     let jss: Library | undefined
     let observer: ResizeObserver | undefined
-    const quiet: Quiet = { on: false }
+    const state: SheetState = { quiet: false, rowClick: false, byNumber: false }
     // Typing or pasting into anything outside the sheet (a dialog, the header box) must not reach it: the library
     // listens on the whole document while a sheet is selected.
     const handleFocusIn = (event: FocusEvent) => {
@@ -271,8 +289,13 @@ export default function FactsSpreadsheet(props: FactsSheetProps) {
       const worksheet = worksheetRef.current
       if (!jss || !worksheet || jss.current !== worksheet || worksheet.edition) return
       if (event.key !== 'Delete' && event.key !== 'Backspace') return
-      const rows = selectedRowsOf(worksheet, propsRef.current.headers.length)
+      const rows = selectedRowsOf(worksheet, state)
       if (rows.length) propsRef.current.onRowsDelete(rows)
+    }
+    // Runs before the library's own mouse handling (on the document), which then selects.
+    const handleMouseDown = (event: MouseEvent) => {
+      const cell = (event.target as HTMLElement).closest('tbody td')
+      state.rowClick = Boolean(cell && !cell.previousElementSibling)
     }
     // Double-click a header to rename it in place.
     const handleDoubleClick = (event: MouseEvent) => {
@@ -289,7 +312,7 @@ export default function FactsSpreadsheet(props: FactsSheetProps) {
       jss = lib
       const sheet = document.createElement('div')
       host.appendChild(sheet)
-      const worksheet = createWorksheet(lib, sheet, host, propsRef, quiet)
+      const worksheet = createWorksheet(lib, sheet, host, propsRef, state)
       worksheetRef.current = worksheet
       const layout = sheetLayout(worksheet, host, propsRef)
       layout()
@@ -298,7 +321,8 @@ export default function FactsSpreadsheet(props: FactsSheetProps) {
       document.addEventListener('keydown', handleKeyDown)
       document.addEventListener('focusin', handleFocusIn)
       host.addEventListener('dblclick', handleDoubleClick)
-      propsRef.current.onReady(sheetApi(lib, worksheet, host, propsRef, quiet))
+      host.addEventListener('mousedown', handleMouseDown)
+      propsRef.current.onReady(sheetApi(lib, worksheet, host, propsRef, state))
     })
 
     return () => {
@@ -307,6 +331,7 @@ export default function FactsSpreadsheet(props: FactsSheetProps) {
       document.removeEventListener('focusin', handleFocusIn)
       document.removeEventListener('keydown', handleKeyDown)
       host.removeEventListener('dblclick', handleDoubleClick)
+      host.removeEventListener('mousedown', handleMouseDown)
       const sheet = host.firstElementChild as jspreadsheet.JspreadsheetInstanceElement | null
       if (jss && sheet) jss.destroy(sheet, true)
       host.replaceChildren()

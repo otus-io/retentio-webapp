@@ -73,7 +73,10 @@ export function useFactsCellAttachments(
       { key: 'image', label: t('term.image'), icon: ImageIcon, value: entry.image, loading: false, progress: null },
       // Video is no longer offered; one already attached is still shown.
       ...(entry.video
-        ? [{ key: 'video', label: t('term.video'), icon: VideoIcon, value: entry.video, loading: false, progress: null }]
+        ? [{
+          key: 'video', label: t('term.video'), icon: VideoIcon, value: entry.video, loading: false,
+          progress: null,
+        }]
         : []),
     ] as MediaItem[]
   })

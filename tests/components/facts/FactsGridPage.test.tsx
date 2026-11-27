@@ -30,7 +30,8 @@ const h = vi.hoisted(() => ({
     setHeader: vi.fn(),
     scrollToRow: vi.fn(),
     focusCell: vi.fn(),
-    selectedCell: vi.fn((): { x: number; y: number } | null => null),
+    selectedRange: vi.fn((): { x1: number; y1: number; x2: number; y2: number } | null => null),
+    focusSheet: vi.fn(),
     selectedRows: vi.fn((): number[] => []),
     markRows: vi.fn(),
     copySelection: vi.fn(),
@@ -181,7 +182,7 @@ describe('FactsGridPage', () => {
   beforeEach(() => {
     vi.clearAllMocks()
     h.api.firstVisibleRow.mockReturnValue(0)
-    h.api.selectedCell.mockReturnValue(null)
+    h.api.selectedRange.mockReturnValue(null)
     h.api.selectedRows.mockReturnValue([])
     vi.mocked(addFactsAction).mockReset()
     vi.mocked(sendToAuthor).mockReset()
@@ -312,7 +313,8 @@ describe('FactsGridPage', () => {
       const { rerender } = renderGrid()
       ready()
       const mounts = h.mounts
-      rerender(<FactsGridPage deck={{ ...deck, fields: ['Front', 'Back'] }} facts={[fact('f0'), fact('f1')]} total={251} />)
+      const resent = { ...deck, fields: ['Front', 'Back'] }
+      rerender(<FactsGridPage deck={resent} facts={[fact('f0'), fact('f1')]} total={251} />)
       expect(h.mounts).toBe(mounts)
       expect(h.api.setHeader).not.toHaveBeenCalled()
       expect(h.sheet).toHaveLength(251)
@@ -895,6 +897,35 @@ describe('FactsGridPage', () => {
       ])
     })
 
+    it('sends a big paste in batches, stopping at a failed one', async () => {
+      vi.mocked(addFactsAction).mockImplementationOnce(async (_d, list) => ({
+        success: true, data: { newFactIds: list.map((_, i) => `n${i}`) },
+      })).mockResolvedValueOnce({ success: false, error: 'boom' })
+      renderGrid(0, deck, [])
+      ready()
+      paste(0, Array.from({ length: 450 }, (_, i) => [`w${i}`, '']))
+      await waitFor(() => expect(showFailToast).toHaveBeenCalledWith('boom'))
+      await settle()
+      expect(vi.mocked(addFactsAction).mock.calls.map((c) => c[1].length)).toEqual([200, 200])
+      expect(vi.mocked(addFactsAction).mock.calls[1][1][0]).toEqual([{ text: 'w200' }, { text: '' }])
+    })
+
+    it('keeps a row being created even if it is emptied meanwhile', async () => {
+      let created!: (v: Awaited<ReturnType<typeof addFactsAction>>) => void
+      vi.mocked(addFactsAction).mockReturnValueOnce(new Promise((r) => { created = r }))
+      renderGrid(1)
+      ready()
+      act(() => h.props.onVisibleRowsChange(3))
+      edit(1, 0, 'x')
+      await waitFor(() => expect(addFactsAction).toHaveBeenCalled())
+      edit(1, 0, '')
+      act(() => h.props.onVisibleRowsChange(1))
+      expect(h.sheet).toHaveLength(3)
+      await act(async () => created({ success: true, data: { newFactIds: ['n1'] } }))
+      expect(screen.getByText('common.all')).toBeDefined()
+      expect(h.sheet[1]).toEqual(['', ''])
+    })
+
     it('reports a create that fails outright, keeping the row editable', async () => {
       vi.mocked(addFactsAction).mockRejectedValueOnce(new Error('offline'))
       renderGrid()
@@ -1441,23 +1472,26 @@ describe('FactsGridPage', () => {
       renderGrid()
       ready()
       // Another row, then another column of the same row.
-      for (const other of [{ x: 0, y: 3 }, { x: 1, y: 0 }]) {
+      for (const [x, y] of [[0, 3], [1, 0]]) {
         rightClick(0, 0)
-        h.api.selectedCell.mockReturnValue(other)
+        h.api.selectedRange.mockReturnValue({ x1: x, y1: y, x2: x, y2: y })
         act(() => h.modals.menu.onClose())
         await act(() => new Promise((r) => requestAnimationFrame(r)))
         await act(() => new Promise((r) => requestAnimationFrame(r)))
       }
       expect(h.api.focusCell).not.toHaveBeenCalled()
+      expect(h.api.focusSheet).not.toHaveBeenCalled()
     })
 
-    it('gives the keyboard back when the menu cell is still selected', async () => {
+    it('gives the keyboard back, keeping the selection, when the menu cell is still selected', async () => {
       renderGrid()
       ready()
-      rightClick(0, 1)
-      h.api.selectedCell.mockReturnValue({ x: 1, y: 0 })
+      // A block right-clicked inside, as for copying it.
+      rightClick(2, 1)
+      h.api.selectedRange.mockReturnValue({ x1: 0, y1: 1, x2: 1, y2: 3 })
       act(() => h.modals.menu.onClose())
-      await waitFor(() => expect(h.api.focusCell).toHaveBeenCalledWith(1, 0))
+      await waitFor(() => expect(h.api.focusSheet).toHaveBeenCalled())
+      expect(h.api.focusCell).not.toHaveBeenCalled()
     })
   })
 })

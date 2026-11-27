@@ -98,7 +98,8 @@ describe('addFactsAction', () => {
   })
 
   it('appends the facts in order in one request and returns their ids', async () => {
-    services.createFactsService.mockResolvedValueOnce({ success: true, data: { fact_length: 2, fact_ids: ['n1', 'n2'] } })
+    services.createFactsService
+      .mockResolvedValueOnce({ success: true, data: { fact_length: 2, fact_ids: ['n1', 'n2'] } })
     expect(await addFactsAction('d1', [[{ text: 'cat' }, { text: 'chat' }], [{ text: 'dog' }]], false, false))
       .toEqual({ success: true, data: { newFactIds: ['n1', 'n2'] } })
     expect(services.createFactsService).toHaveBeenLastCalledWith('d1', {
