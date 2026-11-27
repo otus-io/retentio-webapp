@@ -149,8 +149,20 @@ export async function addFactAction(
   verified: boolean,
   refreshFacts = true,
 ): Promise<ActionState<{ newFactIds: string[], idsUnknown?: boolean }>> {
+  return addFactsAction(deckId, [entries], verified, refreshFacts)
+}
+
+/**
+ * 一次添加多条词条（按顺序追加到末尾），返回与之一一对应的新词条 ID；数量对不上时 idsUnknown（无法逐条认出）。
+ */
+export async function addFactsAction(
+  deckId: string,
+  entriesList: Entry[][],
+  verified: boolean,
+  refreshFacts = true,
+): Promise<ActionState<{ newFactIds: string[], idsUnknown?: boolean }>> {
   const result = createFactsSchema.safeParse({
-    facts: [{ entries }],
+    facts: entriesList.map((entries) => ({ entries })),
     operation: 'append',
     verified: verified || undefined,
   })
@@ -160,7 +172,7 @@ export async function addFactAction(
   if (refreshFacts) revalidatePath(`/decks/${deckId}/facts`)
   revalidatePath(`/decks/${deckId}`)
   const newFactIds = res.data.fact_ids ?? []
-  // One fact was added, so exactly one id identifies it; anything else (e.g. a backend without fact_ids) does not.
-  if (newFactIds.length !== 1) return { success: true, data: { newFactIds: [], idsUnknown: true } }
+  // One id per added fact identifies each; anything else (e.g. a backend without fact_ids) does not.
+  if (newFactIds.length !== entriesList.length) return { success: true, data: { newFactIds: [], idsUnknown: true } }
   return { success: true, data: { newFactIds } }
 }

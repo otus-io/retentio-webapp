@@ -90,47 +90,78 @@ body {
 }
 
 
-.ag-cell-wrapper {
-  height: 100%;
+/* Facts sheet: the app's colours, in light and dark. */
+.facts-sheet {
+  --border_color: var(--border);
+  --header_background: var(--default);
+  --header_color: var(--muted);
+  --header_background_highlighted: color-mix(in oklab, var(--accent) 20%, var(--default));
+  --header_color_highlighted: var(--foreground);
+  --content_background: var(--background);
+  --content_color: var(--foreground);
+  --border_color_highlighted: var(--accent);
+  --selection: color-mix(in oklab, var(--accent) 12%, transparent);
+  --cursor: color-mix(in oklab, var(--accent) 10%, transparent);
 }
 
-/* Facts grid: renaming a field fills the whole header cell with one box, like editing a fact cell. */
-.ag-header-cell:has(.facts-grid-header-input) {
+.facts-sheet .jss_container,
+.facts-sheet .jss_content {
   padding: 0;
+  box-shadow: none;
 }
 
+/* Under a selected cell's tint: the page colour, not the library's white. */
+.facts-sheet .jss_worksheet {
+  border-right-color: var(--border);
+  border-bottom-color: var(--border);
+  background-color: var(--background);
+}
+
+.facts-sheet .jss_worksheet .readonly {
+  color: var(--muted);
+}
+
+/* The row whose number was right-clicked. */
+.facts-sheet .jss_worksheet > tbody > tr.facts-sheet-marked > td {
+  background-color: color-mix(in oklab, var(--accent) 15%, var(--background));
+}
+
+/* Facts sheet: renaming a field fills the whole header cell with one box, like editing a fact cell. */
 .facts-grid-header-input {
-  width: 100%;
-  height: 100%;
-  padding: 0 calc(var(--ag-cell-horizontal-padding) - 1px);
-  border: var(--ag-cell-editing-border);
-  border-radius: var(--ag-border-radius);
-  box-shadow: var(--ag-cell-editing-shadow);
-  background-color: var(--ag-background-color);
+  padding: 0 7px;
+  border: 1px solid var(--accent);
+  background-color: var(--background);
+  color: var(--foreground);
   font: inherit;
+  font-size: 13px;
   outline: none;
 }
 
-/* Facts grid: a wider scrollbar with a long thumb, so it stays easy to grab and drag
-   on decks with thousands of rows. */
-.facts-grid ::-webkit-scrollbar {
-  width: 14px;
-  height: 14px;
+/* Facts sheet: a wide scrollbar with a long thumb, so it stays easy to grab and drag on decks with thousands of
+   rows. The library asks for a thin one, which in Chrome also turns these styles off. */
+.facts-sheet .jss_content {
+  scrollbar-width: auto;
+  scrollbar-color: auto;
 }
 
-.facts-grid ::-webkit-scrollbar-track {
+.facts-sheet .jss_content::-webkit-scrollbar {
+  width: 16px;
+  height: 16px;
+}
+
+.facts-sheet .jss_content::-webkit-scrollbar-track {
   background: transparent;
 }
 
-.facts-grid ::-webkit-scrollbar-thumb {
-  min-width: 80px;
-  min-height: 80px;
+.facts-sheet .jss_content::-webkit-scrollbar-thumb {
+  min-width: 120px;
+  min-height: 120px;
   border: 3px solid transparent;
-  border-radius: 7px;
+  border-radius: 8px;
   background-clip: padding-box;
   background-color: color-mix(in oklab, var(--foreground) 35%, transparent);
 }
 
-.facts-grid ::-webkit-scrollbar-thumb:hover {
+.facts-sheet .jss_content::-webkit-scrollbar-thumb:hover {
   background-color: color-mix(in oklab, var(--foreground) 55%, transparent);
 }

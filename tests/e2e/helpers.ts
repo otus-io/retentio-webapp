@@ -1,5 +1,5 @@
 import fs from 'node:fs'
-import { expect, test, type Page } from '@playwright/test'
+import { expect, test, type Locator, type Page } from '@playwright/test'
 import { API_BASE_URL, JWT_COOKIE_NAME } from '../../src/config/index'
 import { getTestUserAuthStatePath } from './global-setup'
 
@@ -73,12 +73,12 @@ export async function gotoDeckFacts(page: Page, deckName: string) {
     .click()
 
   await page.waitForURL(/\/decks\/[^/]+\/facts$/)
-  await expect(page.locator('.ag-root')).toBeVisible()
+  await expect(page.locator('.jss_worksheet')).toBeVisible()
 }
 
 /**
  * 进入第一个 deck 的 facts 页面（没有 deck 时先创建一个），
- * 返回时 ag-grid 已渲染
+ * 返回时表格已渲染
  */
 export async function gotoFirstDeckFacts(page: Page) {
   await page.goto('/decks')
@@ -97,58 +97,61 @@ export async function gotoFirstDeckFacts(page: Page) {
     .locator('[data-slot="dropdown-popover"] [data-slot="menu-item"][data-key="facts"]')
     .click()
 
-  // 进入 facts 页面，等待 ag-grid 渲染
+  // 进入 facts 页面，等待表格渲染
   await page.waitForURL(/\/decks\/[^/]+\/facts$/)
-  await expect(page.locator('.ag-root')).toBeVisible()
+  await expect(page.locator('.jss_worksheet')).toBeVisible()
 }
 
-/** facts 页标题里的词条总数（“All Facts(n)”）；表格末尾总有填满屏幕的空行，不能用行数判断 */
+/** facts 页标题里的词条总数（“All Facts(n)”）；表格末尾总有一个空行，不能用行数判断 */
 async function factsTotal(page: Page) {
   const text = await page.getByText(/All Facts\(\d+\)/).textContent()
   return Number(text?.match(/\((\d+)\)/)?.[1] ?? 0)
 }
 
+/** 滚动到表格末尾并选中最后一个词条下方的第一个空行 */
+export async function selectFirstEmptyRow(page: Page) {
+  const total = await factsTotal(page)
+  await factsScroller(page).evaluate((el) => { el.scrollTop = el.scrollHeight })
+  await factCell(page, total, 0).click()
+  await expect(factCell(page, total, 0)).toHaveClass(/highlight-selected/)
+  return total
+}
+
 /**
- * 在当前 facts 页面新建一行：按钮跳到第一个空行并进入编辑，输入文字后保存为新词条，等待总数增加
+ * 在当前 facts 页面新建一行：选中第一个空行，输入文字后保存为新词条，等待总数增加
  */
 export async function addFactRow(page: Page, text = 'new fact') {
-  const totalBefore = await factsTotal(page)
-  const icon = page.locator('.facts-grid-create-row-icon')
-  await expect(icon).toBeVisible()
-
-  await page.locator('#facts-grid-create-row').click()
-  const editor = page.locator('.ag-cell-inline-editing input')
-  await expect(editor).toBeVisible()
-  await editor.fill(text)
-  await editor.press('Enter')
+  const totalBefore = await selectFirstEmptyRow(page)
+  await typeIntoSelectedCell(page, text)
 
   await expect(async () => {
     expect(await factsTotal(page)).toBeGreaterThan(totalBefore)
   }).toPass({ timeout: 10000 })
+}
 
-  await expect(page.locator('.facts-grid-create-row-icon')).toBeVisible()
+/** 在选中的单元格里打字（像电子表格一样直接开始编辑），Enter 保存 */
+export async function typeIntoSelectedCell(page: Page, text: string) {
+  await page.keyboard.type(text)
+  await page.keyboard.press('Enter')
+}
+
+/** facts 列头单元格 */
+export function columnHeader(page: Page, columnIndex: number) {
+  return page.locator(`.jss_worksheet thead td[data-x="${columnIndex}"]`)
 }
 
 /**
- * 读取 facts 列头文本（header 可能处于 input 编辑态）
+ * 读取 facts 列头文本
  */
 export async function getColumnHeaderText(page: Page, columnIndex: number): Promise<string> {
-  const header = page.locator('.facts-grid-header-renderer').nth(columnIndex)
-  return header.evaluate((el) => {
-    const inp = el.querySelector('input')
-    return inp?.value ?? el.textContent ?? ''
-  })
+  return (await columnHeader(page, columnIndex).textContent()) ?? ''
 }
 
 /**
- * 第一行第一个 fact 数据单元格（行号列固定在左侧容器，不在 center 容器中）
+ * 第一行第一个 fact 数据单元格（不含行号列）
  */
 export function firstFactDataCell(page: Page) {
-  return page
-    .locator('.ag-center-cols-container [role="row"]')
-    .first()
-    .locator('.ag-cell')
-    .first()
+  return factCell(page, 0, 0)
 }
 
 /**
@@ -161,33 +164,35 @@ export async function editFirstFactCell(page: Page, text: string) {
     (r) => r.request().method() === 'PATCH' && /\/api\/decks\/[^/]+\/facts\//.test(r.url()) && r.ok(),
   )
 
-  await cell.dblclick()
-
-  const editorInput = cell.getByRole('textbox')
-  await expect(editorInput).toBeVisible({ timeout: 5000 })
-  await editorInput.fill(text)
-  // Enter commits and closes the editor; Tab can leave the cell in edit mode under load.
-  await editorInput.press('Enter')
+  await editCell(page, cell, text)
   await savePromise
 
-  await expect(cell.getByRole('textbox')).toHaveCount(0, { timeout: 5000 })
   await expect(cell).toContainText(text, { timeout: 5000 })
 }
 
+/** 双击单元格进入编辑，替换为 text，Enter 保存 */
+export async function editCell(page: Page, cell: Locator, text: string) {
+  await cell.dblclick()
+  const editor = cell.locator('input, textarea')
+  await expect(editor).toBeVisible({ timeout: 5000 })
+  await editor.fill(text)
+  await editor.press('Enter')
+  await expect(cell.locator('input, textarea')).toHaveCount(0, { timeout: 5000 })
+}
+
 /**
- * 重命名 facts 表格指定列头
+ * 重命名 facts 表格指定列头（双击列头，在框里输入，Enter 保存）
  */
 export async function renameColumn(page: Page, columnIndex: number, newName: string) {
-  const header = page.locator('.facts-grid-header-renderer').nth(columnIndex)
-  const input = header.locator('input')
-  await header.dblclick()
+  const input = page.locator('.facts-grid-header-input')
+  await columnHeader(page, columnIndex).dblclick()
   await expect(input).toBeVisible()
 
   const savePromise = page.waitForResponse(
     (r) => r.request().method() === 'PATCH' && /\/api\/decks\/[^/]+$/.test(r.url()) && r.ok(),
   )
   await input.fill(newName)
-  await input.press('Escape')
+  await input.press('Enter')
   await savePromise
 
   await expect.poll(async () => getColumnHeaderText(page, columnIndex)).toContain(newName)
@@ -517,24 +522,32 @@ export async function gotoSeededDeckFacts(page: Page, prefix: string, count: num
   return deckId
 }
 
-/** facts 表格中第 row 行、第 col 个字段单元格（不含左侧固定的行号列） */
+/** facts 表格中第 row 行、第 col 个字段单元格（不含行号列） */
 export function factCell(page: Page, row: number, col: number) {
-  return page.locator(`.ag-center-cols-container [row-index="${row}"] .ag-cell`).nth(col)
+  return page.locator(`.jss_worksheet tbody td[data-x="${col}"][data-y="${row}"]`)
 }
 
 /** facts 表格中第 row 行的行号（ID）单元格 */
 export function factIdCell(page: Page, row: number) {
-  return page.locator(`.ag-pinned-left-cols-container [row-index="${row}"] .ag-cell`)
+  return page.locator(`.jss_worksheet tbody tr[data-y="${row}"] > td:first-child`)
 }
 
-/** 当前获得焦点的单元格文本 */
+/** 当前选中（键盘所在）的单元格文本 */
 export function focusedFactCellText(page: Page) {
-  return page.evaluate(() => document.querySelector('.ag-cell-focus')?.textContent ?? null)
+  return page.evaluate(() => document.querySelector('.jss_worksheet td.highlight-selected')?.textContent ?? null)
 }
 
-/** 表格滚动位置对应的第一行行号（每行 32px） */
+/** facts 表格的滚动区域 */
+export function factsScroller(page: Page) {
+  return page.locator('.facts-sheet .jss_content')
+}
+
+/** 表格滚动位置对应的第一行行号 */
 export function factsTopRow(page: Page) {
-  return page.locator('.ag-body-viewport').evaluate((el) => Math.round(el.scrollTop / 32))
+  return factsScroller(page).evaluate((el) => {
+    const row = el.querySelector<HTMLElement>('tbody tr')
+    return Math.round(el.scrollTop / (row?.offsetHeight || 1))
+  })
 }
 
 /** 右键菜单（只会有一个） */

@@ -51,9 +51,6 @@ function mimeToMediaType(mime: string): MediaType {
   if(mime.startsWith('audio')){
     return 'audio'
   }
-  if(mime.startsWith('video')){
-    return 'video'
-  }
   throw new Error('unknown Media Type ')
 }
 
@@ -74,7 +71,13 @@ export function useFactsCellAttachments(
     return [
       { key: 'audio', label: t('term.audio'), icon: MicIcon, value: entry.audio, loading: false, progress: null },
       { key: 'image', label: t('term.image'), icon: ImageIcon, value: entry.image, loading: false, progress: null },
-      { key: 'video', label: t('term.video'), icon: VideoIcon, value: entry.video, loading: false, progress: null },
+      // Video is no longer offered; one already attached is still shown.
+      ...(entry.video
+        ? [{
+          key: 'video', label: t('term.video'), icon: VideoIcon, value: entry.video, loading: false,
+          progress: null,
+        }]
+        : []),
     ] as MediaItem[]
   })
   const handleUpload = useCallback(async(files: File[]) => {

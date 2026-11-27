@@ -8,7 +8,6 @@ import FactsAudioPlayButton from '@/components/facts/FactsAudioPlayButton'
 import FactsMediaPreviewModal from '@/components/facts/FactsMediaPreviewModal'
 import type { MediaType } from '@/hooks/useFactsCellAttachments'
 import { useFactsCellAttachments } from '@/hooks/useFactsCellAttachments'
-import type { GridApi } from 'ag-grid-community'
 
 export interface FactsMediaModalProps {
   entry?: Entry
@@ -16,7 +15,6 @@ export interface FactsMediaModalProps {
   deckId?: string
   imported?: boolean
   isOpen: boolean,
-  getApi: () => GridApi<any>
   setIsOpen: (isOpen: boolean) => void
   onUpload?: Parameters<typeof useFactsCellAttachments>[1]
 }
@@ -27,7 +25,6 @@ export default function FactsMediaModal({
   deckId,
   imported,
   isOpen,
-  getApi,
   setIsOpen,
   onUpload,
 }: FactsMediaModalProps) {
@@ -38,7 +35,6 @@ export default function FactsMediaModal({
     <FactsAttachmentInner
       onUpload={onUpload}
       setIsOpen={setIsOpen}
-      getApi={getApi}
       isOpen={isOpen}
       entry={entry}
       deckId={deckId}

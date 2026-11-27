@@ -657,6 +657,10 @@
   "facts-grid": {
     "save-failed": "无法保存你的修改",
     "load-failed": "无法加载全部词条，请刷新页面重试。",
-    "delete-failed": "无法删除该词条"
+    "delete-failed": "无法删除该词条",
+    "empty-fact": "词条不能为空。要删除词条，请选中行号后按 Delete 键。",
+    "copy": "复制",
+    "paste": "粘贴",
+    "paste-blocked": "浏览器不允许从菜单粘贴，请按 Ctrl+V（Mac 上为 ⌘V）。"
   }
 }

@@ -30,7 +30,8 @@ describe('useMediaUpload', () => {
     const accept = config.accept as Record<string, string[]>
     expect(accept['image/jpeg']).toBeDefined()
     expect(accept['audio/mpeg']).toBeDefined()
-    expect(accept['video/mp4']).toBeDefined()
+    // Video is not offered as an attachment.
+    expect(Object.keys(accept).some((type) => type.startsWith('video/'))).toBe(false)
   })
 
   it('multiple 参数透传给 useDropzone', () => {
@@ -53,12 +54,6 @@ describe('useMediaUpload', () => {
   it('validator 拒绝超过 200MB 的音频', () => {
     useMediaUpload()
     const largeFile = new File(['x'.repeat(201 * 1024 * 1024)], 'big.mp3', { type: 'audio/mpeg' })
-    expect(lastConfig().validator!(largeFile)).toMatchObject({ code: 'file-too-large' })
-  })
-
-  it('validator 拒绝超过 200MB 的视频', () => {
-    useMediaUpload()
-    const largeFile = new File(['x'.repeat(201 * 1024 * 1024)], 'big.mp4', { type: 'video/mp4' })
     expect(lastConfig().validator!(largeFile)).toMatchObject({ code: 'file-too-large' })
   })
 

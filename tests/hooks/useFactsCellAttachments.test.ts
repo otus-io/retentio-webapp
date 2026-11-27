@@ -68,21 +68,24 @@ describe('useFactsCellAttachments', () => {
     expect(result.current.mediaList).toHaveLength(0)
   })
 
-  it('有 entry 时返回 3 个媒体条目', () => {
-    const { result } = renderHook(() => useFactsCellAttachments(mockEntry))
+  it('有 entry 时返回音频和图片两个媒体条目（不再提供视频）', () => {
+    const { result } = renderHook(() => useFactsCellAttachments({ ...mockEntry, video: undefined }))
     const list = result.current.mediaList
-    expect(list).toHaveLength(3)
+    expect(list).toHaveLength(2)
 
     expect(list[0]).toMatchObject({ key: 'audio', label: 'term.audio' })
     expect(list[1]).toMatchObject({ key: 'image', label: 'term.image' })
-    expect(list[2]).toMatchObject({ key: 'video', label: 'term.video' })
+  })
+
+  it('已附加的视频仍然显示', () => {
+    const { result } = renderHook(() => useFactsCellAttachments(mockEntry))
+    expect(result.current.mediaList[2]).toMatchObject({ key: 'video', label: 'term.video', value: 'vid-1' })
   })
 
   it('有 entry 时 mediaList 包含对应的 value', () => {
     const { result } = renderHook(() => useFactsCellAttachments(mockEntry))
     expect(result.current.mediaList[0].value).toBe('audio-1')
     expect(result.current.mediaList[1].value).toBe('img-1')
-    expect(result.current.mediaList[2].value).toBe('vid-1')
   })
 
   it('初始状态 isOpen 为 false', () => {
@@ -161,10 +164,9 @@ describe('useFactsCellAttachments', () => {
     expect(result.current.loading).toBe(false)
   })
 
-  it('stores audio and video uploads on the matching row', async () => {
+  it('stores audio uploads on the matching row', async () => {
     const cases = [
       { mime: 'audio/mpeg', id: 'new-audio', index: 0, type: 'audio' },
-      { mime: 'video/mp4', id: 'new-video', index: 2, type: 'video' },
     ] as const
 
     for (const item of cases) {
@@ -201,6 +203,21 @@ describe('useFactsCellAttachments', () => {
     expect(onUpload).not.toHaveBeenCalled()
     expect(result.current.loading).toBe(false)
     expect(result.current.mediaList.map((item) => item.value)).toEqual(['audio-1', 'img-1', 'vid-1'])
+  })
+
+  it('rejects a video upload too: video is not offered', async () => {
+    vi.mocked(uploadMedia).mockResolvedValueOnce({
+      data: { id: 'vid', mime: 'video/mp4' },
+    } as Awaited<ReturnType<typeof uploadMedia>>)
+    const onUpload = vi.fn()
+    renderHook(() => useFactsCellAttachments(mockEntry, onUpload))
+
+    await act(async () => {
+      await expect(
+        onAccepted?.([new File(['x'], 'a.mp4', { type: 'video/mp4' })]),
+      ).rejects.toThrow('unknown Media Type')
+    })
+    expect(onUpload).not.toHaveBeenCalled()
   })
 
   it('does not open a preview when the media id is missing', async () => {

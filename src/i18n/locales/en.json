@@ -657,6 +657,10 @@
   "facts-grid": {
     "save-failed": "Couldn't save your changes",
     "load-failed": "Couldn't load all facts. Reload the page to try again.",
-    "delete-failed": "Couldn't delete this fact"
+    "delete-failed": "Couldn't delete this fact",
+    "empty-fact": "A fact can't be empty. To delete facts, select their row numbers and press Delete.",
+    "copy": "Copy",
+    "paste": "Paste",
+    "paste-blocked": "The browser blocked pasting from the menu. Press Ctrl+V (⌘V on Mac) instead."
   }
 }

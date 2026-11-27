@@ -19,7 +19,13 @@ export default async function Page(props: PageProps<'/decks/[id]/facts'>) {
   }
 
   return (
-    <FactsGridPage key={id} deck={data.data} facts={page.data.facts} total={page.meta.total} />
+    // A column added or removed elsewhere starts the sheet afresh; renames update it in place.
+    <FactsGridPage
+      key={`${id}:${data.data.fields.length}`}
+      deck={data.data}
+      facts={page.data.facts}
+      total={page.meta.total}
+    />
   )
 }
 

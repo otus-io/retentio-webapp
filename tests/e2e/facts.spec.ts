@@ -50,7 +50,7 @@ test.describe('Facts', () => {
     await editFirstFactCell(page, cellText)
 
     await page.reload()
-    await expect(page.locator('.ag-root')).toBeVisible()
+    await expect(page.locator('.jss_worksheet')).toBeVisible()
     await expect(firstFactDataCell(page)).toContainText(cellText)
   })
 
@@ -63,7 +63,7 @@ test.describe('Facts', () => {
     await renameColumn(page, 0, newName)
 
     await page.reload()
-    await expect(page.locator('.ag-root')).toBeVisible()
+    await expect(page.locator('.jss_worksheet')).toBeVisible()
     await expect.poll(async () => getColumnHeaderText(page, 0)).toContain(newName)
   })
 
