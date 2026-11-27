@@ -357,6 +357,7 @@
     "deck_tags": "卡组标签",
     "fact_edit": "词条修改",
     "fact_add": "新增词条",
+    "fact_tags": "词条标签",
     "submit-selected": "提交（{count}）",
     "batch-submit-success": "已发送 {count} 条建议",
     "batch-submit-failed": "{count} 条建议发送失败，已保留在待发送列表",

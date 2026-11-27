@@ -237,6 +237,15 @@ export type PendingDeckContribution = {
   factId: string
   preview: string
   savedAt: string
+} | {
+  /** 导入卡组中词条的标签增删（按标签名） */
+  id: `fact_tags:${string}`
+  kind: 'fact_tags'
+  factId: string
+  preview: string
+  addTags: string[]
+  removeTags: string[]
+  savedAt: string
 }
 
 /** 已发送的本地贡献记录 */

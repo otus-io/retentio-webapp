@@ -22,16 +22,21 @@ export function isPendingContribution(value: unknown): value is PendingDeckContr
   if (value.id === 'deck_tags' && value.kind === 'deck_tags') {
     return isStringArray(value.addTags) && isStringArray(value.removeTags)
   }
+  if (value.kind === 'fact_tags' && typeof value.factId === 'string') {
+    return value.id === `fact_tags:${value.factId}` && isStringArray(value.addTags) && isStringArray(value.removeTags)
+  }
   if ((value.kind === 'fact_edit' || value.kind === 'fact_add') && typeof value.factId === 'string') {
     return value.id === `${value.kind}:${value.factId}`
   }
   return value.id === 'field_rename' && value.kind === 'field_rename' && isStringArray(value.proposedFields)
 }
 
+const CONTRIBUTION_KINDS = ['deck_tags', 'field_rename', 'description_edit', 'fact_edit', 'fact_add', 'fact_tags']
+
 export function isSentContribution(value: unknown): value is SentDeckContribution {
   return isRecord(value)
     && typeof value.id === 'string'
-    && typeof value.kind === 'string' && ['deck_tags', 'field_rename', 'description_edit', 'fact_edit', 'fact_add'].includes(value.kind)
+    && typeof value.kind === 'string' && CONTRIBUTION_KINDS.includes(value.kind)
     && typeof value.preview === 'string'
     && typeof value.contributionId === 'string'
     && typeof value.sentAt === 'string'

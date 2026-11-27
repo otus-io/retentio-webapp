@@ -351,6 +351,7 @@
     "deck_tags": "デッキタグ",
     "fact_edit": "項目編集",
     "fact_add": "新規項目",
+    "fact_tags": "項目タグ",
     "submit-selected": "送信（{count}）",
     "batch-submit-success": "{count} 件の提案を送信しました",
     "batch-submit-failed": "{count} 件の送信に失敗し、保留中に残しました",

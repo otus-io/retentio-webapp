@@ -16,10 +16,12 @@ import {
 import { Plus } from 'lucide-react'
 import { useTranslations } from 'next-intl'
 import Fuse from 'fuse.js'
-import { useCallback, useDeferredValue, useEffect, useMemo, useState } from 'react'
+import { useCallback, useDeferredValue, useEffect, useMemo, useRef, useState } from 'react'
 import AppButton from '@/components/app/AppButton'
 import TagFormModal from '@/components/tags/TagFormModal'
 import { showFailToast } from '@/lib/ui'
+import { factContribution, factTagsContribution, sendToAuthor } from '@/modules/contributions/auto-send'
+import { previewFromEntries } from '@/modules/contributions/pending-contributions'
 
 interface FactsTagsModalProps {
   deck: Deck
@@ -36,6 +38,10 @@ export default function FactsTagsModal({ deck, fact, isOpen, setIsOpen }: FactsT
   const [formOpen, setFormOpen] = useState(false)
   const [keywords, setKeywords] = useState('')
   const deferredQuery = useDeferredValue(keywords)
+  // Imported deck: the fact's tags when the dialog loaded, and as saved since; the change goes to the author on close.
+  const openedWithRef = useRef<Set<string> | null>(null)
+  const savedRef = useRef(new Set<string>())
+  const savesRef = useRef<Promise<unknown>[]>([])
 
   const fuse = useMemo(() => new Fuse(tags, { keys: ['name', 'description'] }), [tags])
   const results = useMemo(() => {
@@ -55,7 +61,10 @@ export default function FactsTagsModal({ deck, fact, isOpen, setIsOpen }: FactsT
         ])
         if (cancelled) return
         setTags(allRes.data.tags ?? [])
-        setSelectedKeys(new Set((factRes.data.tags ?? []).map((tag) => tag.id)))
+        const ids = (factRes.data.tags ?? []).map((tag) => tag.id)
+        setSelectedKeys(new Set(ids))
+        openedWithRef.current = new Set(ids)
+        savedRef.current = new Set(ids)
       }
       finally {
         if (!cancelled) setIsLoading(false)
@@ -68,18 +77,48 @@ export default function FactsTagsModal({ deck, fact, isOpen, setIsOpen }: FactsT
   }, [isOpen, deck.id, fact.id])
 
   const associateTag = useCallback((key: Key) => {
-    associateTagToFact(deck.id, fact.id, String(key)).catch((err) => {
-      showFailToast(err)
-      setSelectedKeys((s) => { const next = new Set(s); next.delete(key); return next })
-    })
+    savesRef.current.push(associateTagToFact(deck.id, fact.id, String(key)).then(
+      () => savedRef.current.add(String(key)),
+      (err) => {
+        showFailToast(err)
+        setSelectedKeys((s) => { const next = new Set(s); next.delete(key); return next })
+      },
+    ))
   }, [deck.id, fact.id])
 
   const removeTag = useCallback((key: Key) => {
-    removeTagFromFact(deck.id, fact.id, String(key)).catch((err) => {
-      showFailToast(err)
-      setSelectedKeys((s) => new Set(s).add(key))
-    })
+    savesRef.current.push(removeTagFromFact(deck.id, fact.id, String(key)).then(
+      () => savedRef.current.delete(String(key)),
+      (err) => {
+        showFailToast(err)
+        setSelectedKeys((s) => new Set(s).add(key))
+      },
+    ))
   }, [deck.id, fact.id])
+
+  // Once closed and every save is done: a fact the importer added re-sends its fact_add (which carries its tags, as
+  // the author has no fact to tag); any other fact sends its tag changes.
+  const sendTagChanges = useCallback(async (openedWith: Set<string>) => {
+    const saved = savedRef.current
+    const names = (ids: string[]) => ids.flatMap((id) => tags.find((tag) => tag.id === id)?.name ?? [])
+    const addTags = names([...saved].filter((id) => !openedWith.has(id)))
+    const removeTags = names([...openedWith].filter((id) => !saved.has(id)))
+    if (!addTags.length && !removeTags.length) return
+    const preview = previewFromEntries(fact.entries)
+    const { unsent } = await sendToAuthor(deck.id, [fact.local
+      ? factContribution('fact_add', fact.id, preview)
+      : factTagsContribution(fact.id, preview, addTags, removeTags)])
+    if (unsent) showFailToast(t('auto-send.unsent'))
+  }, [deck.id, fact, tags, t])
+
+  useEffect(() => {
+    const openedWith = openedWithRef.current
+    if (isOpen || !deck.source_deck_id || !openedWith) return
+    openedWithRef.current = null
+    const saves = savesRef.current
+    savesRef.current = []
+    void Promise.allSettled(saves).then(() => sendTagChanges(openedWith))
+  }, [isOpen, deck.source_deck_id, sendTagChanges])
 
   const handleSelectionChange = useCallback((keys: Selection) => {
     if (keys === 'all') return
