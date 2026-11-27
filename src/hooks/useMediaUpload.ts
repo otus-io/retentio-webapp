@@ -3,7 +3,6 @@ import { useDropzone } from 'react-dropzone'
 
 const MB = 1024 * 1024
 const MAX_IMAGE = 5 * MB
-const MAX_VIDEO = 200 * MB
 const MAX_AUDIO = 200 * MB
 
 // ── 允许的 MIME ───────────────────────────────────────────────
@@ -24,19 +23,11 @@ const ACCEPTED_TYPES = {
   'audio/aac': [],
   'audio/webm': [],
   'audio/mp4': [], // m4a
-  // 常见视频
-  'video/mp4': [],
-  'video/webm': [],
-  'video/ogg': [],
-  'video/quicktime': [], // mov
-  'video/x-msvideo': [], // avi
-  'video/x-matroska': [], // mkv
 }
 
 // ── 按 MIME 取对应大小上限 ────────────────────────────────────
 function maxSizeFor(mime: string): number {
   if (mime.startsWith('image/')) return MAX_IMAGE
-  if (mime.startsWith('video/')) return MAX_VIDEO
   if (mime.startsWith('audio/')) return MAX_AUDIO
   return 0
 }

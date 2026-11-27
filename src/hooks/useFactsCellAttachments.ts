@@ -4,7 +4,7 @@ import { useMediaUpload } from '@/hooks/useMediaUpload'
 import { createBlobCache } from '@/lib/idb-cache'
 import type { Entry } from '@/modules/facts/facts.schema'
 import type { LucideIcon } from 'lucide-react'
-import { ImageIcon, MicIcon, VideoIcon } from 'lucide-react'
+import { ImageIcon, MicIcon } from 'lucide-react'
 import { useTranslations } from 'next-intl'
 import { useCallback, useReducer, useState } from 'react'
 
@@ -51,9 +51,6 @@ function mimeToMediaType(mime: string): MediaType {
   if(mime.startsWith('audio')){
     return 'audio'
   }
-  if(mime.startsWith('video')){
-    return 'video'
-  }
   throw new Error('unknown Media Type ')
 }
 
@@ -74,7 +71,6 @@ export function useFactsCellAttachments(
     return [
       { key: 'audio', label: t('term.audio'), icon: MicIcon, value: entry.audio, loading: false, progress: null },
       { key: 'image', label: t('term.image'), icon: ImageIcon, value: entry.image, loading: false, progress: null },
-      { key: 'video', label: t('term.video'), icon: VideoIcon, value: entry.video, loading: false, progress: null },
     ] as MediaItem[]
   })
   const handleUpload = useCallback(async(files: File[]) => {

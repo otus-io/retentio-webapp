@@ -13,7 +13,13 @@ vi.mock('next/cache', () => ({ revalidatePath }))
 const redirect = vi.hoisted(() => vi.fn())
 vi.mock('next/navigation', () => ({ redirect }))
 
-import { addFactAction, deleteFactAction, getFactAction, updateFactEntriesAction } from '@/modules/facts/facts.action'
+import {
+  addFactAction,
+  addFactsAction,
+  deleteFactAction,
+  getFactAction,
+  updateFactEntriesAction,
+} from '@/modules/facts/facts.action'
 
 describe('study fact actions', () => {
   beforeEach(() => {
@@ -83,6 +89,28 @@ describe('updateFactEntriesAction validation', () => {
     const entries = [{ text: 'a', json: '{"k":1}' }] as never
     await updateFactEntriesAction('d1', 'f1', entries)
     expect(services.updateFactService).toHaveBeenCalledWith('d1', 'f1', { entries: [{ text: 'a', json: '{"k":1}' }] })
+  })
+})
+
+describe('addFactsAction', () => {
+  beforeEach(() => {
+    vi.clearAllMocks()
+  })
+
+  it('appends the facts in order in one request and returns their ids', async () => {
+    services.createFactsService.mockResolvedValueOnce({ success: true, data: { fact_length: 2, fact_ids: ['n1', 'n2'] } })
+    expect(await addFactsAction('d1', [[{ text: 'cat' }, { text: 'chat' }], [{ text: 'dog' }]], false, false))
+      .toEqual({ success: true, data: { newFactIds: ['n1', 'n2'] } })
+    expect(services.createFactsService).toHaveBeenLastCalledWith('d1', {
+      facts: [{ entries: [{ text: 'cat' }, { text: 'chat' }] }, { entries: [{ text: 'dog' }] }],
+      operation: 'append',
+    })
+  })
+
+  it('reports the new facts as unknown when the ids do not match them one for one', async () => {
+    services.createFactsService.mockResolvedValueOnce({ success: true, data: { fact_length: 2, fact_ids: ['n1'] } })
+    expect(await addFactsAction('d1', [[{ text: 'cat' }], [{ text: 'dog' }]], false))
+      .toEqual({ success: true, data: { newFactIds: [], idsUnknown: true } })
   })
 })
 

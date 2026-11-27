@@ -10,21 +10,29 @@ describe('FactsCellContextMenu', () => {
     expect(screen.queryByRole('menu')).toBeNull()
   })
 
-  it('anchors at the pointer and lists attachment, tags and delete', () => {
+  it('anchors at the pointer and lists copy, paste, attachment, tags and delete', () => {
     render(<FactsCellContextMenu position={{ x: 12, y: 34 }} onAction={vi.fn()} onClose={vi.fn()} />)
     const trigger = document.querySelector('[data-slot="dropdown-trigger"]') as HTMLElement
     expect(trigger.style.left).toBe('12px')
     expect(trigger.style.top).toBe('34px')
     expect(screen.getAllByRole('menuitem').map((el) => el.textContent)).toEqual([
+      'facts-grid.copy',
+      'facts-grid.paste',
       'term.attachment',
       'term.tags',
       'common.delete',
     ])
   })
 
-  it('lists only delete for a row menu', () => {
+  it('lists copy, paste and delete for a row menu', () => {
     render(<FactsCellContextMenu position={{ x: 0, y: 0 }} rowMenu onAction={vi.fn()} onClose={vi.fn()} />)
-    expect(screen.getAllByRole('menuitem').map((el) => el.textContent)).toEqual(['common.delete'])
+    expect(screen.getAllByRole('menuitem').map((el) => el.textContent))
+      .toEqual(['facts-grid.copy', 'facts-grid.paste', 'common.delete'])
+  })
+
+  it('lists only copy and paste on a row without a fact', () => {
+    render(<FactsCellContextMenu position={{ x: 0, y: 0 }} factActions={false} onAction={vi.fn()} onClose={vi.fn()} />)
+    expect(screen.getAllByRole('menuitem').map((el) => el.textContent)).toEqual(['facts-grid.copy', 'facts-grid.paste'])
   })
 
   it('reports the chosen action and closes', () => {
