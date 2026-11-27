@@ -71,7 +71,6 @@ vi.mock('lucide-react', () => ({
   GitPullRequest: () => <span data-testid="icon-git-pull-request" />,
   GitMerge: () => <span data-testid="icon-git-merge" />,
   RefreshCw: () => <span data-testid="icon-refresh" />,
-  Download: () => <span data-testid="icon-download" />,
 }))
 
 import { ANDROID_INSTALL_PATH, TESTFLIGHT_JOIN_URL } from '@/config'
