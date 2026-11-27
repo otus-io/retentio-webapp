@@ -245,6 +245,15 @@ describe('FactsSpreadsheet', () => {
       expect(api.isEditing()).toBe(false)
     })
 
+    it('does not tell of an editor closing once the sheet is gone', async () => {
+      const { worksheet, td, props, view } = await ready()
+      act(() => worksheet.openEditor(td(0, 0)))
+      act(() => worksheet.closeEditor(td(0, 0), true))
+      view.unmount()
+      await new Promise((r) => setTimeout(r, 10))
+      expect(props.onEditEnd).not.toHaveBeenCalled()
+    })
+
     it('moves the selection by rows, never above the first', async () => {
       const { api, worksheet } = await ready()
       act(() => api.shiftSelection(-1))
@@ -280,12 +289,19 @@ describe('FactsSpreadsheet', () => {
       expect(copy).toHaveBeenCalled()
     })
 
-    it('pastes at the top-left of the selection, as the user would', async () => {
-      const { api, props, td, worksheet } = await ready()
-      act(() => api.pasteAtSelection('nothing selected'))
-      expect(props.onCellsChange).not.toHaveBeenCalled()
-      act(() => worksheet.updateSelectionFromCoords(1, 3, 0, 2))
-      act(() => api.pasteAtSelection('x'))
+    it('copies the cells as typed, not as HTML', async () => {
+      const { api, worksheet } = await ready([['a & <b>', 'say "hi"'], ['tab\there', ''], ['', '']], [])
+      const execCommand = vi.fn(() => true)
+      Object.defineProperty(document, 'execCommand', { configurable: true, value: execCommand })
+      act(() => worksheet.updateSelectionFromCoords(0, 0, 1, 1))
+      act(() => api.copySelection())
+      expect(execCommand).toHaveBeenCalledWith('copy')
+      expect(worksheet.textarea.value).toBe('a & <b>\t"say ""hi"""\n"tab\there"\t')
+    })
+
+    it('pastes with its top-left at the given cell, as the user would', async () => {
+      const { api, props, td } = await ready()
+      act(() => api.pasteAt(0, 2, 'x'))
       expect(td(0, 2).textContent).toBe('x')
       expect(props.onCellsChange).toHaveBeenCalledWith(expect.arrayContaining([{ x: 0, y: 2, value: 'x' }]))
     })
@@ -477,6 +493,17 @@ describe('FactsSpreadsheet', () => {
       fireEvent.keyDown(document.body, { key: 'Delete', keyCode: 46, which: 46 })
       expect(td(0, 0).textContent).toBe('')
       expect(props.onCellsChange).toHaveBeenCalledWith([{ x: 0, y: 0, value: '' }])
+    })
+
+    it('leaves Enter and Escape to an input method while it composes', async () => {
+      const { props, header } = await ready()
+      fireEvent.doubleClick(header(0))
+      fireEvent.change(box(), { target: { value: 'Word' } })
+      fireEvent.keyDown(box(), { key: 'Enter', isComposing: true })
+      fireEvent.keyDown(box(), { key: 'Escape', isComposing: true })
+      expect(box()).toHaveProperty('value', 'Word')
+      fireEvent.keyDown(box(), { key: 'Enter' })
+      expect(props.onHeaderRename).toHaveBeenCalledWith(0, 'Word')
     })
 
     it('saves when the box loses focus, once', async () => {

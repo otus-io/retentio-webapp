@@ -68,6 +68,9 @@ test.describe('Facts sheet', () => {
   }) => {
     await gotoSeededDeckFacts(page, 'SheetPaste', 2)
     await factCell(page, 1, 0).click()
+    // The fact pasted over is saved after the new ones are created.
+    const savedRow = page.waitForResponse((r) => r.request().method() === 'PATCH'
+      && /\/facts\/[^/]+$/.test(r.url()) && (r.request().postData() ?? '').includes('uno'))
     // What the browser hands the page for a paste of three rows copied from Excel or Google Sheets.
     await page.evaluate(() => {
       const data = new DataTransfer()
@@ -77,6 +80,7 @@ test.describe('Facts sheet', () => {
     await expect(page.getByText('All Facts(4)')).toBeVisible()
     // No column for the extra cell.
     await expect(page.locator('.jss_worksheet thead td[data-x]')).toHaveCount(2)
+    expect((await savedRow).ok()).toBe(true)
     await page.reload()
     for (const [row, front, back] of [[1, 'one', 'uno'], [2, 'two', 'dos'], [3, 'three', 'tres']] as const) {
       await expect(factCell(page, row, 0)).toHaveText(front)

@@ -474,18 +474,20 @@ export default function FactsGridPage({ facts, total: initialTotal, deck }: Fact
       if (taken === null) dirty.filter((row) => !rowFact(row)).forEach((row) => dirtyRowsRef.current.add(row))
       if (taken?.length) await addRows(taken)
     }
-    if (!changedRows.length) return
+    // Not the rows deleted while new facts were created.
+    const toSave = changedRows.filter(({ row }) => rowsRef.current.includes(row))
+    if (!toSave.length) return
 
     const results = await Promise.allSettled(
-      changedRows.map(({ row, entries }) => updateFact(deck.id, row.id, { entries })),
+      toSave.map(({ row, entries }) => updateFact(deck.id, row.id, { entries })),
     )
-    const saved = changedRows.filter((_, i) => results[i].status === 'fulfilled')
+    const saved = toSave.filter((_, i) => results[i].status === 'fulfilled')
     saved.forEach(({ row, entries }) => {
       row[rawSymbol].entries = entries
     })
-    if (saved.length < changedRows.length) {
+    if (saved.length < toSave.length) {
       // Retried with the next save (unless deleted meanwhile); the cells keep the typed text.
-      changedRows.forEach(({ row }, i) => {
+      toSave.forEach(({ row }, i) => {
         if (results[i].status === 'rejected' && rowsRef.current.includes(row)) dirtyRowsRef.current.add(row)
       })
       showFailToast(tRef.current('facts-grid.save-failed'))
@@ -605,9 +607,11 @@ export default function FactsGridPage({ facts, total: initialTotal, deck }: Fact
       return
     }
     if (action === 'paste') {
-      // Reading the clipboard needs the browser's leave (Ctrl+V needs none).
-      navigator.clipboard.readText().then(
-        (text) => sheetRef.current?.pasteAtSelection(text),
+      // Where Paste was chosen, even if the selection moves while the clipboard is read.
+      const range = sheetRef.current?.selectedRange()
+      // Reading the clipboard needs the browser's leave (Ctrl+V needs none), and a secure page.
+      Promise.resolve().then(() => navigator.clipboard.readText()).then(
+        (text) => range && sheetRef.current?.pasteAt(range.x1, range.y1, text),
         () => showFailToast(tRef.current('facts-grid.paste-blocked')),
       )
       return

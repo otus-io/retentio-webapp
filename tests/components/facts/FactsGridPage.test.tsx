@@ -37,7 +37,7 @@ const h = vi.hoisted(() => ({
     selectedRows: vi.fn((): number[] => []),
     markRows: vi.fn(),
     copySelection: vi.fn(),
-    pasteAtSelection: vi.fn(),
+    pasteAt: vi.fn(),
     firstVisibleRow: vi.fn(() => 0),
   },
   mounts: 0,
@@ -647,6 +647,24 @@ describe('FactsGridPage', () => {
     expect(updateFact).toHaveBeenCalledTimes(1)
   })
 
+  it('drops edits to a fact deleted while new facts typed with them were created', async () => {
+    let created!: (v: Awaited<ReturnType<typeof addFactsAction>>) => void
+    vi.mocked(addFactsAction).mockReturnValueOnce(new Promise((r) => { created = r }))
+    vi.mocked(deleteFactAction).mockResolvedValueOnce({ success: true })
+    renderGrid()
+    ready()
+    edit(0, 0, 'new')
+    edit(250, 0, 'apple')
+    await waitFor(() => expect(addFactsAction).toHaveBeenCalledTimes(1))
+    rightClick(0)
+    act(() => h.modals.menu.onAction('delete'))
+    await act(() => h.modals.delete.action(null, new FormData()))
+    await act(async () => created({ success: true, data: { newFactIds: ['n1'] } }))
+    await settle()
+    expect(updateFact).not.toHaveBeenCalled()
+    expect(showFailToast).not.toHaveBeenCalled()
+  })
+
   it('drops edits to a fact deleted before they were saved', async () => {
     vi.mocked(deleteFactAction).mockResolvedValueOnce({ success: true })
     renderGrid()
@@ -1165,11 +1183,35 @@ describe('FactsGridPage', () => {
         configurable: true,
         value: { readText: vi.fn(async () => 'a\tb') },
       })
+      h.api.selectedRange.mockReturnValue({ x1: 1, y1: 250, x2: 1, y2: 251 })
       renderGrid()
       ready()
       rightClick(250)
       act(() => h.modals.menu.onAction('paste'))
-      await waitFor(() => expect(h.api.pasteAtSelection).toHaveBeenCalledWith('a\tb'))
+      // A cell chosen while the clipboard is read does not move the paste.
+      h.api.selectedRange.mockReturnValue({ x1: 0, y1: 3, x2: 0, y2: 3 })
+      await waitFor(() => expect(h.api.pasteAt).toHaveBeenCalledWith(1, 250, 'a\tb'))
+    })
+
+    it('pastes nothing when no cell is selected', async () => {
+      const readText = vi.fn(async () => 'a')
+      Object.defineProperty(navigator, 'clipboard', { configurable: true, value: { readText } })
+      renderGrid()
+      ready()
+      rightClick(250)
+      act(() => h.modals.menu.onAction('paste'))
+      await waitFor(() => expect(readText).toHaveBeenCalled())
+      await settle()
+      expect(h.api.pasteAt).not.toHaveBeenCalled()
+    })
+
+    it('says to use the keyboard when the page cannot read the clipboard', async () => {
+      Object.defineProperty(navigator, 'clipboard', { configurable: true, value: undefined })
+      renderGrid()
+      ready()
+      rightClick(0)
+      act(() => h.modals.menu.onAction('paste'))
+      await waitFor(() => expect(showFailToast).toHaveBeenCalledWith('facts-grid.paste-blocked'))
     })
 
     it('says to use the keyboard when the browser blocks pasting from the menu', async () => {
@@ -1182,7 +1224,7 @@ describe('FactsGridPage', () => {
       rightClick(0)
       act(() => h.modals.menu.onAction('paste'))
       await waitFor(() => expect(showFailToast).toHaveBeenCalledWith('facts-grid.paste-blocked'))
-      expect(h.api.pasteAtSelection).not.toHaveBeenCalled()
+      expect(h.api.pasteAt).not.toHaveBeenCalled()
     })
 
     describe('on the row number', () => {

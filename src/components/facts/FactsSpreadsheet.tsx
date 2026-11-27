@@ -37,8 +37,8 @@ export interface FactsSheetApi {
   markRows: (ys: number[]) => void
   /** Copies the selection to the clipboard, as Ctrl+C does. */
   copySelection: () => void
-  /** Pastes text at the selection, as Ctrl+V does (and reported as the user's edit). */
-  pasteAtSelection: (text: string) => void
+  /** Pastes text with its top-left at this cell, as Ctrl+V does (and reported as the user's edit). */
+  pasteAt: (x: number, y: number, text: string) => void
   firstVisibleRow: () => number
 }
 
@@ -81,6 +81,22 @@ interface PropsRef { current: FactsSheetProps }
 interface SheetState {
   /** Set while the page writes to the sheet, so its own writes are not reported as edits. */
   quiet: boolean
+  /** The pending call telling the page an editor closed. */
+  editEndTimer?: ReturnType<typeof setTimeout>
+}
+
+/** The cells as typed, tab-separated: the library would copy their HTML (`&` as `&amp;`). */
+function copiedText(worksheet: Worksheet, [x1, y1, x2, y2]: [number, number, number, number]) {
+  const lines: string[] = []
+  for (let y = y1; y <= y2; y++) {
+    const cells: string[] = []
+    for (let x = x1; x <= x2; x++) {
+      const text = String(worksheet.getValueFromCoords(x, y, false))
+      cells.push(/[\t\n"]/.test(text) ? `"${text.replace(/"/g, '""')}"` : text)
+    }
+    lines.push(cells.join('\t'))
+  }
+  return lines.join('\r\n')
 }
 
 function createWorksheet(lib: Library, sheet: HTMLElement, host: HTMLElement, propsRef: PropsRef, state: SheetState) {
@@ -104,6 +120,7 @@ function createWorksheet(lib: Library, sheet: HTMLElement, host: HTMLElement, pr
       // false skips the library's own menu; its types leave that value out.
       return false as unknown as null
     },
+    oncopy: (ws, range) => copiedText(ws, range),
     onafterchanges: (_ws, changes) => {
       if (state.quiet) return
       // A read-only cell in a paste, cut or Delete keeps its text: the library reports it with no value.
@@ -122,7 +139,7 @@ function createWorksheet(lib: Library, sheet: HTMLElement, host: HTMLElement, pr
     },
     // Told once the library has finished closing the editor.
     oneditionend: () => {
-      setTimeout(() => propsRef.current.onEditEnd())
+      state.editEndTimer = setTimeout(() => propsRef.current.onEditEnd())
     },
     oninsertrow: (_ws, inserted) => {
       // Always reported, even for the page's own rows, so its rows stay in step with the sheet's.
@@ -279,11 +296,10 @@ function sheetApi(lib: Library, worksheet: Worksheet, host: HTMLElement, propsRe
     },
     selectedRows: () => selectedRowsOf(worksheet),
     copySelection: () => worksheet.copy(),
-    pasteAtSelection: (text) => {
-      const selected = worksheet.selectedCell
-      if (!selected) return
-      const [x1, y1, x2, y2] = selected.map(Number)
-      worksheet.paste(Math.min(x1, x2), Math.min(y1, y2), text)
+    pasteAt: (x, y, text) => {
+      // The library pastes over the selection: select where it goes.
+      worksheet.updateSelectionFromCoords(x, y, x, y)
+      worksheet.paste(x, y, text)
     },
     markRows: (ys) => {
       host.querySelectorAll('.facts-sheet-marked').forEach((row) => row.classList.remove('facts-sheet-marked'))
@@ -357,6 +373,7 @@ export default function FactsSpreadsheet(props: FactsSheetProps) {
 
     return () => {
       cancelled = true
+      clearTimeout(state.editEndTimer)
       observer?.disconnect()
       document.removeEventListener('focusin', handleFocusIn)
       document.removeEventListener('keydown', handleKeyDown)
@@ -396,6 +413,8 @@ export default function FactsSpreadsheet(props: FactsSheetProps) {
           onChange={(event) => setRenaming({ ...renaming, title: event.target.value })}
           onBlur={() => commitRename(renaming, true)}
           onKeyDown={(event) => {
+            // Enter or Escape in an input method (Chinese, Japanese) picks or drops what is being composed.
+            if (event.nativeEvent.isComposing) return
             if (event.key === 'Enter') commitRename(renaming, true)
             if (event.key === 'Escape') commitRename(renaming, false)
           }}
