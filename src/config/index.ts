@@ -14,6 +14,4 @@ export const CONTACT_EMAIL = 'research@retentio.app'
 export const TESTFLIGHT_JOIN_URL = 'https://testflight.apple.com/join/46KgYyth'
 /** Guide page explaining how to join Google Play testing and install the Android app. */
 export const ANDROID_INSTALL_PATH = '/guide/get-started/install-android'
-/** Always the newest signed APK, published by retentio-frontend's android-release workflow. */
-export const ANDROID_APK_URL = 'https://github.com/otus-io/retentio-frontend/releases/latest/download/retentio.apk'
 

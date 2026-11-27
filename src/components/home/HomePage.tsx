@@ -5,12 +5,12 @@ import { useRef, useState, useEffect } from 'react'
 import { useTranslations } from 'next-intl'
 import {
   Users, Brain, Palette, Bot, ArrowRight, Clock, BookOpen, TrendingUp,
-  GitFork, GitCommitHorizontal, GitPullRequest, GitMerge, RefreshCw, Download,
+  GitFork, GitCommitHorizontal, GitPullRequest, GitMerge, RefreshCw,
 } from 'lucide-react'
 import clsx from 'clsx'
 import AppLink from '@/components/app/AppLink'
 import { AppButtonLink } from '@/components/app/AppButtonLink'
-import { ANDROID_APK_URL, ANDROID_INSTALL_PATH, TESTFLIGHT_JOIN_URL } from '@/config'
+import { ANDROID_INSTALL_PATH, TESTFLIGHT_JOIN_URL } from '@/config'
 
 function AppleIcon({ className }: { className?: string }) {
   return (
@@ -161,13 +161,6 @@ export default function HomePage({ children }:{ children?: ReactNode }) {
               {t('home.cta.androidButton')}
             </a>
           </div>
-          <a
-            href={ANDROID_APK_URL}
-            className="inline-flex items-center gap-1 mt-4 text-sm font-medium text-accent hover:underline"
-          >
-            <Download className="size-4" />
-            {t('home.cta.apkLink')}
-          </a>
           <p className="text-sm text-gray-500 dark:text-gray-400 mt-3">
             {t('home.cta.note')}
           </p>

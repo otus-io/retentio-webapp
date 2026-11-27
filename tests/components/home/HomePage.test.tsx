@@ -74,7 +74,7 @@ vi.mock('lucide-react', () => ({
   Download: () => <span data-testid="icon-download" />,
 }))
 
-import { ANDROID_APK_URL, ANDROID_INSTALL_PATH, TESTFLIGHT_JOIN_URL } from '@/config'
+import { ANDROID_INSTALL_PATH, TESTFLIGHT_JOIN_URL } from '@/config'
 import HomePage from '@/components/home/HomePage'
 
 interface ObserverStub {
@@ -168,12 +168,6 @@ describe('HomePage', () => {
     expect(androidLink?.getAttribute('href')).toBe(ANDROID_INSTALL_PATH)
     // The Android button opens our install guide in the same tab.
     expect(androidLink?.getAttribute('target')).toBeNull()
-  })
-
-  it('APK 链接指向最新 GitHub Release', () => {
-    render(<HomePage />)
-    const apkLink = screen.getByText('home.cta.apkLink').closest('a')
-    expect(apkLink?.getAttribute('href')).toBe(ANDROID_APK_URL)
   })
 
   it('Learn More 链接指向背景介绍', () => {
