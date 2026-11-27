@@ -478,13 +478,29 @@ export default function FactsGridPage({ facts, total: initialTotal, deck }: Fact
 
     if (typedBelow) {
       // Saves run one at a time, so no earlier new fact is still being created. A big paste goes in batches (a
-      // request has a size limit); a failed batch stops the rest, which then wait as it does.
+      // request has a size limit).
       const taken = takeNewRows()
       // Held until the editor closes (handleEditEnd saves again).
       if (taken === null) dirty.filter((row) => !rowFact(row)).forEach((row) => dirtyRowsRef.current.add(row))
       const newRows = taken ?? []
-      for (let i = 0; i < newRows.length && !newRows[i - 1]?.addFailed; i += FACTS_PAGE_SIZE) {
-        await addRows(newRows.slice(i, i + FACTS_PAGE_SIZE))
+      // All are on their way (kept in the sheet) until their batch is sent; each batch then takes only the rows
+      // still there with text, in case one was cleared meanwhile.
+      newRows.forEach((row) => {
+        row.creating = true
+      })
+      const columns = headersRef.current.length
+      let failed = false
+      for (let i = 0; i < newRows.length; i += FACTS_PAGE_SIZE) {
+        const batch = newRows.slice(i, i + FACTS_PAGE_SIZE)
+        batch.forEach((row) => {
+          row.creating = false
+        })
+        // A failed batch stops the rest, which then wait as it does.
+        if (failed) continue
+        const ready = batch.filter((row) => rowsRef.current.includes(row) && hasText(row, columns))
+        if (!ready.length) continue
+        await addRows(ready)
+        failed = ready.some((row) => row.addFailed)
       }
     }
     if (!changedRows.length) return

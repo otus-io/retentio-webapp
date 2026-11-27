@@ -388,6 +388,17 @@ describe('FactsSpreadsheet', () => {
         fireEvent.contextMenu(number)
       })
       expect(api.selectedRows()).toEqual([1, 2, 3])
+      // Outside the rows picked: that row, which a shift-click then extends from.
+      act(() => {
+        fireEvent.mouseDown(worksheet.rows[0].element.children[0], { buttons: 2 })
+        fireEvent.contextMenu(worksheet.rows[0].element.children[0])
+      })
+      expect(api.selectedRows()).toEqual([0])
+      act(() => {
+        fireEvent.mouseDown(worksheet.rows[1].element.children[0], { buttons: 1, shiftKey: true })
+        fireEvent.mouseUp(document.body)
+      })
+      expect(api.selectedRows()).toEqual([0, 1])
       // Inside a block of cells: just that row.
       act(() => {
         fireEvent.mouseDown(td(0, 1), { buttons: 1 })

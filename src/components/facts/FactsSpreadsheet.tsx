@@ -92,13 +92,7 @@ function createWorksheet(lib: Library, sheet: HTMLElement, host: HTMLElement, pr
       event.preventDefault()
       // A right-clicked row number picks just that row, unless it is in rows already picked by their numbers (a block
       // of cells around it is not kept: its other rows are not what was clicked).
-      const selection = ws as unknown as RowSelection
-      if (role === 'row' && (selection.selectedRow == null || selection.selectedRow === false)) {
-        // As the library selects a row-number row itself (no columns given).
-        const none = null as unknown as number
-        ws.updateSelectionFromCoords(none, Number(y), none, Number(y))
-        selection.selectedRow = Number(y)
-      }
+      if (role === 'row') pickRightClickedRow(ws, Number(y))
       if (role === 'cell' || role === 'row') {
         propsRef.current.onCellContextMenu({
           x: role === 'cell' ? Number(x) : null,
@@ -196,6 +190,21 @@ function sheetLayout(worksheet: Worksheet, host: HTMLElement, propsRef: PropsRef
 
 /** Set by a row-number click, cleared by a cell click; left out of the library's types. */
 interface RowSelection { selectedRow?: number | false | null }
+
+/** A right-clicked row number: the row it picks, and the row a shift-click then extends from. */
+function pickRightClickedRow(worksheet: Worksheet, y: number) {
+  const selection = worksheet as unknown as RowSelection
+  if (selection.selectedRow == null || selection.selectedRow === false) {
+    // As the library selects a row-number row itself (no columns given).
+    const none = null as unknown as number
+    worksheet.updateSelectionFromCoords(none, y, none, y)
+    selection.selectedRow = y
+    return
+  }
+  // Outside the rows picked, the library has just selected this row alone: it is the new anchor.
+  const rows = worksheet.getSelectedRows()
+  if (rows.length === 1 && rows[0] === y) selection.selectedRow = y
+}
 
 /** Rows picked by their numbers, not a block of cells. */
 function selectedRowsOf(worksheet: Worksheet) {
