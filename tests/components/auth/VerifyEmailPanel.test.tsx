@@ -98,6 +98,7 @@ describe('VerifyEmailPanel', () => {
     expect(screen.getByRole('link', { name: 'verifyEmailGetAndroid' }).getAttribute('href')).toBe(
       ANDROID_INSTALL_PATH,
     )
+    expect(screen.getByRole('link', { name: 'verifyEmailGetAndroid' }).getAttribute('target')).toBe('_blank')
   })
 
   it('does not show store links before verification succeeds', () => {

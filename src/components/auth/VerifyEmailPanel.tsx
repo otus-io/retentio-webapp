@@ -102,6 +102,8 @@ export default function VerifyEmailPanel({
                     </a>
                     <a
                       href={ANDROID_INSTALL_PATH}
+                      target="_blank"
+                      rel="noopener noreferrer"
                       className={buttonVariants({ size: 'lg', fullWidth: true, variant: 'outline' })}
                     >
                       {t('verifyEmailGetAndroid')}
