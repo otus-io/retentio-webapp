@@ -245,6 +245,17 @@ describe('FactsSpreadsheet', () => {
       expect(api.isEditing()).toBe(false)
     })
 
+    it('moves the selection by rows, never above the first', async () => {
+      const { api, worksheet } = await ready()
+      act(() => api.shiftSelection(-1))
+      expect(api.selectedRange()).toBeNull()
+      act(() => worksheet.updateSelectionFromCoords(0, 2, 1, 3))
+      act(() => api.shiftSelection(-1))
+      expect(api.selectedRange()).toEqual({ x1: 0, y1: 1, x2: 1, y2: 2 })
+      act(() => api.shiftSelection(-5))
+      expect(api.selectedRange()).toEqual({ x1: 0, y1: 0, x2: 1, y2: 0 })
+    })
+
     it('marks the given rows, replacing the rows marked before', async () => {
       const { api, worksheet, host } = await ready()
       act(() => api.markRows([1]))
@@ -444,6 +455,17 @@ describe('FactsSpreadsheet', () => {
       expect(props.onHeaderRename).toHaveBeenCalledWith(1, 'Meaning')
       expect(header(1).textContent).toBe('Meaning')
       expect(screen.queryByRole('textbox')).toBeNull()
+    })
+
+    it('gives the keyboard back to the sheet once the box closes', async () => {
+      const { props, header, worksheet, td } = await ready()
+      act(() => worksheet.updateSelectionFromCoords(0, 0, 0, 0))
+      fireEvent.doubleClick(header(0))
+      fireEvent.focusIn(box())
+      fireEvent.keyDown(box(), { key: 'Enter' })
+      fireEvent.keyDown(document.body, { key: 'Delete', keyCode: 46, which: 46 })
+      expect(td(0, 0).textContent).toBe('')
+      expect(props.onCellsChange).toHaveBeenCalledWith([{ x: 0, y: 0, value: '' }])
     })
 
     it('saves when the box loses focus, once', async () => {

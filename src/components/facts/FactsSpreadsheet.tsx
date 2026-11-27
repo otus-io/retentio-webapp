@@ -29,6 +29,8 @@ export interface FactsSheetApi {
   focusSheet: () => void
   /** A cell editor is open (rows must not move under it). */
   isEditing: () => boolean
+  /** Moves the selection by this many rows (negative: up), as rows above it are removed. */
+  shiftSelection: (rows: number) => void
   /** The rows selected by their row numbers; none when cells are selected. */
   selectedRows: () => number[]
   /** Highlights these rows (none: no highlight). */
@@ -254,6 +256,12 @@ function sheetApi(lib: Library, worksheet: Worksheet, host: HTMLElement, propsRe
       lib.current = worksheet
     },
     isEditing: () => Boolean(worksheet.edition),
+    shiftSelection: (rows) => {
+      const selected = worksheet.selectedCell
+      if (!selected) return
+      const [x1, y1, x2, y2] = selected.map(Number)
+      worksheet.updateSelectionFromCoords(x1, Math.max(0, y1 + rows), x2, Math.max(0, y2 + rows))
+    },
     selectedRange: () => {
       const selected = worksheet.selectedCell
       if (!selected) return null
@@ -288,6 +296,7 @@ export default function FactsSpreadsheet(props: FactsSheetProps) {
   const [renaming, setRenaming] = useState<{ x: number; title: string; rect: DOMRect } | null>(null)
   const renamingClosedRef = useRef(false)
   const worksheetRef = useRef<Worksheet | null>(null)
+  const libRef = useRef<Library | null>(null)
 
   useEffect(() => {
     const host = hostRef.current!
@@ -322,6 +331,7 @@ export default function FactsSpreadsheet(props: FactsSheetProps) {
     void import('jspreadsheet-ce').then(({ default: lib }) => {
       if (cancelled) return
       jss = lib
+      libRef.current = lib
       const sheet = document.createElement('div')
       host.appendChild(sheet)
       const worksheet = createWorksheet(lib, sheet, host, propsRef, state)
@@ -360,6 +370,9 @@ export default function FactsSpreadsheet(props: FactsSheetProps) {
       propsRef.current.onHeaderRename(x, title)
     }
     setRenaming(null)
+    // The box took the keyboard from the sheet: give it back.
+    // (The box opens only on a mounted sheet.)
+    libRef.current!.current = worksheet!
   }
 
   return (

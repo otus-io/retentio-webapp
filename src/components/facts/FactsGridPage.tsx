@@ -418,15 +418,22 @@ export default function FactsGridPage({ facts, total: initialTotal, deck }: Fact
     const last = below.findLastIndex((row) => hasText(row, columns))
     const gaps = below.slice(0, Math.max(0, last)).some((row) => !hasText(row, columns))
     if (gaps && sheetRef.current?.isEditing()) return null
+    // The selection stays on the same row as rows above it go.
+    const selectedY = sheetRef.current?.selectedRange()?.y1 ?? -1
+    let removedAbove = 0
     for (let i = last - 1; i >= 0; i--) {
       if (!hasText(below[i], columns)) {
         const index = totalRef.current + i
         rowsRef.current.splice(index, 1)
         sheetRef.current?.deleteRow(index)
+        if (index < selectedY) removedAbove += 1
       }
     }
+    if (removedAbove) sheetRef.current?.shiftSelection(-removedAbove)
+    // Refill the empty rows at the end, whether or not the facts are then created.
+    syncTrailingRows()
     return rowsRef.current.slice(totalRef.current).filter((row) => hasText(row, columns))
-  }, [])
+  }, [syncTrailingRows])
 
   const saveDirtyRows = useCallback(async () => {
     const changedRows: { row: SheetRow; entries: Entry[] }[] = []

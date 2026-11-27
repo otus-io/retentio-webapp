@@ -33,6 +33,7 @@ const h = vi.hoisted(() => ({
     selectedRange: vi.fn((): { x1: number; y1: number; x2: number; y2: number } | null => null),
     focusSheet: vi.fn(),
     isEditing: vi.fn(() => false),
+    shiftSelection: vi.fn(),
     selectedRows: vi.fn((): number[] => []),
     markRows: vi.fn(),
     copySelection: vi.fn(),
@@ -283,6 +284,31 @@ describe('FactsGridPage', () => {
       act(() => h.props.onEditEnd())
       await settle()
       expect(addFactsAction).toHaveBeenCalledTimes(2)
+    })
+
+    it('keep the selection on its row as gaps above it close, and refill even when the create fails', async () => {
+      vi.mocked(addFactsAction).mockResolvedValueOnce({ success: false })
+      renderGrid(1)
+      ready()
+      act(() => h.props.onVisibleRowsChange(10))
+      // Typed in row 4 (rows 1-3 empty), then moved down to row 5.
+      h.api.selectedRange.mockReturnValue({ x1: 0, y1: 5, x2: 0, y2: 5 })
+      edit(4, 0, 'gap')
+      await waitFor(() => expect(addFactsAction).toHaveBeenCalled())
+      expect(h.api.shiftSelection).toHaveBeenCalledWith(-3)
+      expect(h.sheet[1]).toEqual(['gap', ''])
+      expect(h.sheet).toHaveLength(10)
+    })
+
+    it('leave the selection alone when no gap above it closes', async () => {
+      vi.mocked(addFactsAction).mockResolvedValueOnce({ success: true, data: { newFactIds: ['n1'] } })
+      renderGrid(1)
+      ready()
+      act(() => h.props.onVisibleRowsChange(10))
+      h.api.selectedRange.mockReturnValue({ x1: 0, y1: 1, x2: 0, y2: 1 })
+      edit(5, 0, 'gap')
+      await waitFor(() => expect(addFactsAction).toHaveBeenCalled())
+      expect(h.api.shiftSelection).not.toHaveBeenCalled()
     })
 
     it('keep rows with text not saved yet', async () => {
