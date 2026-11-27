@@ -32,6 +32,7 @@ const h = vi.hoisted(() => ({
     focusCell: vi.fn(),
     selectedRange: vi.fn((): { x1: number; y1: number; x2: number; y2: number } | null => null),
     focusSheet: vi.fn(),
+    isEditing: vi.fn(() => false),
     selectedRows: vi.fn((): number[] => []),
     markRows: vi.fn(),
     copySelection: vi.fn(),
@@ -183,6 +184,7 @@ describe('FactsGridPage', () => {
     vi.clearAllMocks()
     h.api.firstVisibleRow.mockReturnValue(0)
     h.api.selectedRange.mockReturnValue(null)
+    h.api.isEditing.mockReturnValue(false)
     h.api.selectedRows.mockReturnValue([])
     vi.mocked(addFactsAction).mockReset()
     vi.mocked(sendToAuthor).mockReset()
@@ -245,6 +247,42 @@ describe('FactsGridPage', () => {
       act(() => h.props.onRowsDelete([0, 1]))
       await act(() => h.modals.delete.action(null, new FormData()))
       expect(h.sheet).toHaveLength(17)
+    })
+
+    it('are not dropped under an open editor, only once it closes', () => {
+      renderGrid(10)
+      ready()
+      act(() => h.props.onVisibleRowsChange(20))
+      h.api.isEditing.mockReturnValue(true)
+      act(() => h.props.onVisibleRowsChange(5))
+      expect(h.sheet).toHaveLength(27)
+      h.api.isEditing.mockReturnValue(false)
+      act(() => h.props.onEditEnd())
+      expect(h.sheet).toHaveLength(12)
+    })
+
+    it('below a gap become facts only once an open editor closes', async () => {
+      vi.mocked(addFactsAction).mockResolvedValue({ success: true, data: { newFactIds: ['n1'] } })
+      renderGrid(1)
+      ready()
+      act(() => h.props.onVisibleRowsChange(10))
+      h.api.isEditing.mockReturnValue(true)
+      edit(3, 0, 'later')
+      await settle()
+      expect(addFactsAction).not.toHaveBeenCalled()
+      expect(h.sheet[3]).toEqual(['later', ''])
+      // Without a gap, an open editor does not hold it.
+      h.api.isEditing.mockReturnValue(false)
+      act(() => h.props.onEditEnd())
+      await waitFor(() => expect(addFactsAction).toHaveBeenCalledTimes(1))
+      expect(h.sheet[1]).toEqual(['later', ''])
+      h.api.isEditing.mockReturnValue(true)
+      edit(2, 0, 'next')
+      await waitFor(() => expect(addFactsAction).toHaveBeenCalledTimes(2))
+      // Nothing waiting: closing an editor sends nothing.
+      act(() => h.props.onEditEnd())
+      await settle()
+      expect(addFactsAction).toHaveBeenCalledTimes(2)
     })
 
     it('keep rows with text not saved yet', async () => {

@@ -120,7 +120,8 @@ export default function FactsGridPage({ facts, total: initialTotal, deck }: Fact
     if (rows.length < target) sheet.appendRows(target - rows.length)
     const columns = headersRef.current.length
     const empty = (row: SheetRow) => !rowFact(row) && !row.loading && !row.creating && !hasText(row, columns)
-    while (rows.length > target && empty(rows[rows.length - 1]) && empty(rows[rows.length - 2])) {
+    // Not under an open editor: the rows would move under it (trimmed once it closes).
+    while (!sheet.isEditing() && rows.length > target && empty(rows[rows.length - 1]) && empty(rows[rows.length - 2])) {
       rows.pop()
       sheet.deleteRow(rows.length)
     }
@@ -408,13 +409,15 @@ export default function FactsGridPage({ facts, total: initialTotal, deck }: Fact
   /**
    * The rows below the last fact that hold text, made consecutive (empty rows between them are dropped) so they
    * become the next facts in order. None while a failed one waits to be edited again: rows below it would otherwise
-   * become facts ahead of it.
+   * become facts ahead of it. Null while an editor is open over rows the gaps would move: they wait for it to close.
    */
-  const takeNewRows = useCallback(() => {
+  const takeNewRows = useCallback((): SheetRow[] | null => {
     const columns = headersRef.current.length
     const below = rowsRef.current.slice(totalRef.current)
     if (below.some((row) => row.addFailed && hasText(row, columns))) return []
     const last = below.findLastIndex((row) => hasText(row, columns))
+    const gaps = below.slice(0, Math.max(0, last)).some((row) => !hasText(row, columns))
+    if (gaps && sheetRef.current?.isEditing()) return null
     for (let i = last - 1; i >= 0; i--) {
       if (!hasText(below[i], columns)) {
         const index = totalRef.current + i
@@ -469,7 +472,10 @@ export default function FactsGridPage({ facts, total: initialTotal, deck }: Fact
     if (typedBelow) {
       // Saves run one at a time, so no earlier new fact is still being created. A big paste goes in batches (a
       // request has a size limit); a failed batch stops the rest, which then wait as it does.
-      const newRows = takeNewRows()
+      const taken = takeNewRows()
+      // Held until the editor closes (handleEditEnd saves again).
+      if (taken === null) dirty.filter((row) => !rowFact(row)).forEach((row) => dirtyRowsRef.current.add(row))
+      const newRows = taken ?? []
       for (let i = 0; i < newRows.length && !newRows[i - 1]?.addFailed; i += FACTS_PAGE_SIZE) {
         await addRows(newRows.slice(i, i + FACTS_PAGE_SIZE))
       }
@@ -531,6 +537,12 @@ export default function FactsGridPage({ facts, total: initialTotal, deck }: Fact
     })
     handleDebouncedCellChange()
   }, [handleDebouncedCellChange])
+
+  // What waited for the editor to close: trimming empty rows, and new facts below a gap.
+  const handleEditEnd = useCallback(() => {
+    syncTrailingRows()
+    if (dirtyRowsRef.current.size) handleDebouncedCellChange()
+  }, [syncTrailingRows, handleDebouncedCellChange])
 
   const handleRowsInsert = useCallback((y: number, count: number) => {
     rowsRef.current.splice(y, 0, ...Array.from({ length: count }, () => ({})))
@@ -772,6 +784,7 @@ export default function FactsGridPage({ facts, total: initialTotal, deck }: Fact
           onHeaderRename={handleHeaderRename}
           onCellContextMenu={handleCellContextMenu}
           onRowsDelete={handleRowsDelete}
+          onEditEnd={handleEditEnd}
         />
       </div>
       <FactsMediaModal

@@ -30,6 +30,7 @@ function setup(rows = [['f0', 'b0'], ['', ''], ['f2', 'b2'], ['', '']], readOnly
     onVisibleRowsChange: vi.fn(),
     onCellContextMenu: vi.fn(),
     onRowsDelete: vi.fn(),
+    onEditEnd: vi.fn(),
   }
   const view = render(<FactsSpreadsheet {...props} />)
   const host = view.container.querySelector('.facts-sheet')!
@@ -223,6 +224,16 @@ describe('FactsSpreadsheet', () => {
       expect(td(1, 2).textContent).toBe('y')
     })
 
+    it('tells whether a cell is being edited, and when an editor has closed', async () => {
+      const { api, worksheet, td, props } = await ready()
+      expect(api.isEditing()).toBe(false)
+      act(() => worksheet.openEditor(td(0, 0)))
+      expect(api.isEditing()).toBe(true)
+      act(() => worksheet.closeEditor(td(0, 0), true))
+      await waitFor(() => expect(props.onEditEnd).toHaveBeenCalled())
+      expect(api.isEditing()).toBe(false)
+    })
+
     it('marks the given rows, replacing the rows marked before', async () => {
       const { api, worksheet, host } = await ready()
       act(() => api.markRows([1]))
@@ -324,6 +335,37 @@ describe('FactsSpreadsheet', () => {
       press('Delete')
       outside.remove()
       expect(props.onRowsDelete).toHaveBeenCalledTimes(2)
+    })
+
+    it('extend by dragging down the row numbers', async () => {
+      const { api, worksheet } = await ready()
+      const number = (y: number) => worksheet.rows[y].element.children[0]
+      act(() => {
+        fireEvent.mouseDown(number(0), { buttons: 1 })
+        for (const y of [1, 2, 3]) fireEvent.mouseOver(number(y), { buttons: 1 })
+        fireEvent.mouseUp(document.body)
+      })
+      expect(api.selectedRows()).toEqual([0, 1, 2, 3])
+    })
+
+    it('include a row number right-clicked, so Delete asks to delete it rather than clearing its cells', async () => {
+      const { api, worksheet, td, props } = await ready()
+      const number = worksheet.rows[2].element.children[0]
+      act(() => {
+        fireEvent.mouseDown(number, { buttons: 2 })
+        fireEvent.contextMenu(number)
+      })
+      expect(api.selectedRows()).toEqual([2])
+      press('Delete')
+      expect(props.onRowsDelete).toHaveBeenCalledWith([2])
+      expect(td(0, 2).textContent).toBe('f2')
+      // Inside rows already picked: the pick stays.
+      pickRows(worksheet, 1, 3)
+      act(() => {
+        fireEvent.mouseDown(number, { buttons: 2 })
+        fireEvent.contextMenu(number)
+      })
+      expect(api.selectedRows()).toEqual([1, 2, 3])
     })
 
     it('are no longer selected once the page selects a cell', async () => {

@@ -27,6 +27,8 @@ export interface FactsSheetApi {
   selectedRange: () => { x1: number; y1: number; x2: number; y2: number } | null
   /** Gives the sheet the keyboard back, keeping its selection. */
   focusSheet: () => void
+  /** A cell editor is open (rows must not move under it). */
+  isEditing: () => boolean
   /** The rows selected by their row numbers; none when cells are selected. */
   selectedRows: () => number[]
   /** Highlights these rows (none: no highlight). */
@@ -68,6 +70,8 @@ interface FactsSheetProps {
   onCellContextMenu: (request: FactsSheetMenuRequest) => void
   /** Delete pressed with rows selected by their row numbers. */
   onRowsDelete: (ys: number[]) => void
+  /** A cell editor closed. */
+  onEditEnd: () => void
 }
 
 type Library = typeof jspreadsheet
@@ -75,10 +79,6 @@ interface PropsRef { current: FactsSheetProps }
 interface SheetState {
   /** Set while the page writes to the sheet, so its own writes are not reported as edits. */
   quiet: boolean
-  /** A mouse press on a row number is selecting rows. */
-  rowClick: boolean
-  /** The selection is rows picked by their numbers, not a block of cells. */
-  byNumber: boolean
 }
 
 function createWorksheet(lib: Library, sheet: HTMLElement, host: HTMLElement, propsRef: PropsRef, state: SheetState) {
@@ -86,8 +86,13 @@ function createWorksheet(lib: Library, sheet: HTMLElement, host: HTMLElement, pr
   const [worksheet] = lib(sheet as HTMLDivElement, {
     // Text stays text: no formulas, no HTML.
     parseFormulas: false,
-    contextMenu: (_ws, x, y, event, _items, role) => {
+    contextMenu: (ws, x, y, event, _items, role) => {
       event.preventDefault()
+      // A right-clicked row number selects that row (unless it is in rows already picked): rows, not cells.
+      const selection = ws as unknown as RowSelection
+      if (role === 'row' && (selection.selectedRow == null || selection.selectedRow === false)) {
+        selection.selectedRow = Number(y)
+      }
       if (role === 'cell' || role === 'row') {
         propsRef.current.onCellContextMenu({
           x: role === 'cell' ? Number(x) : null,
@@ -110,12 +115,14 @@ function createWorksheet(lib: Library, sheet: HTMLElement, host: HTMLElement, pr
         value: String(change.value),
       })))
     },
-    // Rows stay picked by their numbers only until the selection moves some other way (a cell click, the keyboard).
-    onselection: (ws) => {
-      state.byNumber = state.rowClick
-      state.rowClick = false
-      // The library's own flag outlives keyboard moves, and then Delete stops clearing cells.
-      if (!state.byNumber) (ws as unknown as RowSelection).selectedRow = null
+    // The library marks rows picked by their numbers (click, shift-click, drag) but keeps the mark when the keyboard,
+    // or the page, then selects a cell; those selections come without a mouse event.
+    onselection: (ws, _x1, _y1, _x2, _y2, origin) => {
+      if (!origin) (ws as unknown as RowSelection).selectedRow = null
+    },
+    // Told once the library has finished closing the editor.
+    oneditionend: () => {
+      setTimeout(() => propsRef.current.onEditEnd())
     },
     oninsertrow: (_ws, inserted) => {
       // Always reported, even for the page's own rows, so its rows stay in step with the sheet's.
@@ -185,8 +192,9 @@ function sheetLayout(worksheet: Worksheet, host: HTMLElement, propsRef: PropsRef
 interface RowSelection { selectedRow?: number | false | null }
 
 /** Rows picked by their numbers, not a block of cells. */
-function selectedRowsOf(worksheet: Worksheet, state: SheetState) {
-  return state.byNumber ? worksheet.getSelectedRows() : []
+function selectedRowsOf(worksheet: Worksheet) {
+  const { selectedRow } = worksheet as unknown as RowSelection
+  return selectedRow == null || selectedRow === false ? [] : worksheet.getSelectedRows()
 }
 
 function sheetApi(lib: Library, worksheet: Worksheet, host: HTMLElement, propsRef: PropsRef, state: SheetState) {
@@ -237,13 +245,14 @@ function sheetApi(lib: Library, worksheet: Worksheet, host: HTMLElement, propsRe
     focusSheet: () => {
       lib.current = worksheet
     },
+    isEditing: () => Boolean(worksheet.edition),
     selectedRange: () => {
       const selected = worksheet.selectedCell
       if (!selected) return null
       const [x1, y1, x2, y2] = selected.map(Number)
       return { x1: Math.min(x1, x2), y1: Math.min(y1, y2), x2: Math.max(x1, x2), y2: Math.max(y1, y2) }
     },
-    selectedRows: () => selectedRowsOf(worksheet, state),
+    selectedRows: () => selectedRowsOf(worksheet),
     copySelection: () => worksheet.copy(),
     pasteAtSelection: (text) => {
       const selected = worksheet.selectedCell
@@ -277,7 +286,7 @@ export default function FactsSpreadsheet(props: FactsSheetProps) {
     let cancelled = false
     let jss: Library | undefined
     let observer: ResizeObserver | undefined
-    const state: SheetState = { quiet: false, rowClick: false, byNumber: false }
+    const state: SheetState = { quiet: false }
     // Typing or pasting into anything outside the sheet (a dialog, the header box) must not reach it: the library
     // listens on the whole document while a sheet is selected.
     const handleFocusIn = (event: FocusEvent) => {
@@ -289,13 +298,8 @@ export default function FactsSpreadsheet(props: FactsSheetProps) {
       const worksheet = worksheetRef.current
       if (!jss || !worksheet || jss.current !== worksheet || worksheet.edition) return
       if (event.key !== 'Delete' && event.key !== 'Backspace') return
-      const rows = selectedRowsOf(worksheet, state)
+      const rows = selectedRowsOf(worksheet)
       if (rows.length) propsRef.current.onRowsDelete(rows)
-    }
-    // Runs before the library's own mouse handling (on the document), which then selects.
-    const handleMouseDown = (event: MouseEvent) => {
-      const cell = (event.target as HTMLElement).closest('tbody td')
-      state.rowClick = Boolean(cell && !cell.previousElementSibling)
     }
     // Double-click a header to rename it in place.
     const handleDoubleClick = (event: MouseEvent) => {
@@ -321,7 +325,6 @@ export default function FactsSpreadsheet(props: FactsSheetProps) {
       document.addEventListener('keydown', handleKeyDown)
       document.addEventListener('focusin', handleFocusIn)
       host.addEventListener('dblclick', handleDoubleClick)
-      host.addEventListener('mousedown', handleMouseDown)
       propsRef.current.onReady(sheetApi(lib, worksheet, host, propsRef, state))
     })
 
@@ -331,7 +334,6 @@ export default function FactsSpreadsheet(props: FactsSheetProps) {
       document.removeEventListener('focusin', handleFocusIn)
       document.removeEventListener('keydown', handleKeyDown)
       host.removeEventListener('dblclick', handleDoubleClick)
-      host.removeEventListener('mousedown', handleMouseDown)
       const sheet = host.firstElementChild as jspreadsheet.JspreadsheetInstanceElement | null
       if (jss && sheet) jss.destroy(sheet, true)
       host.replaceChildren()
