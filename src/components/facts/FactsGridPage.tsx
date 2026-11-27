@@ -39,6 +39,8 @@ type SheetRow = Record<string | symbol, any> & {
   loading?: boolean
   /** Created but not identified yet: the texts it was created with, to recognise it when downloaded. */
   added?: string[]
+  /** Its create failed (the server may still have made it): tried again only once a failed row is edited again. */
+  addFailed?: boolean
 }
 
 function rowFact(data?: Record<string | symbol, any>) {
@@ -297,14 +299,20 @@ export default function FactsGridPage({ facts, total: initialTotal, deck }: Fact
   // One header save at a time, each saving the headers shown when it runs: a later rename never lands before an
   // earlier one, so the saved headers end up matching the shown ones.
   const fieldsSaveQueueRef = useRef<Promise<void>>(Promise.resolve())
+  // Renames not saved yet: the deck the server re-sends meanwhile still has the old names.
+  const pendingRenamesRef = useRef(0)
   const handleHeaderRename = useCallback((x: number, title: string) => {
     headersRef.current = headersRef.current.map((name, i) => (i === x ? title : name))
-    fieldsSaveQueueRef.current = fieldsSaveQueueRef.current.then(saveFields)
+    pendingRenamesRef.current += 1
+    fieldsSaveQueueRef.current = fieldsSaveQueueRef.current.then(saveFields).finally(() => {
+      pendingRenamesRef.current -= 1
+    })
   }, [saveFields])
 
   // Field names changed elsewhere (a column added or removed remounts the page instead).
   const fieldsKey = JSON.stringify(deck.fields)
   useEffect(() => {
+    if (pendingRenamesRef.current) return
     const fields = JSON.parse(fieldsKey) as string[]
     fields.forEach((name, x) => {
       if (headersRef.current[x] !== name) sheetRef.current?.setHeader(x, name)
@@ -346,8 +354,11 @@ export default function FactsGridPage({ facts, total: initialTotal, deck }: Fact
       const res = await addFactsAction(deck.id, entriesList, false, false).catch(() => ({ success: false as const }))
       if (!res.success) {
         // Not retried on its own (the server may have created them before the connection dropped), not even by an
-        // edit held meanwhile: the rows keep the text, and editing one again tries again.
-        rows.forEach((row) => dirtyRowsRef.current.delete(row))
+        // edit held meanwhile or typing in another row: the rows keep the text, and editing one again tries again.
+        rows.forEach((row) => {
+          dirtyRowsRef.current.delete(row)
+          row.addFailed = true
+        })
         showFailToast(String(('error' in res && res.error) || '') || tRef.current('add-fact.failed'))
         return
       }
@@ -388,11 +399,13 @@ export default function FactsGridPage({ facts, total: initialTotal, deck }: Fact
 
   /**
    * The rows below the last fact that hold text, made consecutive (empty rows between them are dropped) so they
-   * become the next facts in order.
+   * become the next facts in order. None while a failed one waits to be edited again: rows below it would otherwise
+   * become facts ahead of it.
    */
   const takeNewRows = useCallback(() => {
     const columns = headersRef.current.length
     const below = rowsRef.current.slice(totalRef.current)
+    if (below.some((row) => row.addFailed && hasText(row, columns))) return []
     const last = below.findLastIndex((row) => hasText(row, columns))
     for (let i = last - 1; i >= 0; i--) {
       if (!hasText(below[i], columns)) {
@@ -501,6 +514,8 @@ export default function FactsGridPage({ facts, total: initialTotal, deck }: Fact
       if (!row || x >= headersRef.current.length) return
       const key = fieldKeyAt(x)
       row[key] = { ...row[key], text: value }
+      // Editing a row whose create failed tries it again, with the rest that failed alongside it.
+      if (row.addFailed) rowsRef.current.forEach((r) => delete r.addFailed)
       dirtyRowsRef.current.add(row)
     })
     handleDebouncedCellChange()

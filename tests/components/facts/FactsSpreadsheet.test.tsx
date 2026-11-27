@@ -102,13 +102,23 @@ describe('FactsSpreadsheet', () => {
     ]))
   })
 
-  it('skips read-only cells when pasting', async () => {
-    const { worksheet, td } = await ready()
+  it('skips read-only cells when pasting, and does not report them as changed', async () => {
+    const { worksheet, td, props } = await ready()
     act(() => {
       worksheet.updateSelectionFromCoords(0, 0, 0, 0)
       worksheet.paste(0, 0, 'a\nb\nc')
     })
     expect([td(0, 0).textContent, td(0, 1).textContent, td(0, 2).textContent]).toEqual(['a', '', 'c'])
+    expect(props.onCellsChange).toHaveBeenCalledWith([{ x: 0, y: 0, value: 'a' }, { x: 0, y: 2, value: 'c' }])
+  })
+
+  it('reports nothing when every cell changed was read-only', async () => {
+    const { worksheet, props } = await ready()
+    act(() => {
+      worksheet.updateSelectionFromCoords(0, 1, 0, 1)
+      worksheet.paste(0, 1, 'b')
+    })
+    expect(props.onCellsChange).not.toHaveBeenCalled()
   })
 
   it('has no undo', async () => {
@@ -270,6 +280,13 @@ describe('FactsSpreadsheet', () => {
       press('Delete')
       outside.remove()
       expect(props.onRowsDelete).toHaveBeenCalledTimes(2)
+    })
+
+    it('are no longer selected once the page selects a cell', async () => {
+      const { api, worksheet } = await ready()
+      pickRows(worksheet, 0, 1)
+      act(() => api.focusCell(0, 0))
+      expect(api.selectedRows()).toEqual([])
     })
 
     it('stops listening for Delete when it unmounts', async () => {

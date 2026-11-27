@@ -68,13 +68,18 @@ describe('useFactsCellAttachments', () => {
     expect(result.current.mediaList).toHaveLength(0)
   })
 
-  it('有 entry 时返回音频和图片两个媒体条目（不提供视频）', () => {
-    const { result } = renderHook(() => useFactsCellAttachments(mockEntry))
+  it('有 entry 时返回音频和图片两个媒体条目（不再提供视频）', () => {
+    const { result } = renderHook(() => useFactsCellAttachments({ ...mockEntry, video: undefined }))
     const list = result.current.mediaList
     expect(list).toHaveLength(2)
 
     expect(list[0]).toMatchObject({ key: 'audio', label: 'term.audio' })
     expect(list[1]).toMatchObject({ key: 'image', label: 'term.image' })
+  })
+
+  it('已附加的视频仍然显示', () => {
+    const { result } = renderHook(() => useFactsCellAttachments(mockEntry))
+    expect(result.current.mediaList[2]).toMatchObject({ key: 'video', label: 'term.video', value: 'vid-1' })
   })
 
   it('有 entry 时 mediaList 包含对应的 value', () => {
@@ -197,7 +202,7 @@ describe('useFactsCellAttachments', () => {
 
     expect(onUpload).not.toHaveBeenCalled()
     expect(result.current.loading).toBe(false)
-    expect(result.current.mediaList.map((item) => item.value)).toEqual(['audio-1', 'img-1'])
+    expect(result.current.mediaList.map((item) => item.value)).toEqual(['audio-1', 'img-1', 'vid-1'])
   })
 
   it('rejects a video upload too: video is not offered', async () => {

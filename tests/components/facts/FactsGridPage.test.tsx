@@ -616,6 +616,20 @@ describe('FactsGridPage', () => {
       expect(vi.mocked(updateDeck).mock.lastCall?.[1]).toMatchObject({ fields: ['Word', 'Meaning'] })
     })
 
+    it('keeps a rename not saved yet when the server re-sends the old names', async () => {
+      let saved!: () => void
+      vi.mocked(updateDeck).mockReturnValueOnce(new Promise((r) => { saved = () => r(undefined as never) }))
+      const { rerender } = renderGrid()
+      ready()
+      act(() => h.props.onHeaderRename(0, 'Word'))
+      rerender(<FactsGridPage deck={{ ...deck, fields: ['Front', 'Back '] }} facts={[fact('f0')]} total={250} />)
+      expect(h.api.setHeader).not.toHaveBeenCalled()
+      await act(async () => saved())
+      await waitFor(() => expect(updateDeck).toHaveBeenCalledWith('d1', expect.objectContaining({
+        fields: ['Word', 'Back'],
+      })))
+    })
+
     it('saves renames one at a time, ending with the headers shown', async () => {
       let first!: () => void
       vi.mocked(updateDeck).mockReturnValueOnce(new Promise((r) => { first = () => r(undefined as never) }))
@@ -858,6 +872,27 @@ describe('FactsGridPage', () => {
       edit(250, 0, 'new!')
       await waitFor(() => expect(addFactsAction).toHaveBeenCalledTimes(2))
       expect(vi.mocked(addFactsAction).mock.lastCall?.[1]).toEqual([[{ text: 'new!' }, { text: '' }]])
+    })
+
+    it('never retries a failed add for typing in another row, so nothing is created twice', async () => {
+      vi.mocked(addFactsAction).mockResolvedValueOnce({ success: false, error: 'timeout' })
+        .mockResolvedValueOnce({ success: true, data: { newFactIds: ['n1', 'n2'] } })
+      renderGrid(1)
+      ready()
+      paste(1, [['one', ''], ['two', '']])
+      await waitFor(() => expect(showFailToast).toHaveBeenCalledWith('timeout'))
+      // Typing below the failed rows waits for them.
+      edit(3, 0, 'three')
+      await settle()
+      expect(addFactsAction).toHaveBeenCalledTimes(1)
+      // Editing a failed row tries again, all in order.
+      edit(1, 0, 'one!')
+      await waitFor(() => expect(addFactsAction).toHaveBeenCalledTimes(2))
+      expect(vi.mocked(addFactsAction).mock.lastCall?.[1]).toEqual([
+        [{ text: 'one!' }, { text: '' }],
+        [{ text: 'two' }, { text: '' }],
+        [{ text: 'three' }, { text: '' }],
+      ])
     })
 
     it('reports a create that fails outright, keeping the row editable', async () => {
