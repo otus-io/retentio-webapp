@@ -108,23 +108,25 @@ async function factsTotal(page: Page) {
   return Number(text?.match(/\((\d+)\)/)?.[1] ?? 0)
 }
 
+/** 滚动到表格末尾并选中最后一个词条下方的第一个空行 */
+export async function selectFirstEmptyRow(page: Page) {
+  const total = await factsTotal(page)
+  await factsScroller(page).evaluate((el) => { el.scrollTop = el.scrollHeight })
+  await factCell(page, total, 0).click()
+  await expect(factCell(page, total, 0)).toHaveClass(/highlight-selected/)
+  return total
+}
+
 /**
- * 在当前 facts 页面新建一行：按钮跳到第一个空行并选中它，输入文字后保存为新词条，等待总数增加
+ * 在当前 facts 页面新建一行：选中第一个空行，输入文字后保存为新词条，等待总数增加
  */
 export async function addFactRow(page: Page, text = 'new fact') {
-  const totalBefore = await factsTotal(page)
-  const icon = page.locator('.facts-grid-create-row-icon')
-  await expect(icon).toBeVisible()
-
-  await page.locator('#facts-grid-create-row').click()
-  await expect(factCell(page, totalBefore, 0)).toHaveClass(/highlight-selected/)
+  const totalBefore = await selectFirstEmptyRow(page)
   await typeIntoSelectedCell(page, text)
 
   await expect(async () => {
     expect(await factsTotal(page)).toBeGreaterThan(totalBefore)
   }).toPass({ timeout: 10000 })
-
-  await expect(page.locator('.facts-grid-create-row-icon')).toBeVisible()
 }
 
 /** 在选中的单元格里打字（像电子表格一样直接开始编辑），Enter 保存 */

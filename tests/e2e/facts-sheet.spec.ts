@@ -10,6 +10,7 @@ import {
   factsTopRow,
   focusedFactCellText,
   gotoSeededDeckFacts,
+  selectFirstEmptyRow,
   skipUnlessE2ECredentials,
   typeIntoSelectedCell,
 } from './helpers'
@@ -97,8 +98,7 @@ test.describe('Facts sheet', () => {
     page,
   }) => {
     await gotoSeededDeckFacts(page, 'SheetEnd', 60)
-    await page.locator('#facts-grid-create-row').click()
-    await expect(factCell(page, 60, 0)).toHaveClass(/highlight-selected/)
+    await selectFirstEmptyRow(page)
     await expect.poll(() => factsTopRow(page)).toBe(57)
     // Empty rows fill the rest of the screen.
     const lastRowShown = await factsScroller(page).evaluate((el) => {
@@ -251,8 +251,7 @@ test.describe('Facts sheet', () => {
   test('a renamed column keeps its values after adding a fact, and later edits keep them too', async ({ page }) => {
     await gotoSeededDeckFacts(page, 'SheetRename', 3)
     await renameColumn(page, 0, uniqueName('Word'))
-    await page.locator('#facts-grid-create-row').click()
-    await expect(factCell(page, 3, 0)).toHaveClass(/highlight-selected/)
+    await selectFirstEmptyRow(page)
     await typeIntoSelectedCell(page, 'added')
     await expect(page.getByText('All Facts(4)')).toBeVisible()
     await expect(factCell(page, 0, 0)).toHaveText('f0')
@@ -268,8 +267,7 @@ test.describe('Facts sheet', () => {
 
   test('typing a new fact across columns saves every column', async ({ page }) => {
     await gotoSeededDeckFacts(page, 'SheetTypeAcross', 3)
-    await page.locator('#facts-grid-create-row').click()
-    await expect(factCell(page, 3, 0)).toHaveClass(/highlight-selected/)
+    await selectFirstEmptyRow(page)
     // The second column is saved with the create or, typed while the fact is created, right after it.
     const savedRingo = page.waitForResponse((r) => (r.request().postData() ?? '').includes('ringo') && r.ok(),
       { timeout: 15_000 })

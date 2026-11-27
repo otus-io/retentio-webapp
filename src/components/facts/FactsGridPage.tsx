@@ -5,8 +5,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import type { Deck } from '@/modules/decks/decks.schema'
 import { useDebouncedCallback } from 'use-debounce'
 import { updateDeck } from '@/api/decks'
-import AppButton from '@/components/app/AppButton'
-import { CircleQuestionMark, Rows4Icon } from 'lucide-react'
+import { CircleQuestionMark } from 'lucide-react'
 import { getFactsPage, updateFact } from '@/api/facts'
 import FactsMediaModal from '@/components/facts/FactsMediaModal'
 import type { MediaType } from '@/hooks/useFactsCellAttachments'
@@ -25,7 +24,7 @@ import type { FactsCellMenuAction } from '@/components/facts/FactsCellContextMen
 import FactsCellContextMenu from '@/components/facts/FactsCellContextMenu'
 import type { FactsSheetApi, FactsSheetCellChange, FactsSheetMenuRequest } from '@/components/facts/FactsSpreadsheet'
 import FactsSpreadsheet from '@/components/facts/FactsSpreadsheet'
-import { endScrollRow, FACTS_PAGE_SIZE, FACTS_SORT, nextPageStart, sheetRowCount } from '@/components/facts/factsSheet'
+import { FACTS_PAGE_SIZE, FACTS_SORT, nextPageStart, sheetRowCount } from '@/components/facts/factsSheet'
 
 // A failing background request is retried this often before the loader gives up.
 const MAX_LOAD_FAILURES = 5
@@ -79,7 +78,6 @@ export default function FactsGridPage({ facts, total: initialTotal, deck }: Fact
   const [isOpen, setIsOpen] = useState(false)
   const [target, setTarget] = useState<{ factId: string; fieldKey: string; entry: Entry }>()
   const sheetRef = useRef<FactsSheetApi | null>(null)
-  const [loading, setLoading] = useState(false)
   const [total, setTotal] = useState(initialTotal)
   // Facts are the rows before `total`; the first empty row sits at index `total`.
   const totalRef = useRef(initialTotal)
@@ -286,15 +284,12 @@ export default function FactsGridPage({ facts, total: initialTotal, deck }: Fact
   const saveFields = useCallback(async () => {
     const fields = headersRef.current.slice()
     if (JSON.stringify(fields) !== JSON.stringify(lastDecksFields.current)) {
-      setLoading(true)
       try {
         await updateDeck(deck.id, { ...deck, fields })
         lastDecksFields.current = fields
       } catch {
         // Not marked saved, so the next rename retries it.
         showFailToast(tRef.current('facts-grid.save-failed'))
-      } finally {
-        setLoading(false)
       }
     }
   }, [deck])
@@ -354,55 +349,50 @@ export default function FactsGridPage({ facts, total: initialTotal, deck }: Fact
     rows.forEach((row) => {
       row.creating = true
     })
-    try {
-      setLoading(true)
-      // No facts page refresh (the sheet keeps its own rows); the deck page still refreshes for its counts.
-      const res = await addFactsAction(deck.id, entriesList, false, false).catch(() => ({ success: false as const }))
+    // No facts page refresh (the sheet keeps its own rows); the deck page still refreshes for its counts.
+    const res = await addFactsAction(deck.id, entriesList, false, false).catch(() => ({ success: false as const }))
+    rows.forEach((row) => {
+      row.creating = false
+    })
+    if (!res.success) {
+      // Not retried on its own (the server may have created them before the connection dropped), not even by an
+      // edit held meanwhile or typing in another row: the rows keep the text, and editing one again tries again.
       rows.forEach((row) => {
-        row.creating = false
+        dirtyRowsRef.current.delete(row)
+        row.addFailed = true
       })
-      if (!res.success) {
-        // Not retried on its own (the server may have created them before the connection dropped), not even by an
-        // edit held meanwhile or typing in another row: the rows keep the text, and editing one again tries again.
-        rows.forEach((row) => {
-          dirtyRowsRef.current.delete(row)
-          row.addFailed = true
-        })
-        showFailToast(String(('error' in res && res.error) || '') || tRef.current('add-fact.failed'))
-        return
+      showFailToast(String(('error' in res && res.error) || '') || tRef.current('add-fact.failed'))
+      return
+    }
+    const newFactIds = res.data?.newFactIds ?? []
+    rows.forEach((row, i) => {
+      if (newFactIds.length === rows.length) {
+        // The row is now this fact.
+        const id = newFactIds[i]
+        const fact: Fact = { id, entries: entriesList[i], fields: [], tags: [], ...(imported ? { local: true } : {}) }
+        Object.assign(row, { id, [rawSymbol]: fact })
+      } else {
+        // Not identified: the loader downloads it (for its id) while the row keeps the typed text.
+        row.loading = true
+        row.added = createdTexts[i]
       }
-      const newFactIds = res.data?.newFactIds ?? []
-      rows.forEach((row, i) => {
-        if (newFactIds.length === rows.length) {
-          // The row is now this fact.
-          const id = newFactIds[i]
-          const fact: Fact = { id, entries: entriesList[i], fields: [], tags: [], ...(imported ? { local: true } : {}) }
-          Object.assign(row, { id, [rawSymbol]: fact })
-        } else {
-          // Not identified: the loader downloads it (for its id) while the row keeps the typed text.
-          row.loading = true
-          row.added = createdTexts[i]
-        }
-      })
-      totalRef.current += rows.length
-      setTotal(totalRef.current)
-      rows.forEach(writeRow)
-      syncTrailingRows()
-      // Save anything typed into them, or below them, meanwhile.
-      saveEditsRef.current()
-      // Also picks up rows left pending after an earlier download stopped on network errors.
-      runLoader()
-      if (imported && res.data?.idsUnknown) {
-        showFailToast(tRef.current('auto-send.fact-added-not-sent'))
-      } else if (imported && newFactIds.length) {
-        // A new fact on an imported deck goes to the author right away, as on mobile.
-        const contributions = newFactIds.map((id, i) => (
-          factContribution('fact_add', id, previewFromEntries(entriesList[i]))
-        ))
-        queueSend(() => sendToAuthor(deck.id, contributions), 'auto-send.fact-added-unsent')
-      }
-    } finally {
-      setLoading(false)
+    })
+    totalRef.current += rows.length
+    setTotal(totalRef.current)
+    rows.forEach(writeRow)
+    syncTrailingRows()
+    // Save anything typed into them, or below them, meanwhile.
+    saveEditsRef.current()
+    // Also picks up rows left pending after an earlier download stopped on network errors.
+    runLoader()
+    if (imported && res.data?.idsUnknown) {
+      showFailToast(tRef.current('auto-send.fact-added-not-sent'))
+    } else if (imported && newFactIds.length) {
+      // A new fact on an imported deck goes to the author right away, as on mobile.
+      const contributions = newFactIds.map((id, i) => (
+        factContribution('fact_add', id, previewFromEntries(entriesList[i]))
+      ))
+      queueSend(() => sendToAuthor(deck.id, contributions), 'auto-send.fact-added-unsent')
     }
   }, [deck.id, deck.source_deck_id, getEntriesFromData, rowTexts, writeRow, syncTrailingRows, runLoader, queueSend])
 
@@ -486,33 +476,28 @@ export default function FactsGridPage({ facts, total: initialTotal, deck }: Fact
     }
     if (!changedRows.length) return
 
-    try {
-      setLoading(true)
-      const results = await Promise.allSettled(
-        changedRows.map(({ row, entries }) => updateFact(deck.id, row.id, { entries })),
-      )
-      const saved = changedRows.filter((_, i) => results[i].status === 'fulfilled')
-      saved.forEach(({ row, entries }) => {
-        row[rawSymbol].entries = entries
+    const results = await Promise.allSettled(
+      changedRows.map(({ row, entries }) => updateFact(deck.id, row.id, { entries })),
+    )
+    const saved = changedRows.filter((_, i) => results[i].status === 'fulfilled')
+    saved.forEach(({ row, entries }) => {
+      row[rawSymbol].entries = entries
+    })
+    if (saved.length < changedRows.length) {
+      // Retried with the next save (unless deleted meanwhile); the cells keep the typed text.
+      changedRows.forEach(({ row }, i) => {
+        if (results[i].status === 'rejected' && rowsRef.current.includes(row)) dirtyRowsRef.current.add(row)
       })
-      if (saved.length < changedRows.length) {
-        // Retried with the next save (unless deleted meanwhile); the cells keep the typed text.
-        changedRows.forEach(({ row }, i) => {
-          if (results[i].status === 'rejected' && rowsRef.current.includes(row)) dirtyRowsRef.current.add(row)
-        })
-        showFailToast(tRef.current('facts-grid.save-failed'))
-      }
-      // Edits on an imported deck go to the author right away, as on mobile; only a failed send is shown.
-      if (deck.source_deck_id && saved.length) {
-        const edits = saved.map(({ row, entries }) => ({
-          factId: row.id,
-          entries,
-          local: (row[rawSymbol] as Fact).local,
-        }))
-        queueSend(() => sendFactEdits(deck.id, edits), 'auto-send.unsent')
-      }
-    } finally {
-      setLoading(false)
+      showFailToast(tRef.current('facts-grid.save-failed'))
+    }
+    // Edits on an imported deck go to the author right away, as on mobile; only a failed send is shown.
+    if (deck.source_deck_id && saved.length) {
+      const edits = saved.map(({ row, entries }) => ({
+        factId: row.id,
+        entries,
+        local: (row[rawSymbol] as Fact).local,
+      }))
+      queueSend(() => sendFactEdits(deck.id, edits), 'auto-send.unsent')
     }
   }, [deck.id, deck.source_deck_id, getEntriesFromData, createRowData, writeRow, takeNewRows, addRows, queueSend])
 
@@ -550,12 +535,6 @@ export default function FactsGridPage({ facts, total: initialTotal, deck }: Fact
 
   const handleRowsInsert = useCallback((y: number, count: number) => {
     rowsRef.current.splice(y, 0, ...Array.from({ length: count }, () => ({})))
-  }, [])
-
-  // Jump to the first empty row and select it for typing; the fact is created once something is typed.
-  const handleAddRow = useCallback(() => {
-    sheetRef.current?.scrollToRow(endScrollRow(totalRef.current))
-    sheetRef.current?.focusCell(0, totalRef.current)
   }, [])
 
   const [cellMenu, setCellMenu] = useState<{
@@ -770,10 +749,6 @@ export default function FactsGridPage({ facts, total: initialTotal, deck }: Fact
             </AppLink>
           </AppTooltip>
         </div>
-
-        <div className="ml-auto"></div>
-
-        <CrateRowButton isPending={loading} onPress={handleAddRow} />
       </div>
       {/* Take the rest of the window below the breadcrumbs and toolbar; only the sheet scrolls. */}
       <div className="facts-grid flex-1 min-h-0">
@@ -827,24 +802,5 @@ export default function FactsGridPage({ facts, total: initialTotal, deck }: Fact
         deleteCount={deleteFacts.length}
       />
     </LayoutPage>
-  )
-}
-
-function CrateRowButton({ isPending, onPress }: { isPending: boolean, onPress: () => void }){
-  const t = useTranslations()
-  return (
-    <AppTooltip
-      content={t('common.add', { name: t('term.facts') })}
-    >
-      <AppButton
-        size="sm"
-        variant="outline"
-        id="facts-grid-create-row"
-        isPending={isPending}
-        isIconOnly
-        onPress={onPress}
-        icon={<Rows4Icon className="size-4 facts-grid-create-row-icon" />}
-      />
-    </AppTooltip>
   )
 }

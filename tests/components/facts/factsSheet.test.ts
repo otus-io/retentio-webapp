@@ -1,15 +1,11 @@
 import { describe, expect, it } from 'vitest'
-import { endScrollRow, FACTS_PAGE_SIZE, nextPageStart, sheetRowCount } from '@/components/facts/factsSheet'
+import { FACTS_PAGE_SIZE, nextPageStart, sheetRowCount } from '@/components/facts/factsSheet'
 
 describe('factsSheet', () => {
   it('ends the grid with the last three facts at the top, then empty rows filling the screen', () => {
     expect([0, 2, 3, 250].map((total) => sheetRowCount(total, 30))).toEqual([30, 30, 30, 277])
     // Always at least one empty row, even on a screen too short to fit four rows.
     expect(sheetRowCount(250, 2)).toBe(251)
-  })
-
-  it('scrolls the end into view three facts above the first empty row', () => {
-    expect([0, 2, 3, 250].map(endScrollRow)).toEqual([0, 0, 0, 247])
   })
 
   describe('nextPageStart', () => {

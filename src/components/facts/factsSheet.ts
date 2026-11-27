@@ -15,11 +15,6 @@ export function sheetRowCount(total: number, visibleRows: number) {
   return Math.max(total + 1, Math.max(0, total - FACTS_AT_END) + visibleRows)
 }
 
-/** The row to scroll to the top to show the end of the grid. */
-export function endScrollRow(total: number) {
-  return Math.max(0, total - FACTS_AT_END)
-}
-
 /**
  * Where to fetch next: the not-yet-loaded row nearest `anchor` (the first row on screen), widened back over the
  * unloaded rows just above it so one page covers them; null once every row is loaded.

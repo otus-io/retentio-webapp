@@ -1,4 +1,4 @@
-import { act, fireEvent, render, screen, waitFor } from '@testing-library/react'
+import { act, render, screen, waitFor } from '@testing-library/react'
 import type { ReactNode } from 'react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { getFactsPage, updateFact } from '@/api/facts'
@@ -709,27 +709,6 @@ describe('FactsGridPage', () => {
       await act(async () => first())
       await waitFor(() => expect(updateDeck).toHaveBeenCalledTimes(2))
       expect(vi.mocked(updateDeck).mock.lastCall?.[1]).toMatchObject({ fields: ['B', 'Back'] })
-    })
-  })
-
-  describe('add fact button', () => {
-    it('jumps to the end and selects the first empty row without creating a fact', () => {
-      renderGrid()
-      ready()
-      act(() => {
-        fireEvent.click(document.getElementById('facts-grid-create-row')!)
-      })
-      expect(h.api.scrollToRow).toHaveBeenCalledWith(247)
-      expect(h.api.focusCell).toHaveBeenCalledWith(0, 250)
-      expect(addFactsAction).not.toHaveBeenCalled()
-    })
-
-    it('does nothing before the sheet is ready', () => {
-      renderGrid()
-      act(() => {
-        fireEvent.click(document.getElementById('facts-grid-create-row')!)
-      })
-      expect(h.api.focusCell).not.toHaveBeenCalled()
     })
   })
 
