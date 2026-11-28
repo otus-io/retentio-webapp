@@ -3,7 +3,7 @@ import { useDropzone } from 'react-dropzone'
 
 const MB = 1024 * 1024
 const MAX_IMAGE = 5 * MB
-const MAX_AUDIO = 200 * MB
+const MAX_AUDIO = 20 * MB
 
 // ── 允许的 MIME ───────────────────────────────────────────────
 const ACCEPTED_TYPES = {

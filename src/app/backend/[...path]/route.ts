@@ -40,7 +40,7 @@ async function forward(req: NextRequest, ctx: RouteContext<'/backend/[...path]'>
     upstream = await fetch(`${API_BASE_URL}/${path.map(encodeURIComponent).join('/')}${req.nextUrl.search}`, {
       method: req.method,
       headers,
-      // Stream instead of buffering: media uploads can reach 200 MB. Node fetch requires duplex for stream bodies.
+      // Stream instead of buffering: media uploads can reach 20 MB. Node fetch requires duplex for stream bodies.
       body: hasBody ? req.body : undefined,
       duplex: 'half',
       signal: req.signal,

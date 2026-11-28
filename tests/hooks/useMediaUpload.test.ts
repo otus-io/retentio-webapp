@@ -51,9 +51,9 @@ describe('useMediaUpload', () => {
     expect(lastConfig().validator!(largeFile)).toMatchObject({ code: 'file-too-large' })
   })
 
-  it('validator 拒绝超过 200MB 的音频', () => {
+  it('validator 拒绝超过 20MB 的音频', () => {
     useMediaUpload()
-    const largeFile = new File(['x'.repeat(201 * 1024 * 1024)], 'big.mp3', { type: 'audio/mpeg' })
+    const largeFile = new File(['x'.repeat(21 * 1024 * 1024)], 'big.mp3', { type: 'audio/mpeg' })
     expect(lastConfig().validator!(largeFile)).toMatchObject({ code: 'file-too-large' })
   })
 
